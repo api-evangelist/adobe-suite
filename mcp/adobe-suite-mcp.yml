@@ -1,0 +1,107 @@
+generated: '2026-08-13'
+method: searched
+status: published
+source: >-
+  https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/mcp-server ,
+  https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/ai-in-aem/mcp-support/using-mcp-with-aem-as-a-cloud-service ,
+  https://developer.adobe.com/express/add-ons/docs/guides/getting-started/local-development/mcp-server
+note: >-
+  Adobe ships more than one MCP surface and they are NOT the same product. Two are
+  remote HTTPS endpoints an agent can POST to today (both auth-gated), and one is a
+  local stdio package a developer installs on a workstation. `deployment` below records
+  the union; `servers[]` records each one separately with how it was established.
+deployment:
+  mode: both
+  endpoint: https://marketo-mcp.adobe.io/mcp
+  install: npx @adobe/express-developer-mcp@latest --yes
+  package: https://www.npmjs.com/package/@adobe/express-developer-mcp
+  auth: api-key
+  verified: probed
+  note: >-
+    `endpoint` names the Marketo Engage remote server because it is the one whose exact
+    POST URL Adobe publishes verbatim in its documentation and which answered a live
+    tools/list probe (401, i.e. reachable and auth-gated). The AEM remote endpoint is
+    recorded in servers[] below and also answered a live probe. `install` names the
+    Express developer server, which is stdio-only and requires a human to install it
+    before any agent sees it.
+servers:
+- name: marketo-engage-mcp
+  product: Adobe Marketo Engage
+  transport: http
+  mode: remote
+  url: https://marketo-mcp.adobe.io/mcp
+  auth: api-key
+  auth_detail:
+    option_1_headers: [X-Marketo-Client-Id, X-Marketo-Client-Secret, X-Marketo-Munchkin-Id]
+    option_2_headers: ["Authorization: Bearer <IMS token>", x-gw-ims-org-id]
+  docs: https://experienceleague.adobe.com/en/docs/marketo-developer/marketo/mcp-server
+  verified: probed
+  probe:
+    method: 'POST tools/list (jsonrpc 2.0)'
+    date: '2026-08-13'
+    http_status: 401
+    body: '{"detail":"Unauthorized"}'
+    conclusion: >-
+      Endpoint is live and reachable; the tool manifest is auth-gated, so tool
+      inputSchemas cannot be introspected anonymously. Tool families below are taken
+      from Adobe's published description, not from a live tools/list response.
+  tool_families_documented:
+  - forms (browse, create, clone, approve)
+  - smart campaigns (create, configure, activate)
+  - leads and list management
+  - programs (create, clone, tag, browse)
+  - emails and snippets
+  - instance structure exploration
+  - bulk lead export
+  documented_operation_count: '100+'
+- name: aem-cloud-service-mcp
+  product: Adobe Experience Manager as a Cloud Service
+  transport: http
+  mode: remote
+  url: https://mcp.adobeaemcloud.com/adobe/mcp/aem
+  auth: oauth
+  docs: https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/ai-in-aem/mcp-support/using-mcp-with-aem-as-a-cloud-service
+  verified: probed
+  probe:
+    method: 'POST tools/list (jsonrpc 2.0)'
+    date: '2026-08-13'
+    http_status: 401
+    body: '{"jsonrpc":"2.0","error":{"code":401,"message":"Authorization header is required"}}'
+    conclusion: Live and reachable; requires an Authorization header. Tool manifest not introspectable anonymously.
+- name: adobe-express-developer-mcp
+  product: Adobe Express Add-on development
+  transport: stdio
+  mode: local-stdio
+  install: npx @adobe/express-developer-mcp@latest --yes
+  package: https://www.npmjs.com/package/@adobe/express-developer-mcp
+  package_version: 1.0.0
+  package_published: '2026-01-14'
+  auth: none
+  docs: https://developer.adobe.com/express/add-ons/docs/guides/getting-started/local-development/mcp-server
+  verified: searched
+  config_verbatim: |
+    {
+      "mcpServers": {
+        "adobe-express-developer": {
+          "command": "npx",
+          "args": ["@adobe/express-developer-mcp@latest", "--yes"]
+        }
+      }
+    }
+  tool_families_documented:
+  - semantic documentation search over Adobe Express add-on guides and tutorials
+  - Adobe Express Add-on SDK TypeScript definitions
+  - structured access to add-on reference documentation
+  note: >-
+    This is a DOCUMENTATION server for add-on developers, not a data plane over an Adobe
+    product API. It is local-stdio only — there is no hosted URL an agent can call.
+gaps:
+- >-
+  Adobe announced an MCP server for Adobe Commerce at Summit 2026 but publishes no
+  endpoint URL in its developer documentation as of 2026-08-13; the Commerce MCP servers
+  discoverable in registries are community builds and are NOT recorded here.
+- >-
+  No MCP surface is published for the largest OpenAPI families in this repo — PDF
+  Services (49 ops), Firefly Services, Adobe Analytics 2.0, Experience Platform, or
+  Cloud Manager. See mcp/adobe-suite-tool-crosswalk.yml rest_only[] for what that leaves
+  unreachable to an agent.

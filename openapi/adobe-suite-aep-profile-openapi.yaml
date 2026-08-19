@@ -1,0 +1,3020 @@
+openapi: 3.0.1
+info:
+  title: Real-time Customer Profile API
+  description: >- 
+    Use Real-time Customer Profile to drive coordinated, consistent and relevant experiences for your customers no matter where or when they interact with your brand. Profile provides a holistic view of each individual customer that combines data from multiple channels, including online, offline, CRM, and third-party data.
+    
+    - **Related documentation**:
+      - [Real-time Customer Profile documentation](http://www.adobe.com/go/profile-overview-en)
+      - [Profile API developer guide](http://www.adobe.com/go/profile-developer-guide-en)
+
+    - **Visualize API calls with Postman (a free, third-party software)**:
+      - [Real-time Customer Profile API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Real-time%20Customer%20Profile%20API.postman_collection.json)
+      - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)
+      - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)
+
+    - **API paths**:
+      - PLATFORM Gateway URL: https://<span>platform.adobe.io/
+      - Base path for this API: /data/core/ups
+      - Base path for the computed attributes API: /data/core/ca
+      - Example of a complete path: https://<span>platform.adobe.io/data/core/ups/config/mergePolicies
+
+    - **Required headers**:
+      - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. Accepted values specific to each call are provided in the call parameters.
+
+    - **API error handling**:
+      - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).
+      
+  version: "1.0"
+servers:
+- url: https://{environment}.adobe.io/data/core
+  variables:
+    environment:
+      default: platform
+      enum: 
+        - platform
+        - platform-stage
+tags:
+- name: (NEW) Interactive API documentation
+  description: You can now interact with the Experience Platform API endpoints directly from this API reference page. Get your [authentication credentials](https://www.adobe.com/go/platform-api-get-credentials-en) and use the **Try it** functionality in the right rail. Note that by using this functionality, you are making real API calls. Keep this in mind when you interact with production sandboxes.
+- name: Computed attributes
+  description: Computed attributes enable a field value to be automatically computed based on other values, calculations, and expressions. Computed attributes functionality is in **beta** and is **not** available to all users. Functionality is subject to change. For more information on using this set of endpoints, please read the [computed attributes endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/computed-attributes/api.html?lang=en#computed-attributes).
+- name: Entities
+  description: An entity is an Experience Data Model (XDM) object whose attributes and related time-series events have been merged from various sources to form an individual profile. For more information on using this set of endpoints, please read the [entities endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/api/entities.html).
+- name: Merge policies
+  description: Merge policies are the rules that Platform uses to determine how data will be prioritized and what data will be combined to create an individual customer profile. For more information on using this set of endpoints, please read the [merge policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/merge-policies/merge-policies.html).
+- name: Profile preview
+  description: Preview the latest sample job showing how many profile fragments and merged profiles are in the Profile store, as well as listing profile distribution by dataset and by identity namespace. For more information on using this set of endpoints, please read the [profile preview endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/api/preview-sample-status.html?).
+- name: Profile System Jobs
+  description: Profile System Jobs allow you to delete profile fragments for a given dataset or batch. For more information on using this set of endpoints, please read the [profile system jobs endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/api/profile-system-jobs.html).
+paths:
+  /ca/attributes:
+    get:
+      tags:
+      - Computed attributes
+      summary: List all computed attributes
+      operationId: listComputedAttributes
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: limit
+        in: query
+        description: A parameter that specifies the maximum number of items returned as part of the response.
+        schema:
+          type: string
+        example: 20
+      - name: offset
+        in: query
+        description: A parameter that specifies the number of items to skip before returning the items.
+        schema:
+          type: string
+        example: 5
+      - name: sortBy
+        in: query
+        description: A parameter that specifies the order in which the items are sorted. Possible values include `name`, `status`, `updateEpoch`, and `createEpoch`. You can choose whether to sort in ascending order or descending order by including or not including a `-` in front of the sort option. By default, the items will be sorted by `updateEpoch` in descending order. 
+        schema:
+          type: string
+          enum:
+            - name
+            - status
+            - updateEpoch
+            - createEpoch
+        example: -name
+      - name: property
+        in: query
+        description: A parameter that lets you filter on various computed attribute fields. Supported values include `name`, `createdEpoch`, `mergePolicy.value`, `updateEpoch`, and `status. More information about this query parameter can be found in the [computed attributes API guide](https://experienceleague.adobe.com/docs/experience-platform/profile/computed-attributes/api.html?lang=en#list).
+        schema:
+          type: string
+          enum:
+            - name
+            - createdEpoch
+            - mergePolicy.value
+            - updateEpoch
+            - status
+        example: name=testingrelease
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns a list of computed attributes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listComputedAttributes'
+        500:
+          x-summary: "Internal server error"
+          description: An internal server issue occurred.
+          content: {}
+        502:
+          x-summary: "Service unavailable"
+          description: The service is unavailable.
+          content: {}
+    post:
+      tags:
+      - Computed attributes
+      summary: Create a computed attribute
+      operationId: createComputedAttribute
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        description: |-
+          A JSON object containing the details of the computed attribute being created.
+          - **name:** The name of the computed attribute field, as a string. The name of the computed attribute can only be comprised of alphanumeric characters without any spaces or underscores.  
+          - **description:** A description of the computed attribute.
+          - **displayName:** The display name for the computed attribute. This is the name that will be displayed when listing your computed attributes within the Adobe Experience Platform UI.
+          - **expression:** An object containing information about the expression for the computed attribute.
+            - **type**: The type of expression. Currently, only `PQL` is supported.
+            - **format**: The format of the expression. Currently, only `pql/text` is supported.
+            - **value**: The value of the query expression.
+          - **keepCurrent:*** A boolean that determines whether or not the computed attribute's value is kept up-to-date with fast refresh.
+          - **duration:** An object containing the duration of the lookback period for the computed attribute. The lookback period represents how far back can be looked back to compute the computed attribute.
+            - **count:** A number that represents the duration for the lookback period. The possible values depend on the value of the `duration.unit` field.
+              | Unit | Values |
+              | ---- | ------ |
+              | HOURS | 1 - 24 |
+              | DAYS | 1 - 7 |
+              | WEEKS | 1 - 4 |
+              | MONTHS | 1 - 6 |
+            - **unit:** A string that represents the unit of time that will be used for the lookback period. Possible values include: `HOURS`, `DAYS`, `WEEKS`, and `MONTHS`. 
+          - **status:** The status of the computed attribute. Possible values include `DRAFT` and `NEW`. 
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createComputedAttribute'
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns the details of the newly created computed attribute.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/computedAttributeResponse'
+        400:
+          x-summary: "Bad request"
+          description: |-
+            Bad Request. Common examples include:
+              * "Function with the same name already exists for the specified schema or definedOn"
+              * "Could not lookup schema of the computed attribute for the provided path"
+              * "Return schema of the expression is not same as the schema of the computed attribute in the XDM schema".
+          content: {}
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /ca/attributes/{ATTRIBUTE_ID}:
+    get:
+      tags:
+      - Computed attributes
+      summary: Retrieve a specific computed attribute
+      operationId: retrieveComputedAttribute
+      parameters:
+      - name: ATTRIBUTE_ID
+        in: path
+        description: The unique, read-only ID of the computed attribute that is generated by the system when the attribute is created.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns the details of the computed attribute
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/computedAttributeResponse'
+        404:
+          x-summary: "Not found"
+          description: The computed attribute was not found
+          content: {}
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    delete:
+      tags:
+      - Computed attributes
+      summary: Delete a computed attribute
+      operationId: deleteComputedAttribute
+      parameters:
+      - name: ATTRIBUTE_ID
+        in: path
+        description: The unique, read-only ID of the computed attribute that is generated by the system when the attribute is created.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        202:
+          x-summary: "Accepted"
+          description: Returns HTTP Status 202 (Accepted) and details of the computed attribute you deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/computedAttributeResponse'
+        404:
+          x-summary: "Not found"
+          description: Computed attribute not found
+          content: {}
+        422:
+          x-summary: "Cannot delete"
+          description: Cannot perform delete as some other functions are dependent on this function.
+          content: {}
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Computed attributes
+      summary: Update a computed attribute
+      operationId: updateComputedAttribute
+      parameters:
+      - name: ATTRIBUTE_ID
+        in: path
+        description: The unique, read-only ID of the computed attribute that is generated by the system when the attribute is created.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        description: |-
+          Add the key/value pairs of the items you want to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/updateComputedAttribute'
+        required: true
+      responses:
+        200:
+          x-summary: "Accepted"
+          description: Returns HTTP Status 200 (OK) with information about your newly updated computed attribute.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/computedAttributeResponse'
+        404:
+          x-summary: "Not found"
+          description: Computed attribute not found
+          content: {}
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /ups/config/mergePolicies:
+    get:
+      tags:
+      - Merge policies
+      summary: List merge policies
+      operationId: getMany
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      - name: start
+        in: query
+        description: Page offset - As per created time of resource
+        schema:
+          type: string
+        example: 2
+      - name: limit
+        in: query
+        description: Page Size
+        schema:
+          type: integer
+        example: 10
+      - name: orderby
+        in: query
+        description: The model attribute which will be using for ordering
+        schema:
+          type: string
+        example: value
+      - name: schema.name
+        in: query
+        description: Schema class ID
+        schema:
+          type: string
+        example: _xdm.context.profile
+      - name: default
+        in: query
+        description: default flag
+        schema:
+          type: boolean
+        example: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: List of merge policies returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergePoliciesResponse'
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Merge policies
+      summary: Create a merge policy
+      operationId: createMergePolicy
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: Content-Type
+        in: header
+        description: Type of content being sent in the body of the request. Should be 'application/json'.
+        required: true
+        schema:
+          type: string
+      - name: x-profile-instance-id
+        in: header
+        description: Profile Instance ID
+        required: true
+        schema:
+          type: string
+        example: ups
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      requestBody:
+        description: The merge policy object
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/PostMergePolicy'
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: Merge Policy successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergePolicy'
+        400:
+          x-summary: "Bad request"
+          description: The post body is incomplete. Please double check your post body and try again.
+          content: {}
+        403:
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        429:
+          x-summary: "Rate limit"
+          description: The request rate for using this endpoint is too large. Please reduce the request rate and try again.
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /ups/config/mergePolicies/{mergePolicyId}:
+    get:
+      tags:
+      - Merge policies
+      summary: Retrieve a merge policy
+      operationId: retrieveMergePolicy
+      parameters:
+      - name: mergePolicyId
+        in: path
+        description: Merge policy ID.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      responses:
+        200:
+          x-summary: "Success"
+          description: MergePolicy successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergePolicy'
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        404:
+          x-summary: "Not found"
+          description: Merge policy not found
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    put:
+      tags:
+      - Merge policies
+      summary: Update a merge policy
+      operationId: updateMergePolicy
+      parameters:
+      - name: mergePolicyId
+        in: path
+        description: Merge policy ID.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-profile-instance-id
+        in: header
+        description: Profile Instance ID
+        required: true
+        schema:
+          type: string
+        example: ups
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      requestBody:
+        description: merge policy object
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/MergePolicy'
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: Merge Policy successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergePolicy'
+        400:
+          x-summary: "Bad request"
+          description: The request is incomplete or malformed.
+          content: {}
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        429:
+          x-summary: "Rate limit"
+          description: The request rate for using this endpoint is too large. Please reduce the request rate and try again.
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Merge policies
+      summary: Delete a merge policy
+      operationId: deleteMergePolicy
+      parameters:
+      - name: mergePolicyId
+        in: path
+        description: Merge policy ID.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      responses:
+        200:
+          x-summary: "Success"
+          description: Merge Policy deleted successfully
+          content: {}
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        404:
+          x-summary: "Not found"
+          description: MergePolicy not found
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Merge policies
+      summary: Update one or more attributes of a merge policy
+      operationId: patchMergePolicy
+      parameters:
+      - name: mergePolicyId
+        in: path
+        description: Merge policy ID.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-profile-instance-id
+        in: header
+        description: Profile Instance ID
+        required: true
+        schema:
+          type: string
+        example: ups
+      - name: x-request-id
+        in: header
+        description: Request ID
+        schema:
+          type: string
+        example: q0gf6caRuRtX2s5khaN1Zgd1OoEXcPJA
+      requestBody:
+        description: A sample request body to update the merge policy.
+        content:
+          'application/json':
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchOperation'
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: Merge Policy successfully updated
+          content: 
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/MergePolicy"
+        400:
+          x-summary: "Bad request"
+          description: The post body is incomplete. Please double check your post body and try again.
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        429:
+          x-summary: "Rate limit"
+          description: The request rate for using this endpoint is too large. Please reduce the request rate and try again.
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /ups/config/mergePolicies/bulk-get:
+    post:
+      tags:
+      - Merge policies
+      summary: Retrieve multiple merge policies using multiple merge policy IDs
+      operationId: bulkGetMergePolicies
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: Content-Type
+        in: header
+        description: Type of content being sent in the body of the request. Should be 'application/json'.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: An array of the merge policy IDs that you are trying to retrieve.
+        required: true
+        content:
+          'application/json':
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items: 
+                    type: object
+                    properties: 
+                      id: 
+                        type: string
+                        example: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
+              example:
+                ids:
+                  - id: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
+                  - id: 42d4a596-b1c6-46c0-994e-ca5ef1f85130
+      responses:
+        207:
+          x-summary: "Success"
+          description: The details of each merge policy are returned. The sample response has been truncated to show only the details for the first merge policy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: object
+                    properties:
+                      '10648288-cda5-11e8-a8d5-f2801f1b9fd1':
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
+                          name:
+                            type: string
+                            example: "Sample merge policy 1"
+                          imsOrgId:
+                            type: string
+                            example: "{IMS_ORG_ID}"
+                          sandbox:
+                            type: object
+                            properties:
+                              sandboxId:
+                                type: string
+                                example: "ff0f6870-c46d-11e9-8ca3-036939a64204"
+                              sandboxName:
+                                type: string
+                                example: "prod"
+                              type:
+                                type: string
+                                example: "production"
+                              default:
+                                type: boolean
+                                example: "true"
+                          schema:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "_xdm.context.profile"
+                          version:
+                            type: integer
+                            example: 1
+                          identityGraph:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: "none"
+                          attributeMerge:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: timestampOrdered
+                          isActiveOnEdge:
+                            type: boolean
+                            example: true
+                          default:
+                            type: boolean
+                            example: true
+                          updateEpoch:
+                            type: integer
+                            example: 1552086578
+                      '42d4a596-b1c6-46c0-994e-ca5ef1f85130':
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 42d4a596-b1c6-46c0-994e-ca5ef1f85130
+                          name:
+                            type: string
+                            example: "Sample merge policy 2"
+                          imsOrgId:
+                            type: string
+                            example: "{IMS_ORG_ID}"
+                          sandbox:
+                            type: object
+                            properties:
+                              sandboxId:
+                                type: string
+                                example: "ff0f6870-c46d-11e9-8ca3-036939a64204"
+                              sandboxName:
+                                type: string
+                                example: "prod"
+                              type:
+                                type: string
+                                example: "production"
+                              default:
+                                type: boolean
+                                example: "true"
+                          schema:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "_xdm.context.profile"
+                          version:
+                            type: integer
+                            example: 1
+                          identityGraph:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: "pdg"
+                          attributeMerge:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: dataSetPrecedence
+                              order:
+                                type: array
+                                items: 
+                                  type: string
+                                  example: 
+                                  - "5b76f86b85d0e00000be5c8b"
+                                  - "5b76f8d787a6af01e2ceda18"
+                          isActiveOnEdge:
+                            type: boolean
+                            example: false
+                          default:
+                            type: boolean
+                            example: false
+                          updateEpoch:
+                            type: integer
+                            example: 1576099719
+      x-codegen-request-body-name: body
+  /ups/access/entities:
+    get:
+      tags:
+      - Entities
+      summary: Retrieve an entity
+      description: You can only use this endpoint if you are subscribed to Real-Time CDP Ultimate edition. For more information on this update, read the [entities API guide](https://experienceleague.adobe.com/en/docs/experience-platform/profile/api/entities).
+      operationId: retrieveEntity
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: schema.name
+        in: query
+        description: The name of the schema you want to retrieve. Please note that retrieving ExperienceEvents is now **deprecated**.
+        required: true
+        schema:
+          type: string
+          enum: 
+            - _xdm.context.profile
+            - _xdm.context.account
+            - _xdm.context.opportunity
+        example: _xdm.context.profile
+      - name: entityId
+        in: query
+        description: The ID of the entity. If the value of this parameter is not an XID, you must also provide the identity namespace parameter, `entityIdNS`.
+        schema:
+          type: string
+        example: GtghAUFkdGVzdDE
+      - name: entityIdNS
+        in: query
+        description: The identity namespace of the entity. This field is only used if you specified an `entityId`.
+        schema:
+          type: string
+        example: UPS1
+      - name: fields
+        in: query
+        description: Filters the data returned in the response. Use this to specify which schema field values to include in data retrieved. For multiple fields, separate values by a comma with no spaces between.
+        schema:
+          type: string
+        example: person.name.firstName,person.name.lastName
+      - name: mergePolicyId
+        in: query
+        description: Identifies the merge policy by which to govern the data returned. If one is not specified in the call, your organization's default for that schema will be used. If no default merge policy has been configured, the default is no profile merge and no identity stitching.
+        schema:
+          type: string
+        example: example-mergePolicy
+      - name: startTime
+        in: query
+        description: 'Inclusively specifies the start time to filter the entities (in milliseconds). By default, this is from beginning.'
+        schema:
+          type: number
+        example: "1539838505"
+      - name: endTime
+        in: query
+        description: 'Exclusively specifies the end time to filter entities (in milliseconds). By default, this is to the end.'
+        schema:
+          type: number
+        example: "1539838510"
+      - name: limit
+        in: query
+        description: 'The maximum number of records to return from the result. Only for time-series objects. By default, this value is set to 1000.'
+        schema:
+          type: number
+        example: 10
+      - name: orderby
+        in: query
+        description: 'The sort order of retrieved entities by timestamp. This is written as `(+/-)timestamp`, with the default being `+timestamp`.'
+        schema:
+          type: string
+        example: -timestamp
+      - name: property
+        in: query
+        description: 'Filter by the property value. Supported evaluators include =, !=, <, <=, >, >=. If more than one property filter is provided, it needs to be concatenated with `&`. This can only be used with experience events, with a maximum of **three** properties being supported. When using URLs, they must be encoded. When using date filters, they must be encoded as a string in the format "yyyy-mm-dd" or "yyyymmdd".<br><br>Example: `property=web.webPageDetails.isHomepage=false&property=placeContext.localTime<="2020-07-20"`'
+        schema:
+          type: string
+        example: property=web.webPageDetails.isHomepage=false&property=placeContext.localTime<="2020-07-20"
+      responses:
+        200:
+          x-summary: "Success"
+          description: The entity was successfully returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEntityResponse'
+              examples:
+                Profile entity:
+                  value:
+                    BVrqzwVv7o2p3naHvnsWpqZXv3KJgA:
+                        entityId: BVrqzwVv7o2p3naHvnsWpqZXv3KJgA
+                        sources: ["1000000000"]
+                        entity:
+                          identities:
+                            - {
+                              "id": "89149270342662559642753730269986316601",
+                              "namespace": {
+                                "code": "ecid"
+                              }
+                            }
+                            - {
+                              "id": "janedoe@example.com",
+                              "namespace": {
+                                "code": "email"
+                              }
+                            }
+                            - {
+                              "id": "89149270342662559642753730269986316604",
+                              "namespace": {
+                                "code": "ecid"
+                              }
+                            }
+                            - {
+                              "id": "janefdoeh@example.com",
+                              "namespace": {
+                                "code": "email"
+                              }
+                            }   
+                            - {
+                              "id": "58832431024964181144308914570411162539",
+                              "namespace": {
+                                "code": "ecid"
+                              }
+                            }
+                            - {
+                              "id": "89149270342662559642753730269986316602",
+                              "namespace": {
+                                "code": "ecid"
+                              },
+                              "primary": "true"
+                            }
+                          person:
+                            name:
+                              firstName: Jane
+                              middleName: F
+                              lastName: Doe
+                          workEmail:
+                            primary: true
+                            address: "janedoe@example.com"
+                            label: "Jane Doe"
+                            type: "work"
+                            status: "active"
+                        lastModifiedAt: "2018-10-18T15:59:10-08:00"
+                B2B Account:
+                  value:
+                    GuQ-AUFjgjaeIw:
+                      entityId: "GuQ-AUFjgjaeIw"
+                      mergePolicy:
+                        id: "a6150f47-a94f-4c9d-bfa0-958a370020ee"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        _id: "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "{SOURCE_INSTANCE_ID}"
+                            sourceType: "{SOURCE_TYPE}"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_account:
+                            - id: "2334263"
+                            - id: "2334262"
+                            - id: "{SOURCE_ID}"
+                        isDeleted: false
+                        accountKey: 
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                B2B Opportunity:
+                  value:
+                    Ggw_AUFjgjaeIw:
+                      entityId: "Ggw_AUFjgjaeIw"
+                      mergePolicy:
+                        id: "162824be-07f5-4cd0-aa85-2ff3c8f6c775"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        "_id": "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "00DC0000000Q35nMAC"
+                            sourceType: "Salesforce"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_opportunity:
+                            - id: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            - id: "2334263"
+                            - id: "2334262"
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                        accountKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"         
+        400:
+          x-summary: "Bad request"
+          description: The post body is incomplete. Please double check your post body and try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: "Not found"
+          description: XDM objects not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        422:
+          x-summary: "Processing error"
+          description: Syntax is correct but Profile Access is not able to process your request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        429:
+          x-summary: "Rate limit"
+          description: Too many requests were sent. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+    post:
+      tags:
+      - Entities
+      summary: Retrieve multiple entities
+      description: You can only use this endpoint if you are subscribed to Real-Time CDP Ultimate edition. For more information on this update, read the [entities API guide](https://experienceleague.adobe.com/en/docs/experience-platform/profile/api/entities).
+      operationId: retrieveMultipleEntities
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: Content-Type
+        in: header
+        description: Type of content being sent in the body of the request. Should be 'application/json'.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: XDM objects to be created. Each object should be in JSON format.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRequestBodyEntity'
+            examples: 
+              Profile entity:
+                value:
+                  schema:
+                    name: "_xdm.context.profile"
+                  fields:
+                    - "identities"
+                    - "person.name"
+                    - "workEmail"
+                  identities:
+                    - {
+                      "entityId": "89149270342662559642753730269986316601",
+                      "entityIdNS": {
+                        "code":"ECID"
+                      }
+                    }
+                    - {
+                      "entityId": "89149270342662559642753730269986316900",
+                      "entityIdNS": {
+                        "code":"ECID"
+                      }
+                    }
+                    - {
+                      "entityId": "89149270342662559642753730269986316602",
+                      "entityIdNS": {
+                        "code":"ECID"
+                      }
+                    }
+                  timeFilter: 
+                    startTime: 1539838505
+                    endTime: 1539838510
+                  limit: 10
+                  orderBy: "-timestamp"
+              B2B Account:
+                value:
+                  schema:
+                    name: "_xdm.context.account"
+                  identities:
+                    - {
+                      entityId: "2334262",
+                      entityIdNS: {
+                        "code": "b2b_account"
+                      }
+                    }
+                    - {
+                      entityId: "2334263",
+                      entityIdNS: {
+                        "code": "b2b_account"
+                      }
+                    }
+                    - {
+                      entityId: "2334264",
+                      entityIdNS: {
+                        "code": "b2b_account"
+                      }
+                    }
+              B2B Opportunity:
+                value:
+                  schema: 
+                    name: "_xdm.context.opportunity"
+                  identities:
+                    - {
+                      entityId: "2334262",
+                      entityIdNS: {
+                        "code": "b2b_opportunity"
+                      }
+                    }
+                    - {
+                      entityId: "2334263",
+                      entityIdNS: {
+                        "code": "b2b_opportunity"
+                      }
+                    }
+                    - {
+                      entityId: "2334264",
+                      entityIdNS: {
+                        "code": "b2b_opportunity"
+                      }
+                    }
+                    - {
+                      entityId: "2334265",
+                      entityIdNS: {
+                        "code": "b2b_opportunity"
+                      }
+                    }      
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: XDM objects successfully returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEntityResponse'
+              examples:
+                Profile entity:
+                  value:
+                    BVrqzwVv7o2p3naHvnsWpqZXv3KJgA:
+                      entityId: BVrqzwVv7o2p3naHvnsWpqZXv3KJgA
+                      sources: ["1000000000"]
+                      entity:
+                        identities:
+                          - {
+                            "id": "89149270342662559642753730269986316601",
+                            "namespace": {
+                              "code": "ecid"
+                            }
+                          }
+                          - {
+                            "id": "janedoe@example.com",
+                            "namespace": {
+                              "code": "email"
+                            }
+                          }
+                          - {
+                            "id": "89149270342662559642753730269986316604",
+                            "namespace": {
+                              "code": "ecid"
+                            }
+                          }
+                          - {
+                            "id": "janefdoeh@example.com",
+                            "namespace": {
+                              "code": "email"
+                            }
+                          }   
+                          - {
+                            "id": "58832431024964181144308914570411162539",
+                            "namespace": {
+                              "code": "ecid"
+                            }
+                          }
+                          - {
+                            "id": "89149270342662559642753730269986316602",
+                            "namespace": {
+                              "code": "ecid"
+                            },
+                            "primary": "true"
+                          }
+                        person:
+                          name:
+                            firstName: Jane
+                            middleName: F
+                            lastName: Doe
+                        workEmail:
+                          primary: true
+                          address: "janedoe@example.com"
+                          label: "Jane Doe"
+                          type: "work"
+                          status: "active"
+                      lastModifiedAt: "2018-10-18T15:59:10-08:00"
+                    A29cgveD5y64ezphxjUXNzcm:
+                      entityId: A29cgveD5y64ezphxjUXNzcm
+                      sources: ["1000000000"]
+                      entity:
+                        identities:
+                          - {
+                            "id": "89149270342662559642753730269986316601",
+                            "namespace": {
+                              "code": "ecid"
+                            },
+                            "primary": true
+                          }
+                          - {
+                            "id": "janedoe@example.com",
+                            "namespace": {
+                              "code": "email"
+                            }
+                          }
+                        person:
+                          name:
+                            firstName: Jane
+                            middleName: F
+                            lastName: Doe
+                        workEmail:
+                          primary: true
+                          address: "janedoe@example.com"
+                          label: "Jane Doe"
+                          type: "work"
+                          status: "active"
+                      lastModifiedAt: "2018-10-18T15:59:10-08:00"
+                B2B Account:
+                  value:
+                    GuQ-AUFjgjeeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: "b2b_account"
+                      entityId: GuQ-AUFjgjeeIw
+                      mergePolicy:
+                        id: "a6150f47-a94f-4c9d-bfa0-958a370020ee"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        "_id": "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "00DC0000000Q35nMAC"
+                            sourceType: "Salesforce"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_account:
+                            - {
+                              "id": "2334263"
+                            }
+                            - {
+                              "id": "2334262"
+                            }
+                            - {
+                              "id": "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            }
+                        isDeleted: false
+                        accountKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                    GuQ-AUFjgjaeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: "b2b_account"
+                      entityId: GuQ-AUFjgjaeIw
+                      mergePolicy:
+                        id: "a6150f47-a94f-4c9d-bfa0-958a370020ee"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        "_id": "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "00DC0000000Q35nMAC"
+                            sourceType: "Salesforce"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_account:
+                            - {
+                              "id": "2334263"
+                            }
+                            - {
+                              "id": "2334262"
+                            }
+                            - {
+                              "id": "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            }
+                        isDeleted: false
+                        accountKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                B2B Opportunity:
+                  value:
+                    GuQ-AUFjgjeeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: "b2b_opportunity"
+                      entityId: GuQ-AUFjgjeeIw
+                      mergePolicy:
+                        id: "a6150f47-a94f-4c9d-bfa0-958a370020ee"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        "_id": "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "00DC0000000Q35nMAC"
+                            sourceType: "Salesforce"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_opportunity:
+                            - {
+                              "id": "2334263"
+                            }
+                            - {
+                              "id": "2334262"
+                            }
+                            - {
+                              "id": "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            }
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                        accountKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                    GuQ-AUFjgjaeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: "b2b_opportunity"
+                      entityId: GuQ-AUFjgjaeIw
+                      mergePolicy:
+                        id: "a6150f47-a94f-4c9d-bfa0-958a370020ee"
+                      sources:
+                        - "er_m_attr"
+                      entity:
+                        "_id": "id1"
+                        extSourceSystemAudit:
+                          lastReferencedDate: "2024-03-09 12:21:43.0"
+                          lastActivityDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedDate: "2024-03-09 12:21:43.0"
+                          lastUpdatedBy: "{USER_ID}"
+                          externalKey:
+                            sourceID: "00394S0001xpG6xABE"
+                            sourceKey: "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            sourceInstanceID: "00DC0000000Q35nMAC"
+                            sourceType: "Salesforce"
+                          lastViewedDate: "2024-03-09 12:21:43.0"
+                          createdDate: "2024-03-09 12:21:43.0"
+                        accountID: "2334262"
+                        identityMap:
+                          b2b_opportunity:
+                            - {
+                              "id": "2334263"
+                            }
+                            - {
+                              "id": "2334262"
+                            }
+                            - {
+                              "id": "0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce"
+                            }
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+                        accountKey:
+                          sourceID: "2334262"
+                          sourceKey: "2334262"
+                          sourceInstanceID: "2334262"
+                          sourceType: "Random"
+
+        207:
+          x-summary: "Partial failure"
+          description: Failed to get records for some recordIds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponseById'
+        400:
+          x-summary: "Bad request"
+          description: The post body is incomplete. Please double check your post body and try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: "Not found"
+          description: XDM objects not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        429:
+          x-summary: "Rate limit"
+          description: Too many requests. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Entities
+      summary: Delete an entity
+      operationId: deleteEntity
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: schema.name
+        in: query
+        description: Name of the associated XDM schema. You can only use the _xdm.context.profile schema with this endpoint.
+        required: true
+        schema:
+          type: string
+        example: _xdm.context.profile
+      - name: entityId
+        in: query
+        description: ID of the entity. For Native XID, use `entityId=<XID>` and leave `entityIdNS` absent; For ID:NS, use both `entityId` and `entityIdNS` fields.
+        schema:
+          type: string
+        example: GtghAUFkdGVzdDE
+      - name: entityIdNS
+        in: query
+        description: Identity Namespace code. Used for ID:NS. If this field is used, `entityId` cannot be empty.
+        schema:
+          type: string
+        example: ECID
+      - name: mergePolicyId
+        in: query
+        description: ID of the merge policy. A merge policy includes information for Identity stitching and key-value XDM object merging. If not present, the default merge policy will be used.
+        schema:
+          type: string
+        example: 963d71a1-9875-4aea-a52b-c5c7a2504cae
+      responses:
+        202:
+          x-summary: "Accepted"
+          description: Accepted
+          content: {}
+        207:
+          x-summary: "Partial failure"
+          description: Failed to delete records with some IDs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponseById'
+        400:
+          x-summary: "Bad request"
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: "Not found"
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        429:
+          x-summary: "Rate limit"
+          description: Too many requests. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+  /ups/system/jobs:
+    get:
+      tags:
+      - Profile System Jobs
+      summary: List all delete requests (Profile System Jobs)
+      description: Please note that the query parameters can **only** be used in Microsoft Azure instances of Adobe Experience Platform. To learn more about the supported Experience Platform infrastructure, see the [Experience Platform multi-cloud overview](https://experienceleague.adobe.com/en/docs/experience-platform/landing/multi-cloud).
+      operationId: listDeleteRequests
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-sandbox-id
+        in: header
+        description: The ID of the sandbox you are using. If you are using Platform on Amazon Web Services (AWS), you **must** use this request header.
+        schema: 
+          type: string
+      - name: start
+        in: query
+        description: Return results from a specific page offset. For example, `start=3`
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        description: Limit response to a specific number of objects. Must be a positive number. For example, `limit=10`
+        schema:
+          type: integer
+      - name: page
+        in: query
+        description: Return a specific page of results, as per the create time of the request. For example, `page=0`
+        schema:
+          type: integer
+      - name: sort
+        in: query
+        description: Sort results by a specific field in ascending (`asc`) or descending (`desc`) order. The sort parameter does not work when returning multiple pages of results. For example, `sort=batchId:asc`
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns a list of all delete requests (Profile System Jobs)
+            defined by your organization.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                 - $ref: '#/components/schemas/ProfileSystemJobsResponse'
+                 - $ref: "#/components/schemas/ListAWSSystemJobs"
+              examples:
+                Microsoft Azure:
+                    value:
+                        _page:
+                            count: 100
+                            next: "K1JJRDpFaWc5QUwyZFgtMEpBQUFBQUFBQUFBPT0jUlQ6MSNUUkM6MiNGUEM6QWdFQUFBQVFBQWZBQUg0Ly9yL25PcmpmZndEZUR3QT0"
+                        children:
+                            - id: "9c2018e2-cd04-46a4-b38e-89ef7b1fcdf4"
+                              imsOrgId: "{ORG_ID}"
+                              batchId: "8d075b5a178e48389126b9289dcfd0ac"
+                              jobType: "DELETE"
+                              status: "COMPLETED"
+                              metrics: "{\"recordsProcessed\":5,\"timeTakenInSec\":1}"
+                              createEpoch: 1559026134
+                              updateEpoch: 1559026137
+                            - id: "3f225e7e-ac8c-4904-b1d5-0ce79e03c2ec"
+                              imsOrgId: "{ORG_ID}"
+                              dataSetId: "5c802d3cd83fc114b741c4b5"
+                              jobType: "DELETE"
+                              status: "PROCESSING"
+                              metrics: "{\"recordsProcessed\":0,\"timeTakenInSec\":15}"
+                              createEpoch: 1559025404
+                              updateEpoch: 1559025406
+                Amazon Web Services (AWS):
+                    value:
+                        - requestId: "80a9405a-21ca-4278-aedf-99367f90c055"
+                          requestType: "DELETE_EE_BATCH"
+                          imsOrgId: "{ORG_ID}"
+                          sandbox: 
+                            sandboxName: "prod"
+                            sandboxId: "8129954b-fa83-43ba-a995-4bfa8373ba2b"
+                          status: "SUCCESS"
+                          properties:
+                            batchId: "01JFSYFDFW9JAAEKHX672JMPSB"
+                            datasetId: "66a92c5910df2d1767de13f3"
+                          createdAt: "2024-12-23T15:55:34.905411Z"
+                          updatedAt: "2024-12-23T15:58:56.917088Z"
+                        - requestId: "38a835eb-b491-4864-902b-be07fa4d6a6d"
+                          requestType: "TRUNCATE_DATASET"
+                          imsOrgId: "{ORG_ID}"
+                          sandbox:
+                            sandboxName: prod
+                            sandboxId: "8129954b-fa83-43ba-a995-4bfa8373ba2b"
+                          status: "SUCCESS"
+                          properties:
+                            datasetId: "66a92c5910df2d1767de13f3"
+                          createdAt: "2024-12-22T19:44:50.250006Z"
+                          updatedAt: "2024-12-22T19:52:13.380706Z"
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Profile System Jobs
+      summary: Create delete request (Profile System Job)
+      description: "Initiating a new delete request is done through a POST request to the `/systems/jobs` endpoint, where the ID of the dataset or batch to be deleted is provided in the body of the request.\n\n  In order to delete a dataset, the dataset ID must be included in the body of the POST request. This action will delete **ALL** data for a given dataset. Experience Platform allows you to delete datasets based on both record and time series schemas. \n\n In order to delete a batch, the batch ID must be included in the body of the POST request. Please be advised that you cannot delete batches for datasets based on record schemas. Only batches for datasets based on time series schemas may be deleted. \n\n  **Note:** The reason you cannot delete batches for datasets based on record schemas is because record type dataset batches overwrite previous records and therefore cannot be \"undone\" or deleted. The way to remove the impact of erroneous batches for datasets based on record schemas is to re-ingest the batch with the correct data and it will overwrite the incorrect records. \n  \n  For more information on record and time series behavior, please review the section on XDM data behaviors in the [XDM System overview](https://experienceleague.adobe.com/docs/experience-platform/xdm/home.html)."
+      operationId: createDeleteRequest
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-sandbox-id
+        in: header
+        description: The ID of the sandbox you are using. If you are using Platform on Amazon Web Services (AWS), you **must** use this request header.
+        schema: 
+          type: string
+      - name: Content-Type
+        in: header
+        description: Type of content being sent in the body of the request. Should be 'application/json'.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: |-
+          A JSON object containing the ID of the dataset or batch to be deleted.
+          **Example for batch ID:**
+          <pre>{
+            "batchId": "8d075b5a178e48389126b9289dcfd0ac"
+          }</pre>
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/XdmDataJobPostBodyWithDataSetId'
+        required: true
+      responses:
+        200:
+          x-summary: "Success"
+          description: Delete request (Profile System Job) successfully created
+          content:
+            application/json:
+              schema:
+                oneOf:
+                    - $ref: '#/components/schemas/ProfileSystemJob'
+                    - $ref: "#/components/schemas/AWSSystemJob"
+              examples:
+                Microsoft Azure:
+                    value:
+                        id: "3f225e7e-ac8c-4904-b1d5-0ce79e03c2ec"
+                        imsOrgId: "{ORG_ID}"
+                        dataSetId: "5c802d3cd83fc114b741c4b5"
+                        jobType: "DELETE"
+                        status: "NEW"
+                        createEpoch: 1559025404
+                        updateEpoch: 1559025406
+                Amazon Web Services (AWS):
+                    value: 
+                        requestId: 80a9405a-21ca-4278-aedf-99367f90c055"
+                        requestType: "DELETE_EE_BATCH"
+                        imsOrgId: "{ORG_ID}"
+                        sandbox:
+                            sandboxName: "prod"
+                            sandboxId: "8129954b-fa83-43ba-a995-4bfa8373ba2b"
+                        status: "NEW"
+                        properties:
+                            batchId: "01JFSYFDFW9JAAEKHX672JMPSB"
+                            datasetId: "66a92c5910df2d1767de13f3"
+                        createdAt: "2024-12-22T19:44:50.250006Z"
+                        updatedAt: "2024-12-22T19:44:50.250006Z"
+
+        400:
+          x-summary: "Invalid"
+          description: Invalid delete request (Profile System Job)
+          content: {}
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        422:
+          x-summary: "Request already exists"
+          description: Delete request (Profile System Job) Definition already exists.
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /ups/system/jobs/{ID}:
+    get:
+      tags:
+      - Profile System Jobs
+      summary: Retrieve a delete request (Profile System Job)
+      operationId: retrieveDeleteRequest
+      parameters:
+      - name: ID
+        in: path
+        description: ID of the delete request (Profile System Job) that you wish to view. For example, '3e64ad31-5e6b-4399-80ad-ccfab54254ae'.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-sandbox-id
+        in: header
+        description: The ID of the sandbox you are using. If you are using Platform on Amazon Web Services (AWS), you **must** use this request header.
+        schema: 
+          type: string
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns the details of a specific delete request (Profile System Job).
+          content:
+            application/json:
+              schema:
+                oneOf:
+                    - $ref: '#/components/schemas/ProfileSystemJob'
+                    - $ref: "#/components/schemas/AWSSystemJob"
+              examples:
+                Microsoft Azure:
+                    value:
+                        id: "9c2018e2-cd04-46a4-b38e-89ef7b1fcdf4"
+                        imsOrgId: "{ORG_ID}"
+                        batchId: "8d075b5a178e48389126b9289dcfd0ac"
+                        jobType: "DELETE"
+                        status: "COMPLETED"
+                        metrics: "{\"recordsProcessed\":5,\"timeTakenInSec\":1}"
+                        createEpoch: 1559026134
+                        updateEpoch: 1559026137
+                Amazon Web Services (AWS):
+                    value:
+                        requestId: "9c2018e2-cd04-46a4-b38e-89ef7b1fcdf4"
+                        requestType: "DELETE_EE_BATCH"
+                        imsOrgId: "{ORG_ID}"
+                        sandbox:
+                            sandboxName: "prod"
+                            sandboxId: "8129954b-fa83-43ba-a995-4bfa8373ba2b"
+                        status: "SUCCESS"
+                        properties:
+                            batchId: "01JFSYFDFW9JAAEKHX672JMPSB" 
+                            datasetId: "66a92c5910df2d1767de13f3"
+                        createdAt: "2024-12-22T19:44:50.250006Z"
+                        updatedAt: "2024-12-22T19:52:13.380706Z"
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        404:
+          x-summary: "Not found"
+          description: Delete request (Profile System Job) not found
+          content: {}
+        "500":
+          x-summary: "Internal server error"
+          description: "There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists."
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+    delete:
+      tags:
+      - Profile System Jobs
+      summary: Remove a delete request (Profile System Job)
+      description: This endpoint can **only** be used with the Microsoft Azure instance of Adobe Experience Platform, and **cannot** be used with the Amazon Web Services (AWS) instance of Platform.
+      operationId: deleteDeleteRequest
+      parameters:
+      - name: ID
+        in: path
+        description: ID of the delete request (Profile System Job) that you wish to view. For example, '3e64ad31-5e6b-4399-80ad-ccfab54254ae'.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        200:
+          x-summary: "Success"
+          description: If removal is successful, returns HTTP Status 200 (OK) and an empty response body.
+          content: {}
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        404:
+          x-summary: "Not found"
+          description: Delete request (Profile System Job) not found
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+  /ups/previewsamplestatus:
+    get:
+      tags:
+      - Profile preview
+      summary: Preview the last successful sample job
+      operationId: previewSampleStatus
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns the details of the last successful sample that was run for the organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewSampleStatusPageResponse'
+        "403":
+          x-summary: "Missing access permissions"
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+  /ups/previewsamplestatus/report/dataset:
+    get:
+      tags:
+      - Profile preview
+      summary: View a report showing the distribution of profiles by dataset
+      operationId: profileDatasetReport
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: date
+        in: query
+        description: 'Specify the date of the report to be returned. If multiple reports were run on the date, the most recent report for that date will be returned. If a report does not exist for the specified date, a 404 error will be returned. If no date is specified, the most recent report will be returned. Format: YYYY-MM-DD. Example: date=2024-12-31'
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns a report showing profile distribution by dataset for the organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetReportResponse'
+        404:
+          x-summary: "Not found"
+          description: Dataset report does not exist for this date.
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+  /ups/previewsamplestatus/report/namespace:
+    get:
+      tags:
+      - Profile preview
+      summary: View a report showing the distribution of profiles by namespace
+      operationId: profileNamespaceReport
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: date
+        in: query
+        description: 'Specify the date of the report to be returned. If multiple reports were run on the date, the most recent report for that date will be returned. If a report does not exist for the specified date, a 404 error will be returned. If no date is specified, the most recent report will be returned. Format: YYYY-MM-DD. Example: date=2024-12-31'
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: "Success"
+          description: Returns a report showing profile distribution by namespace for the organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamespaceReportResponse'
+        404:
+          x-summary: "Not found"
+          description: Namespace report does not exist for this date.
+          content: {}
+        503:
+          x-summary: "Service unavailable"
+          description: Service Unavailable
+          content: {}
+components:
+  schemas:
+    listComputedAttributes:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              example: 1
+            pageSize:
+              type: integer
+              example: 1
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/computedAttributeResponse'
+        _links:
+          type: object
+          properties:
+            next:
+              type: object
+              properties: {}
+    createComputedAttribute:
+      required:
+      - name 
+      - description
+      - displayName
+      - expression
+      - duration
+      - status
+      type: object
+      properties:
+        name:
+          type: string
+          example: sampleComputedAttribute
+        description:
+          type: string
+          example: A sample computed attribute
+        displayName:
+          type: string
+          example: Sample Computed Attribute
+        expression:
+          type: object
+          properties:
+            type:
+              type: string
+              example: PQL
+            format:
+              type: string
+              example: pql/text
+            value:
+              type: string
+              example: xEvent[(commerce.checkouts.value > 0.0 or commerce.purchases.value > 1.0 or commerce.order.priceTotal >= 10.0) and (timestamp occurs <= 7 days before now)].sum(commerce.order.priceTotal)
+          description: A valid Profile Query Language (PQL) expression.
+        keepCurrent:
+          type: boolean
+          example: false 
+          description: A boolean that determines whether or not the value should be kept up-to-date using fast refresh.
+        duration:
+          type: object
+          properties:
+            count:
+              type: number
+              example: 3
+            unit:
+              type: string
+              example: MONTHS
+              enum: ["HOURS", "DAYS", "WEEKS", "MONTHS"]
+        status:
+          type: string
+          example: DRAFT
+          enum: ["DRAFT", "NEW"]
+    computedAttributeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 2afcf410-450e-4a39-984d-2de99ab58877
+        "type":
+          type: string
+          example: ComputedAttribute
+        name:
+          type: string
+          example: sampleComputedAttribute
+        displayName:
+          type: string
+          example: Sample Computed Attribute
+        description:
+          type: string
+          example: Sample description for a computed attribute
+        imsOrgId:
+          type: string
+          example: '{ORG_ID}'
+        sandbox:
+          type: object
+          properties:
+            sandboxId:
+              type: string
+              example: ff0f6870-c46d-11e9-8ca3-036939a64204
+            sandboxName:
+              type: string
+              example: prod
+            type:
+              type: string
+              example: production
+            isDefault:
+              type: boolean
+              example: true
+        path:
+          type: string
+          example: "{TENANT_ID}/ComputedAttributes"
+        positionPath:
+          type: array
+          items:
+            type: string
+            example: ["{TENANT_ID}", "ComputedAttributes"]
+        keepCurrent:
+          type: boolean
+          example: false
+        expression:
+          type: object
+          properties:
+            type:
+              type: string
+              example: PQL
+            format:
+              type: string
+              example: pql/text
+            value:
+              type: string
+              example: xEvent[(commerce.checkouts.value > 0.0 or commerce.purchases.value > 1.0 or commerce.order.priceTotal >= 10.0) and (timestamp occurs <= 7 days before now)].sum(commerce.order.priceTotal)
+          description: A valid Profile Query Language (PQL) expression.
+        mergeFunction:
+          type: object
+          properties:
+            value:
+              type: string
+              example: SUM
+        status:
+          type: string
+          example: DRAFT
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              example: _xdm.context.profile
+        lastEvaluationTs:
+          type: string
+          example: "2023-08-27T00:14:55.028"
+        returnSchema:
+          type: object
+          properties:
+            meta:xdmType:
+              type: string
+              example: number
+        definedOn:
+          type: array
+          items:
+            type: object
+            properties:
+              meta:resourceType:
+                type: string
+                example: unions
+              meta:containerId:
+                type: string
+                example: tenant
+              $ref:
+                type: string
+                example: https://ns.adobe.com/xdm/context/profile__union
+        createEpoch:
+          type: integer
+          example: 1572555223
+        updateEpoch:
+          type: integer
+          example: 1572555225
+        createdBy:
+          type: string
+          example: "{USER_ID}"
+    updateComputedAttribute:
+      type: object
+      properties:
+        status:
+          type: string
+          example: DRAFT
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    ProjectionConfig:
+      required:
+      - destinationId
+      - selector
+      type: object
+      properties:
+        selector:
+          type: string
+          description: A property selector under the extended data model that are to be replicated to the edges, i.e. the mask to apply on top of the data in Real-time Customer Profile.
+          example: person.gender,addresses.city,phoneNumbers.number
+        version:
+          type: integer
+          description: The current version number of the projection configuration. Must be bigger than 1.
+          format: int32
+          example: 1
+        id:
+          type: string
+          description: The ID of the profile projection configuration
+          example: 111-222-333-444
+        schemaName:
+          type: string
+          description: The XDM schema associated with the profile projection configuration
+          example: profile
+        name:
+          type: string
+          description: The projection name, identifying a customer projection configuration within an XDM schema
+          example: default
+        destinationId:
+          type: string
+          description: The ID of the projection destination containing routing metadata for the projection destination
+          example: 1111-2222-3333-4444
+          default: 123-123-123-123
+        mergePolicyId:
+          type: string
+          description: The merge policy ID.
+          example: 90b2977c-afb0-4b93-aea3-2eea5f26131d
+          default: 90b2977c-afb0-4b93-aea3-2eea5f26131d
+        _links:
+          type: object
+          properties:
+            destination:
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+          readOnly: true
+        _embedded:
+          type: object
+          properties:
+            destination:
+              $ref: '#/components/schemas/ProjectionDestinationRepresentation'
+          readOnly: true
+      description: Projections are an edge "view" of the full profile data managed by Real-time Customer Profile. Edge projections are materialized by applying a mask on top of the complete Profile data. Each customer can manage the edge projections by maintaining a projection configuration using the Edge Projection Configuration API. There is one single projection configuration per customer. <br/>A projection configuration contains:<ul><li>A selector of properties under the extended data model that are to be replicated to the edges (the mask to apply on top of the data in Profile).</li><li>A data expiry value representing the default maximum time an idle profile projection is stored on the edge before being deleted. Expressed in seconds</li></ul>
+    ProjectionDestinationRepresentation:
+      type: object
+      discriminator:
+        propertyName: type
+    ProblemDetail:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: The HTTP status code generated by the server for this occurrence of the problem.
+          format: int32
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+          example: Client error
+        type:
+          type: string
+          description: A URI reference (RFC3986) that identifies the problem type.
+          example: https://mcloud.io/client-error
+      description: An error object containing a problem detail, as defined by [RFC 7807 Problem Details for HTTP APIs](https://tools.ietf.org/html/rfc7807). The returned content-type is the `application/problem+json` media type. When present, this response contains machine-readable details pertaining to the error. Problem details include a **type**, which is a URI.
+    InputProjectionConfig:
+      required:
+      - destinationId
+      - selector
+      type: object
+      properties:
+        name:
+          type: string
+          description: The projection name, identifying a customer projection configuration within an XDM schema
+          example: default
+        selector:
+          type: string
+          description: A property selector under the extended data model that are to be replicated to the edges, i.e. the mask to apply on top of the data in Real-time Customer Profile.
+          example: person.gender,addresses.city,phoneNumbers.number
+        currentVersion:
+          minimum: 1
+          type: integer
+          description: An integer representing the current version of the projection configuration. It is used for updates. It must be bigger than 1.
+          format: int32
+          example: 1
+          default: 1
+        destinationId:
+          type: string
+          description: The ID of the projection destination containing routing metadata for the projection destination.
+          example: 1111-2222-3333-4444
+          default: 123-123-123-123
+        mergePolicyId:
+          type: string
+          description: Id of the merge policy. Merge policy includes information of Identity stitching and key-value xdm object merging. If not present, the default merge policy will be used.
+          example: 90b2977c-afb0-4b93-aea3-2eea5f26131d
+      description: Projections are an edge "view" of the full profile data managed by Real-time Customer Profile. Edge projections are materialized by applying a mask on top of the complete Profile data. Each customer can manage the edge projections by maintaining a projection configuration using the Edge Projection Configuration API. There is one single projection configuration per customer. <br/>A projection configuration contains:<ul><li>A selector of properties under the extended data model that are to be replicated to the edges (the mask to apply on top of the data in Profile).</li><li>A data expiry value representing the default maximum time an idle profile projection is stored on the edge before being deleted. Expressed in seconds</li></ul>
+    ProjectionConfigurationList:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            projectionConfigs:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectionConfig'
+          readOnly: true
+        _links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/HalLink'
+          readOnly: true
+      description: A list of projection configurations.
+    InputProjectionDestination:
+      type: object
+      description: A projection destination stores metadata regarding the target locations where projections get pushed by the Projection Service.
+      discriminator:
+        propertyName: type
+    SchemaEntity:
+      type: object
+      properties:
+        name:
+          type: string
+          description: XED name of the schema class.
+          example: _xdm.context.profile
+    NotFoundError:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          example: "404"
+    ForbiddenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
+        statusCode:
+          type: string
+          example: "403"
+    TooManyRequestError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Too many requests
+        cause:
+          type: string
+          description: Cause message
+          example: '{"Errors":["Request rate is large"]}'
+        retryAfterMs:
+          type: string
+          description: Retry in milliseconds
+          example: "500"
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: "429"
+    ResponseErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: "422"
+    ResponseInternalErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Unable to connect to server
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 500 : Connection Timeout'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: "500"
+    ErrorResponseById:
+      type: object
+      properties:
+        xid:
+          type: string
+        error:
+          $ref: '#/components/schemas/ResponseErrorContext'
+    PostIdentityEntityItem:
+      type: object
+      properties:
+        entityId:
+          type: string
+          description: ID of the entity.
+          example: "69935279872410346619186588147492736556"
+        entityIdNS:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Identity namespace code.
+              example: CRMID
+          description: Identity namespace of the entity.
+        relatedEntityId:
+          type: string
+          description: "The ID of the related entity"
+          example: "GkouAW-2u-7iWt5vQ9u2wm40JOZY"
+    GetEntityResponse:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/Entity"
+    Entity:
+      properties:
+        requestedIdentity:
+          type: object
+        mergePolicy:
+          type: object
+        entityId:
+          type: string
+          description: The identifier of the XDM entity.
+          example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        sources:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: dataset IDs.'
+            example: 5bc7ee61cdcc8712f991f0ee
+        tags:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: batch ids.'
+            example: 4c442203cffc4635aa4553528958d969
+        identityGraph:
+          type: array
+          items:
+            type: string
+            description: Related identities of the merged XDM entity.
+            example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        entity:
+          type: object
+          description: Any user defined JSON as per the definition of XDM
+        lastModifiedAt:
+          type: string
+          description: Last modified timestamp. In RFC-3339 format.
+          example: 2018-10-18T15:59:10-08:00
+        "_page":
+          type: object
+          description: ""
+    PostRequestBodyEntity:
+      required:
+      - identities
+      - schema
+      type: object
+      properties:
+        schema:
+          $ref: '#/components/schemas/SchemaEntity'
+        fields:
+          type: array
+          description: Fields for the model object. By default, all fields will be fetched. Separated by comma.
+          items:
+            type: string
+            example: person.name.firstName
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostIdentityEntityItem'
+        timeFilter:
+          $ref: '#/components/schemas/PostTimeFilterEntity'
+        limit:
+          type: number
+          description: 'Number of records to return from the result. Only for ExperienceEvents. Default: 1000'
+          example: 10.0
+        orderBy:
+          type: string
+          description: 'The sort order of retrieved ExperienceEvents by timestamp. Syntax: (+/-)timestamp. Default: +timestamp'
+          example: -timestamp
+    PostTimeFilterEntity:
+      type: object
+      properties:
+        startTime:
+          type: number
+          description: 'Start time of Time range filter for time-series objects. Should be at millisecond granularity. Included. Default: From beginning.'
+          example: 1539838505
+        endTime:
+          type: number
+          description: 'End time of Time range filter for ExperienceEvents. Should be at millisecond granularity. Excluded. Default: To the end.'
+          example: 1.53983851E+9
+    MergePoliciesResponse:
+      required:
+      - _page
+      - children
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/Page'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergePolicy'
+    Page:
+      required:
+      - count
+      type: object
+      properties:
+        count:
+          type: number
+          description: number of merge policies per page
+          example: 100.0
+        next:
+          type: string
+          description: page offset
+          example: K1JJRDpFaWc5QUwyZFgtMEpBQUFBQUFBQUFBPT0jUlQ6MSNUUkM6MiNGUEM6QWdFQUFBQVFBQWZBQUg0Ly9yL25PcmpmZndEZUR3QT0=
+    PostMergePolicy:
+      required:
+      - attributeMerge
+      - identityGraph
+      - schema
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the merge policy you want to create.
+          example: real-time-customer-profile-default
+        schema:
+          $ref: '#/components/schemas/SchemaClass'
+        default:
+          type: boolean
+          example: true
+          description: A boolean that specifies if the merge policy is the default for the schema.
+        identityGraph:
+          $ref: '#/components/schemas/IdentityGraph'
+        attributeMerge:
+          $ref: '#/components/schemas/AttributeMerge'
+        isActiveOnEdge:
+          type: boolean
+          example: true
+          description: A boolean that specifies if the merge policy will be active on edge.
+      description: The request body when you want to create a merge policy.
+    MergePolicy:
+      description: merge policy
+      allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the merge policy.
+            example: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
+      - $ref: '#/components/schemas/PostMergePolicy'
+      - type: object
+        properties:
+          version:
+            type: integer
+            description: The version of the merge policy.
+            example: 1
+    SchemaClass:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the XDM class that the schema associated with the merge policy is based.
+          example: _xdm.context.profile
+      description: An object that specifies which schema class the merge policy is created for.
+    IdentityGraph:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: The identity graph type. This determines which related identities will be merged.
+          example: pdg
+          enum:
+          - none
+          - pdg
+      description: The identity graph for the merge policy.
+    AttributeMerge:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of attribute merge applied. Possible values include timestampOrdered and dataSetPrecedence.
+          example: timestampOrdered
+          enum:
+          - timestampOrdered
+          - dataSetPrecedence
+        order:
+          type: array
+          items:
+            type: string
+      description: An object that describes which profile attributes to prioritize in case of conflicting profile attributes.
+    PatchOperation:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          description: op
+          example: add
+          enum:
+          - add
+        path:
+          type: string
+          description: The path of the attribute need to be updated. Supported values include `/name`, `/identityGraph.type`, `/attributeMerge.type`, `/schema.name`, `/version`, `/default`, and `/idActiveOnEdge`.
+          example: /identityGraph.type
+        value:
+          type: string
+          description: The new value used to update the specified attribute
+          example: pdg
+      description: Patch operation
+    ProfileSystemJobsResponse:
+      type: object
+      properties:
+        _page:
+            $ref: '#/components/schemas/SystemJobsPage'
+        children:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProfileSystemJob'
+    ListAWSSystemJobs:
+        type: array
+        items:
+            type: object
+            $ref: '#/components/schemas/AWSSystemJob'
+    AWSSystemJob:
+        type: object
+        properties:
+            requestId:
+                type: string
+                description: "The ID of the system job when using Platform on AWS."
+                example: "80a9405a-21ca-4278-aedf-99367f90c055"
+            requestType:
+                type: string
+                description: "The type of system job."
+                example: "DELETE_EE_BATCH"
+                enum:
+                    - BACKFILL_TTL
+                    - DELETE_EE_BATCH
+                    - TRUNCATE_DATASET
+            imsOrgId:
+                type: string
+                description: The ID of the organization the system job belongs to.
+                example: "{ORG_ID}"
+            sandbox:
+                type: object
+                description: "The sandbox that the system job belongs to."
+                properties: 
+                    sandboxName:
+                        type: string
+                        example: "prod"
+                        description: "The name of the sandbox."
+                    sandboxId:
+                        type: string
+                        description: "The ID of the sandbox."
+                        example: "8129954b-fa83-43ba-a995-4bfa8373ba2b"
+            status:
+                type: string
+                example: "SUCCESS"
+                description: "The status of the system job."
+                enum:
+                    - NEW
+                    - SUCCESS
+                    - ERROR
+                    - FAILED
+                    - IN-PROGRESS
+            properties:
+                type: object
+                description: "An object that contains batch and/or dataset IDs for the system job."
+                properties: 
+                    batchId: 
+                        type: string
+                        description: "The ID of the batch you want to delete."
+                        example: "01JFSYFDFW9JAAEKHX672JMPSB"
+                    datasetId:
+                        type: string
+                        description: "The ID of the dataset you want to delete."
+                        example: "66a92c5910df2d1767de13f3"
+            createdAt:
+                type: string
+                description: "A timestamp that shows when the system job was created."
+                example: "2024-12-23T15:55:34.905411Z"
+            updatedAt:
+                type: string
+                description: "A timestamp that shows when the system job was last updated."
+                example: "2024-12-23T15:58:56.917088Z"
+    SystemJobsPage:
+      required:
+      - count
+      type: object
+      properties:
+        count:
+          type: number
+          description: number of ProfileSystemJobsDefinition per page
+          example: 100.0
+        next:
+          type: string
+          description: page offset
+          example: K1JJRDpFaWc5QUwyZFgtMEpBQUFBQUFBQUFBPT0jUlQ6MSNUUkM6MiNGUEM6QWdFQUFBQVFBQWZBQUg0Ly9yL25PcmpmZndEZUR3QT0=
+    XdmDataJobPostBodyWithDataSetId:
+      type: object
+      properties:
+        dataSetId:
+          type: string
+          description: dataSetId
+          example: 5cf212ed73fbff145365d15d
+    ProfileSystemJob:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ProfileSystemJob or delete request ID
+          example: 9c2018e2-cd04-46a4-b38e-89ef7b1fcdf4
+        imsOrgId:
+          type: string
+          description: The ID of the organization.
+          example: '{ORG_ID}'
+        dataSetId:
+          type: string
+          description: dataset Id
+          example: 5cf212ed73fbff145365d15d
+        batchId:
+          type: string
+          description: batch Id
+          example: 5cf212ed73fbff145365d15d
+        jobType:
+          type: string
+          description: Type of Profile System Job
+          example: DELETE
+        status:
+          type: string
+          description: Status of Profile System Job
+          example: NEW
+          enum:
+          - NEW
+          - PROCESSING
+          - COMPLETED
+          - ERROR
+        metrics:
+          type: string
+          description: Rum time metrics of Profile System Job
+          example: '{\"recordsProcessed\":727109,\"timeTakenInSec\":50}'
+        createEpoch:
+          type: integer
+          description: create timestamp
+          example: 1234567890
+        updateEpoch:
+          type: integer
+          description: update timestamp
+          example: 1234567890
+    PreviewSampleStatusPageResponse:
+      type: object
+      properties:
+        numRowsToRead:
+          type: string
+          description: Total number of merged profiles in the sample.
+          example: "41003"
+        sampleJobRunning:
+          type: object
+          properties:
+            status:
+              type: boolean
+              example: true
+            submissionTimestamp:
+              type: string
+              example: 2020-08-17 22:14:37.0
+          description: A boolean value that returns `true` when a sample job is in progress. Provides transparency into the latency that occurs from when a batch file is uploaded to when it is actually added to the Profile store.
+        docCount:
+          type: string
+          description: Total document count in the database.
+          example: '"300803"'
+        totalFragmentCount:
+          type: integer
+          description: Total number of profile fragments in the profile store.
+          format: int64
+          example: 57429
+        lastSuccessfulBatchTimestamp:
+          type: string
+          description: Last successful batch ingestion timestamp.
+        streamingDriven:
+          type: string
+          description: Deprecated field.
+        totalRows:
+          type: string
+          description: Total number of merged profiles.
+          example: "51003"
+        lastBatchId:
+          type: string
+          description: Last batch ingestion ID.
+        status:
+          type: string
+          description: Status of last sample.
+          example: TASK_FINISHED
+        samplingRatio:
+          type: number
+          description: Ratio of merged profiles sampled `numRowsToRead` to total merged profiles `totalRows` expressed as a percentage in decimal format.
+          format: double
+          example: 0.803933
+        mergeStrategy":
+          type: string
+          description: Merge strategy used in last sample.
+          example: timestampOrdered_auto
+        lastSampledTimestamp:
+          type: string
+          description: Last successful sample timestamp.
+          example: 2020-08-01 17:57:57.0
+    DatasetReportResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: The list of dataset objects.
+          items:
+            $ref: '#/components/schemas/DatasetDataResponse'
+        reportTimestamp:
+          type: string
+          description: Date and time when the report was generated.
+          example: 2020-08-01T17:57:58.697
+    DatasetDataResponse:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The `id` value for the dataset.
+          example: 5f160106be34361915754b9c
+        fullIDsCount:
+          type: integer
+          description: Number of total merged profiles with this dataset ID.
+          format: int64
+          example: 20988
+        fullIDsPercentage:
+          type: number
+          description: The `fullIDsCount` as a percentage of total merged profiles expressed in decimal format.
+          format: double
+          example: 0.411505
+        sampleCount:
+          type: integer
+          description: Number of sampled merged profiles with this dataset ID.
+          format: int64
+          example: 12577
+        samplePercentage:
+          type: number
+          description: The `sampleCount` as a percentage of sampled merged profiles expressed in decimal format.
+          format: double
+          example: 0.306734
+        name:
+          type: string
+          description: The name of the dataset, as provided during dataset creation.
+          example: CRM Profiles
+        description:
+          type: string
+          description: The description of the dataset, as provided during dataset creation.
+          example: Profiles from the CRM.
+        createdUser:
+          type: string
+          description: The user ID of the user who created the dataset.
+          example: '{CREATED_USER}'
+        streamingIngestionEnabled:
+          type: string
+          description: Whether the dataset is enabled for streaming ingestion.
+          example: ""
+        reportTimestamp:
+          type: string
+          description: The timestamp of the report. If a `date` parameter was provided during the request, the report returned is for the date provided. If no `date` parameter is provided, the most recent report is returned.
+          example: 2020-08-01T17:57:58.697
+    NamespaceReportResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: The list namespace objects.
+          items:
+            $ref: '#/components/schemas/NamespaceDataResponse'
+        reportTimestamp:
+          type: string
+          description: Date and time when the report was generated.
+          example: 2020-08-01T17:57:58.697
+    NamespaceDataResponse:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The `id` value for the namespace.
+          example: "6"
+        fullIDsFragmentCount:
+          type: integer
+          description: Number of total fragments within this namespace.
+          format: int64
+          example: 13141
+        fullIDsCount:
+          type: integer
+          description: Number of total merged profiles with in this namespace.
+          format: int64
+          example: 12631
+        fullIDsPercentage:
+          type: number
+          description: The `fullIDsCount` as a percentage of total merged profiles expressed in decimal format.
+          format: double
+          example: 0.247652
+        sampleCount:
+          type: integer
+          description: Number of sampled merged profiles with in this namespace.
+          format: int64
+          example: 12148
+        samplePercentage:
+          type: number
+          description: The `sampleCount` as a percentage of sampled merged profiles expressed in decimal format.
+          format: double
+          example: 0.296271
+        code:
+          type: string
+          description: The `code` for the namespace.
+          example: Email
+        reportTimestamp:
+          type: string
+          description: The timestamp of the report. If a `date` parameter was provided during the request, the report returned is for the date provided. If no `date` parameter is provided, the most recent report is returned.
+          example: 2020-08-01T17:57:58.697
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: Type of content being sent in the body of the request. Should be 'application/json'.
+      required: true
+      schema:
+        type: string
+    attribute-id:
+      name: ATTRIBUTE_ID
+      in: path
+      description: The unique, read-only ID of the computed attribute that is generated by the system when the attribute is created.
+      required: true
+      schema:
+        type: string
+    x-request-id:
+      name: x-request-id
+      in: header
+      description: An optional header that may be used for debugging purposes when investigating issues with a workflow. The same ID can be used to identify a single request to the service from a flow. A new ID should be created for each request.
+      schema:
+        type: string
+    eventTypeId:
+      name: eventTypeId
+      in: path
+      description: Event type ID.
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    x-profile-instance-id:
+      name: x-profile-instance-id
+      in: header
+      description: Profile instance ID.
+      required: true
+      schema:
+        type: string
+      example: ups
+    mergePolicyId:
+      name: mergePolicyId
+      in: path
+      description: Merge policy ID.
+      required: true
+      schema:
+        type: string
+      example: ca8fe8a8-0f38-478a-9905-fd515d1d2988
+    macroId:
+      name: macroId
+      in: path
+      description: Macro ID. For example, `ca8fe8a8-0f38-478a-9905-fd515d1d2988`
+      required: true
+      schema:
+        type: string
+    start:
+      name: start
+      in: query
+      description: Return results from a specific page offset. For example, `start=3`
+      schema:
+        type: integer
+    limit:
+      name: limit
+      in: query
+      description: Limit response to a specific number of objects. Must be a positive number. For example, `limit=10`
+      schema:
+        type: integer
+  

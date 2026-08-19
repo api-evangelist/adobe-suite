@@ -1,0 +1,107 @@
+generated: '2026-08-13'
+method: searched
+source: >-
+  https://developer.adobe.com/console/ ,
+  https://developer.adobe.com/document-services/pricing/main ,
+  https://experienceleague.adobe.com/en/docs/experience-platform/sandbox/home ,
+  openapi/adobe-suite-aep-sandbox-openapi.yaml ,
+  https://developer.adobe.com/commerce/webapi/get-started/ ,
+  https://developer.adobe.com/express/add-ons/docs/guides/getting-started/local-development/
+note: >-
+  Adobe does NOT publish test credentials, magic test values, test cards or fixture
+  tooling. What it publishes instead is tenant-level environment isolation — real
+  sandboxes with real credentials, provisioned per organization. Nothing below is
+  invented; where a value would normally appear (a test key prefix, a magic identifier)
+  this file says plainly that Adobe publishes none.
+test_vs_live:
+  model: separate-environment, not separate-key-prefix
+  key_prefixes: none
+  note: >-
+    Adobe credentials carry no test/live prefix. A Client ID from the Developer Console is
+    scoped to a project + workspace, and the workspace (and for Experience Cloud, the
+    sandbox) determines which data it touches. There is no way to tell from a credential
+    string whether it is a production credential.
+environments:
+- name: Adobe Developer Console — Development workspace
+  scope: all Adobe APIs
+  url: https://developer.adobe.com/console/
+  description: >-
+    Every Developer Console project has at least a Production workspace and can add
+    Development workspaces. Each workspace issues its own credentials and its own
+    entitlements. This is the primary test/live separation for the whole estate.
+  self_serve: true
+- name: Adobe Experience Platform Sandboxes
+  scope: Experience Platform, Journey Optimizer, Real-Time CDP, Customer Journey Analytics
+  docs: https://experienceleague.adobe.com/en/docs/experience-platform/sandbox/home
+  spec: openapi/adobe-suite-aep-sandbox-openapi.yaml
+  operations: 29
+  api_managed: true
+  description: >-
+    First-class, API-managed tenant isolation. Sandboxes are created, reset and deleted
+    programmatically through the Sandbox API (29 operations). Types are `development` and
+    `production`; a reset wipes all data in the sandbox while keeping its configuration.
+  selector_header: x-sandbox-name
+  note: >-
+    This is the strongest sandbox story in the Adobe estate and the only one with its own
+    machine-readable contract.
+- name: Adobe Acrobat Services Free Tier
+  scope: PDF Services, PDF Extract, PDF Accessibility Auto-Tag, Document Generation, Electronic Seal
+  url: https://developer.adobe.com/document-services/
+  description: >-
+    500 Document Transactions per month against the PRODUCTION endpoints, no credit card
+    required. There is no separate sandbox host — the free tier is a quota on live
+    infrastructure, so test traffic consumes real transactions.
+  quota: 500 document transactions / month
+  rate_limit: 25 requests per minute
+  self_serve: true
+  cross_link: plans/adobe-suite-plans-pricing.yml
+- name: Adobe Commerce sandbox / non-production environments
+  scope: Adobe Commerce
+  docs: https://developer.adobe.com/commerce/webapi/get-started/
+  server_observed: https://na1-sandbox.api.commerce.adobe.com/{tenantId}
+  spec: openapi/adobe-suite-commerce-data-ingestion-openapi.yaml
+  description: >-
+    Adobe Commerce as a Cloud Service publishes a distinct sandbox hostname. The Catalog
+    Data Ingestion API's declared server is the sandbox host, i.e. the published contract
+    points at sandbox by default.
+- name: Firefly Services trial
+  scope: Firefly API, Firefly Services (Photoshop, Lightroom, Illustrator, InDesign, Express, Substance 3D, audio/video)
+  description: >-
+    A trial entitlement exists but Adobe publishes no trial quota figure. Exhaustion is
+    signalled at runtime as HTTP 402 "Trial Limit Exceeded", documented on 24 operations
+    across the Firefly specs.
+  runtime_signal: 402 Trial Limit Exceeded
+- name: Adobe Express add-on local development
+  scope: Adobe Express Add-on SDK
+  docs: https://developer.adobe.com/express/add-ons/docs/guides/getting-started/local-development/
+  description: >-
+    `npx @adobe/create-ccweb-add-on` scaffolds an add-on and serves it over HTTPS locally;
+    Adobe Express loads it from localhost in developer mode before any marketplace
+    submission.
+  self_serve: true
+- name: Journey Optimizer stage endpoints
+  scope: Adobe Journey Optimizer
+  evidence: >-
+    Several harvested AJO specs declare stage servers alongside production, e.g.
+    https://platform-stage.adobe.io/ajo (messaging, content, suppression,
+    orchestrated-campaign-dataset, journey-retrieve).
+  note: >-
+    These are Adobe-internal staging hosts that leaked into published contracts rather
+    than a customer-facing sandbox. Two AJO loyalty specs even declare
+    http://localhost:8080 as their first server. Recorded as a spec-hygiene finding.
+test_values:
+  test_cards: none
+  test_bank_accounts: none
+  magic_identifiers: none
+  test_clocks: none
+  fixture_tooling: none
+  note: >-
+    Adobe publishes no magic test values of any kind. The only published, non-secret
+    credential found anywhere in the estate is the Adobe Status API's documented public
+    api_key value ("StatusAdobeIOClient",
+    openapi/adobe-suite-status-openapi.yaml) — an anonymous read key for the status
+    service, not a sandbox credential.
+gaps:
+- No sandbox host for PDF Services, Firefly Services, Analytics or Workfront.
+- No published trial quota for Firefly Services.
+- No replayable fixtures or event simulators for Adobe I/O Events.

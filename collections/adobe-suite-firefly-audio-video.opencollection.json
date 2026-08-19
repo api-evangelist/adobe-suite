@@ -1,0 +1,317 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Firefly Services Audio and Video API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Text-to-speech",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get available voices",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v1/voices"
+          },
+          "docs": "This endpoint provides the list of all available voices for the user's enterprise."
+        },
+        {
+          "info": {
+            "name": "Generate speech from text",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/generate-speech",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "This endpoint generates speech from a transcript. You can provide the transcript either as plain text or a pre-signed URL. The response will include a job ID and a status URL for tracking the job."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Manage jobs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get job status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v1/status/:jobId",
+            "params": [
+              {
+                "name": "jobId",
+                "value": "",
+                "type": "path",
+                "description": "The job ID of an asynchronous job."
+              }
+            ]
+          },
+          "docs": "Provides the status and result of an asynchronous job. For Dynamic Graphics Render (DGR), returns the status of a Describe template or Render job."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Dynamic Graphics Render",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Describe template",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/templates/describe",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Analyzes a MOGRT (video template) file and returns a manifest of editable controls; fonts, images, audio, video and other supported values."
+        },
+        {
+          "info": {
+            "name": "Fetch video rendering presets",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v1/presets"
+          },
+          "docs": "Returns a list of predefined social-first encoding presets for rendering outputs."
+        },
+        {
+          "info": {
+            "name": "Render template",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/templates/render",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Renders one or more video variations by applying overrides and export presets. Submit up to 10 overrides per call for a subset of editable layers and get a pre-signed URL link to download the video file. For layers that are not editable, the system defaults are automatically applied at export."
+        },
+        {
+          "info": {
+            "name": "Cancel a render job",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://audio-video-api.adobe.io/v1/cancel/:jobId",
+            "headers": [
+              {
+                "name": "x-request-id",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "jobId",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the render job to cancel, as returned in the `jobId` field of the original 202 submit response or in the `cancelUrl` property of a List Render Jobs response item."
+              }
+            ]
+          },
+          "docs": "Aborts an in-flight render job. Returns `202 Accepted` as soon as the cancellation has been accepted; subsequent calls to `GET /v1/status/{jobId}` will report `\"status\": \"canceled\"` once the worker has fully stopped the underlying render.\n\n**Applicable only to render jobs submitted via `POST /v1/templates/render`.** This endpoint does not apply to Describe, Reframe, TLS, TTS, or Avatar jobs.\n\n**Notes:**\n- Cancellation is idempotent.\n- Once propagated to the worker, in-progress outputs are not up"
+        },
+        {
+          "info": {
+            "name": "List render jobs",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v1/templates/render-jobs",
+            "headers": [
+              {
+                "name": "x-request-id",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "filter",
+                "value": "",
+                "type": "query",
+                "description": "FIQL filter string. Supported sub-params: `status` (enum) and `createdDate` (ISO 8601 date-time or relative duration). Default: `createdDate=ge=-P30D;status=in=(not_started,running,succeeded,partially_succeeded,failed,canceled)`."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of job entries to return per page. Must be between 1 and 100 (inclusive). Defaults to 20."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Opaque pagination cursor returned in `paging.nextUrl` of a previous response. Omit to fetch the first page."
+              }
+            ]
+          },
+          "docs": "Returns a paginated list of template render jobs owned by the authenticated caller, optionally filtered by status and creation date.\n\n**Applicable only to render jobs submitted via `POST /v1/templates/render`.** Jobs from other API types (Describe, Reframe, TLS, TTS, Avatar) are not returned.\n\n**Filter syntax (FIQL):**\n- `status==running` — single status equality\n- `status=in=(running,not_started)` — status set membership\n- `createdDate=ge=2026-05-01T00:00:00Z` — absolute ISO 8601 lower bound\n- "
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Reframe",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Reframe video",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/reframe",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "This endpoint enables you to reframe video using AI. Provide video input with a pre-signed URL to generate reframed video output. \n\nThis API has more limited capabilities than the v2 endpoint, and may be deprecated soon. **It's recommended to use the v2 endpoint instead.**"
+        },
+        {
+          "info": {
+            "name": "Reframe video v2",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v2/reframe",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "This endpoint enables you to reframe the input media. You can provide a video input via a pre-signed URL to generate reframed output video."
+        },
+        {
+          "info": {
+            "name": "Get job result",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v2/status/:jobId",
+            "params": [
+              {
+                "name": "jobId",
+                "value": "",
+                "type": "path",
+                "description": "The job ID to get status for an asynchronous generate reframed video job."
+              }
+            ]
+          },
+          "docs": "This endpoint retrieves the result of an asynchronous reframed job initiated using the job ID."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Translate and lip sync",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Transcribe media",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/transcribe",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Generates transcripts and captions for the input audio or video in the source language or in a target language."
+        },
+        {
+          "info": {
+            "name": "Dub audio or video",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/dub",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Generate dubbed video or audio. A composited lip sync can also be added for video dubbing."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Text-to-Avatar",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get available avatars",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://audio-video-api.adobe.io/v1/avatars"
+          },
+          "docs": "Retrieves the list of all available avatars for the user's enterprise."
+        },
+        {
+          "info": {
+            "name": "Generate avatar video from text",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://audio-video-api.adobe.io/v1/generate-avatar",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Generates an avatar video from a provided transcript or audio file. You can provide the transcript either as plain text or a pre-signed URL. The API is asynchronous, so the response will include a job ID and a status URL for tracking the running job."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

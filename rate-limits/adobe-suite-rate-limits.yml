@@ -4,7 +4,21 @@ schema: https://raw.githubusercontent.com/api-evangelist/interface-research/main
 provider: Adobe Suite
 providerId: adobe-suite
 created: '2026-05-04'
-modified: '2026-05-04'
+modified: '2026-08-13'
+generated: '2026-08-13'
+method: searched
+source: >-
+  https://developer.adobe.com/document-services/docs/overview/limits ,
+  https://developer.adobe.com/firefly-services/docs/firefly-api/guides/concepts/rate-limits/ ,
+  https://developer.adobe.com/express/api/docs/getting-started/rate-limits/ ,
+  https://developer.adobe.com/analytics-apis/docs/2.0/guides/faq/ ,
+  and the AdobeDocs source markdown for each of those pages
+note: >-
+  REPLACES the 2026-05-04 scaffold, which carried invented free/professional/enterprise
+  tiers that Adobe does not publish. Adobe publishes rate limits PER PRODUCT, not per
+  plan tier, and the numbers below are quoted from Adobe's own documentation. There is
+  no house-wide limit and no X-RateLimit-* response header family anywhere in Adobe's
+  documentation — the only runtime signal Adobe documents is HTTP 429 plus Retry-After.
 tags:
   - Ai
   - Analytics
@@ -20,186 +34,142 @@ tags:
   - Rate Limiting
   - Quotas
   - Throttling
-description: Machine-readable rate limit definitions for the Adobe Suite API surface. Captures per-tier
-  quotas, burst behavior, response signaling, and recovery semantics. Defaults are scaffold values to
-  be replaced with published provider limits.
+description: >-
+  Published rate limits for the Adobe API surface, captured per product family from
+  Adobe's own limits documentation. Records the enforcement scope, window, numeric
+  limit, the response code on exhaustion, and the response headers Adobe documents.
 headers:
-  limit: X-RateLimit-Limit
-  remaining: X-RateLimit-Remaining
-  reset: X-RateLimit-Reset
+  limit: null
+  remaining: null
+  reset: null
   retryAfter: Retry-After
-  policy: RateLimit-Policy
+  policy: null
+  note: >-
+    Adobe documents NO X-RateLimit-*/RateLimit-* response headers on any of its APIs. An
+    agent cannot read remaining budget from an Adobe response; it can only detect
+    exhaustion after the fact via 429 and back off using Retry-After where present.
+    Adobe Admin APIs and Cloud Storage explicitly document Retry-After on 429; Firefly,
+    Express and Analytics document 429 and recommend Retry-After or exponential backoff.
 responseCodes:
   throttled: 429
   quotaExceeded: 429
+  trialExhausted: 402
   serviceUnavailable: 503
+  note: >-
+    402 Payment Required appears on 24 Firefly Services operations as "Trial Limit
+    Exceeded" — a quota signal that is NOT a rate limit and must NOT be retried.
 limits:
-  - tier: free
-    name: Free Tier Default
+  - name: Firefly API — per organization, per minute
+    scope: organization
+    metric: requests_per_minute
+    limit: 4
+    timeFrame: minute
+    applies: [Adobe Firefly API]
+    docs: https://developer.adobe.com/firefly-services/docs/firefly-api/guides/concepts/rate-limits/
+    note: Default. Higher limits only via an account manager.
+  - name: Firefly API — per organization, per day
+    scope: organization
+    metric: requests_per_day
+    limit: 9000
+    timeFrame: day
+    applies: [Adobe Firefly API]
+    docs: https://developer.adobe.com/firefly-services/docs/firefly-api/guides/concepts/rate-limits/
+    note: >-
+      Stays at 9,000/day even when the per-minute limit is raised, unless renegotiated
+      separately. This is the ceiling that actually binds high-volume creative automation.
+  - name: Express API — default
     scope: api-key
     metric: requests_per_minute
-    limit: 10
-    burst: 20
+    limit: 50
     timeFrame: minute
-    applies:
-      - Adobe Photoshop API
-      - Adobe Lightroom API
-      - Adobe Illustrator API
-      - Adobe InDesign API
-      - Adobe PDF Services API
-      - Adobe PDF Extract API
-      - Adobe PDF Accessibility Auto-Tag API
-      - Adobe Sign API
-      - Adobe Analytics API
-      - Adobe Experience Manager API
-      - Adobe Stock API
-      - Adobe Firefly API
-      - Adobe Firefly Audio/Video APIs
-      - Adobe Creative Cloud Libraries API
-      - Adobe Express Embed SDK
-      - Adobe Premiere Pro API
-      - Adobe After Effects API
-      - Adobe Experience Platform API
-      - Adobe Target API
-      - Adobe Campaign API
-      - Adobe Marketo Engage API
-      - Adobe Commerce API
-      - Adobe User Management API
-  - tier: free
-    name: Free Tier Monthly Quota
-    scope: api-key
-    metric: requests_per_month
-    limit: 1000
-    timeFrame: month
-    applies:
-      - Adobe Photoshop API
-      - Adobe Lightroom API
-      - Adobe Illustrator API
-      - Adobe InDesign API
-      - Adobe PDF Services API
-      - Adobe PDF Extract API
-      - Adobe PDF Accessibility Auto-Tag API
-      - Adobe Sign API
-      - Adobe Analytics API
-      - Adobe Experience Manager API
-      - Adobe Stock API
-      - Adobe Firefly API
-      - Adobe Firefly Audio/Video APIs
-      - Adobe Creative Cloud Libraries API
-      - Adobe Express Embed SDK
-      - Adobe Premiere Pro API
-      - Adobe After Effects API
-      - Adobe Experience Platform API
-      - Adobe Target API
-      - Adobe Campaign API
-      - Adobe Marketo Engage API
-      - Adobe Commerce API
-      - Adobe User Management API
-  - tier: professional
-    name: Professional Tier Default
-    scope: api-key
+    applies: [Adobe Express Embed SDK]
+    docs: https://developer.adobe.com/express/api/docs/getting-started/rate-limits/
+  - name: Express API — Export Rendition endpoint
+    scope: client-id
+    metric: requests_per_minute
+    limit: 5
+    timeFrame: minute
+    endpoint: /beta/export-rendition
+    applies: [Adobe Express Embed SDK]
+    docs: https://developer.adobe.com/express/api/docs/getting-started/rate-limits/
+    note: >-
+      Enforced at the route level — image, PDF and video exports share the same
+      5-per-minute budget and are not counted separately by format.
+  - name: PDF Services — Free Tier
+    scope: credential
+    metric: requests_per_minute
+    limit: 25
+    timeFrame: minute
+    applies: [Adobe PDF Services API, Adobe PDF Extract API, Adobe PDF Accessibility Auto-Tag API]
+    docs: https://developer.adobe.com/document-services/docs/overview/limits
+  - name: PDF Services — Enterprise
+    scope: credential
     metric: requests_per_minute
     limit: 100
-    burst: 200
     timeFrame: minute
-    applies:
-      - Adobe Photoshop API
-      - Adobe Lightroom API
-      - Adobe Illustrator API
-      - Adobe InDesign API
-      - Adobe PDF Services API
-      - Adobe PDF Extract API
-      - Adobe PDF Accessibility Auto-Tag API
-      - Adobe Sign API
-      - Adobe Analytics API
-      - Adobe Experience Manager API
-      - Adobe Stock API
-      - Adobe Firefly API
-      - Adobe Firefly Audio/Video APIs
-      - Adobe Creative Cloud Libraries API
-      - Adobe Express Embed SDK
-      - Adobe Premiere Pro API
-      - Adobe After Effects API
-      - Adobe Experience Platform API
-      - Adobe Target API
-      - Adobe Campaign API
-      - Adobe Marketo Engage API
-      - Adobe Commerce API
-      - Adobe User Management API
-  - tier: professional
-    name: Professional Tier Monthly Quota
-    scope: api-key
-    metric: requests_per_month
-    limit: 100000
-    timeFrame: month
-    applies:
-      - Adobe Photoshop API
-      - Adobe Lightroom API
-      - Adobe Illustrator API
-      - Adobe InDesign API
-      - Adobe PDF Services API
-      - Adobe PDF Extract API
-      - Adobe PDF Accessibility Auto-Tag API
-      - Adobe Sign API
-      - Adobe Analytics API
-      - Adobe Experience Manager API
-      - Adobe Stock API
-      - Adobe Firefly API
-      - Adobe Firefly Audio/Video APIs
-      - Adobe Creative Cloud Libraries API
-      - Adobe Express Embed SDK
-      - Adobe Premiere Pro API
-      - Adobe After Effects API
-      - Adobe Experience Platform API
-      - Adobe Target API
-      - Adobe Campaign API
-      - Adobe Marketo Engage API
-      - Adobe Commerce API
-      - Adobe User Management API
-  - tier: enterprise
-    name: Enterprise Negotiated Limit
-    scope: contract
-    metric: requests_per_minute
-    limit: 1000
-    burst: 5000
-    timeFrame: minute
-    applies:
-      - Adobe Photoshop API
-      - Adobe Lightroom API
-      - Adobe Illustrator API
-      - Adobe InDesign API
-      - Adobe PDF Services API
-      - Adobe PDF Extract API
-      - Adobe PDF Accessibility Auto-Tag API
-      - Adobe Sign API
-      - Adobe Analytics API
-      - Adobe Experience Manager API
-      - Adobe Stock API
-      - Adobe Firefly API
-      - Adobe Firefly Audio/Video APIs
-      - Adobe Creative Cloud Libraries API
-      - Adobe Express Embed SDK
-      - Adobe Premiere Pro API
-      - Adobe After Effects API
-      - Adobe Experience Platform API
-      - Adobe Target API
-      - Adobe Campaign API
-      - Adobe Marketo Engage API
-      - Adobe Commerce API
-      - Adobe User Management API
+    applies: [Adobe PDF Services API, Adobe PDF Extract API, Adobe PDF Accessibility Auto-Tag API]
+    docs: https://developer.adobe.com/document-services/docs/overview/limits
+  - name: Adobe Analytics 2.0 — per user
+    scope: user
+    metric: requests_per_6_seconds
+    limit: 12
+    timeFrame: 6 seconds
+    equivalent: approximately 120 requests per minute
+    applies: [Adobe Analytics API]
+    docs: https://developer.adobe.com/analytics-apis/docs/2.0/guides/faq/
+    error_body: '{"error_code":"429050","message":"Too many requests"}'
+  - name: Adobe Admin APIs (Storage Management)
+    scope: client-id
+    metric: requests_per_second
+    limit: 20
+    timeFrame: second
+    applies: [Adobe User Management API]
+    docs: https://developer.adobe.com/adobe-admin-apis/docs/guides/overview/limits/
+    retry_after: true
+  - name: Adobe Cloud Storage and Collaboration API
+    scope: client-id
+    metric: requests_per_second
+    limit: 20
+    timeFrame: second
+    applies: [Adobe Creative Cloud Libraries API]
+    docs: https://developer.adobe.com/cloud-storage/docs/guides/overview/limits/
+    retry_after: true
+constraints:
+  - name: adobe.io request timeout
+    value: 60 seconds
+    docs: https://developer.adobe.com/analytics-apis/docs/2.0/guides/faq/
+    note: Requests submitted through adobe.io time out at 60 seconds.
+  - name: PDF Services file size
+    value: 100MB
+    docs: https://developer.adobe.com/document-services/docs/overview/limits
+  - name: Firefly Object Composite max image size
+    value: 10MB
+    docs: https://developer.adobe.com/firefly-services/docs/firefly-api/guides/api/
+  - name: AEP small-file upload threshold
+    value: 256MB
+    docs: openapi/adobe-suite-aep-batch-ingestion-openapi.yaml
 policies:
   - name: Backoff Strategy
-    description: Clients should implement exponential backoff with jitter, honoring the Retry-After header
-      when present.
-  - name: Burst Handling
-    description: Short bursts above the steady-state limit are tolerated up to the documented burst ceiling
-      before throttling engages.
-  - name: Quota Reset
-    description: Monthly quotas reset at the start of each calendar month in UTC. Per-minute and per-second
-      windows reset on a sliding-window basis.
-  - name: Fair Use
-    description: Even on uncapped enterprise tiers, sustained usage that materially impacts shared infrastructure
-      may be subject to fair-use throttling.
+    description: >-
+      Adobe documents, on every rate-limited product, that clients should implement retry
+      logic using the Retry-After HTTP header or an exponential backoff strategy.
+  - name: Limit increases
+    description: >-
+      Higher limits are not self-service. Firefly and Express both direct developers to
+      an account manager; Express also publishes a request form at
+      https://www.adobe.com/go/express-api-ratelimiting.
+  - name: Analytics polling guidance
+    description: >-
+      Adobe explicitly advises not polling for new Analytics data faster than a 30-minute
+      interval, and pulling historical data incrementally rather than re-requesting the
+      whole set.
+undocumented:
+  - >-
+    Experience Platform, Journey Optimizer, Cloud Manager, Commerce, Workfront and the
+    VIP Marketplace Partner API document 429 responses in their OpenAPI (1,672 documented
+    429 responses across the repo) but publish no numeric limit. Those products are
+    rate-limited in practice with no published budget.
+limit_count: 9
 maintainers:
   - FN: Kin Lane
     email: kin@apievangelist.com

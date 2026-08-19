@@ -1,0 +1,179 @@
+generated: '2026-08-13'
+method: searched
+source: >-
+  openapi/ (70 documents, 2,857 operations) plus
+  https://developer.adobe.com/developer-console/docs/guides/authentication/ ,
+  https://developer.adobe.com/analytics-apis/docs/2.0/guides/endpoints/bulk-data-insertion/endpoints/ ,
+  https://developer.adobe.com/analytics-apis/docs/2.0/guides/faq/
+note: >-
+  Adobe does not operate one API. It operates roughly a dozen product APIs that share
+  exactly three things — the IMS bearer token, the x-api-key header, and the
+  x-gw-ims-org-id tenancy header — and diverge on everything else: pagination, error
+  envelope, versioning and async model are all per-family. This artifact records the
+  shared core first, then the divergence, because the divergence is what an agent
+  actually trips over.
+authentication:
+  style: bearer + api-key + tenancy header
+  headers:
+    - {name: Authorization, value: 'Bearer <IMS access token>', occurrences: 1494}
+    - {name: x-api-key, value: '<Client ID from Adobe Developer Console>', occurrences: 2326}
+    - {name: x-gw-ims-org-id, value: '<IMS Org ID>', occurrences: 1660, note: Experience Cloud tenancy selector.}
+  token_endpoint: https://ims-na1.adobelogin.com/ims/token/v3
+  token_lifetime: 24 hours
+  cross_link: authentication/adobe-suite-authentication.yml
+idempotency:
+  supported: partial
+  model: >-
+    Adobe has no house idempotency-key contract. Exactly one product publishes an
+    idempotency key header, and elsewhere idempotency is only the natural HTTP-method
+    guarantee described in prose.
+  keyed:
+    - product: Adobe Analytics Bulk Data Insertion API (BDIA)
+      header: x-adobe-idempotency-key
+      required: false
+      scope: per file upload
+      purpose: >-
+        "Allows you to store a reference to your unique file identifier for the upload.
+        This value can be used for duplication protection in cases when your request does
+        not return a response from Adobe." (Adobe, verbatim)
+      response_field: idempotency_key
+      response_fallback: >-
+        If the header is omitted, Adobe generates file_id and echoes it back as
+        idempotency_key.
+      docs: https://developer.adobe.com/analytics-apis/docs/2.0/guides/endpoints/bulk-data-insertion/endpoints/
+      spec: openapi/adobe-suite-analytics-bulk-data-insertion-openapi.json
+  method_semantics_only:
+    - product: Adobe Experience Platform Batch Ingestion
+      operation: uploadSmallFile
+      note: >-
+        "The PUT method creates or updates the entire request stream as the file bytes
+        under the path denoted by the filePath and is idempotent." Replace-semantics, no key.
+      spec: openapi/adobe-suite-aep-batch-ingestion-openapi.yaml
+    - product: Firefly Services Audio/Video
+      operation: cancel-render-job
+      note: '"Cancellation is idempotent." Repeat cancels are safe; no key.'
+      spec: openapi/adobe-suite-firefly-audio-video-openapi.json
+  gap: >-
+    None of the 87 Firefly Services generation operations, none of the 49 PDF Services
+    operations and none of the 186 Commerce operations accepts an idempotency key. A
+    retried generative POST bills twice.
+pagination:
+  style: per-family (no house standard)
+  families:
+    - product: Adobe Experience Platform
+      style: cursor
+      params: [start, limit, orderby]
+      response: '_links.next'
+      note: Catalog and Schema Registry use _links.next with an opaque continuation.
+    - product: Adobe Analytics 2.0
+      style: offset
+      params: [page, limit]
+      response: [totalPages, totalElements, number, numberOfElements, firstPage, lastPage]
+    - product: Adobe Commerce REST
+      style: offset
+      params: ['searchCriteria[currentPage]', 'searchCriteria[pageSize]']
+      response: [total_count]
+    - product: Workfront
+      style: offset
+      params: ['$$FIRST', '$$LIMIT']
+    - product: Cloud Manager
+      style: offset
+      params: [start, limit]
+      response: '_links (HAL)'
+  gap: No shared pagination vocabulary across Adobe products. An agent must special-case each family.
+field_selection:
+  expansion:
+    - product: Cloud Manager
+      note: HAL _embedded expansion via the Accept header and _links traversal.
+    - product: Workfront
+      params: [fields]
+      note: '`fields` query parameter selects returned attributes and nested collections.'
+    - product: Adobe Experience Platform Catalog
+      params: [properties]
+  sparse_fields: partial
+metadata:
+  supported: partial
+  note: >-
+    Experience Platform objects carry an `imsOrg`/`sandboxName` envelope and Workfront
+    supports custom (`DE:`-prefixed) fields, but there is no cross-product `metadata`
+    key-value convention.
+request_tracing:
+  header: x-request-id
+  occurrences_in_specs: 1494
+  direction: response (and accepted on request by several families)
+  note: >-
+    The most consistently present cross-cutting header after auth. Adobe's own error
+    bodies echo a requestId — the AEM MCP 401 probe returned
+    `"data":{"requestId":"75a472af-..."}`. Quote it in support tickets.
+versioning:
+  schemes:
+    - product: Adobe Analytics
+      scheme: uri-path
+      current: '2.0'
+    - product: Adobe Experience Platform
+      scheme: uri-path per service
+      note: e.g. /data/foundation/catalog, /data/core/ups — versioned per service, not globally.
+    - product: PDF Services
+      scheme: assetId-per-operation
+      note: >-
+        "each operation has a unique assetId which is passed in Form Parameters... If its
+        functionality can't be enhanced without breaking changes, then its new version
+        will be released with its own unique assetId." (Adobe, verbatim)
+    - product: Firefly Services
+      scheme: uri-path
+      current: v3 / v4 depending on model generation
+      note: 'e.g. /v4/images/generate-async'
+    - product: Workfront
+      scheme: uri-path
+      current: v19.0
+      server: https://{domain}.my.workfront.com/attask/api/v19.0
+    - product: Adobe Commerce
+      scheme: uri-path + release
+      current: 2.4.6 schema
+  cross_link: lifecycle/adobe-suite-lifecycle.yml
+error_envelope:
+  house_standard: false
+  rfc9457: false
+  note: >-
+    application/problem+json appears on exactly 1 of 1,264 documented error response
+    bodies. Shapes vary per family.
+  cross_link: errors/adobe-suite-problem-types.yml
+rate_limit_signaling:
+  headers_published: [Retry-After]
+  ratelimit_headers_published: []
+  status_on_exhaustion: 429
+  trial_exhaustion_status: 402
+  note: >-
+    No X-RateLimit-* or RateLimit-* family anywhere. An agent cannot read remaining budget
+    before exhausting it.
+  cross_link: rate-limits/adobe-suite-rate-limits.yml
+async_model:
+  pattern: submit-then-poll
+  note: >-
+    The creative and document APIs are asynchronous by default: POST returns 202 with a
+    status URL, and the client polls until terminal. Firefly Services, Photoshop,
+    Lightroom, InDesign, PDF Services and Substance 3D all follow this shape. Job status
+    endpoints are the second-most-common operation class in the repo after CRUD.
+  examples:
+    - {operation: cancel-render-job, spec: openapi/adobe-suite-firefly-audio-video-openapi.json}
+    - path: '/v1/status/{jobId}'
+      spec: openapi/adobe-suite-firefly-audio-video-openapi.json
+  webhook_alternative: >-
+    Adobe I/O Events can deliver job completion instead of polling — see
+    asyncapi/adobe-suite-webhooks.yml.
+timeouts:
+  gateway: 60 seconds
+  note: Requests submitted through adobe.io time out at 60 seconds (Adobe Analytics FAQ).
+regional_routing:
+  note: >-
+    Several APIs publish regional hostnames for data-residency: Analytics bulk collection
+    offers analytics-collection-us.adobe.io and analytics-collection-eu.adobe.io; PDF
+    Services publishes pdf-services-ue1.adobe.io (US East) and pdf-services-ew1.adobe.io
+    (EU West); Experience Platform templatizes {environment}.adobe.io.
+cross_links:
+  authentication: authentication/adobe-suite-authentication.yml
+  scopes: scopes/adobe-suite-scopes.yml
+  errors: errors/adobe-suite-problem-types.yml
+  lifecycle: lifecycle/adobe-suite-lifecycle.yml
+  rate_limits: rate-limits/adobe-suite-rate-limits.yml
+  data_model: data-model/adobe-suite-data-model.yml

@@ -1,0 +1,155 @@
+generated: '2026-08-13'
+method: derived
+source: >-
+  openapi/ (70 first-party documents, 2,857 operations),
+  well-known/adobe-suite-openid-configuration.json,
+  well-known/adobe-suite-oauth-authorization-server.json,
+  well-known/adobe-suite-security.txt,
+  https://www.adobe.com/trust/compliance/compliance-list.html
+note: >-
+  Standards conformance is asserted only where there is evidence in a harvested artifact
+  or a probed document. Where Adobe operates a standard in production but does not
+  express it in a machine-readable contract, that is recorded as `conforms: partial` with
+  the gap named — that gap is the most useful finding here.
+standards:
+- id: oauth2
+  conforms: true
+  evidence: >-
+    Live RFC 8414 authorization-server metadata at
+    https://ims-na1.adobelogin.com/.well-known/oauth-authorization-server (HTTP 200);
+    client_credentials and authorization_code grants documented; token endpoint
+    https://ims-na1.adobelogin.com/ims/token/v3.
+- id: oidc
+  conforms: true
+  evidence: >-
+    Live OIDC discovery at https://ims-na1.adobelogin.com/.well-known/openid-configuration
+    (HTTP 200) with issuer, jwks_uri, userinfo_endpoint, id_token_signing_alg_values_supported
+    [RS256], subject_types_supported [public], and claims_supported.
+- id: rfc8414-oauth-authorization-server-metadata
+  conforms: true
+  evidence: well-known/adobe-suite-oauth-authorization-server.json
+- id: rfc7636-pkce
+  conforms: true
+  evidence: 'code_challenge_methods_supported: [S256, plain] in the IMS discovery document.'
+- id: rfc7591-dynamic-client-registration
+  conforms: partial
+  evidence: >-
+    IMS advertises registration_endpoint https://ims-na1.adobelogin.com/ims/register, but
+    Adobe documents credential creation through the Developer Console UI, not through the
+    registration endpoint.
+- id: oauth2-in-openapi
+  conforms: false
+  evidence: >-
+    Zero of the 70 harvested specs declares an `oauth2` securityScheme. Adobe's OAuth is
+    real but invisible to any tool that reads only the contract.
+- id: rfc9116-security-txt
+  conforms: true
+  evidence: >-
+    https://www.adobe.com/.well-known/security.txt (HTTP 200, text/plain, PGP-signed) with
+    Contact, Expires (2027-07-30), Encryption, Acknowledgments, Preferred-Languages,
+    Canonical, Policy and Hiring fields.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: >-
+    application/problem+json appears on exactly 1 of 1,264 documented error response
+    bodies across the whole estate; application/json on 1,247.
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: No Sunset or Deprecation header on any harvested contract.
+- id: ratelimit-headers
+  conforms: false
+  evidence: >-
+    No X-RateLimit-* or RateLimit-* response header is documented on any Adobe API.
+    Retry-After on 429 is the only runtime throttling signal.
+- id: openapi-3
+  conforms: true
+  evidence: >-
+    52 of 70 harvested documents are OpenAPI 3.x (3.0.0 through 3.1.0); the remaining 18
+    are Swagger 2.0, concentrated in Analytics 2.0, Cloud Manager, Commerce REST, Marketo,
+    CC Libraries, VIP Marketplace and the AEP Schema Registry.
+- id: openapi-3.1
+  conforms: partial
+  evidence: 'Reactor, Firefly, Substance 3D, Cloud Manager events, Photoshop, translate-lipsync and AJO loyalty are 3.1.0.'
+- id: openapi-webhooks
+  conforms: true
+  evidence: >-
+    openapi/adobe-suite-cloud-manager-events-openapi.yaml is an OpenAPI 3.1.0 document
+    that uses the `webhooks` root object to define 5 Cloud Manager pipeline events.
+- id: asyncapi
+  conforms: false
+  evidence: >-
+    No AsyncAPI document is published anywhere in the AdobeDocs GitHub organization.
+    Adobe's event surface (Adobe I/O Events) is documented in prose and, for Cloud
+    Manager only, as OpenAPI webhooks.
+- id: cloudevents
+  conforms: partial
+  evidence: >-
+    Adobe I/O Events delivers CloudEvents-shaped JSON to registered webhooks and the
+    journaling API, documented at https://developer.adobe.com/events/docs/ ; no
+    machine-readable event schema registry is published.
+- id: graphql
+  conforms: true
+  evidence: >-
+    Adobe Commerce publishes a GraphQL API
+    (https://developer.adobe.com/commerce/webapi/graphql-api/) and AEM ships a headless
+    GraphQL client (@adobe/aem-headless-client-js). Endpoints are per-tenant, so SDL
+    could not be introspected anonymously.
+- id: mcp
+  conforms: true
+  evidence: >-
+    Two live remote MCP endpoints (marketo-mcp.adobe.io/mcp, mcp.adobeaemcloud.com/adobe/mcp/aem)
+    both answered a JSON-RPC 2.0 tools/list probe with 401, plus a first-party stdio server
+    @adobe/express-developer-mcp. See mcp/adobe-suite-mcp.yml.
+- id: a2a-agent-card
+  conforms: false
+  evidence: >-
+    Probed /.well-known/agent-card.json and /.well-known/agent.json on 13 Adobe hosts on
+    2026-08-13. No host served an AgentCard. developer.adobe.com answers 200 with an SPA
+    HTML shell on every /.well-known path and is not a hit.
+- id: llms-txt
+  conforms: true
+  evidence: >-
+    https://experienceleague.adobe.com/llms.txt (HTTP 200, 52,729 bytes) and
+    https://www.adobe.com/llms.txt (HTTP 200, 10,499 bytes). developer.adobe.com — the
+    API developer portal — serves no llms.txt.
+- id: scim2
+  conforms: partial
+  evidence: >-
+    Adobe User Management API performs SCIM-equivalent user/group/entitlement management
+    but does not implement the SCIM 2.0 protocol or schema paths.
+- id: odata
+  conforms: false
+- id: fhir-r4
+  conforms: false
+- id: fapi
+  conforms: false
+- id: psd2
+  conforms: false
+- id: json-api
+  conforms: partial
+  evidence: >-
+    The Adobe Experience Platform Reactor API (openapi/adobe-suite-aep-reactor-openapi.yaml,
+    137 operations) uses JSON:API document structure (data/attributes/relationships/links).
+    No other Adobe API does.
+- id: hal
+  conforms: partial
+  evidence: 'Cloud Manager (106 operations) uses HAL _links/_embedded throughout.'
+- id: pdf-iso-32000-2
+  conforms: true
+  evidence: 'Listed on the Adobe compliance matrix as an Adobe-wide accessibility/standards commitment.'
+- id: pdf-ua-iso-14289-1
+  conforms: true
+  evidence: 'Listed on the Adobe compliance matrix; the PDF Accessibility Auto-Tag API is built for it.'
+- id: wcag-2.2-aa
+  conforms: true
+  evidence: 'Adobe-wide accessibility commitment on the compliance matrix.'
+compliance_program:
+  published: true
+  url: https://www.adobe.com/trust/compliance/compliance-list.html
+  certifications: [SOC 2 Type 2, SOC 3, ISO 27001:2022, ISO 27017:2015, ISO 27018:2019, ISO 22301:2019, ISO 9001:2015, PCI DSS, HIPAA ready, FedRAMP Tailored, CSA STAR Level 2, C5, IRAP, ISMAP, TISAX, CMMC Level 1, GDPR, CCPA]
+  cross_link: security/adobe-suite-trust-center.yml
+summary:
+  asserted: 30
+  conforms_true: 15
+  conforms_partial: 8
+  conforms_false: 7

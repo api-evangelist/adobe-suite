@@ -1,0 +1,99 @@
+generated: '2026-08-13'
+method: searched
+source: https://raw.githubusercontent.com/AdobeDocs/ff-services-docs/main/src/pages/guides/get-started.md
+docs: https://developer.adobe.com/developer-console/docs/guides/authentication/
+discovery: https://ims-na1.adobelogin.com/.well-known/openid-configuration
+note: >-
+  None of the 70 harvested Adobe OpenAPI documents declares an `oauth2` securityScheme —
+  every spec models auth as an apiKey header (`x-api-key`) plus an HTTP bearer token, so
+  a spec-only derivation would report zero scopes. The scopes below are real: they are
+  quoted from Adobe's own Firefly Services getting-started guide and corroborated by the
+  live OIDC discovery document at ims-na1.adobelogin.com. This is the gap worth naming —
+  Adobe runs a full OAuth 2.0 / OIDC authorization server (IMS) but does not express it
+  in any published contract.
+authorization_server:
+  issuer: https://ims-na1.adobelogin.com
+  authorization_endpoint: https://ims-na1.adobelogin.com/ims/authorize/v2
+  token_endpoint: https://ims-na1.adobelogin.com/ims/token/v3
+  jwks_uri: https://ims-na1.adobelogin.com/ims/keys
+  revocation_endpoint: https://ims-na1.adobelogin.com/ims/revoke
+  userinfo_endpoint: https://ims-na1.adobelogin.com/ims/userinfo/v2
+  registration_endpoint: https://ims-na1.adobelogin.com/ims/register
+  grant_types_supported: [authorization_code, implicit_grant, refresh_token]
+  code_challenge_methods_supported: [S256, plain]
+  discovery_scopes_supported: [openid, email, profile]
+  note: >-
+    `discovery_scopes_supported` is what RFC 8414 discovery advertises. It is a strict
+    subset of what Adobe actually documents for API access (below) — the product scopes
+    are not published in the discovery document.
+schemes:
+- name: Adobe IMS OAuth Server-to-Server
+  grant: client_credentials
+  token_endpoint: https://ims-na1.adobelogin.com/ims/token/v3
+  token_lifetime: 24 hours
+  source: https://raw.githubusercontent.com/AdobeDocs/ff-services-docs/main/src/pages/guides/get-started.md
+  request_verbatim: >-
+    curl -X POST 'https://ims-na1.adobelogin.com/ims/token/v3' -d
+    'grant_type=client_credentials&client_id=<YOUR_CLIENT_ID>&client_secret=<YOUR_CLIENT_SECRET>&scope=openid,AdobeID,session,additional_info,read_organizations,firefly_api,ff_apis'
+- name: Adobe IMS User Authentication (OAuth Web / SPA / Native App)
+  grant: authorization_code
+  authorization_endpoint: https://ims-na1.adobelogin.com/ims/authorize/v2
+  token_endpoint: https://ims-na1.adobelogin.com/ims/token/v3
+  source: https://developer.adobe.com/developer-console/docs/guides/authentication/
+scopes:
+- scope: openid
+  description: Standard OIDC scope. Returns an ID token identifying the authenticated principal.
+  flows: [client_credentials, authorization_code]
+  sources: [ims-openid-configuration, ff-services-docs]
+- scope: AdobeID
+  description: Core Adobe identity scope. Required on virtually every Adobe API integration.
+  flows: [client_credentials, authorization_code]
+  sources: [ff-services-docs]
+- scope: session
+  description: Establishes an Adobe IMS session alongside the issued token.
+  flows: [client_credentials]
+  sources: [ff-services-docs]
+- scope: additional_info
+  description: Returns additional profile information on the token/userinfo response.
+  flows: [client_credentials]
+  sources: [ff-services-docs]
+- scope: read_organizations
+  description: Read the Adobe organizations (IMS Orgs) the credential is entitled to act on behalf of.
+  flows: [client_credentials]
+  sources: [ff-services-docs]
+- scope: firefly_api
+  description: Access to the Adobe Firefly generative APIs (image, video, custom models).
+  flows: [client_credentials]
+  sources: [ff-services-docs]
+- scope: ff_apis
+  description: Access to the wider Firefly Services API family (Photoshop, Lightroom, Illustrator, InDesign, Express, Substance 3D, audio/video).
+  flows: [client_credentials]
+  sources: [ff-services-docs]
+- scope: email
+  description: OIDC email claim.
+  flows: [authorization_code]
+  sources: [ims-openid-configuration]
+- scope: profile
+  description: OIDC profile claims.
+  flows: [authorization_code]
+  sources: [ims-openid-configuration]
+- scope: additional_info.projectedProductContext
+  description: >-
+    Returns the product context array for the authenticated user — which Adobe products and
+    entitlements they hold. Widely required by Experience Cloud APIs (Analytics, Target,
+    Experience Platform).
+  flows: [authorization_code, client_credentials]
+  sources: [adobe-developer-console-docs]
+gaps:
+- >-
+  Adobe documents "View scopes per service" as an interactive control inside the Developer
+  Console rather than as a published scope reference page, so the complete per-product scope
+  list is only visible to a signed-in developer with a project. The scopes above are the ones
+  Adobe publishes in open documentation.
+- >-
+  No OpenAPI in openapi/ declares an oauth2 securityScheme, so no operation-level scope
+  requirement can be derived. An agent cannot compute least-privilege from Adobe's contracts.
+summary:
+  scope_count: 10
+  oauth2_in_openapi: false
+  oidc_discovery_live: true

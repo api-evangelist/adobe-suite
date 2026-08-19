@@ -1,0 +1,153 @@
+generated: '2026-08-13'
+method: derived
+source: >-
+  mcp/adobe-suite-mcp.yml (published MCP surface) bound against the 70 first-party
+  OpenAPI/Swagger documents in openapi/ (2,857 operations), plus the Adobe Commerce
+  GraphQL surface recorded in graphql/adobe-suite-graphql.md
+note: >-
+  Both Adobe remote MCP endpoints are auth-gated (401 on tools/list), so no live tool
+  manifest with inputSchemas could be read. Tools below are mapped by NAME AND SEMANTICS
+  from Adobe's published tool-family descriptions, and confidence is set accordingly —
+  never `high` for a tool whose schema was never observed. The headline finding is the
+  size of `rest_only`: Adobe publishes 2,857 REST operations and exposes an MCP surface
+  over roughly two products.
+surfaces:
+  openapi:
+    location: openapi/
+    documents: 70
+    operations: 2857
+    gated: false
+  graphql:
+    endpoint: https://commerce.adobe.io (Adobe Commerce GraphQL)
+    docs: https://developer.adobe.com/commerce/webapi/graphql-api/
+    introspection: not-attempted-anonymously
+    gated: true
+    note: Commerce GraphQL is per-tenant; there is no public shared endpoint to introspect.
+  mcp:
+  - name: marketo-engage-mcp
+    url: https://marketo-mcp.adobe.io/mcp
+    gated: true
+    probe_status: 401
+  - name: aem-cloud-service-mcp
+    url: https://mcp.adobeaemcloud.com/adobe/mcp/aem
+    gated: true
+    probe_status: 401
+  - name: adobe-express-developer-mcp
+    transport: stdio
+    gated: false
+    note: Documentation-retrieval server; has no backing REST data plane, so it is excluded from binding.
+crosswalk:
+- tool: marketo.users.list
+  category: user-management
+  rest: [getUsersUsingGET]
+  binding: rest
+  confidence: medium
+  note: >-
+    Marketo MCP documents "instance structure exploration"; the only Marketo REST
+    operations published as OpenAPI in this repo are the User Management service
+    (openapi/adobe-suite-marketo-user-openapi.json). Bound by semantics, not by an
+    observed tool name.
+- tool: marketo.users.invite
+  category: user-management
+  rest: [inviteUserUsingPOST]
+  binding: rest
+  confidence: low
+  note: Inferred from the same User Management spec; no observed MCP tool name.
+- tool: marketo.auth.token
+  category: authentication
+  rest: [identityUsingGET, identityUsingPOST]
+  binding: rest
+  confidence: medium
+  note: >-
+    The MCP server accepts X-Marketo-Client-Id/Secret/Munchkin-Id, i.e. it performs this
+    identity exchange server-side rather than exposing it as a tool. Recorded as the
+    backing operation, not as an agent-callable tool.
+mcp_only:
+- tool: marketo.forms.*
+  reason: >-
+    Adobe documents form browse/create/clone/approve tools, but publishes no OpenAPI for
+    the Marketo Asset API in AdobeDocs — the REST reference lives as prose on Experience
+    League only. No operationId exists to bind to.
+- tool: marketo.smart_campaigns.*
+  reason: Smart Campaign create/configure/activate has no published machine-readable contract.
+- tool: marketo.leads.*
+  reason: Lead and list management has no published OpenAPI; only the Marketo REST prose docs.
+- tool: marketo.programs.*
+  reason: Program create/clone/tag/browse has no published OpenAPI.
+- tool: marketo.emails.*
+  reason: Email and snippet management has no published OpenAPI.
+- tool: marketo.bulk_export.*
+  reason: Bulk Lead Export has no published OpenAPI.
+- tool: aem.*
+  reason: >-
+    The AEM as a Cloud Service MCP server has no counterpart OpenAPI in this repo. Adobe
+    publishes AEM developer reference material but no AEM content/assets OpenAPI in the
+    AdobeDocs org, so every AEM tool is MCP-only against the catalog.
+- tool: express-developer-mcp.*
+  reason: >-
+    Documentation-retrieval tools (semantic doc search, TypeScript definitions). These
+    are not projections of an API; there is nothing to bind.
+rest_only:
+- capability: Workfront work management
+  spec: openapi/adobe-suite-workfront-workflow-openapi.json
+  operations: 1520
+  note: Largest single contract Adobe publishes. No MCP tool.
+- capability: Workfront Planning + Unified Approvals
+  spec: openapi/adobe-suite-workfront-planning-openapi.yaml, openapi/adobe-suite-workfront-unified-approvals-openapi.json
+  operations: 17
+- capability: Experience Platform (schema registry, profile, segmentation, query, flow, destinations, identity, privacy, sandbox, policy, ...)
+  spec: openapi/adobe-suite-aep-*.yaml
+  operations: 570
+  note: 27 separate AEP contracts. No MCP surface.
+- capability: Adobe Commerce REST (guest + customer) and Catalog Data Ingestion
+  spec: openapi/adobe-suite-commerce-*.yaml
+  operations: 186
+  note: Announced at Summit 2026 as MCP-enabled; no published endpoint URL as of 2026-08-13.
+- capability: Cloud Manager (programs, environments, pipelines, executions) + Cloud Manager events
+  spec: openapi/adobe-suite-cloud-manager-openapi.yaml, openapi/adobe-suite-cloud-manager-events-openapi.yaml
+  operations: 106
+- capability: Journey Optimizer (campaigns, journeys, content, messaging, suppression, loyalty, simulations)
+  spec: openapi/adobe-suite-journey-optimizer-*.yaml
+  operations: 91
+- capability: Firefly Services (Firefly image/video, Photoshop v2, Lightroom, Illustrator, InDesign, Express, Substance 3D, audio/video, translate+lipsync, workflow builder)
+  spec: openapi/adobe-suite-firefly-*.json, openapi/adobe-suite-firefly-*.yaml
+  operations: 87
+  note: >-
+    Adobe's flagship generative-AI API family. Entirely REST-only — no agent-callable MCP
+    tool exists for image generation, video generation, or any creative automation.
+- capability: Adobe Analytics 2.0 (reporting, classification, data repair, bulk data insertion)
+  spec: openapi/adobe-suite-analytics-*.json
+  operations: 78
+- capability: PDF Services (create, convert, OCR, extract, auto-tag, seal, combine)
+  spec: openapi/adobe-suite-pdf-services-openapi.json
+  operations: 49
+- capability: VIP Marketplace Partner API
+  spec: openapi/adobe-suite-vip-marketplace-partners-openapi.json
+  operations: 37
+- capability: Creative Cloud Libraries
+  spec: openapi/adobe-suite-cc-libraries-openapi.json
+  operations: 25
+- capability: Photoshop API (v1)
+  spec: openapi/adobe-suite-photoshop-openapi.json
+  operations: 23
+- capability: Media Edge + Edge Network data collection
+  spec: openapi/adobe-suite-media-edge-openapi.yaml, openapi/adobe-suite-data-collection-openapi.yaml
+  operations: 25
+- capability: Lightroom API
+  spec: openapi/adobe-suite-lightroom-openapi.json
+  operations: 18
+- capability: Adobe Status API
+  spec: openapi/adobe-suite-status-openapi.yaml
+  operations: 11
+coverage:
+  mcp_servers_published: 3
+  mcp_servers_remote: 2
+  mcp_servers_stdio: 1
+  tools_named_by_provider: 0
+  tool_families_documented: 13
+  tools_bound_to_rest: 3
+  mcp_only_families: 8
+  rest_operations_total: 2857
+  rest_operations_with_a_tool: 14
+  rest_operations_without_a_tool: 2843
+  rest_coverage_percent: 0.5
