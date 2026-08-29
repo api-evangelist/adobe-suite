@@ -1,0 +1,281 @@
+openapi: 3.2.0
+info:
+  version: '1.0'
+  title: Schema Registry Export/Import API
+  description: "Use the Schema Registry API to access the Schema Library within Adobe Experience Platform. The registry provides a user interface and RESTful API from which all available library resources are accessible.  Programmatically manage all schemas and related Experience Data Model (XDM) resources available to you within Platform. This includes those defined by Adobe, Experience Platform partners, and vendors whose applications you use.\n* **Related documentation**:\n  * [XDM documentation](http://www.adobe.com/go/xdm-home-en)\n\n* **Visualize API calls with Postman (a free, third-party software)**:\n  * [Schema Registry API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Schema%20Registry%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n* **API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io\n  * Base path for this API: /data/foundation/schemaregistry\n  * Example of a complete path for making a call to \"/stats\": https://<span>platform.adobe.io/data/foundation/schemaregistry/stats\n\n* **Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All GET requests to the Schema Registry require an `Accept` header to determine what data is returned by the system. See the [section on `Accept` headers](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/getting-started.html?lang=en#accept) in the Schema Registry developer guide for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+servers:
+- url: https://platform.adobe.io/data/foundation/schemaregistry
+tags:
+- name: Export/Import
+  description: The Schema Registry API allows you to transfer and share XDM resources between sandboxes and IMS Organizations. For any schema, field group, or data type, you can generate an export payload containing the structure of the resource and any dependent resources. This payload can then be used to import the resource into a destination sandbox and IMS Org.
+paths:
+  /rpc/export/{RESOURCE_ID}:
+    get:
+      tags:
+      - Export/Import
+      summary: Retrieve an export payload
+      description: 'You can use this endpoint to retrieve an export payload for a specific resource in order to transfer it into a different sandbox or IMS Organization.
+
+
+        >**NOTE**: For more information on using this operation, see the [export](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/export.html) and [import endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/import.html) on Experience League.'
+      operationId: retrieveExportPayload
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept'
+      - name: RESOURCE_ID
+        description: The `meta:altId` or URL-encoded `$id` value of the schema, field group, or data type you want to export.
+        required: true
+        in: path
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns the details of the exported resource and its dependent field groups and data types, with any tenant ID values being replaced with `<XDM_TENANTID_PLACEHOLDER>`. The contents of this payload can then be used as the request body in a POST `/rpc/import` call to import the resource to the desired sandbox or IMS Organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/importExportPayload'
+        404:
+          x-summary: Not found
+          description: No schema could be found for the specified {SCHEMA_ID}. Double-check that you are providing a valid {SCHEMA_ID} and are using the correct {IMS_ORG} and {SANDBOX_NAME} headers for that schema before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notFoundError'
+  /rpc/import:
+    post:
+      tags:
+      - Export/Import
+      summary: Import a resource
+      description: 'Use an export payload to import a resource into a different sandbox or IMS Organization.
+
+
+        >**NOTE**: For more information on using this operation, see the [export/import endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/export-import.html) on Experience League.'
+      operationId: importResource
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: x-gw-ims-org-id
+        required: true
+        in: header
+        description: The unique ID ({IMS_ORG}) of the IMS Organization that you want to import the resource into.
+        schema:
+          type: string
+      - name: x-sandbox-name
+        required: true
+        in: header
+        description: The name of the sandbox that you want to import the resource into. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns the details of the imported resource, with the appropriate `{TENANT_ID}` applied for the specified IMS Organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/importResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The resources failed to import due to a conflict. In order to import XDM resources, their `$id` and `title` values must be unique within the destination IMS Org and sandbox. The error message will indicate which field contains the conflicting value. Change this value in the request payload before attempting the import again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/importError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/importExportPayload'
+        description: The payload returned by a GET `/rpc/export/{RESOURCE_ID}` call, indicating which schemas, field groups, and/or data types should be imported into the destination IMS Organization and sandbox.
+components:
+  schemas:
+    importExportPayload:
+      type: array
+      items:
+        type: object
+      example:
+      - $id: https://ns.adobe.com/<XDM_TENANTID_PLACEHOLDER>/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        meta:altId: _<XDM_TENANTID_PLACEHOLDER>.mixins.443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        meta:resourceType: mixins
+        version: '1.0'
+        title: Example field group
+        type: object
+        description: ''
+        definitions:
+          customFields:
+            type: object
+            properties:
+              _<XDM_TENANTID_PLACEHOLDER>:
+                type: object
+                properties:
+                  customerId:
+                    title: Customer ID
+                    description: ''
+                    type: string
+                    isRequired: false
+                    meta:xdmType: string
+                meta:xdmType: object
+          meta:xdmType: object
+        allOf:
+        - '$ref ': '#/definitions/customFields'
+          type: object
+          meta:xdmType: object
+        meta:extensible: true
+        meta:abstract: true
+        meta:intendedToExtend: []
+        meta:xdmType: object
+        meta:sandboxId: ff0f6870-c46d-11e9-8ca3-036939a64204
+        meta:sandboxType: production
+      - $id: https://ns.adobe.com/<XDM_TENANTID_PLACEHOLDER>/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117c80
+        meta:altId: _<XDM_TENANTID_PLACEHOLDER>.schemas.20af3f1d4b175f27ba59529d1b51a0c79fc25df454117c80
+        meta:resourceType: schemas
+        version: '1.1'
+        title: Example schema
+        type: object
+        description: ''
+        allOf:
+        - '$ref ': https://ns.adobe.com/xdm/context/profile
+          type: object
+          meta:xdmType: object
+        - '$ref ': https://ns.adobe.com/<XDM_TENANTID_PLACEHOLDER>/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+          type: object
+          meta:xdmType: object
+        meta:extensible: false
+        meta:abstract: false
+        meta:extends:
+        - https://ns.adobe.com/<XDM_TENANTID_PLACEHOLDER>/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        - https://ns.adobe.com/xdm/common/auditable
+        - https://ns.adobe.com/xdm/data/record
+        - https://ns.adobe.com/xdm/context/profile
+        meta:xdmType: object
+        meta:class: https://ns.adobe.com/xdm/context/profile
+        meta:sandboxId: ff0f6870-c46d-11e9-8ca3-036939a64204
+        meta:sandboxType: production
+    notFoundError:
+      type: object
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1012-404
+        title: Resource Not Found
+        status: 404
+        report:
+          registryRequestId: a6773f98-f5ba-4e3e-8ff8-320136cc6c48
+          timestamp: 10-22-2020 06:42:13
+          detailed-message: Requested resource https://ns.adobe.com/{TENANT_ID}/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117 with version 1 is not found
+        detail: Requested resource https://ns.adobe.com/{TENANT_ID}/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117 with version 1 is not found
+    importError:
+      type: object
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-3005-400
+        title: Import Resource Failed
+        status: 400
+        report:
+          registryRequestId: 1c282c30-d6ca-40a3-a694-e914a12f249d
+          timestamp: 10-22-2020 06:33:12
+          detailed-message: 'Failed to import resources. Error: Title must be unique. An object https://ns.adobe.com/{TENANT_ID}/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b already exists with the same title'
+          sub-errors: []
+        detail: 'Failed to import resources. Error: Title must be unique. An object https://ns.adobe.com/{TENANT_ID}/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b already exists with the same title'
+    importResponse:
+      type: array
+      items:
+        type: object
+      example:
+      - $id: https://ns.adobe.com/{TENANT_ID}/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        meta:altId: _{TENANT_ID}.mixins.443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        meta:resourceType: mixins
+        version: '1.0'
+        title: Example field group
+        type: object
+        description: ''
+        definitions:
+          customFields:
+            type: object
+            properties:
+              _{TENANT_ID}:
+                type: object
+                properties:
+                  customerId:
+                    title: Customer ID
+                    description: ''
+                    type: string
+                    isRequired: false
+                    meta:xdmType: string
+                meta:xdmType: object
+          meta:xdmType: object
+        allOf:
+        - '$ref ': '#/definitions/customFields'
+          type: object
+          meta:xdmType: object
+        meta:extensible: true
+        meta:abstract: true
+        meta:intendedToExtend: []
+        meta:xdmType: object
+        meta:sandboxId: ff0f6870-c46d-11e9-8ca3-036939a64204
+        meta:sandboxType: production
+      - $id: https://ns.adobe.com/{TENANT_ID}/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117c80
+        meta:altId: _{TENANT_ID}.schemas.20af3f1d4b175f27ba59529d1b51a0c79fc25df454117c80
+        meta:resourceType: schemas
+        version: '1.1'
+        title: Example schema
+        type: object
+        description: ''
+        allOf:
+        - '$ref ': https://ns.adobe.com/xdm/context/profile
+          type: object
+          meta:xdmType: object
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+          type: object
+          meta:xdmType: object
+        meta:extensible: false
+        meta:abstract: false
+        meta:extends:
+        - https://ns.adobe.com/{TENANT_ID}/mixins/443fe51457047d958f4a97853e64e0eca93ef34d7990583b
+        - https://ns.adobe.com/xdm/common/auditable
+        - https://ns.adobe.com/xdm/data/record
+        - https://ns.adobe.com/xdm/context/profile
+        meta:xdmType: object
+        meta:class: https://ns.adobe.com/xdm/context/profile
+        meta:sandboxId: ff0f6870-c46d-11e9-8ca3-036939a64204
+        meta:sandboxType: production
+  parameters:
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string

@@ -1,0 +1,1430 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Firefly Services Audio and Video Dynamic Graphics Render API
+  description: This RESTful API provides resources to use Firefly Services AI for audio and video generation and processing.
+  termsOfService: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+servers:
+- url: https://audio-video-api.adobe.io
+  description: Production server.
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Dynamic Graphics Render
+  description: 'Endpoints for Dynamic Graphics Render (DGR): template describe, presets, render, job status, cancel a render job, and list render jobs. The Cancel (`PUT /v1/cancel/{jobId}`) and List Render Jobs (`GET /v1/templates/render-jobs`) endpoints, as well as the extended status fields (`createdDate`, `totalJobItems`, `retryPayloadUrl`, `startedDate`, `completedDate`, and the `canceling`/`canceled` statuses), apply **only to render jobs** submitted via `POST /v1/templates/render`.'
+paths:
+  /v1/templates/describe:
+    post:
+      tags:
+      - Dynamic Graphics Render
+      summary: Describe template
+      description: Analyzes a MOGRT (video template) file and returns a manifest of editable controls; fonts, images, audio, video and other supported values.
+      operationId: template-describe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDescribeRequest'
+            examples:
+              SampleExample:
+                summary: MOGRT template
+                value:
+                  source:
+                    url: <pre-signed_URL_to_download_the_template>
+              AEPDescribeExample:
+                summary: After Effects project (AEP)
+                value:
+                  type: aep
+                  source:
+                    url: <pre-signed_URL_to_download_the_.zip>
+                  compName: A. Variable Duration
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDescribeResponse'
+              examples:
+                SuccessResponse:
+                  value:
+                    jobId: <job_ID>
+                    statusUrl: https://audio-video-api.adobe.io/v1/status/<job_ID>
+          headers:
+            Link:
+              schema:
+                type: string
+              description: URL to monitor the status of the job.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidJsonError:
+                  value:
+                    error_code: invalid_json
+                    message: Invalid request. Please check the input data.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidToken:
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidContext:
+                  value:
+                    error_code: access_error
+                    message: Token not allowed in the current context.
+                ApiKeyIsRequired:
+                  value:
+                    error_code: '403000'
+                    message: API key is required.
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ValidationError:
+                  value:
+                    error_code: validation_error
+                    message: Validation error occurred
+                    messageId: '42206000'
+                InvalidTemplateTypeError:
+                  value:
+                    error_code: validation_error
+                    message: Input must contain a valid template type
+                    messageId: '42206001'
+                InvalidTemplateSourceError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid template source
+                    messageId: '42206002'
+                InvalidTemplateSourceUrlError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid template source URL
+                    messageId: '42206003'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ServerError:
+                  value:
+                    messageId: '50006000'
+                    message: Internal Server Error
+                    error_code: runtime_error
+  /v1/presets:
+    get:
+      tags:
+      - Dynamic Graphics Render
+      summary: Fetch video rendering presets
+      description: Returns a list of predefined social-first encoding presets for rendering outputs.
+      operationId: get-presets
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetsResponse'
+              examples:
+                PresetsExample:
+                  $ref: '#/components/examples/PresetsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Unauthorized:
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                Forbidden:
+                  value:
+                    error_code: '403000'
+                    message: API key is required.
+  /v1/templates/render:
+    post:
+      tags:
+      - Dynamic Graphics Render
+      summary: Render template
+      description: Renders one or more video variations by applying overrides and export presets. Submit up to 10 overrides per call for a subset of editable layers and get a pre-signed URL link to download the video file. For layers that are not editable, the system defaults are automatically applied at export.
+      operationId: template-render
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateRenderRequest'
+            examples:
+              RenderExample:
+                summary: Sample render request
+                value:
+                  source:
+                    url: <pre-signed mogrt url>
+                  fonts:
+                  - name: <Font postscript name>
+                    source:
+                      url: <pre-signed url for font .ttf/otf>
+                  config:
+                    handleMissingFonts: use_default
+                  assets:
+                  - source:
+                      url: <pre-signed url for image or video asset>
+                  - source:
+                      url: <pre-signed url for audio asset>
+                  presets:
+                  - source:
+                      presetId: ffs_video_api_vert_1920p_hq
+                  - source:
+                      url: <pre-signed url for Encoder preset file>
+                  variations:
+                  - variables:
+                    - variableId: <unique template variable id>
+                      selectedCheckboxValue: true
+                    - variableId: <unique template variable id>
+                      assetIndex: 0
+                      scale: no_scale
+                    - variableId: <unique template variable id>
+                      selectedDropdownValue: '0'
+                    - variableId: <unique template variable id>
+                      text: First Name
+                      fontName: font_name_1
+                    - variableId: <unique template variable id>
+                      selectedSliderValue: -18
+                    - variableId: <unique template variable id>
+                      assetIndex: 1
+                      audioPreference: replace
+                  - variables:
+                    - variableId: <unique template variable id>
+                      selectedCheckboxValue: true
+                    - variableId: <unique template variable id>
+                      assetIndex: 0
+                      scale: fit_to_frame
+                    - variableId: <unique template variable id>
+                      selectedDropdownValue: '0'
+                    - variableId: <unique template variable id>
+                      text: First Name
+                      fontName: font_name_1
+                    - variableId: <unique template variable id>
+                      selectedSliderValue: -18
+                    - variableId: <unique template variable id>
+                      assetIndex: 1
+                      audioPreference: mix
+                  outputs:
+                  - variationIndex: 0
+                    presetIndex: 0
+                    fileName: some_custom_file_name
+                    destination: <pre-signed_URL_for_output_video>
+                  - variationIndex: 1
+                    presetIndex: 0
+                    fileName: output_vert_1920p_hq
+                    destination: <pre-signed_URL_for_output_video>
+                  - variationIndex: 1
+                    presetIndex: 1
+                    fileName: my_custom_file_name
+                    destination: <pre-signed_URL_for_output_video>
+              AEPRenderExample:
+                summary: 'AEP: replace media with scaling'
+                value:
+                  type: aep
+                  compName: A. Variable Duration
+                  source:
+                    url: <pre-signed_URL_to_download_the_.zip>
+                  config:
+                    handleMissingFonts: use_default
+                  presets:
+                  - source:
+                      presetId: ffs_video_api_land_1080p_hq
+                  assets:
+                  - source:
+                      url: <pre-signed_URL_for_video_asset>
+                  variations:
+                  - variables:
+                    - variableId: c259:l261:media
+                      assetIndex: 0
+                      scale: fill_frame
+                  outputs:
+                  - variationIndex: 0
+                    presetIndex: 0
+                    fileName: aep_media_replace
+              AEPRenderTextExample:
+                summary: 'AEP: replace a text control'
+                value:
+                  type: aep
+                  compName: A. Variable Duration
+                  source:
+                    url: <pre-signed_URL_to_download_the_.zip>
+                  config:
+                    handleMissingFonts: use_default
+                  fonts:
+                  - name: SourceSans3-Bold
+                    source:
+                      url: <pre-signed_URL_for_font_.ttf>
+                  presets:
+                  - source:
+                      presetId: ffs_video_api_land_1080p_hq
+                  variations:
+                  - variables:
+                    - variableId: c169:l193:layer:sourceText
+                      text: Certification Test Title
+                  outputs:
+                  - variationIndex: 0
+                    presetIndex: 0
+                    fileName: aep_text_replacement
+              AEPRenderAudioExample:
+                summary: 'AEP: replace audio'
+                value:
+                  type: aep
+                  compName: C. Audio Replacement
+                  source:
+                    url: <pre-signed_URL_to_download_the_.zip>
+                  config:
+                    handleMissingFonts: use_default
+                  presets:
+                  - source:
+                      presetId: ffs_video_api_land_1080p_hq
+                  assets:
+                  - source:
+                      url: <pre-signed_URL_for_audio_asset>
+                  variations:
+                  - variables:
+                    - variableId: c840:l921:audio
+                      assetIndex: 0
+                      audioPreference: replace
+                  outputs:
+                  - variationIndex: 0
+                    presetIndex: 0
+                    fileName: aep_audio_replace
+              AEPRenderLayerOperationsExample:
+                summary: 'AEP: layer operations (variable-duration timeline)'
+                value:
+                  type: aep
+                  compName: A. Variable Duration
+                  source:
+                    url: <pre-signed_URL_to_download_the_.zip>
+                  config:
+                    handleMissingFonts: use_default
+                  fonts:
+                  - name: SourceSans3-Bold
+                    source:
+                      url: <pre-signed_URL_for_font_.ttf>
+                  presets:
+                  - source:
+                      presetId: ffs_video_api_land_1080p_hq
+                  assets:
+                  - source:
+                      url: <pre-signed_URL_for_video_asset>
+                  variations:
+                  - variables:
+                    - variableId: c259:l261:media
+                      assetIndex: 0
+                  layerOperations:
+                  - operation: match_source_duration
+                    layerId: c259:l261:layer
+                  - operation: shift_inpoint
+                    layerId: c259:l263:layer
+                    refLayerId: c259:l261:layer
+                    refInOut: out
+                    offsetSeconds: -1
+                  - operation: shift_inpoint
+                    layerId: c259:l265:layer
+                    refLayerId: c259:l263:layer
+                    refInOut: in
+                    offsetFrames: 90
+                  - operation: trim_comp
+                    startSeconds: 0
+                    endLayerId: c259:l265:layer
+                  - operation: trim_outpoint
+                    layerId: c259:l263:layer
+                    refLayerId: c259:l265:layer
+                    refInOut: out
+                  - operation: trim_outpoint
+                    layerId: c259:l262:layer
+                    refLayerId: c259:l261:layer
+                    refInOut: out
+                  - operation: trim_outpoint
+                    layerId: c259:l819:layer
+                    refLayerId: c259:l265:layer
+                    refInOut: out
+                  - operation: enable_layer
+                    layerId: c259:l398:layer
+                    videoEnabled: false
+                  outputs:
+                  - variationIndex: 0
+                    presetIndex: 0
+                    fileName: aep_layer_operations
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateRenderResponse'
+              examples:
+                SuccessResponse:
+                  value:
+                    jobId: <job_ID>
+                    statusUrl: https://audio-video-api.adobe.io/v1/status/<job_ID>
+                    cancelUrl: https://audio-video-api.adobe.io/v1/cancel/<job_ID>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidJsonError:
+                  value:
+                    error_code: invalid_json
+                    message: Invalid request. Please check the input data.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidToken:
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidContext:
+                  value:
+                    error_code: access_error
+                    message: Token not allowed in the current context.
+                ApiKeyIsRequired:
+                  value:
+                    error_code: '403000'
+                    message: API key is required.
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidTemplateTypeError:
+                  value:
+                    error_code: validation_error
+                    message: Input must contain a valid template type
+                    messageId: '42205000'
+                InvalidTemplateSourceUrlError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid template source URL
+                    messageId: '42205001'
+                InvalidPresetIdError:
+                  value:
+                    error_code: validation_error
+                    message: '{presetId} export preset does not exist'
+                    messageId: '42205002'
+                InvalidFontDetailsError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid font details in variation {variationIndex} control {controlIndex}
+                    messageId: '42205003'
+                InvalidMediaDetailsError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid media details in variation {variationIndex} control {controlIndex}
+                    messageId: '42205004'
+                InvalidScaleTypeError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid scale type in variation {variationIndex} control {controlIndex}
+                    messageId: '42205005'
+                InvalidControlTypeError:
+                  value:
+                    error_code: validation_error
+                    message: Invalid control type in variation {variationIndex} control {controlIndex}
+                    messageId: '42205006'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InternalServerError:
+                  value:
+                    error_code: runtime_error
+                    message: Internal Server Error
+                    messageId: '50005001'
+  /v1/cancel/{jobId}:
+    put:
+      tags:
+      - Dynamic Graphics Render
+      summary: Cancel a render job
+      description: 'Aborts an in-flight render job. Returns `202 Accepted` as soon as the cancellation has been accepted; subsequent calls to `GET /v1/status/{jobId}` will report `"status": "canceled"` once the worker has fully stopped the underlying render.
+
+
+        **Applicable only to render jobs submitted via `POST /v1/templates/render`.** This endpoint does not apply to Describe, Reframe, TLS, TTS, or Avatar jobs.
+
+
+        **Notes:**
+
+        - Cancellation is idempotent.
+
+        - Once propagated to the worker, in-progress outputs are not uploaded to the destinations specified in the original render request.
+
+        - For a short window after the PUT, the status endpoint may still report `running`; poll until it transitions to `canceled`.'
+      operationId: cancel-render-job
+      parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the render job to cancel, as returned in the `jobId` field of the original 202 submit response or in the `cancelUrl` property of a List Render Jobs response item.
+      - $ref: '#/components/parameters/XRequestIdHeader'
+      responses:
+        '202':
+          description: Cancellation accepted. The job is transitioning to `canceled`; poll `GET /v1/status/{jobId}` to observe the terminal state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelAcceptedResponse'
+              examples:
+                CancelAccepted:
+                  $ref: '#/components/examples/CancelAccepted'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidJsonError:
+                  value:
+                    error_code: invalid_json
+                    message: Invalid request. Please check the input data.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidToken:
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidContext:
+                  value:
+                    error_code: access_error
+                    message: Token not allowed in the current context.
+        '404':
+          description: Not Found — `jobId` is unknown or no longer accessible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                JobNotFound:
+                  $ref: '#/components/examples/CancelJobNotFound'
+        '409':
+          description: Conflict — the job is already in a terminal state and cannot be canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                JobAlreadyCompleted:
+                  $ref: '#/components/examples/CancelJobAlreadyCompleted'
+                JobAlreadyCanceled:
+                  $ref: '#/components/examples/CancelJobAlreadyCanceled'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                RateLimited:
+                  value:
+                    error_code: rate_limit_exceeded
+                    message: Too many requests. Please retry after some time.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InternalServerError:
+                  value:
+                    error_code: runtime_error
+                    message: Internal Server Error
+                    messageId: '50005001'
+  /v1/templates/render-jobs:
+    get:
+      tags:
+      - Dynamic Graphics Render
+      summary: List render jobs
+      description: 'Returns a paginated list of template render jobs owned by the authenticated caller, optionally filtered by status and creation date.
+
+
+        **Applicable only to render jobs submitted via `POST /v1/templates/render`.** Jobs from other API types (Describe, Reframe, TLS, TTS, Avatar) are not returned.
+
+
+        **Filter syntax (FIQL):**
+
+        - `status==running` — single status equality
+
+        - `status=in=(running,not_started)` — status set membership
+
+        - `createdDate=ge=2026-05-01T00:00:00Z` — absolute ISO 8601 lower bound
+
+        - `createdDate=ge=-P7D` — relative ISO 8601 duration (last 7 days)
+
+        - Combine with `;` (AND): `status==running;createdDate=ge=-P7D`
+
+
+        **Default filter:** all statuses, `createdDate` within the last 30 days.
+
+
+        **Retention:** `createdDate` filter values must fall within the 30-day retention window.
+
+
+        **Pagination:** follow `paging.nextUrl` until it is absent (last page).'
+      operationId: list-render-jobs
+      parameters:
+      - name: filter
+        in: query
+        required: false
+        description: 'FIQL filter string. Supported sub-params: `status` (enum) and `createdDate` (ISO 8601 date-time or relative duration). Default: `createdDate=ge=-P30D;status=in=(not_started,running,succeeded,partially_succeeded,failed,canceled)`.'
+        schema:
+          type: string
+        examples:
+          RunningOnly:
+            summary: Running jobs only
+            value: status==running
+          Last7DaysRunning:
+            summary: Running jobs in last 7 days
+            value: createdDate=ge=-P7D;status==running
+          AbsoluteDateRange:
+            summary: Absolute date range
+            value: createdDate=ge=2026-05-14T00:00:00Z;createdDate=le=2026-05-21T00:00:00Z
+          MultipleStatuses:
+            summary: Multiple statuses
+            value: status=in=(running,not_started)
+      - name: limit
+        in: query
+        required: false
+        description: Maximum number of job entries to return per page. Must be between 1 and 100 (inclusive). Defaults to 20.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      - name: cursor
+        in: query
+        required: false
+        description: Opaque pagination cursor returned in `paging.nextUrl` of a previous response. Omit to fetch the first page.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/XRequestIdHeader'
+      responses:
+        '200':
+          description: Success — list of render jobs (may be empty).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RenderJobListResponse'
+              examples:
+                FirstPageWithMore:
+                  $ref: '#/components/examples/RenderJobListFirstPage'
+                LastPage:
+                  $ref: '#/components/examples/RenderJobListLastPage'
+                EmptyResult:
+                  $ref: '#/components/examples/RenderJobListEmpty'
+        '400':
+          description: Bad request — invalid filter, limit, cursor, or date range.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidStatusFilter:
+                  $ref: '#/components/examples/ListJobsInvalidStatusFilter'
+                LimitOutOfRange:
+                  $ref: '#/components/examples/ListJobsLimitOutOfRange'
+                InvalidCursor:
+                  $ref: '#/components/examples/ListJobsInvalidCursor'
+                InvalidFilter:
+                  $ref: '#/components/examples/ListJobsInvalidFilter'
+                FilterOutOfRetention:
+                  $ref: '#/components/examples/ListJobsFilterOutOfRetention'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidToken:
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidContext:
+                  value:
+                    error_code: access_error
+                    message: Token not allowed in the current context.
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                RateLimited:
+                  value:
+                    error_code: rate_limit_exceeded
+                    message: Too many requests. Please retry after some time.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InternalServerError:
+                  value:
+                    error_code: runtime_error
+                    message: Internal Server Error
+                    messageId: '50005001'
+components:
+  examples:
+    ListJobsInvalidStatusFilter:
+      summary: Invalid status value in filter
+      value:
+        error_code: invalid_status_filter
+        message: status must be one of not_started, running, succeeded, partially_succeeded, failed, canceled.
+    ListJobsInvalidFilter:
+      summary: Syntactically invalid FIQL expression
+      value:
+        error_code: invalid_filter
+        message: 'Invalid filter: unexpected token at position 5.'
+    PresetsResponse:
+      summary: List of supported presets
+      value:
+        items:
+        - presetId: ffs_video_api_land_1080p_hq
+          label: Landscape 1920×1080 – HQ
+          mediaType: video/mp4
+          codec: H.264
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 8000
+          maxBitrateInKbps: 12000
+          alpha: false
+          primaryUsage: Youtube, Web Promos
+        - presetId: ffs_video_api_land_1080p_lq
+          label: Landscape 1920×1080 – LQ
+          mediaType: video/mp4
+          codec: H.264
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 6000
+          maxBitrateInKbps: 8000
+          alpha: false
+          primaryUsage: Previews
+        - presetId: ffs_video_api_square_1080p_hq
+          label: Square 1080×1080 – HQ
+          mediaType: video/mp4
+          codec: H.264
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 6000
+          maxBitrateInKbps: 8000
+          alpha: false
+          primaryUsage: IG / FB feed ads, LinkedIn videos, X
+        - presetId: ffs_video_api_square_1080p_lq
+          label: Square 1080×1080 – LQ
+          mediaType: video/mp4
+          codec: H.264
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 3000
+          maxBitrateInKbps: 4000
+          alpha: false
+          primaryUsage: Previews
+        - presetId: ffs_video_api_vert_1920p_hq
+          label: Vertical 1080×1920 – HQ
+          mediaType: video/mp4
+          codec: H.264
+          profile: high
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 6000
+          maxBitrateInKbps: 8000
+          alpha: false
+          primaryUsage: Reels, TikTok, Snapchat Paid Ads
+        - presetId: ffs_video_api_vert_1920p_lq
+          label: Vertical 1080×1920 – LQ
+          mediaType: video/mp4
+          codec: H.264
+          profile: high
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          targetBitrateInKbps: 3000
+          maxBitrateInKbps: 4000
+          alpha: false
+          primaryUsage: Previews
+        - presetId: ffs_video_api_prores
+          label: ProRes export preset supporting Alpha channel
+          mediaType: video/quicktime
+          codec: Apple ProRes 4444
+          profile: high
+          maxFps:
+            numerator: 30
+            denominator: 1
+          bitrateMode: vbr
+          alpha: true
+          primaryUsage: Logo stings, overlay plates, compositing
+    CancelJobAlreadyCanceled:
+      summary: Render job already canceled
+      value:
+        error_code: job_already_canceled
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already canceled.
+    CancelJobAlreadyCompleted:
+      summary: Render job already completed
+      value:
+        error_code: job_completed
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already completed and cannot be canceled.
+    CancelAccepted:
+      summary: Render job cancellation accepted
+      value:
+        jobId: 27776956-d405-4754-97e9-7e9cfd3809af
+        status: canceling
+    RenderJobListEmpty:
+      summary: No matching render jobs
+      value:
+        paging:
+          totalRecords: 0
+        jobs: []
+    RenderJobListFirstPage:
+      summary: First page of render jobs, more pages available
+      value:
+        paging:
+          nextUrl: https://audio-video-api.adobe.io/v1/templates/render-jobs?cursor=eyJzIjoiMjAyNi0wNS0wNFQwOToxNDowMVoifQ&limit=20
+          totalRecords: 47
+        jobs:
+        - jobId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          status: succeeded
+          totalJobItems: 5
+          createdDate: '2026-05-20T10:00:00Z'
+          completedDate: '2026-05-20T10:05:30Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/3fa85f64-5717-4562-b3fc-2c963f66afa6
+        - jobId: 7ba95c74-6828-5673-c4fd-3d074g77bgb7
+          status: running
+          totalJobItems: 10
+          percentCompleted: 42.0
+          createdDate: '2026-05-20T11:00:00Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/7ba95c74-6828-5673-c4fd-3d074g77bgb7
+          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/7ba95c74-6828-5673-c4fd-3d074g77bgb7
+    CancelJobNotFound:
+      summary: Render job not found
+      value:
+        error_code: job_not_found
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af does not exist or is no longer accessible.
+    ListJobsLimitOutOfRange:
+      summary: limit parameter outside [1, 100]
+      value:
+        error_code: limit_out_of_range
+        message: limit must be between 1 and 100.
+    ListJobsInvalidCursor:
+      summary: Malformed or expired cursor
+      value:
+        error_code: invalid_cursor
+        message: The provided cursor is invalid or has expired.
+    RenderJobListLastPage:
+      summary: Last page of render jobs (no nextUrl)
+      value:
+        paging:
+          totalRecords: 47
+        jobs:
+        - jobId: 9cd06d85-7939-6784-d5ge-4e185h88chc8
+          status: running
+          totalJobItems: 50
+          percentCompleted: 23.0
+          createdDate: '2026-05-04T08:01:09Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/9cd06d85-7939-6784-d5ge-4e185h88chc8
+          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/9cd06d85-7939-6784-d5ge-4e185h88chc8
+    ListJobsFilterOutOfRetention:
+      summary: createdDate outside 30-day retention window
+      value:
+        error_code: filter_out_of_retention
+        message: createdDate filter values must fall within the 30-day retention window.
+  schemas:
+    PresetItem:
+      type: object
+      properties:
+        presetId:
+          type: string
+          description: Unique identifier for the preset.
+        label:
+          type: string
+          description: Human-readable label for the preset.
+        mediaType:
+          type: string
+          description: MIME type of the output media (e.g., video/mp4).
+        codec:
+          type: string
+          description: Video codec used (e.g., H.264).
+        profile:
+          type: string
+          description: Codec profile (e.g., high).
+        maxFps:
+          type: object
+          required:
+          - numerator
+          - denominator
+          properties:
+            numerator:
+              type: integer
+              description: Frames-per-second numerator.
+            denominator:
+              type: integer
+              description: Frames-per-second denominator.
+          description: Maximum frames per second as a fraction.
+        bitrateMode:
+          type: string
+          description: Bitrate mode (e.g., vbr, cbr).
+        targetBitrateInKbps:
+          type: integer
+          description: Target bitrate in kilobits per second.
+        maxBitrateInKbps:
+          type: integer
+          description: Maximum bitrate in kilobits per second.
+        alpha:
+          type: boolean
+          description: Whether the preset supports alpha channel.
+        primaryUsage:
+          type: string
+          description: Primary use case for this preset.
+      required:
+      - presetId
+      - label
+      - mediaType
+      - codec
+      - maxFps
+      - bitrateMode
+      - alpha
+      - primaryUsage
+    CancelAcceptedResponse:
+      type: object
+      description: Success response body returned with HTTP 202 when a render job cancel request is accepted. Applies only to render jobs submitted via `POST /v1/templates/render`.
+      required:
+      - jobId
+      - status
+      properties:
+        jobId:
+          type: string
+          format: uuid
+          description: UUID of the render job for which cancellation was accepted.
+        status:
+          type: string
+          enum:
+          - canceling
+          description: Transient in-progress status. Poll `GET /v1/status/{jobId}` to observe the terminal `canceled` state.
+    TemplateDescribeRequest:
+      type: object
+      required:
+      - source
+      properties:
+        type:
+          type: string
+          enum:
+          - mogrt
+          - aep
+          default: mogrt
+          description: Input template type. Use `mogrt` for a Motion Graphics Template or `aep` for an After Effects project. Defaults to `mogrt` when omitted.
+        source:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              format: uri
+              description: A pre-signed URL pointing to the input template file. For `mogrt`, this is a `.mogrt` file. For `aep`, this is a `.zip` archive containing exactly one `.aep` project file together with its collected footage and assets.
+          description: Contains metadata about the source of the input template.
+        compName:
+          type: string
+          description: Name of the After Effects composition to describe. Required when `type` is `aep`; not applicable to `mogrt`. This composition name within the AEP project must be unique so that `compName` resolves to a single composition.
+      if:
+        properties:
+          type:
+            const: aep
+        required:
+        - type
+      then:
+        required:
+        - source
+        - compName
+    TemplateRenderRequest:
+      type: object
+      required:
+      - source
+      - variations
+      properties:
+        type:
+          type: string
+          enum:
+          - mogrt
+          - aep
+          default: mogrt
+          description: Input template type. Use `mogrt` for a Motion Graphics Template or `aep` for an After Effects project. Defaults to `mogrt` when omitted.
+        source:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              format: uri
+              description: A pre-signed URL pointing to the input template file. For `mogrt`, this is a `.mogrt` file. For `aep`, this is a `.zip` archive containing exactly one `.aep` project file together with its collected footage and assets.
+          description: Contains metadata about the source of the input template.
+        compName:
+          type: string
+          description: Name of the After Effects composition to render. Required when `type` is `aep`; not applicable to `mogrt`. This composition name within the AEP project must be unique so that `compName` resolves to a single composition.
+        fonts:
+          type: array
+          description: Array of fonts to be used in the template.
+          items:
+            type: object
+            required:
+            - name
+            - source
+            properties:
+              name:
+                type: string
+                description: PostScript name of the font.
+              source:
+                type: object
+                required:
+                - url
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Pre-signed URL for the font file (.ttf/.otf).
+        config:
+          type: object
+          description: Configuration options for the render request.
+          properties:
+            handleMissingFonts:
+              type: string
+              enum:
+              - fail
+              - use_default
+              default: use_default
+              description: How to handle missing fonts. 'fail' will cause the render to fail; 'use_default' will use Premiere Pro fallback behavior.
+            sidecar:
+              type: string
+              enum:
+              - aep
+              description: Optional. Applicable only when `type` is `aep`. Set to `aep` to also produce the collected After Effects project (a self-contained archive of the `.aep` file and its footage), returned as `sidecarDestination` on each output. Not supported for `mogrt` renders.
+        assets:
+          type: array
+          description: Array of image, video, or audio assets referenced by variations via assetIndex.
+          items:
+            type: object
+            required:
+            - source
+            properties:
+              source:
+                type: object
+                required:
+                - url
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Pre-signed URL for the image, video, or audio asset.
+        presets:
+          type: array
+          description: Array of export presets. Each item is either a built-in preset (by presetId) or a custom preset (by URL). Outputs reference presets by presetIndex.
+          items:
+            type: object
+            required:
+            - source
+            properties:
+              source:
+                type: object
+                properties:
+                  presetId:
+                    type: string
+                    description: ID of a built-in preset from the presets endpoint.
+                  url:
+                    type: string
+                    format: uri
+                    description: Pre-signed URL for a custom Encoder preset file.
+        variations:
+          type: array
+          description: List of variations. Each variation contains variable overrides applied to the template.
+          minItems: 1
+          items:
+            type: object
+            required:
+            - variables
+            properties:
+              variables:
+                type: array
+                description: Variable overrides for this variation. Each object targets one template variable by variableId and supplies the override value.
+                items:
+                  type: object
+                  required:
+                  - variableId
+                  properties:
+                    variableId:
+                      type: string
+                      description: Unique identifier for the template variable, taken verbatim from the describe response. For AEP, this is the composite ID of a control (for example `c259:l261:media` for a media control or `c169:l193:layer:sourceText` for a text control).
+                    selectedCheckboxValue:
+                      type: boolean
+                      description: Override for checkbox controls.
+                    selectedDropdownValue:
+                      type: string
+                      description: Override for dropdown controls.
+                    selectedSliderValue:
+                      type: number
+                      description: Override for slider controls.
+                    text:
+                      type: string
+                      description: Override for text controls.
+                    fontName:
+                      type: string
+                      description: PostScript font name for text controls.
+                    assetIndex:
+                      type: integer
+                      description: Index into the assets array for media or audio controls.
+                    scale:
+                      type: string
+                      enum:
+                      - no_scale
+                      - fit_to_frame
+                      - stretch_to_fill
+                      - fill_frame
+                      description: Scaling behavior for media controls.
+                    audioPreference:
+                      type: string
+                      enum:
+                      - replace
+                      - mix
+                      description: Audio preference for audio controls.
+        layerOperations:
+          type: array
+          description: Layer-level timing operations applied after variable overrides, in array order. Applicable only when `type` is `aep`; ignored for `mogrt`. Each operation targets a layer by its `layerId` (the `layers[].id` value from the describe response, of the form `c{comp}:l{layer}:layer`). The exact field set depends on `operation`; see the Render guide for the per-operation field reference.
+          items:
+            type: object
+            required:
+            - operation
+            properties:
+              operation:
+                type: string
+                enum:
+                - trim_comp
+                - trim_inpoint
+                - trim_outpoint
+                - shift_inpoint
+                - shift_outpoint
+                - match_source_duration
+                - set_layer_duration
+                - stretch_layer
+                - enable_layer
+                description: The layer operation to perform.
+              layerId:
+                type: string
+                description: Target layer ID (`c{comp}:l{layer}:layer`). Used by all operations except `trim_comp`.
+              refLayerId:
+                type: string
+                description: Reference layer for `shift_inpoint`, `shift_outpoint`, `trim_inpoint`, and `trim_outpoint` (its in/out time, selected by `refInOut`, anchors the move) and for `stretch_layer` (its duration becomes the target duration when no `duration*` field is provided).
+              refInOut:
+                type: string
+                enum:
+                - in
+                - out
+                description: Which end of `refLayerId` to read as the reference time.
+              startLayerId:
+                type: string
+                description: For `trim_comp`, the layer whose in point sets the start of the comp.
+              endLayerId:
+                type: string
+                description: For `trim_comp`, the layer whose out point sets the end of the comp.
+              startSeconds:
+                type: number
+                description: For `trim_comp`, the absolute start time of the comp, in seconds.
+              startFrames:
+                type: integer
+                description: For `trim_comp`, the absolute start time of the comp, in frames.
+              offsetSeconds:
+                type: number
+                description: Offset added to the resolved reference time (`shift_*`, `trim_*`) or target duration (`stretch_layer`), in seconds. Takes precedence over `offsetFrames`.
+              offsetFrames:
+                type: integer
+                description: Offset added to the resolved reference time (`shift_*`, `trim_*`) or target duration (`stretch_layer`), in frames. Used only when `offsetSeconds` is absent.
+              durationSeconds:
+                type: number
+                description: Duration in seconds for `set_layer_duration` and `stretch_layer`, or the comp duration for `trim_comp`. Takes precedence over `durationFrames`.
+              durationFrames:
+                type: integer
+                description: Duration in frames for `set_layer_duration` and `stretch_layer`, or the comp duration for `trim_comp`. Used only when `durationSeconds` is absent.
+              durationPercent:
+                type: number
+                description: 'For `stretch_layer`, the target duration as a percentage of the layer''s native duration. Highest priority of the `stretch_layer` duration inputs: `durationPercent` > `durationSeconds` > `durationFrames` > `refLayerId`.'
+              videoEnabled:
+                type: boolean
+                description: For `enable_layer`, turns the target layer's video (visuals) on or off. Optional; each `enable_layer` operation must set at least one of `videoEnabled`, `audioEnabled`, or `solo`.
+              audioEnabled:
+                type: boolean
+                description: For `enable_layer`, turns the target layer's audio on or off. Optional; each `enable_layer` operation must set at least one of `videoEnabled`, `audioEnabled`, or `solo`.
+              solo:
+                type: boolean
+                description: For `enable_layer`, solos the target layer within its comp; only solo-enabled layers will render. A comp with solo-enabled layers will render against transparency or the comp's background color setting, depending on the render output format. To render audio-only to a video output format, solo an invisible video layer (such as a null) in addition to any solo-enabled audio layers; this is not necessary when rendering to an audio output format. Optional; each `enable_layer` operation must set at least one of `videoEnabled`, `audioEnabled`, or `solo`. If `videoEnabled` and `audioEnabled` are both false for a layer, solo cannot be applied to it.
+        outputs:
+          type: array
+          description: Defines which variation and preset combinations to render and optional output file names.
+          items:
+            type: object
+            required:
+            - variationIndex
+            - presetIndex
+            properties:
+              variationIndex:
+                type: integer
+                description: Zero-based index of the variation to render.
+              presetIndex:
+                type: integer
+                description: Zero-based index of the preset in the presets array.
+              fileName:
+                type: string
+                description: Optional custom file name for the output.
+              destination:
+                type: string
+                description: A pre-signed URL destination for the video output.
+      if:
+        properties:
+          type:
+            const: aep
+        required:
+        - type
+      then:
+        required:
+        - source
+        - variations
+        - compName
+    RenderJobListResponse:
+      type: object
+      description: Response body for `GET /v1/templates/render-jobs`. Contains render jobs submitted via `POST /v1/templates/render` only.
+      required:
+      - paging
+      - jobs
+      properties:
+        paging:
+          $ref: '#/components/schemas/PagingInfo'
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/RenderJobListItem'
+          description: Ordered list of render job summaries for the current page. Empty array when no jobs match the filter.
+    TemplateDescribeResponse:
+      type: object
+      required:
+      - jobId
+      - statusUrl
+      properties:
+        jobId:
+          type: string
+          description: Unique identifier for the describe job.
+        statusUrl:
+          type: string
+          format: uri
+          description: URL to poll for the status of the describe job.
+    ErrorResponse:
+      type: object
+      required:
+      - error_code
+      - message
+      properties:
+        error_code:
+          type: string
+          description: The error code returned with the response.
+        message:
+          type: string
+          description: The error message returned with the response.
+        messageId:
+          type: string
+          description: The error message ID returned with the response.
+    TemplateRenderResponse:
+      type: object
+      required:
+      - jobId
+      - statusUrl
+      properties:
+        jobId:
+          type: string
+          description: Unique identifier for the render job.
+        statusUrl:
+          type: string
+          format: uri
+          description: URL to poll for the status of the rendering job.
+        cancelUrl:
+          type: string
+          format: uri
+          description: URL to cancel the rendering job.
+    PresetsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PresetItem'
+      required:
+      - items
+    RenderJobListItem:
+      type: object
+      description: Summary of a single template render job as returned by `GET /v1/templates/render-jobs`. Applies only to render jobs submitted via `POST /v1/templates/render`.
+      required:
+      - jobId
+      - status
+      - totalJobItems
+      - createdDate
+      - statusUrl
+      properties:
+        jobId:
+          type: string
+          format: uuid
+          description: Unique identifier of the render job.
+        status:
+          type: string
+          enum:
+          - not_started
+          - running
+          - succeeded
+          - partially_succeeded
+          - failed
+          - canceled
+          description: Current overall status of the render job.
+        totalJobItems:
+          type: integer
+          description: Total number of output items (variation × preset combinations) in this batch render job.
+        percentCompleted:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Percentage of the job completed (0–100). Present only when `status` is `running`.
+        createdDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date-time when the render job was submitted.
+        completedDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date-time when the job reached a terminal state. Present only when `status` is `succeeded`, `partially_succeeded`, `failed`, or `canceled`.
+        statusUrl:
+          type: string
+          format: uri
+          description: Absolute URL to poll for the latest job status (`GET /v1/status/{jobId}`).
+        cancelUrl:
+          type: string
+          format: uri
+          description: Absolute URL to submit a cancel request (`PUT /v1/cancel/{jobId}`). Present only when the job is still cancellable (`status` is `not_started` or `running`).
+    PagingInfo:
+      type: object
+      description: Cursor-based pagination metadata returned by the List Render Jobs endpoint.
+      required:
+      - totalRecords
+      properties:
+        nextUrl:
+          type: string
+          format: uri
+          description: Absolute URL to the next page of results. Absent on the last page — treat its absence as the end of the result set.
+        totalRecords:
+          type: integer
+          description: Total number of render jobs matching the filter across all pages.
+  parameters:
+    XRequestIdHeader:
+      name: x-request-id
+      in: header
+      required: false
+      description: GUID, unique per request. Auto-generated if not provided.
+      schema:
+        type: string
+        format: uuid
+        example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

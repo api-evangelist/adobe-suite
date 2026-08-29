@@ -1,0 +1,223 @@
+openapi: 3.2.0
+info:
+  title: Catalog Service Last Batches API
+  description: "Catalog is the system of record for data location and lineage within Adobe Experience Platform. Catalog Service does not contain the actual files or directories that contain the data. Instead, it holds the metadata and description of those files and directories.\n\nCatalog acts as a metadata store or \"catalog\" where you can find information about your data within Experience Platform.\n\nUse Catalog to answer the following questions: Where is my data located? At what stage of processing is this data? What systems or processes have acted on my data? What errors occurred during processing? If successful, how much data was processed?\n\n- **Related documentation**:\n    - [Catalog Service documentation](http://www.adobe.com/go/data-catalog-service-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Catalog Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Catalog%20Service%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n    - Base path for this API: /data/foundation/catalog\n    - Example of a complete path: https://<span>platform.adobe.io/data/foundation/catalog/batches\n\n- **Required headers**:\n    - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Catalog Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/catalog/api/filter-data.html)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/catalog
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: LastBatches
+paths:
+  /lastBatches:
+    get:
+      summary: List last batches
+      description: Fetches a list of last batches per dataset. A list of datasetIds is returned, which lets you check the last batch status, last successful batch, and last failed batch per dataset.
+      operationId: listLastBatches
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - name: dataSetId
+        in: query
+        description: Filter by a datasetId. A list can be provided by separating the values with comma. The number of datasets requested is limited by the max-http-header-size config.
+        schema:
+          type: string
+      - name: lastBatchId
+        in: query
+        description: Filter by the ID of the last related batch of a dataset
+        schema:
+          type: string
+        example: ca12b29612bf4052872edad59573703c
+      - name: lastBatchStatus
+        in: query
+        description: Filter by the status of the last related batch of the dataset
+        schema:
+          type: string
+        example: success
+      - name: lastSuccessfulBatchId
+        in: query
+        description: Filter by the ID of the last successful batch related to a dataset
+        schema:
+          type: string
+        example: ca12b29612bf4052872edad59573703c
+      - name: lastFailedBatchId
+        in: query
+        description: Filter by the ID of the last failed batch related to a dataset
+        schema:
+          type: string
+        example: ca12b29612bf4052872edad59573703a
+      - name: created
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when this object was persisted.
+        schema:
+          type: integer
+          format: int64
+        example: 1541534444286
+      - name: updated
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) for the time of last modification.
+        schema:
+          type: integer
+          format: int64
+        example: 1541534444286
+      - name: orderBy
+        in: query
+        description: Sort parameter and direction for sorting the response. Ex. orderBy=asc:created,updated. This was previously called sort.
+        schema:
+          type: string
+        example: orderBy=asc:created,updated
+      - $ref: '#/components/parameters/limit'
+      - name: start
+        in: query
+        description: Specifies the offset of the pages of results. To get the first page of results, set the value to `start=0`.
+        schema:
+          type: integer
+          default: 0
+      - name: properties
+        in: query
+        description: A comma separated allowlist of top-level object properties to be returned in the response. Used to cut down the number of properties and amount of data returned in the response bodies.
+        schema:
+          type: string
+      responses:
+        200:
+          description: All last batches related to datasets in your organization.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/lastBatchesResponse'
+              example:
+                5ab540d0864cf0267448ead4:
+                  lastBatchId: 62a31e96ba86e52a2f729a8d
+                  lastBatchStatus: processing
+                  lastSuccessfulBatchId: 73a340e26b64ed3eb31ec8f9
+                  lastFailedBatchId: 51b340e26b64ed3eb31ec9z8
+                  imsOrg: 4F3BB22C5631222A7F000101@AdobeOrg
+                  sandboxId: 73d54130-c5bc-11e9-949c-0da8d50fcac1
+                  created: 1658499154836
+                  updated: 1658499238628
+        400:
+          description: Bad request
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not found
+          content: {}
+        500:
+          description: Internal server error
+          content: {}
+        default:
+          description: Unexpected error
+          content: {}
+      tags:
+      - LastBatches
+components:
+  schemas:
+    lastBatchesResponse:
+      type: object
+      properties:
+        lastBatchId:
+          type: string
+          description: The ID of the last batch related to a dataset
+          readOnly: true
+          example: 62a31e96ba86e52a2f729a8d
+        lastBatchStatus:
+          $ref: '#/components/schemas/batchStatus'
+        lastSuccessfulBatchId:
+          type: string
+          description: The ID of the last successful batch related to a dataset
+          example: 73a340e26b64ed3eb31ec8f9
+        lastFailedBatchId:
+          type: string
+          description: The ID of the last failed batch related to a dataset
+          example: 51b340e26b64ed3eb31ec9z8
+        imsOrg:
+          type: string
+          description: The organization that the last batch belongs to.
+          example: 4F3BB22C5631222A7F000101@AdobeOrg
+        created:
+          type: integer
+          description: A UTC timestamp for when the batch was created, in milliseconds.
+          format: int64
+          readOnly: true
+          example: 1658499154836
+        updated:
+          type: integer
+          description: A UTC timestamp for when the batch was updated, in milliseconds.
+          format: int64
+          readOnly: true
+          example: 1658499238628
+    batchStatus:
+      type: string
+      description: The status of the last batch.
+      enum:
+      - processing
+      - success
+      - failure
+      - queued
+      - retrying
+      - stalled
+      - aborted
+      - abandoned
+      - inactive
+      - failed
+      - loading
+      - loaded
+      - staged
+      - active
+      - staging
+      - deleted
+      example: processing
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      description: Limit response to a specified positive number of objects. The maximum number of objects that can be returned is 100.
+      schema:
+        type: integer
+      example: 20
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string

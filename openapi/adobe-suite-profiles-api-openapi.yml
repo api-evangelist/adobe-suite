@@ -1,0 +1,153 @@
+openapi: 3.2.0
+info:
+  title: Reactor Profiles API
+  description: "Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.\n**Related documentation**:\n  * [Tags overview and UI documentation](https://adobe.com/go/launch_help_en)\n  * [Reactor API guides](https://adobe.com/go/reactor-api-overview)\n\n**API paths**:\n  * Reactor Gateway URL: https://<span>reactor.adobe.io\n  * Example of a complete path for making a call to `/properties`: https://<span>reactor.adobe.io/properties\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).\n  * All GET requests to the Reactor API require an `Accept` header to determine what data is returned by the system. In most cases, this value will be `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. The specific `Content-Type` value for each call is provided in the parameters sections in the endpoints listed below.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //reactor.adobe.io
+tags:
+- name: Profiles
+  description: A profile represents a tags user. Platform does not maintain its own database of users and permissions, and instead relies on Adobe IDs managed by Adobe’s company-wide Identity Management System (IMS). A profile contains all the information about the logged-in user, including all the Adobe Orgs to which they belong, the product profiles they belong to within each Org, and the rights they have from each product profile.
+paths:
+  /profile:
+    get:
+      tags:
+      - Profiles
+      summary: Retrieve the details of the currently logged-in user
+      description: '>**NOTE**: For more information on using this operation, see the [profile endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/profile.html) on Experience League.'
+      operationId: retrieveUserDetails
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the profile.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/profilesLookupResponse'
+components:
+  schemas:
+    profilesAttributes:
+      type: object
+      properties:
+        active_org:
+          type: string
+          description: The ID of the IMS Organization that the user is active under.
+        expires_in:
+          type: integer
+          description: The time in seconds that the user's IMS profile is cached for. Once this time expires, the IMS service is polled again to refresh the profile.
+        display_name:
+          type: string
+          description: The display name for the user.
+        job_function:
+          type: string
+          description: The job function or role for the user.
+        email:
+          type: string
+          description: The email address for the user.
+        organizations:
+          type: object
+          properties:
+            '{ORG_ID}':
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The IMS Org name.
+                admin:
+                  type: boolean
+                  description: Indicates whether the user is an admin for this IMS Org.
+                active:
+                  type: boolean
+                  description: Indicates whether the user currently logged in under this IMS Org.
+                login_companies:
+                  type: array
+                  description: Lists the different names that the organization operates under.
+                  items:
+                    type: string
+                product_contexts:
+                  type: array
+                  description: Lists the Adobe products that the IMS Org has access to.
+                  items:
+                    type: string
+                tenant_id:
+                  type: string
+                  description: The tenant ID for the IMS Organization, which is used as a namespace to separate resources created by the organization from global resources managed by Adobe.
+              description: Contains the details for a particular IMS Organization (as identified in the property key).
+          description: Provides information on the IMS Organizations that the user is a member of. Each property in this object is keyed to the ID of IMS Org in question.
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    profilesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/profilesEntity'
+    profilesEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            description: Contains the profile's attributes.
+            allOf:
+            - $ref: '#/components/schemas/profilesAttributes'
+          links:
+            type: object
+            properties:
+              self:
+                type: string
+                description: A link to the profile itself.
+            description: Contains links related to the profile which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              rights:
+                type: array
+                description: Lists the permission rights granted to the profile.
+                items:
+                  type: string
+            description: Contains meta information about the profile.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+x-original-swagger-version: '2.0'

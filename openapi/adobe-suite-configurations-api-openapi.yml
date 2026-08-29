@@ -1,0 +1,167 @@
+openapi: 3.2.0
+info:
+  description: "Use the Adobe Experience Platform Flow Service API to connect and activate data to various destinations within and outside of Adobe Experience Platform. This API reference is centered on exporting data to batch destinations like Amazon S3, SFTP, Azure Blob.\n>**NOTE**: Refer to [Flow Service API - Sources](https://developer.adobe.com/experience-platform-apis/references/flow-service/) if you are looking for API documentation to perform operations on *sources* in Experience Platform.\n- **Related documentation**:\n    - [Destinations overview](http://www.adobe.com/go/destinations-overview-en)\n    - [Activate data to file-based destinations - API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/api/activate-segments-file-based-destinations.html)\n    - [Activate data to streaming destinations - API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/api/streaming-destinations.html)\n    - [Update destination dataflows - API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/api/update-destination-dataflows.html)\n    - [Export datasets - API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/api/export-datasets.html)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/flows\n\n- **Required headers**:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html)."
+  title: Flow Service API - Destinations Configurations API
+  version: 1.0.0
+servers:
+- url: https://{environment}.adobe.io/data/foundation/flowservice
+  description: Adobe IO gateway endpoint
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Configurations
+  description: Configurations provide additional information that is necessary when setting up a dataset export.
+paths:
+  /connectionSpecs/{id}/configs:
+    get:
+      tags:
+      - Configurations
+      summary: Retrieve a list of datasets for activation
+      description: 'You can use this endpoint to retrieve destinations-related configurations and metadata associated with a connection spec and are needed to successfully configure a dataset export. For example, when configuring dataset exports, this endpoint can return a list of activation-eligible datasets for your organization, along with metadata about the datasets.
+
+        '
+      operationId: getDatasets
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - in: path
+        name: id
+        description: The ID of the connection spec. To return a list of dataset IDs eligible for export, use Experience Platform Data Lake source connection spec id, `23598e46-f560-407b-88d5-ea6207e49db0`.
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: outputType
+        description: The type of configurations you want to retrieve. To return a list of dataset IDs eligible for export, use the value `activationDatasets`.
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: outputField
+        description: The output field where configuration values will be saved. To return a list of dataset IDs eligible for export, use the value `datasets`.
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: start
+        description: Specify the offset for the list of datasets.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - in: query
+        name: limit
+        description: Specify the maximum number of datasets to be included in the response.
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of datasets that match the request parameters and are eligible for activation. See [Catalog Service API documentation](https://developer.adobe.com/experience-platform-apis/references/catalog/#tag/Datasets/operation/retrieveDataset) for more details about individual dataset structure.
+          x-summary: List of Eligible Datasets Retrieved
+          content:
+            application/json:
+              examples:
+                Destination_Dataset_Response:
+                  $ref: '#/components/examples/Destination_Dataset_Response'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  parameters:
+    XApiKey:
+      in: header
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    XImsOrgId:
+      in: header
+      name: x-gw-ims-org-id
+      description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    XSandboxId:
+      in: header
+      name: x-sandbox-name
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+      schema:
+        type: string
+      required: true
+    Authorization:
+      in: header
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+  examples:
+    Destination_Dataset_Response:
+      summary: Dataset List Response
+      value:
+        items:
+        - id: 635865d23b3f261ba5a8589b
+          schemaRef:
+            id: https://ns.adobe.com/activationcontrolplaneint/schemas/36fcb097f2f3f000a0cb7ab355e3f9c2a2aa922fb28a6795
+            contentType: application/vnd.adobe.xed-full+json;version=1
+          name: City Dataset
+          description: A dataset of cities around the world
+          tags:
+            unifiedIdentity:
+            - enabled:true
+          fileDescription:
+            persisted: false
+            containerFormat: null
+            format: parquet
+          aspect: production
+          imsOrg: 5555467B5D8013E50A494220@AdobeOrg
+          sandboxId: 02dd69f0-da73-11e9-9ea1-af59ce7c24e8
+          version: 1.0.7
+          created: 1666737618845
+          updated: 1666737967289
+          createdClient: exc_app
+          createdUser: 433E0A015D7AB86C0A49402B@AdobeID
+          updatedUser: acp_foundation_dataTracker@AdobeID
+          viewId: 635865d23b3f261ba5a8589c
+          basePath: abfss://gen1@datalakep1234356gn.dfs.core.windows.net/platform/635865d23b3f261ba5a8589b/datasetViewId=635865d23b3f261ba5a8589c
+          files: '@/dataSetFiles?dataSetId=635865d23b3f261ba5a8589b'
+          enableErrorDiagnostics: false
+          lastBatchStatus: success
+          lastBatchId: 01GG8N3TRVHC2Z7CQAY4YJ7Q2F
+          lastSuccessfulBatch: 01GG8N3TRVHC2Z7CQAY4YJ7Q2F
+  schemas:
+    ErrorResponse:
+      type: object

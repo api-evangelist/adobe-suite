@@ -1,0 +1,458 @@
+openapi: 3.2.0
+info:
+  title: Catalog Data Ingestion Category Metadata API
+  description: 'The Catalog Data Ingestion API allows you to create and manage products and price books and directly integrate catalog data with the Commerce catalog service.
+
+
+    This API provides the following resource collections to create and update catalog data:
+
+
+    - <strong>[Product Metadata](#tag/ProductMetadata)</strong>—define and manage product attribute metadata including display settings, search characteristics, filtering options, and sorting rules.
+
+    - <strong>[Category Metadata](#tag/CategoryMetadata)</strong>—define and manage category attribute metadata.
+
+    - <strong>[Categories](#tag/Categories)</strong>—Define and manage categories with hierarchical structure to build navigation menu.
+
+    - <strong>[Products](#tag/Products)</strong>—Define and manage catalog items with their attributes (name, description, SKU, images, and variants).
+
+    - <strong>[Price books](#tag/Price-Books)</strong>—Define and manage pricing scopes for different customer tiers and markets.
+
+    - <strong>[Prices](#tag/Prices)</strong>—Define and manage product SKU prices and their associated price books.
+
+    - <strong>[Product Layers](#tag/Product-Layers)</strong>—Define and manage product layers to customize and override base product data for specific contexts, locales, or business requirements.
+
+    '
+  version: 1.0.0
+servers:
+- url: https://na1-sandbox.api.commerce.adobe.com/{tenantId}
+  variables:
+    tenantId:
+      default: string
+tags:
+- name: CategoryMetadata
+  description: 'Manage category attribute definitions.
+
+    These settings control how category attributes appear and function throughout the storefront.
+
+
+    Category attribute metadata specifies how category attributes are displayed on the storefront.
+
+    '
+paths:
+  /v1/catalog/categories/metadata:
+    post:
+      tags:
+      - CategoryMetadata
+      summary: Create category attribute metadata
+      description: "When creating category attribute metadata:\n  - Each category attribute requires a unique `code` and `source`.\n  - Use the `dataType` field to define the data type for the category attribute.\n\nTo update existing category attribute metadata, use the update operation.\n"
+      operationId: createCategoryMetadata
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedCategoryMetadata'
+            examples:
+              FeedWithMetadataInformation:
+                summary: Create category attributes metadata
+                description: 'This example defines metadata for the required attributes with recommended default values.
+
+                  '
+                value:
+                - code: bottom_description
+                  source:
+                    locale: en-US
+                  label: Category Description
+                  dataType: TEXT
+    patch:
+      tags:
+      - CategoryMetadata
+      summary: Update category attribute metadata
+      description: 'Update existing category attribute metadata with new values.
+
+        When the update is processed, the merge strategy is used to apply changes to `scalar` and `object` type fields. The replace strategy is used to apply changes for fields in an `array`.
+
+
+        > **Note:** Update operations do not verify that the entity exists. Requests targeting a nonexistent entity are accepted, but the update has no effect.
+
+        '
+      operationId: updateCategoryMetadata
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedCategoryMetadataUpdate'
+            examples:
+              FeedWithMetadataInformation:
+                summary: Example of category attribute metadata
+                description: 'Update existing category attribute metadata with new values.
+
+                  Note that fields with the `array` type will replace existing data.
+
+                  The example below updates the following attributes:
+
+                  * `label` - Change the category attribute label.
+
+                  '
+                value:
+                - code: bottom_description
+                  source:
+                    locale: en-US
+                  label: Updated - Category Description
+  /v1/catalog/categories/metadata/delete:
+    post:
+      tags:
+      - CategoryMetadata
+      summary: Delete category attributes metadata
+      description: Remove category attribute metadata resources from the catalog data.
+      operationId: deleteCategoryMetadata
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedCategoryMetadataDelete'
+            examples:
+              FeedWithMetadataInformation:
+                summary: Delete category attribute metadata
+                description: Marks existing category attribute metadata as deleted.
+                value:
+                - code: bottom_description
+                  source:
+                    locale: en-US
+components:
+  schemas:
+    FeedCategoryMetadata:
+      title: Create or update category metadata attribute
+      description: Metadata information for a category attribute.
+      required:
+      - code
+      - source
+      - label
+      - dataType
+      type: object
+      properties:
+        code:
+          type: string
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+        label:
+          type: string
+          description: Label for the attribute that is displayed in user interfaces.
+          example: Attribute Name
+        dataType:
+          type: string
+          description: Data type
+          example: TEXT
+          enum:
+          - TEXT
+          - DECIMAL
+          - INTEGER
+          - BOOLEAN
+    FeedCategoryMetadataDelete:
+      title: Delete category metadata attribute
+      description: Delete metadata information for a category attribute.
+      required:
+      - code
+      - source
+      type: object
+      properties:
+        code:
+          type: string
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    FeedCategoryMetadataUpdate:
+      title: Update category metadata attribute
+      description: Metadata information for a category attribute.
+      required:
+      - code
+      - source
+      type: object
+      properties:
+        code:
+          type: string
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+        label:
+          type: string
+          description: Label for the attribute that is displayed in user interfaces.
+          example: Attribute Name
+        dataType:
+          type: string
+          description: Data type
+          example: TEXT
+          enum:
+          - TEXT
+          - DECIMAL
+          - INTEGER
+          - BOOLEAN
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    400ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: FAILED
+        message:
+          type: string
+          description: Error summary.
+        errors:
+          type: array
+          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
+          items:
+            $ref: '#/components/schemas/FeedItemFailedValidationResult'
+      example:
+        status: FAILED
+        message: Items validation failed for 2 items
+        errors:
+        - itemIndex: 0
+          code: status
+          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
+          value: active
+        - itemIndex: 1
+          code: source
+          message: required property 'source' not found
+          value: ''
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
+      type: object
+      required:
+      - locale
+      properties:
+        locale:
+          type: string
+          description: A single value that represents content locale, for example, English.
+          example: English
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+  responses:
+    InvalidItemsResponse:
+      x-summary: Request rejected
+      description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
+
+
+        Common causes of validation errors include:
+
+
+        * **Invalid SKU**: SKU does not exist in the catalog
+
+        * **Invalid Price Book**: Price book ID does not exist
+
+        * **Invalid Discount Code**: Duplicate or invalid discount codes
+
+        * **Invalid Tier Quantities**: Quantities not in ascending order or less than 2
+
+        * **Configurable Product Price**: Attempting to set price for configurable product SKU
+
+        * **Invalid Price Format**: Non-numeric or negative price values
+
+        * **Incorrect Category Slug**: Invalid category slug format
+
+        * **Incorrect hierarchy configuration**: Misconfiguration of price book parent-child relationship
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/400ProcessFeedResponse'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+externalDocs:
+  url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
+  description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

@@ -1,0 +1,148 @@
+openapi: 3.2.0
+info:
+  title: Segmentation Service Estimates API
+  description: "\nAdobe Experience Platform Segmentation Service provides a user interface and RESTful API that allows you to create audiences through segment definitions or other sources from your Real-Time Customer Profile data. These audiences are centrally configured and maintained on Platform, and are readily accessible by any Adobe solution. Use the Segmentation Service API to programmatically integrate the service's various functionalities into your experience application, providing RESTful endpoints for managing audiences, segment definitions, segment jobs, exports, schedules, and more.\n- **Related documentation**:\n    - [Segmentation Service documentation](https://www.adobe.com/go/segmentation-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Segmentation Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Segmentation%20Service%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**: \n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/core/ups\n  - Example of a complete path: https://<span>platform.adobe.io/data/core/ups/segment/definitions\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](https://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \\\"prod\\\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en)for more information.    \n  - All requests with a payload in the request body(such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/core/ups
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Estimates
+  description: Estimates provide statistical information on a segment definition, such as the projected audience size and confidence interval. More information about using this set of endpoints can be found in the [previews and estimates endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/segmentation/api/previews-and-estimates.html).
+paths:
+  /estimate/{ESTIMATE_ID}:
+    get:
+      tags:
+      - Estimates
+      summary: Retrieve the results of an estimate job
+      operationId: retrieveEstimate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: ESTIMATE_ID
+        in: path
+        description: The ID of the estimate job.
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: The estimate job was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimateResponse'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The estimate job was not found.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+components:
+  schemas:
+    PreviewLink:
+      required:
+      - preview
+      type: object
+      properties:
+        preview:
+          type: string
+          description: The URI to get more information about the estimate.
+          example: https://platform.adobe.io/data/core/ups/preview/app-32be0328-3f31-4b64-8d84-acd0c4fbdad3/execution/0?previewQueryId={QUERY_ID}
+    EstimateResponse:
+      type: object
+      properties:
+        estimatedSize:
+          type: integer
+          format: int32
+          example: 35935
+        numRowsToRead:
+          type: integer
+          format: int32
+          example: 35935
+        estimatedNamespaceDistribution:
+          type: array
+          items:
+            type: object
+            properties:
+              namespaceId:
+                type: string
+                example: '4'
+              profilesMatchedSoFar:
+                type: integer
+                example: 11986
+        state:
+          type: string
+          example: RESULT_READY
+        profilesReadSoFar:
+          type: integer
+          format: int32
+          example: 35935
+        standardError:
+          type: integer
+          format: int32
+          example: 0
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+              example: ''
+            traceback:
+              type: string
+              example: ''
+        profilesMatchedSoFar:
+          type: integer
+          example: 12123
+        totalRows:
+          type: integer
+          format: int32
+          example: 35935
+        confidenceInterval:
+          type: string
+          example: 95%
+        _links:
+          $ref: '#/components/schemas/PreviewLink'
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string

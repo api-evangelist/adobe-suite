@@ -1,0 +1,1339 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Datasets API
+  version: '1.0'
+  description: 'Operations tagged Datasets across 2 of this provider''s published API definitions: adobe-suite-aep-catalog-openapi.yaml, adobe-suite-aep-dataset-service-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //{environment}.adobe.io/data/foundation/catalog
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: //{environment}.adobe.io/data/foundation/dataset
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Datasets
+  description: Datasets are the building blocks for data transformation and tracking in Catalog Service.
+paths:
+  /dataSets:
+    get:
+      tags:
+      - Datasets
+      summary: Retrieve a list of datasets
+      description: This request lets you retrieve a list of datasets which are the building blocks for data transformation and tracking in Catalog Service.
+      operationId: listDatasets
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - name: version
+        in: query
+        description: Filter by Semantic version of the account. Updated when the object is modified.
+        schema:
+          type: string
+      - name: created
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when this object was persisted.
+        schema:
+          type: integer
+          format: int64
+      - name: updated
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) for the time of last modification.
+        schema:
+          type: integer
+          format: int64
+      - name: createdClient
+        in: query
+        description: Filter by the ID of the IMS client that created this object.
+        schema:
+          type: string
+      - name: createdUser
+        in: query
+        description: Filter by the ID of the user who created this object.
+        schema:
+          type: string
+      - name: updatedUser
+        in: query
+        description: Filter by the ID of the user who changed this object.
+        schema:
+          type: string
+      - name: name
+        in: query
+        description: Filter on the name of the dataset.
+        schema:
+          type: string
+      - name: description
+        in: query
+        description: Filter on the description of the dataset.
+        schema:
+          type: string
+      - name: enableErrorDiagnostics
+        in: query
+        description: A field that provides the ability to opt in to generating diagnostic files for the errors while ingesting data.
+        schema:
+          type: boolean
+      - name: orderBy
+        in: query
+        description: Sort parameter and direction for sorting the response. Ex. orderBy=asc:created,updated. This was previously called sort.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/limit'
+      - name: start
+        in: query
+        description: Specifies the offset of the pages of results. To get the first page of results, set the value to `start=0`.
+        schema:
+          type: integer
+          default: 0
+      - name: property
+        in: query
+        description: Regex used to filter objects in the response.
+        schema:
+          type: string
+      - name: properties
+        in: query
+        description: A comma separated allowlist of top-level object properties to be returned in the response. Used to cut down the number of properties and amount of data returned in the response bodies.
+        schema:
+          type: string
+      - name: tags
+        in: query
+        description: Filter response by the specified tags.
+        schema:
+          type: string
+      responses:
+        200:
+          description: A list of datasets is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/dataSetResponse'
+              example:
+                5ab540d0864cf0267448ead4:
+                  version: 1.0.0
+                  imsOrg: 4F3BB22C5631222A7F000101@AdobeOrg
+                  name: Acme accounts dataset - 1521827915638
+                  created: 1521828048923
+                  updated: 1521828208046
+                  createdClient: platform_foundation_catalog
+                  createdUser: platform_foundation_catalog@AdobeID
+                  updatedUser: platform_foundation_catalog@AdobeID
+                  tags:
+                    foo:
+                    - bar
+                    - foos
+                    - ball
+                    adobe/touchpoint/appliedTransformations:
+                    - CLUSTERED:FOO
+                  viewId: 5ab54170864cf0267448ead5
+                  basePath: s3://bar/ball/baz
+                  files: '@/dataSetFiles?dataSetId=5ab540d0864cf0267448ead4'
+                  observableSchema: {}
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The datasets are not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    post:
+      tags:
+      - Datasets
+      summary: Create a new dataset
+      description: This request creates a new dataset.
+      operationId: createDataset
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: Information about the new dataset you are creating.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dataSetRequest'
+            examples:
+              Enable for Profile:
+                summary: Enable a dataset for Profile
+                value:
+                  name: Profile-enabled sample dataset
+                  description: This is a sample dataset that is enabled for Profile.
+                  schemaRef:
+                    id: https://ns.adobe.com/{TENANT_ID}/schemas/31670881463308a46f7d2cb09762715
+                    contentType: application/vnd.adobe.xed-full-notext+json; version=1
+                  tags:
+                    unifiedIdentity:
+                    - 'enabled: true'
+                    unifiedProfile:
+                    - 'enabled: true'
+                    - 'isUpsert: true'
+        required: true
+      responses:
+        201:
+          description: The dataset has been successfully created.
+          headers:
+            Location:
+              description: The URI of the newly created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: dataSet
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /dataSets/{DATASET_ID}:
+    get:
+      tags:
+      - Datasets
+      summary: Look up a dataset
+      description: This request allows you to retrieve a dataset using the {DATASET_ID}.
+      operationId: retrieveDataset
+      parameters:
+      - $ref: '#/components/parameters/dataset_id'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - name: properties
+        in: query
+        description: A comma separated allowlist of top-level object properties to be returned in the response. Used to cut down the number of properties and amount of data returned in the response bodies.
+        schema:
+          type: string
+      responses:
+        200:
+          description: The dataset for the specified dataset ID is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/dataSetResponse'
+              example:
+                5ab540d0864cf0267448ead4:
+                  version: 1.0.0
+                  imsOrg: 4F3BB22C5631222A7F000101@AdobeOrg
+                  name: Acme accounts dataset - 1521827915638
+                  enableErrorDiagnostics: true
+                  created: 1521828048923
+                  updated: 1521828208046
+                  createdClient: platform_foundation_catalog
+                  createdUser: 4F3BB22C5631222A7F000101@AdobeOrg
+                  updatedUser: platform_foundation_catalog@AdobeID
+                  tags:
+                    foo:
+                    - bar
+                    - foos
+                    - ball
+                    adobe/touchpoint/appliedTransformations:
+                    - CLUSTERED:FOO
+                  viewId: 5ab54170864cf0267448ead5
+                  basePath: s3://bar/ball/baz
+                  files: '@/dataSetFiles?dataSetId=5ab540d0864cf0267448ead4'
+                  observableSchema: {}
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The dataset was not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    put:
+      tags:
+      - Datasets
+      summary: Update a dataset
+      description: This request allows you to update a specific dataset. The dataset that requires updating can be retrieved using the {DATASET_ID}.
+      operationId: putDataset
+      parameters:
+      - $ref: '#/components/parameters/dataset_id'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/if-none-match'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: Data set field(s) to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dataSetRequest'
+        required: true
+      responses:
+        200:
+          description: Array[ @/dataSets/dataSetId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: dataSet
+    delete:
+      tags:
+      - Datasets
+      summary: Delete a dataset
+      description: This request deletes a dataset using the {DATASET_ID}.
+      operationId: deleteDataset
+      parameters:
+      - $ref: '#/components/parameters/dataset_id'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      responses:
+        200:
+          description: Array[ @/dataSets/dataSetId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    patch:
+      tags:
+      - Datasets
+      summary: Update a dataset's attributes
+      description: This request allows you to update specified attributes of an existing DataSetView.
+      operationId: patchDataset
+      parameters:
+      - $ref: '#/components/parameters/dataset_id'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/if-none-match'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: Dataset field(s) to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/dataSetRequest'
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/dataSetRequest'
+            examples:
+              Update a dataset to be Profile-enabled:
+                summary: Update a dataset to be Profile-enabled
+                value:
+                - op: add
+                  path: /tags/unifiedProfile
+                  value:
+                  - enabled:true
+                  - isUpsert:true
+                - op: add
+                  path: /tags/unifiedIdentity
+                  value:
+                  - enabled:true
+        required: true
+      responses:
+        200:
+          description: Array[ @/dataSets/dataSetId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: Not found
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: dataSet
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /dataSets/{id}/credentials:
+    get:
+      tags:
+      - Datasets
+      summary: Retrieve a dataset's credentials
+      description: This request fetches credentials for the requested dataset ID.
+      operationId: retrieveDatasetCredentials
+      parameters:
+      - name: id
+        in: path
+        description: Object ID
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/x-user-token'
+      - $ref: '#/components/parameters/accept-encoding'
+      - name: batchId
+        in: query
+        description: If wishing to write, the batchId used during writing. Required for building a stage path.
+        schema:
+          type: string
+      responses:
+        200:
+          description: Credential object given dataSet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dataSetCredentials'
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      deprecated: true
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /datasets/{DATASET_ID}/labels:
+    get:
+      tags:
+      - Datasets
+      summary: Retrieve data usage labels for a specific dataset
+      description: 'You can use this endpoint to retrieve data usage labels for a specified dataset.
+
+        >**NOTE**: See the tutorial on [managing labels for datasets using APIs](https://experienceleague.adobe.com/docs/experience-platform/data-governance/labels/dataset-api.html) for more information on using this endpoint.'
+      operationId: retrieveDatasetLabels
+      parameters:
+      - name: DATASET_ID
+        in: path
+        description: The ID of an existing dataset. Dataset IDs can be retrieved using the [Catalog Service API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/catalog.yaml).
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The data usage labels for the specified dataset were retrieved.
+          x-summary: Data usage labels retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelPayload'
+        '404':
+          description: The labels entity was not found. If the dataset indicated in the request path does not have any existing labels applied, this error will occur.
+          x-summary: Labels entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+    put:
+      tags:
+      - Datasets
+      summary: Update the data usage labels for a specific dataset
+      description: "You can use this endpoint to update the data usage labels for a specified dataset or fields.\n\n >**NOTE**: You can entirely remove a dataset's labels by providing an empty list for the `labels` parameter. It is not mandatory for a dataset to retain any labels. See the tutorial on [managing labels for datasets using APIs](https://experienceleague.adobe.com/docs/experience-platform/data-governance/labels/dataset-api.html) for more information on using this endpoint."
+      operationId: updateDatasetLabels
+      parameters:
+      - name: DATASET_ID
+        in: path
+        description: The ID of an existing dataset. Dataset IDs can be retrieved using the [Catalog Service API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/catalog.yaml).
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: The media type being sent in the request payload. The required value for calls to the Dataset Service API is `application/json`.
+        required: true
+        schema:
+          type: string
+      - name: If-Match
+        in: header
+        description: The version of the dataset entity to compare against. As a requirement for all PUT and DELETE requests for dataset labels, the call will only update the dataset entity if the "If-Match" string matches that of the "etag" header that is returned in all responses from the Dataset Service API.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/LabelPayload'
+        required: false
+      responses:
+        '200':
+          description: The data usage labels were successfully updated.
+          x-summary: Data usage labels updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelPayload'
+        '404':
+          description: The labels entity was not found.
+          x-summary: Labels entity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '409':
+          description: A data usage policy violation has occurred.
+          x-summary: Data usage policy violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+      x-codegen-request-body-name: body
+    post:
+      tags:
+      - Datasets
+      summary: Add data usage labels to a specific dataset
+      description: 'This endpoint has been deprecated. You can use this endpoint to add data usage labels to a specified dataset or fields.
+
+        >**NOTE**: See the tutorial on [managing labels for datasets using APIs](https://experienceleague.adobe.com/docs/experience-platform/data-governance/labels/dataset-api.html) for more information on using this endpoint.'
+      operationId: addDatasetLabels
+      parameters:
+      - name: DATASET_ID
+        in: path
+        description: The ID of an existing dataset. Dataset IDs can be retrieved using the [Catalog Service API](https://www.adobe.io/apis/experienceplatform/home/api-reference.html#!acpdr/swagger-specs/catalog.yaml).
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: The media type being sent in the request payload. The required value for calls to the Dataset Service API is `application/json`.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/LabelPayload'
+        required: false
+      responses:
+        '201':
+          description: The data usage labels were successfully added.
+          x-summary: Data usage labels added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelPayload'
+        '403':
+          description: The labels entity already exists. Use a PUT request instead.
+          x-summary: Labels entity already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        '409':
+          description: A data usage policy violation has occurred.
+          x-summary: Data usage policy violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+      x-codegen-request-body-name: body
+      deprecated: true
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/dataset
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+components:
+  schemas:
+    dataSetResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          description: The Semantic version of the dataset. Updated when the dataset is modified.
+          readOnly: true
+          example: 1.0.3
+        imsOrg:
+          type: string
+          description: The owning organization identifier.
+          example: 4F3BB22C5631222A7F000101@AdobeOrg
+        name:
+          type: string
+          description: A descriptive, human-readable name for this dataset.
+          example: Acme accounts dataset - 1521827915638
+        description:
+          type: string
+          description: A longer text description of the dataset.
+          example: A dataset for accounts held by Acme.
+        created:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when this dataset was persisted.
+          format: int64
+          readOnly: true
+          example: 1658499154836
+        updated:
+          type: integer
+          description: The Unix timestamp (in milliseconds) for the time of last modification.
+          format: int64
+          readOnly: true
+          example: 1658499238628
+        createdClient:
+          type: string
+          description: The ID of the IMS client that created this Batch.
+          readOnly: true
+          example: platform_foundation_catalog
+        createdUser:
+          type: string
+          description: The ID of the user who created this object.
+          readOnly: true
+          example: platform_foundation_catalog@AdobeID
+        updatedUser:
+          type: string
+          description: The ID of the user who changed this object.
+          readOnly: true
+          example: platform_foundation_catalog@AdobeID
+        viewId:
+          type: string
+          description: The ID for associated dataset view.
+          example: 5ab54170864cf0267448ead5
+        observableSchema:
+          type: object
+          properties: {}
+          description: observableSchema stores a JSON Schema object that is a valid subset (including the null case) of the XDM model specified by `schemaRef`.
+        basePath:
+          type: string
+          description: Fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN.
+          readOnly: true
+          example: s3://bar/ball/baz
+        fileDescription:
+          type: object
+          properties:
+            format:
+              $ref: '#/components/schemas/format'
+            delimiters:
+              type: array
+              description: Characters used to separate fields.
+              items:
+                maxLength: 1
+                type: string
+            quotes:
+              type: array
+              description: ''
+              items:
+                type: string
+            escapes:
+              type: array
+              description: ''
+              items:
+                type: string
+            nullMarkers:
+              type: array
+              description: ''
+              items:
+                type: string
+            header:
+              type: boolean
+              description: ''
+            charset:
+              type: string
+              description: The character encoding of the files.
+              enum:
+              - US-ASCII
+              - UTF-8
+              - ISO-8859-1
+              - ''
+          description: Metadata describing the dataset files associated with this DatasetView.
+        schema:
+          type: string
+          description: This is the uri for the XDM model
+          example: null
+        schemaRef:
+          $ref: '#/components/schemas/schemaRef'
+        files:
+          type: string
+          description: Associated files for given dataset in following string format dataSets/{dataSetId}/views/{dataSetViewId}/files. By using query parameter 'expansion=files', this object can be requested as part of response.
+          example: dataSets/605dbe4e89b61819495e4dff/views/5cc6a9b60d4a5914b7940a7f/
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+            example: platform_dataset
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands. Normally tags are not used for internal Catalog business logic
+          example: adobe/platform/table
+        lastBatchId:
+          type: string
+          description: The ID of the last batch that modified the data set (only modified by Siphon batch ingest).
+          example: 62a31e96ba86e52a2f729a8d
+        lastBatchStatus:
+          $ref: '#/components/schemas/batchStatus'
+        lastSuccessfulBatch:
+          type: string
+          description: The ID of the last successful batch that has modified this dataset (only modified by Siphon batch ingest).
+          example: 73a340e26b64ed3eb31ec8f9
+        lastFailedBatch:
+          type: string
+          description: The ID of the last failed batch that has modified this dataset (only modified by Siphon batch ingest).
+          example: 51b340e26b64ed3eb31ec9z8
+        dataSourceId:
+          type: integer
+          description: The ID of the data source. It must be unique, along with its name.
+        persistence:
+          $ref: '#/components/schemas/persistenceResponse'
+    format:
+      type: string
+      description: The file format for all dataSetFiles associated with this view. Required for CSV upload workflows, but optional in all other cases.
+      enum:
+      - ''
+      - csv
+      - text
+      - parquet
+      - json
+      - sequencefile
+      - avro
+      example: parquet
+    schemaRef:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID contains full URL path for XDM schema.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/142afb78d8b368a5ba97a6cc8fc7e033
+        contentType:
+          type: string
+          description: contentType represents XDM schema version and type of schema.
+          example: application/vnd.adobe.xed+json;version=1
+      description: This is the full URL for XDM schema path. This field will be derived from schema field, if it is not present. This field will be used to annotate XDM schema version used in the dataSet or dataSetView.
+    credentials:
+      type: object
+      properties:
+        clientKey:
+          type: string
+          description: Credentials client key.
+        clientId:
+          type: string
+          description: Credentials client ID.
+        tenantId:
+          type: string
+          description: Credentials tenant ID.
+        resourceGroupName:
+          type: string
+          description: Credentials resource group.
+        subscriptionId:
+          type: string
+          description: Credentials subscription ID.
+        name:
+          type: string
+          description: Credentials name.
+        adlsType:
+          type: string
+          description: Credentials ADLS type.
+        adlsUri:
+          type: string
+          description: Credentials ADLS URI.
+        hadoopUri:
+          type: string
+          description: Hadoop URI.
+      description: Credentials.
+    dataSetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: A descriptive, human-readable name for this dataset.
+          example: Acme accounts dataset - 1521827915638
+        description:
+          type: string
+          description: A longer text description of the dataset.
+          example: A dataset for accounts held by Acme.
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands. Normally tags are not used for internal Catalog business logic
+          example:
+            foo_bar:
+            - stuff
+            bar_foo:
+            - woo
+            - baz
+            foo/bar/foo-bar:
+            - weehaw
+            - wee:haw
+        enableErrorDiagnostics:
+          type: boolean
+          description: This field provides the ability to opt in to generating diagnostic files for the errors while ingesting data.
+          example: true
+        observableSchema:
+          type: object
+          properties: {}
+          description: observableSchema stores a JSON Schema object that is a valid subset (including the null case) of the XDM model specified by `schemaRef`.
+        basePath:
+          type: string
+          description: Fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN.
+          readOnly: true
+          example: s3://bar/ball/baz
+        fileDescription:
+          type: object
+          properties:
+            format:
+              $ref: '#/components/schemas/format'
+            delimiters:
+              type: array
+              description: Characters used to separate fields.
+              items:
+                maxLength: 1
+                type: string
+            quotes:
+              type: array
+              description: Quote characters used.
+              items:
+                type: string
+              example: '`'
+            escapes:
+              type: array
+              description: Escape characters used.
+              items:
+                type: string
+                example: \
+            nullMarkers:
+              type: array
+              description: Null markers used.
+              items:
+                type: string
+              example: ''
+            header:
+              type: boolean
+              description: ''
+              example: 'true'
+            charset:
+              type: string
+              description: The character encoding of the files.
+              enum:
+              - US-ASCII
+              - UTF-8
+              - ISO-8859-1
+              - ''
+              example: UTF-8
+          description: Metadata describing the dataset files associated with this DatasetView.
+        schema:
+          type: string
+          description: This is the uri for the XDM model
+        schemaRef:
+          $ref: '#/components/schemas/schemaRef'
+        dataSourceId:
+          type: integer
+          description: The ID of the datasource. It must be unique, along with its name.
+    persistenceResponse:
+      type: object
+      properties:
+        adls:
+          type: object
+          properties:
+            location:
+              type: string
+              description: Filter by the fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN. Its value is same as the basePath field.
+            adlsType:
+              type: object
+              description: ADLS generation type 1 or 2.
+              readOnly: true
+            credentials:
+              type: string
+              description: This property represents the relative URI for persistence credentials of this dataset, for e.g. @/dataSets/{id}/credentials.
+          description: This object represents adls storage path for dataSets.
+          readOnly: true
+        datastream:
+          type: object
+          properties:
+            source:
+              type: string
+              description: This property represents the source of dataStream.
+          description: This object represents stream persistence type for dataSets.
+      description: Persistence object holds meta data of different persistence type supported by a dataset.
+    dataSetCredentials:
+      type: object
+      properties:
+        dataSetId:
+          type: string
+          description: The ID of the dataset these credentials are for.
+          example: 5abd49645591445e1ba04f87
+        path:
+          type: string
+          description: Base storage path for this dataset.
+          example: https://platform.adobe.io/data/foundation/dataset/datasets/5abd49645591445e1ba04f87/
+        stagePath:
+          type: string
+          description: Staging base path for ingest.
+          example: platformdataset/stage/5d01230fc78a4e4f8c0c6b387b4b8d1c
+        credentials:
+          $ref: '#/components/schemas/credentials'
+    batchStatus:
+      type: string
+      description: The status of the last batch.
+      enum:
+      - processing
+      - success
+      - failure
+      - queued
+      - retrying
+      - stalled
+      - aborted
+      - abandoned
+      - inactive
+      - failed
+      - loading
+      - loaded
+      - staged
+      - active
+      - staging
+      - deleted
+      example: processing
+    _links:
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the currently displayed response page.
+              example: https://platform.adobe.io/data/foundation/dulepolicy/policies/custom/5db3393907d49f198b8f0e6a
+          description: Contains the URL for the currently displayed response page.
+        next:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the next response page.
+          description: Contains the URL for the next response page.
+        page:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The templated URL for viewing other response pages.
+            templated:
+              type: boolean
+              description: Indicates that the sibling `href` property is a template.
+          description: Contains a templated URL for viewing other response pages.
+      description: Contains pagination URLs to view the rest of the response.
+    LabelPayload:
+      type: object
+      properties:
+        labels:
+          type: array
+          description: A list of data usage labels that have been applied to the dataset as a whole.
+          items:
+            type: string
+            example: ''
+        optionalLabels:
+          type: array
+          description: A list of individual fields within the dataset that have data usage labels applied.
+          items:
+            type: object
+            properties:
+              option:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The URL `$id` of the dataset's schema.
+                    example: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
+                  contentType:
+                    type: string
+                    description: The content type and version of the schema.
+                    example: application/vnd.adobe.xed-full+json;version=1
+                  schemaPath:
+                    type: string
+                    description: The path to the specific field in the schema.
+                    example: /properties/repositoryCreatedBy
+                description: Describes the field that the labels have been applied to.
+              labels:
+                type: array
+                description: A list of data usage labels that have been applied to the field described in the sibling `option` property.
+                items:
+                  type: string
+                  example: ''
+    NotFoundError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: A timestamp of when the error occurred.
+          example: 2021-04-21 19:56:46.551000+00:00
+        status:
+          type: string
+          description: The error status.
+          example: NOT_FOUND
+        code:
+          type: string
+          description: The Policy Service error code.
+          example: PES-404
+        message:
+          type: string
+          description: The error message.
+          example: GET Entities Not Found
+        path:
+          type: string
+          description: The path used in the lookup attempt, containing the ID of the dataset whose labels were not found.
+          example: /entities/AEP:dataset:60105b5e1af43c18db857d69
+    policyDeny:
+      type: object
+      properties:
+        label:
+          type: string
+          description: If only checking against a single label, this property should be used to indicate that label. If multiple labels are being used as part of the expression, then `operator` and `operands` must be used instead.
+          example: C1
+        operator:
+          type: string
+          description: When including multiple labels in the expression, this property indicates the relationship the labels have (`AND` or `OR`).
+          example: AND
+        operands:
+          type: array
+          description: A list of labels to check for. If `operator` is set to `AND`, all labels must be present for a violation to occur. If `operator` is set to `OR`, only one of the listed labels needs to be present to trigger a violation.
+          items:
+            type: string
+            example: ''
+        imsOrg:
+          type: string
+          description: The ID of the IMS Org that owns the policy.
+          example: '{IMS_ORG}'
+        sandboxName:
+          type: string
+          description: The name of the sandbox that contains the policy.
+          example: prod
+        created:
+          type: number
+          description: A unix timestamp of when the policy was created.
+          example: 1529696681413
+        createdClient:
+          type: string
+          description: The client that was used to create the policy.
+          example: '{CLIENT_ID}'
+        createdUser:
+          type: string
+          description: The user that created the policy.
+          example: '{USER_ID}'
+        updated:
+          type: number
+          description: A unix timestamp of when the policy was last updated.
+          example: 1529696681413
+        updatedClient:
+          type: string
+          description: The client that was used to last update the policy.
+          example: '{CLIENT_ID}'
+        updatedUser:
+          type: string
+          description: The user that last updated the policy.
+          example: '{USER_ID}'
+        marketingActionRefs:
+          type: array
+          description: A list of marketing actions that the policy applies to.
+          items:
+            type: string
+            example: ''
+        _links:
+          $ref: '#/components/schemas/_links'
+      description: An object that describes the specific labels (or combinations therein) that the policy restricts, as well as other metadata.
+    ForbiddenError:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+    violatedPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The policy ID
+          example: corepolicy_0001
+        name:
+          type: string
+          description: The name of the policy.
+          example: 3rd party export restriction
+        status:
+          type: string
+          description: The current status of the policy.
+          example: ENABLED
+        description:
+          type: string
+          description: A friendly description for the policy.
+          example: Policy for restricting data export to 3rd parties.
+        deny:
+          $ref: '#/components/schemas/policyDeny'
+    ConflictError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The Policy Service error code.
+          example: PES-409
+        message:
+          type: string
+          description: The error message.
+          example: Policy conflict error
+        violations:
+          type: array
+          description: A list of policy violations that the attempted action triggered.
+          items:
+            $ref: '#/components/schemas/policyViolation'
+        count:
+          type: number
+          description: The number of policy violations that were triggered.
+          example: 1.0
+    policyViolation:
+      type: object
+      properties:
+        enforcementRef:
+          type: string
+          description: Indicates the marketing action whose policy constraints were violated.
+          example: /dulepolicy/marketingActions/core/g72cbgy644bsgc3becbba1e197fa25c1e/constraints
+        entities:
+          type: array
+          description: A list of dataset entities that were involved in the violation, including their associated labels.
+          items:
+            $ref: '#/components/schemas/LabelPayload'
+        violatedPolicies:
+          type: array
+          description: A list of policies that were violated for the datasets and/or fields listed in the `entities` array.
+          items:
+            $ref: '#/components/schemas/violatedPolicy'
+  parameters:
+    dataset_id:
+      name: DATASET_ID
+      in: path
+      description: The ID of the dataset.
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-user-token:
+      name: x-user-token
+      in: header
+      description: For calls which are proxied by catalog, the access token for the user on whose behalf this call is made.
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      description: Limit response to a specified positive number of objects. The maximum number of objects that can be returned is 100.
+      schema:
+        type: integer
+      example: 20
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
+      schema:
+        type: string
+    if-none-match:
+      name: if-none-match
+      in: header
+      description: Set to verify the invalid versions of document to be modified by matching the updated date.
+      schema:
+        type: string
+    content-type:
+      name: content-type
+      in: header
+      description: Specifies the media type of the request body. Required for requests with a payload, such as POST, PUT, and PATCH. When sending a JSON payload, this must be set to `application/json`.
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+x-refined-from:
+- adobe-suite-aep-catalog-openapi.yaml
+- adobe-suite-aep-dataset-service-openapi.yaml
+x-original-swagger-version: '2.0'

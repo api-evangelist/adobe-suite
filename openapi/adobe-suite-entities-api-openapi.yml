@@ -1,0 +1,911 @@
+openapi: 3.2.0
+info:
+  title: Real-time Customer Profile Entities API
+  description: "Use Real-time Customer Profile to drive coordinated, consistent and relevant experiences for your customers no matter where or when they interact with your brand. Profile provides a holistic view of each individual customer that combines data from multiple channels, including online, offline, CRM, and third-party data.\n- **Related documentation**:\n  - [Real-time Customer Profile documentation](http://www.adobe.com/go/profile-overview-en)\n  - [Profile API developer guide](http://www.adobe.com/go/profile-developer-guide-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n  - [Real-time Customer Profile API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Real-time%20Customer%20Profile%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/core/ups\n  - Base path for the computed attributes API: /data/core/ca\n  - Example of a complete path: https://<span>platform.adobe.io/data/core/ups/config/mergePolicies\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. Accepted values specific to each call are provided in the call parameters.\n\n- **API error handling**:\n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).\n  "
+  version: '1.0'
+servers:
+- url: https://{environment}.adobe.io/data/core
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Entities
+  description: An entity is an Experience Data Model (XDM) object whose attributes and related time-series events have been merged from various sources to form an individual profile. For more information on using this set of endpoints, please read the [entities endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/profile/api/entities.html).
+paths:
+  /ups/access/entities:
+    get:
+      tags:
+      - Entities
+      summary: Retrieve an entity
+      description: You can only use this endpoint if you are subscribed to Real-Time CDP Ultimate edition. For more information on this update, read the [entities API guide](https://experienceleague.adobe.com/en/docs/experience-platform/profile/api/entities).
+      operationId: retrieveEntity
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: schema.name
+        in: query
+        description: The name of the schema you want to retrieve. Please note that retrieving ExperienceEvents is now **deprecated**.
+        required: true
+        schema:
+          type: string
+          enum:
+          - _xdm.context.profile
+          - _xdm.context.account
+          - _xdm.context.opportunity
+        example: _xdm.context.profile
+      - name: entityId
+        in: query
+        description: The ID of the entity. If the value of this parameter is not an XID, you must also provide the identity namespace parameter, `entityIdNS`.
+        schema:
+          type: string
+        example: GtghAUFkdGVzdDE
+      - name: entityIdNS
+        in: query
+        description: The identity namespace of the entity. This field is only used if you specified an `entityId`.
+        schema:
+          type: string
+        example: UPS1
+      - name: fields
+        in: query
+        description: Filters the data returned in the response. Use this to specify which schema field values to include in data retrieved. For multiple fields, separate values by a comma with no spaces between.
+        schema:
+          type: string
+        example: person.name.firstName,person.name.lastName
+      - name: mergePolicyId
+        in: query
+        description: Identifies the merge policy by which to govern the data returned. If one is not specified in the call, your organization's default for that schema will be used. If no default merge policy has been configured, the default is no profile merge and no identity stitching.
+        schema:
+          type: string
+        example: example-mergePolicy
+      - name: startTime
+        in: query
+        description: Inclusively specifies the start time to filter the entities (in milliseconds). By default, this is from beginning.
+        schema:
+          type: number
+        example: '1539838505'
+      - name: endTime
+        in: query
+        description: Exclusively specifies the end time to filter entities (in milliseconds). By default, this is to the end.
+        schema:
+          type: number
+        example: '1539838510'
+      - name: limit
+        in: query
+        description: The maximum number of records to return from the result. Only for time-series objects. By default, this value is set to 1000.
+        schema:
+          type: number
+        example: 10
+      - name: orderby
+        in: query
+        description: The sort order of retrieved entities by timestamp. This is written as `(+/-)timestamp`, with the default being `+timestamp`.
+        schema:
+          type: string
+        example: -timestamp
+      - name: property
+        in: query
+        description: 'Filter by the property value. Supported evaluators include =, !=, <, <=, >, >=. If more than one property filter is provided, it needs to be concatenated with `&`. This can only be used with experience events, with a maximum of **three** properties being supported. When using URLs, they must be encoded. When using date filters, they must be encoded as a string in the format "yyyy-mm-dd" or "yyyymmdd".<br><br>Example: `property=web.webPageDetails.isHomepage=false&property=placeContext.localTime<="2020-07-20"`'
+        schema:
+          type: string
+        example: property=web.webPageDetails.isHomepage=false&property=placeContext.localTime<="2020-07-20"
+      responses:
+        200:
+          x-summary: Success
+          description: The entity was successfully returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEntityResponse'
+              examples:
+                Profile entity:
+                  value:
+                    BVrqzwVv7o2p3naHvnsWpqZXv3KJgA:
+                      entityId: BVrqzwVv7o2p3naHvnsWpqZXv3KJgA
+                      sources:
+                      - '1000000000'
+                      entity:
+                        identities:
+                        - id: '89149270342662559642753730269986316601'
+                          namespace:
+                            code: ecid
+                        - id: janedoe@example.com
+                          namespace:
+                            code: email
+                        - id: '89149270342662559642753730269986316604'
+                          namespace:
+                            code: ecid
+                        - id: janefdoeh@example.com
+                          namespace:
+                            code: email
+                        - id: '58832431024964181144308914570411162539'
+                          namespace:
+                            code: ecid
+                        - id: '89149270342662559642753730269986316602'
+                          namespace:
+                            code: ecid
+                          primary: 'true'
+                        person:
+                          name:
+                            firstName: Jane
+                            middleName: F
+                            lastName: Doe
+                        workEmail:
+                          primary: true
+                          address: janedoe@example.com
+                          label: Jane Doe
+                          type: work
+                          status: active
+                      lastModifiedAt: '2018-10-18T15:59:10-08:00'
+                B2B Account:
+                  value:
+                    GuQ-AUFjgjaeIw:
+                      entityId: GuQ-AUFjgjaeIw
+                      mergePolicy:
+                        id: a6150f47-a94f-4c9d-bfa0-958a370020ee
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: '{SOURCE_INSTANCE_ID}'
+                            sourceType: '{SOURCE_TYPE}'
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_account:
+                          - id: '2334263'
+                          - id: '2334262'
+                          - id: '{SOURCE_ID}'
+                        isDeleted: false
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                B2B Opportunity:
+                  value:
+                    Ggw_AUFjgjaeIw:
+                      entityId: Ggw_AUFjgjaeIw
+                      mergePolicy:
+                        id: 162824be-07f5-4cd0-aa85-2ff3c8f6c775
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: 00DC0000000Q35nMAC
+                            sourceType: Salesforce
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_opportunity:
+                          - id: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                          - id: '2334263'
+                          - id: '2334262'
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+        400:
+          x-summary: Bad request
+          description: The post body is incomplete. Please double check your post body and try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: Missing access permissions
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: Not found
+          description: XDM objects not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        422:
+          x-summary: Processing error
+          description: Syntax is correct but Profile Access is not able to process your request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        429:
+          x-summary: Rate limit
+          description: Too many requests were sent. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+    post:
+      tags:
+      - Entities
+      summary: Retrieve multiple entities
+      description: You can only use this endpoint if you are subscribed to Real-Time CDP Ultimate edition. For more information on this update, read the [entities API guide](https://experienceleague.adobe.com/en/docs/experience-platform/profile/api/entities).
+      operationId: retrieveMultipleEntities
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: Content-Type
+        in: header
+        description: Type of content being sent in the body of the request. Should be 'application/json'.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: XDM objects to be created. Each object should be in JSON format.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRequestBodyEntity'
+            examples:
+              Profile entity:
+                value:
+                  schema:
+                    name: _xdm.context.profile
+                  fields:
+                  - identities
+                  - person.name
+                  - workEmail
+                  identities:
+                  - entityId: '89149270342662559642753730269986316601'
+                    entityIdNS:
+                      code: ECID
+                  - entityId: '89149270342662559642753730269986316900'
+                    entityIdNS:
+                      code: ECID
+                  - entityId: '89149270342662559642753730269986316602'
+                    entityIdNS:
+                      code: ECID
+                  timeFilter:
+                    startTime: 1539838505
+                    endTime: 1539838510
+                  limit: 10
+                  orderBy: -timestamp
+              B2B Account:
+                value:
+                  schema:
+                    name: _xdm.context.account
+                  identities:
+                  - entityId: '2334262'
+                    entityIdNS:
+                      code: b2b_account
+                  - entityId: '2334263'
+                    entityIdNS:
+                      code: b2b_account
+                  - entityId: '2334264'
+                    entityIdNS:
+                      code: b2b_account
+              B2B Opportunity:
+                value:
+                  schema:
+                    name: _xdm.context.opportunity
+                  identities:
+                  - entityId: '2334262'
+                    entityIdNS:
+                      code: b2b_opportunity
+                  - entityId: '2334263'
+                    entityIdNS:
+                      code: b2b_opportunity
+                  - entityId: '2334264'
+                    entityIdNS:
+                      code: b2b_opportunity
+                  - entityId: '2334265'
+                    entityIdNS:
+                      code: b2b_opportunity
+        required: true
+      responses:
+        200:
+          x-summary: Success
+          description: XDM objects successfully returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEntityResponse'
+              examples:
+                Profile entity:
+                  value:
+                    BVrqzwVv7o2p3naHvnsWpqZXv3KJgA:
+                      entityId: BVrqzwVv7o2p3naHvnsWpqZXv3KJgA
+                      sources:
+                      - '1000000000'
+                      entity:
+                        identities:
+                        - id: '89149270342662559642753730269986316601'
+                          namespace:
+                            code: ecid
+                        - id: janedoe@example.com
+                          namespace:
+                            code: email
+                        - id: '89149270342662559642753730269986316604'
+                          namespace:
+                            code: ecid
+                        - id: janefdoeh@example.com
+                          namespace:
+                            code: email
+                        - id: '58832431024964181144308914570411162539'
+                          namespace:
+                            code: ecid
+                        - id: '89149270342662559642753730269986316602'
+                          namespace:
+                            code: ecid
+                          primary: 'true'
+                        person:
+                          name:
+                            firstName: Jane
+                            middleName: F
+                            lastName: Doe
+                        workEmail:
+                          primary: true
+                          address: janedoe@example.com
+                          label: Jane Doe
+                          type: work
+                          status: active
+                      lastModifiedAt: '2018-10-18T15:59:10-08:00'
+                    A29cgveD5y64ezphxjUXNzcm:
+                      entityId: A29cgveD5y64ezphxjUXNzcm
+                      sources:
+                      - '1000000000'
+                      entity:
+                        identities:
+                        - id: '89149270342662559642753730269986316601'
+                          namespace:
+                            code: ecid
+                          primary: true
+                        - id: janedoe@example.com
+                          namespace:
+                            code: email
+                        person:
+                          name:
+                            firstName: Jane
+                            middleName: F
+                            lastName: Doe
+                        workEmail:
+                          primary: true
+                          address: janedoe@example.com
+                          label: Jane Doe
+                          type: work
+                          status: active
+                      lastModifiedAt: '2018-10-18T15:59:10-08:00'
+                B2B Account:
+                  value:
+                    GuQ-AUFjgjeeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: b2b_account
+                      entityId: GuQ-AUFjgjeeIw
+                      mergePolicy:
+                        id: a6150f47-a94f-4c9d-bfa0-958a370020ee
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: 00DC0000000Q35nMAC
+                            sourceType: Salesforce
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_account:
+                          - id: '2334263'
+                          - id: '2334262'
+                          - id: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                        isDeleted: false
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                    GuQ-AUFjgjaeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: b2b_account
+                      entityId: GuQ-AUFjgjaeIw
+                      mergePolicy:
+                        id: a6150f47-a94f-4c9d-bfa0-958a370020ee
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: 00DC0000000Q35nMAC
+                            sourceType: Salesforce
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_account:
+                          - id: '2334263'
+                          - id: '2334262'
+                          - id: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                        isDeleted: false
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                B2B Opportunity:
+                  value:
+                    GuQ-AUFjgjeeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: b2b_opportunity
+                      entityId: GuQ-AUFjgjeeIw
+                      mergePolicy:
+                        id: a6150f47-a94f-4c9d-bfa0-958a370020ee
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: 00DC0000000Q35nMAC
+                            sourceType: Salesforce
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_opportunity:
+                          - id: '2334263'
+                          - id: '2334262'
+                          - id: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                    GuQ-AUFjgjaeIw:
+                      requestedIdentity:
+                        entityId: 2334263
+                        entityIdNS:
+                          code: b2b_opportunity
+                      entityId: GuQ-AUFjgjaeIw
+                      mergePolicy:
+                        id: a6150f47-a94f-4c9d-bfa0-958a370020ee
+                      sources:
+                      - er_m_attr
+                      entity:
+                        _id: id1
+                        extSourceSystemAudit:
+                          lastReferencedDate: '2024-03-09 12:21:43.0'
+                          lastActivityDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedDate: '2024-03-09 12:21:43.0'
+                          lastUpdatedBy: '{USER_ID}'
+                          externalKey:
+                            sourceID: 00394S0001xpG6xABE
+                            sourceKey: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                            sourceInstanceID: 00DC0000000Q35nMAC
+                            sourceType: Salesforce
+                          lastViewedDate: '2024-03-09 12:21:43.0'
+                          createdDate: '2024-03-09 12:21:43.0'
+                        accountID: '2334262'
+                        identityMap:
+                          b2b_opportunity:
+                          - id: '2334263'
+                          - id: '2334262'
+                          - id: 0043c329201xpG6xAAE@00DC0000000Q35nWIN.Salesforce
+                        isDeleted: false
+                        opportunityKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+                        accountKey:
+                          sourceID: '2334262'
+                          sourceKey: '2334262'
+                          sourceInstanceID: '2334262'
+                          sourceType: Random
+        207:
+          x-summary: Partial failure
+          description: Failed to get records for some recordIds.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponseById'
+        400:
+          x-summary: Bad request
+          description: The post body is incomplete. Please double check your post body and try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: Missing access permissions
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: Not found
+          description: XDM objects not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        429:
+          x-summary: Rate limit
+          description: Too many requests. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Entities
+      summary: Delete an entity
+      operationId: deleteEntity
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: schema.name
+        in: query
+        description: Name of the associated XDM schema. You can only use the _xdm.context.profile schema with this endpoint.
+        required: true
+        schema:
+          type: string
+        example: _xdm.context.profile
+      - name: entityId
+        in: query
+        description: ID of the entity. For Native XID, use `entityId=<XID>` and leave `entityIdNS` absent; For ID:NS, use both `entityId` and `entityIdNS` fields.
+        schema:
+          type: string
+        example: GtghAUFkdGVzdDE
+      - name: entityIdNS
+        in: query
+        description: Identity Namespace code. Used for ID:NS. If this field is used, `entityId` cannot be empty.
+        schema:
+          type: string
+        example: ECID
+      - name: mergePolicyId
+        in: query
+        description: ID of the merge policy. A merge policy includes information for Identity stitching and key-value XDM object merging. If not present, the default merge policy will be used.
+        schema:
+          type: string
+        example: 963d71a1-9875-4aea-a52b-c5c7a2504cae
+      responses:
+        202:
+          x-summary: Accepted
+          description: Accepted
+          content: {}
+        207:
+          x-summary: Partial failure
+          description: Failed to delete records with some IDs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ErrorResponseById'
+        400:
+          x-summary: Bad request
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseErrorContext'
+        403:
+          x-summary: Missing access permissions
+          description: You do not have access permissions for this endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+        404:
+          x-summary: Not found
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        429:
+          x-summary: Rate limit
+          description: Too many requests. Please try again later.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TooManyRequestError'
+        500:
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseInternalErrorContext'
+components:
+  parameters:
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+  schemas:
+    PostTimeFilterEntity:
+      type: object
+      properties:
+        startTime:
+          type: number
+          description: 'Start time of Time range filter for time-series objects. Should be at millisecond granularity. Included. Default: From beginning.'
+          example: 1539838505
+        endTime:
+          type: number
+          description: 'End time of Time range filter for ExperienceEvents. Should be at millisecond granularity. Excluded. Default: To the end.'
+          example: 1539838510.0
+    NotFoundError:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          example: '404'
+    TooManyRequestError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Too many requests
+        cause:
+          type: string
+          description: Cause message
+          example: '{"Errors":["Request rate is large"]}'
+        retryAfterMs:
+          type: string
+          description: Retry in milliseconds
+          example: '500'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '429'
+    SchemaEntity:
+      type: object
+      properties:
+        name:
+          type: string
+          description: XED name of the schema class.
+          example: _xdm.context.profile
+    PostIdentityEntityItem:
+      type: object
+      properties:
+        entityId:
+          type: string
+          description: ID of the entity.
+          example: '69935279872410346619186588147492736556'
+        entityIdNS:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Identity namespace code.
+              example: CRMID
+          description: Identity namespace of the entity.
+        relatedEntityId:
+          type: string
+          description: The ID of the related entity
+          example: GkouAW-2u-7iWt5vQ9u2wm40JOZY
+    ForbiddenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
+        statusCode:
+          type: string
+          example: '403'
+    ResponseInternalErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Unable to connect to server
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 500 : Connection Timeout'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '500'
+    ResponseErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '422'
+    Entity:
+      properties:
+        requestedIdentity:
+          type: object
+        mergePolicy:
+          type: object
+        entityId:
+          type: string
+          description: The identifier of the XDM entity.
+          example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        sources:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: dataset IDs.'
+            example: 5bc7ee61cdcc8712f991f0ee
+        tags:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: batch ids.'
+            example: 4c442203cffc4635aa4553528958d969
+        identityGraph:
+          type: array
+          items:
+            type: string
+            description: Related identities of the merged XDM entity.
+            example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        entity:
+          type: object
+          description: Any user defined JSON as per the definition of XDM
+        lastModifiedAt:
+          type: string
+          description: Last modified timestamp. In RFC-3339 format.
+          example: 2018-10-18 15:59:10-08:00
+        _page:
+          type: object
+          description: ''
+    GetEntityResponse:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Entity'
+    ErrorResponseById:
+      type: object
+      properties:
+        xid:
+          type: string
+        error:
+          $ref: '#/components/schemas/ResponseErrorContext'
+    PostRequestBodyEntity:
+      required:
+      - identities
+      - schema
+      type: object
+      properties:
+        schema:
+          $ref: '#/components/schemas/SchemaEntity'
+        fields:
+          type: array
+          description: Fields for the model object. By default, all fields will be fetched. Separated by comma.
+          items:
+            type: string
+            example: person.name.firstName
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostIdentityEntityItem'
+        timeFilter:
+          $ref: '#/components/schemas/PostTimeFilterEntity'
+        limit:
+          type: number
+          description: 'Number of records to return from the result. Only for ExperienceEvents. Default: 1000'
+          example: 10.0
+        orderBy:
+          type: string
+          description: 'The sort order of retrieved ExperienceEvents by timestamp. Syntax: (+/-)timestamp. Default: +timestamp'
+          example: -timestamp

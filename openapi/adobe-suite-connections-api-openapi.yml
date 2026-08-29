@@ -1,0 +1,1096 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Connections API
+  version: '1.0'
+  description: 'Operations tagged Connections across 2 of this provider''s published API definitions: adobe-suite-aep-flow-service-openapi.yaml, adobe-suite-aep-query-service-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: //{environment}.adobe.io/data/foundation/query
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Connections
+  description: Base connections retain information between your source and Adobe Experience Platform. They include metadata, a partial view of the credentials used to authenticate a given source, and the unique base connection ID that corresponds to the queried connection. The base connection ID is required to create a source connection. The base connection ID represents your authenticated connection and allows you to explore and inspect the type, structure, and contents of the data that you want to bring to Experience Platform. An instance of a base connection is specific to an organization.
+paths:
+  /connections:
+    get:
+      tags:
+      - Connections
+      summary: List connections
+      description: Retrieve a list of base connections in your organization by making a GET request to the `/connections` endpoint.
+      operationId: listConnections
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: A comma-separated list of top-level object properties to be returned in the response. This parameter is used to filter the response data based on the properties provided. For example, `property=lastRunDetails.startedAtUTC>=1670880253121` returns only the flows whos last run iterations were started during or after the specified epoch time in milliseconds. This parameter is also used to cut down the amount of data returned in the response body. For example, `property=state==enabled&orderby=createdAt` returns only base connections that have a status of `enabled` in the order of their creation, in ascending order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        description: Restrict the maximum number of items returned for a given request. For example, adding a parameter of `limit=10` in a request to retrieve all base connections returns only a maximum of 10 base connections. When used to query the API, the returned response automatically includes a `continuationToken` that can be used to fetch records that were not returned due to the limits applied by the parameter.
+        schema:
+          type: integer
+      - name: orderby
+        in: query
+        description: Sort the listed resources by specified fields. For example, `orderby=name` sorts results by name in ascending order (A-Z). Adding a dash (`-`) before the field name (`orderby=-name`) sorts the results in descending order (Z-A).
+        schema:
+          type: string
+      - name: continuationToken
+        in: query
+        description: An auto-generated string token that is appended to a returned response when there are more results to be read beyond the maximum count of items that can be returned.
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: A boolean value specifying if the count of resources should be returned. By default the count is not returned (`count=false`)
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns a list of base connections that match the request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Connections
+      summary: Create a new connection
+      description: Create a new base connection by making a POST request to the `/connections` endpoint while providing a name for your base connection, your source's corresponding authentication parameters, and your source's unique connection specification ID.
+      operationId: createConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        description: "- **name** - **(Required)** The name of your base connection. Ensure that the name of your base connection is descriptive as you can use this to look up information on your base connection.\n- **description** - An optional value that you can include to provide more information on your base connection.\n- **auth** - **(Required)** Contains information necessary to authenticate a base connection.\n  - **specName** - **(Required)** Specifies the name of the the type of authentication to be used with the base connection.\n  - **params** - **(Required)** Contains credentials and values necessary to authenticate and create a connection.\n              \n- **connectionSpec** - **(Required)** Contains information regarding the source's connection specification ID.\n  - **id** - **(Required)** The specific connection specification ID associated with source.\n  - **version** - Specifies the version of the connection specification ID. Omitting this value will default to the most recent version"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionRequest'
+        required: true
+      responses:
+        '201':
+          description: Returns a new base connection ID and its corresponding etag.
+          x-summary: Success - Connection Created
+          headers:
+            Location:
+              description: Location of the newly created connection instance
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateConnectionResponse'
+              example:
+                id: 69f188b6-af07-4587-8061-e94d34637b41
+                etag: '"6802064a-0000-0200-0000-6387c6b90000"'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}:
+    get:
+      tags:
+      - Connections
+      summary: Retrieve a base connection
+      description: Use this endpoint to retrieve a single base connection.
+      operationId: retrieveConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the base connection you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns the queried base connection ID in JSON format.
+          x-summary: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}/test:
+    get:
+      tags:
+      - Connections
+      summary: Test a base connection's connectivity
+      description: Use this endpoint to test the connectivity of an existing base connection.
+      operationId: testConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the base connection you want to test.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns `true` if the queried base connection is valid. Returns `false` if the queried base connection is invalid.
+          x-summary: Connection Validity Checked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestConnectionResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}/explore:
+    get:
+      tags:
+      - Connections
+      summary: Explore a connection's contents
+      description: Use this endpoint to explore the data structure and contents of a base connection.
+      operationId: getByConnectionId
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the connection you want to explore.
+        required: true
+        schema:
+          type: string
+      - name: objectType
+        in: query
+        description: object Type
+        required: false
+        schema:
+          type: string
+          enum:
+          - ROOT
+          - TABLE
+          - FILE
+          - FOLDER
+          - REST
+      - name: object
+        in: query
+        description: Path or TableName
+        required: false
+        schema:
+          type: string
+      - name: FileType
+        in: query
+        description: object Type
+        required: false
+        schema:
+          type: string
+          enum:
+          - Delimited
+          - JSON
+      - name: CompressionType
+        in: query
+        description: The compression type used to compress the file.
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns the file structure of a specified base connection ID, including details regarding type, name, path and whether the file can be previewed or fetched.
+          x-summary: File Structure Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploreConnectionResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}/action:
+    post:
+      tags:
+      - Connections
+      summary: Perform a state transition action on an existing connection.
+      description: Use this endpoint to update the state of an existing connection.
+      operationId: performAction
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the base connection.
+        required: true
+        schema:
+          type: string
+      - name: op
+        in: query
+        description: The operation action to be performed against the base connection.
+        required: true
+        schema:
+          type: string
+          enum:
+          - FINALIZE_UPDATE
+          - FINALIZE
+          - PUBLISH
+      - name: subOp
+        in: query
+        description: The sub-operation action to be performed against the base connection.
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - APPLY
+            - ROLLBACK
+            - PROGRESS
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StateActionDTO'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated base connection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateConnectionResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}/:
+    delete:
+      tags:
+      - Connections
+      summary: Delete an existing connection
+      description: Use this endpoint to delete a single base connection.
+      operationId: deleteConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the connection you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Connection successfully deleted (No content).
+          x-summary: Connection Deleted
+          content: {}
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Connections
+      summary: Update an existing connection
+      description: Use this endpoint to update details of an existing base connection.
+      operationId: patchConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: if-match
+        in: header
+        description: A parameter required when updating a connection or a dataflow. When making a PUT or PATCH request, you must add an `if-match` header parameter and include the current version/etag of the resource that you want to update to complete the update.
+        required: true
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The {BASE_CONNECTION_ID} you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: '**op** - **(Required)** The operation call used to define the action needed to update the connection. Operations include `add`, `replace`, and `remove`.
+
+          **path** - **(Required)** The path of the parameter to be updated.
+
+          **value** - **(Required)** The new value you want to update your parameter with.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchInstruction'
+        required: true
+      responses:
+        '200':
+          description: Successful operation. A successful response returns the updated base connection.
+          x-summary: Connection Updated
+          content:
+            application/json:
+              example:
+                id: 69f188b6-af07-4587-8061-e94d34637b41
+                etag: '"6802064a-0000-0200-0000-6387c6b90000"'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/{BASE_CONNECTION_ID}/configs:
+    get:
+      tags:
+      - Connections
+      summary: Retrieve configs for the properties of a given connection.
+      description: Use this endpoint to retrieve the configs of a given connection.
+      operationId: exploreConfigByConnectionId
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: BASE_CONNECTION_ID
+        in: path
+        description: The ID of the base connection to query.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the configs of the queried base connection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploreConnectionResponse'
+              examples:
+                success:
+                  value:
+                    items:
+                    - columnName: name
+                      columnType: string
+                    - columnName: address
+                      columnType: string
+                    - columnName: dob
+                      columnType: date
+                    - columnName: phone
+                      columnType: string
+        '400':
+          description: The request is invalid.
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connections/search:
+    post:
+      tags:
+      - Connections
+      summary: Retrieve a list of connections based on a given filtering criteria.
+      description: Use this endpoint to retrieve a list of connections given a particular filtering criteria.
+      operationId: getConnectionsByFilters
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: continuationToken
+        in: query
+        description: An auto-generated string token that is appended to a returned response when there are more results to be read beyond the maximum count of items that can be returned.
+        schema:
+          type: string
+      requestBody:
+        description: The filtering parameters to be applied to the query.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionFilterRequest'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns a list of base connections that fit the parameters of the given filtering criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /connection_parameters:
+    get:
+      tags:
+      - Connections
+      summary: List connection parameters
+      description: This request lists the connection parameters used for the interactive interface.
+      operationId: listConnectionParameters
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: x-request-id
+        in: header
+        description: An optional header that serves as a tracking ID for the request. If one is not provided on the request, the server generates one automatically.
+        schema:
+          type: string
+      - name: User-Agent
+        in: header
+        description: The type of the client making the HTTP request.
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: Connection Parameters Response for interactive interface
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connection_parameters'
+        401:
+          x-summary: Unauthorized
+          description: Unauthorized
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/query
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+components:
+  schemas:
+    AuthCreateBaseDTO:
+      type: object
+      properties:
+        accessKeyId:
+          type: string
+          example: GOOGMG1234ABCDEFGHIJKLMN
+        secretAccessKey:
+          type: string
+          example: xxxx
+    ConnectionItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The base connection ID.
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        createdAt:
+          type: integer
+          description: The epoch time in milliseconds when the base connection was created.
+          format: int64
+          example: 1668637963851
+        updatedAt:
+          type: integer
+          description: The epoch time in milliseconds when the base connection was created.
+          format: int64
+          example: 1668637963851
+        createdBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who created the base connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        updatedBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the base connection. In the case of service tokens, the value for `updatedBy` is the same as `updatedClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        createdClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who created the base connection. This can be an application or a user. For example, the value `exc_app` represents base connections created in the Experience Platform UI.
+          example: exc_app
+        updatedClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who last updated the base connection. This can be an application or a user. For example, the value `exc_app` represents base connections created in the Experience Platform UI.
+          example: exc_app
+        sandboxId:
+          type: string
+          description: The ID of the sandbox in which the base connection was created.
+          example: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        sandboxName:
+          type: string
+          description: The name of the sandbox in which the base connection was created.
+          example: prod
+        imsOrgId:
+          type: string
+          description: The organization ID to which the base connection belongs.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        name:
+          type: string
+          description: The name of the base connection.
+          example: Google BigQuery Base Connection
+        description:
+          type: string
+          description: An optional description that can be added to provide further context on the connection.
+          example: A Google BigQuery base connection for sales data
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        state:
+          type: string
+          description: Represents the current state of the base connection. A base connection can be `enabled` or `disabled`
+          example: enabled
+        auth:
+          $ref: '#/components/schemas/AuthInfoDTO'
+        version:
+          type: string
+          description: The version of the specified connection.
+          example: '"6802064a-0000-0200-0000-6387c6b90000"'
+        etag:
+          type: string
+          description: The unique eTag returned by the HTTP response. The eTag value updates with every successful update of a base connection.
+          example: '"6802064a-0000-0200-0000-6387c6b90000"'
+    AuthInfoDTO:
+      required:
+      - specName
+      type: object
+      properties:
+        specName:
+          type: string
+          description: Specifies the type of authentication a specific source is using to connect.
+          example: Basic Authentication for google-cloud
+        params:
+          $ref: '#/components/schemas/AuthCreateBaseDTO'
+    ExploreConnectionResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            description: The type of file that corresponds with the queried data. Data directories can either be `folder` or `table`.
+            example: folder
+          name:
+            type: string
+            description: The name of the folder.
+            example: acme-customers
+          path:
+            type: string
+            description: The path to the folder.
+            example: /acme-customers/
+          canPreview:
+            type: boolean
+            description: A boolean value indicating whether the file can be previewed.
+            example: false
+          canFetchSchema:
+            type: boolean
+            description: A boolean value indicating whether the schema can be fetched.
+            example: false
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    StatusDTO:
+      type: object
+      properties:
+        value:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - COMPLETED
+          - SUCCESS
+          - PARTIAL_SUCCESS
+          - FAILED
+          - PARTIAL_FAILURE
+          - QUEUED
+          - SCHEDULED
+        properties:
+          type: object
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+    ConnectionFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+    CreateConnectionRequest:
+      required:
+      - connectionSpec
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the base connection.
+          example: Google Cloud Storage Base Connection
+        description:
+          type: string
+          description: An optional description that can be added to provide further context on the connection.
+          example: Google Cloud Storage base connection for customer data
+        auth:
+          $ref: '#/components/schemas/AuthInfoDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    TestConnectionResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+          description: A boolean value indicating whether the connection is successful  or not.
+          example: true
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
+    ConnectionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionItemDTO'
+    CreateConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The newly created base connection ID.
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        etag:
+          type: string
+          description: The eTag assigned to the base connection ID.
+          example: '"6802064a-0000-0200-0000-6387c6b90000"'
+      description: The location of the newly created connection instance.
+    connection_parameters:
+      type: object
+      properties:
+        host:
+          type: string
+          description: The URI of the host to connect to.
+          example: acme-prod.platform-query.adobe.io
+        port:
+          type: integer
+          description: The host port to connect to.
+          example: 80
+        username:
+          type: string
+          description: Your organization ID as it was received in the request.
+          example: '{USER_NAME}'
+        token:
+          type: string
+          description: The IMS token as it was received in the request.
+          example: NCSDFBRlhQRTdJWFVLR01RRjI3WUJRND09PT09PSIsInNpZCI6IjE2NfkwNTg3ODc4MDVfMzI2YWE0NfQtODFlYy00MWI4LWFlMjctNjU3MThhYjIxOGE5X3VlMSIsIm1vaSI6ImYwYjJjYjkxIiwicGJhIjoiTWVkU2VjTm9FVixMb3dTZWMiLCJleHBpcmVzX2luIjoiODY0MDAwMDAiLCJzY29wZSI6ImFiLm1hbmFnZSxhZGRpdGlvbmFsX2luZm8sYWRkaXRpb25hbhMS5hZG9iZWxvZ2luLmNvbS9pbXMvc2Vzc2lvbi92MS9ORGt6TkRZMU5HTXRaVEUxTVMwMFl6SXdMVGd6T0RBdFlURTBNVGhsTVRkbFlqRXpMUzFHUmpsQk1FTkVNell3T1VGRk56RXdNRUUwT1RWRFJETkFRV1J2WW1WSlJBXCJ9IiwiYXMiOiJpbXMtbmExIiwiYWFfaWQiOiJGRjlBMENEMzYwOUFFNzEwMEE0OTVDRDNAQWRvYmVJRCIsImN0cCI6MCwiZmciOiJXNjF9pbmZvLmpvYl9mdW5jdGlvbixhZGRpdGlvbmFsX2luZm8ucHJvamVjdGVkUHJvZHVjdENvbnRleHQsYWRkaXRpb25hbF9pbmZvLnJvbGVzLEFkb2JlSUQsYWRvYmVpby5hcHByZWdpc3RyeS5yZWFkLGFkb2JlaW9fYXBpLGF1ZGllbmNlbWFuYWdlcl9hcGksY3JlYXRpdmVfY2xvdWQsbXBzLG9wZW5pZCxyZWFkX29yZ2FuaXphdGlvbnMscmVhZF9wYyxyZWFkX3BjLmFjcCxyZWFkX3BjLmRtYV90YXJ0YW4sc2Vzc2lvbiIsImNyZWF0ZWRfYXQiOiIxNjY5MDY2NzY2MzY0In0.ZPNyd7JHKFRfrPFtGh8SqoGK7em0AT7WN_LK_DHGzPZr5WqGCcdUE-qEifOa-DqdiAUM2OCNHCXjzN1U9TZu7xs-AZYkz8dEjMQmDfxTcdCSJDHTPYVqWCxxARvw9hS62QhJsAsJ2b08reo0Q6qoTeRlXt1xyl4pVruf2rHmC_Dz8EkujrZsdmxTLgsIkCfYOXnKISVLrqAtQbmNwcSmhBmpmYCDVvU8v1qjrSb3Qd11nw56a5CLHJZQ2y8adm6TUsqtXyGZGSDvdYPbwCEMNHs_Uk9F1PaT51NH1AKKr6a4lA1E3SOUE6ithAytqcA4wyoLqz86PCPMmmbPG7_jEQeyJhbGciOiJSUzI1NiIsIng1dSI6Imltc19uYTEta2V5LWF0LTEuY2VyIiwia2lkIjoiaW1zX25hMS1rZXktYXQtMSIsIml0dCI6ImF0In0.eyJpZCI6IjE2NjkwNjY3NjYzNjRfNGFhN2NjZDMtYTdiNi00NGJkLWFjMzAtYjIyNGFkNDk3NDk4X3VlMSIsInR5cGUiOiJhY2Nlc3NfdG9rZW4iLCJjbGllbnRfaWQiOiJleGNfYXBwIiwidXNlcl9pZCI6IkMzNUI3OEJFNjJERDVERDcwQTQ5NUU3NEBjMGZjNzc0NjYyZGQzODlkNDk1YzBjLmUiLCJzdGF0ZSI6IntcInNlc3Npb25cIjpcImh0dHBzOi8vaW1zLW5
+        compressedToken:
+          type: string
+          description: The IMS token compressed in a special format. It is required by some interactive clients such as Tableau.
+          example: Nkgt8JNlbpg32ldmZrPOK1lo1oc1kZQkgw6lingKlj_wt3DRUshQ2cS22qDaUhL9RX212pIl9sKtZh35x1o1aCacFvGsU3TJ-rSotX_Y3XqFK09qlw9qHlUrlmyhqxlK1u3txGAP90mPGTNmy4mUkmjjKbA8YMS8utyFmpNtxe161trlNJbnfhuWqWUMk9dJnbI1Szz68LrP6352vINTQaKvs0bF03u9MFz0F__cGsj79_9RxV.eNoBAAH__mTzcneyRyhUX6zxbRofEqqBiu3ptAE-1jfyyvwxxsz2a-VqhgnHVBPqhInzmvg6nYgFDNjgjRwl48zdVPU2bu8bPgGWJM_HRIzEJg38U3HQkiQx0z2FalgscQEb8PYUutkISbALCdm9PK3qNEOqqE3kZV7dccpeKVa7n9qx5gew8_BJLo62bHZsUy4LCJAn2Dl5yiElS66gLUG5jcHEpoQZqZmAg1b1PL9ao60m90HddZ8OemuQixyWUNsvGnZuk1LKrV8hmRkg73WD28AhDDR7P1JPRdT2k-dTR9QCiq-muFQNRN0jlBOorYQMranAOMMqC6s_OjwjzJpmzxu_4xE5BXzTeNqrVkrMSVeyUgoKNjI1U9JRqjAtBfIyc4vj8xINdbNTK3UTS3QN9ZJTi4CS2ZkpWCSBEpklJUCJxBKlWgC4CRff.eNplU39vmzAQ_S78DcSAY0OkSSWFdN1K2qbpj0yR0GE7qVOCEThJm6rjjSZJN6k1EvjevfM93x3vluTWwPIIiRAhlJCA4BwDUMZ44AAtiINxwR1gAXIK38fAcURxFOYb4Vm2pd9qYeKBMdG2uVYvojIoK6WodH44WryyHOraoJtWNEfsPOgPaThMiZ8k_SShKMZRP6X4jKEFoxQT4nMehJHJ1WeIucJEtxp0l-p9brUml1TV3BrMrWet63bQ68l161TgucBVIUq1lJXL1LqDeyd6b-v1xsnLfpzMvPFFpv9MUy-7Q2i2v9xdTZf76yTWs2mKsulzmU15OVul-6s772KyKodZOk6z_Wx3fT8ajffpLktTdD19SCbJOL59nGxn64dfk3hufRih0BqVJzmdCcc7j0ZRfM6TgKAoTqmHDnc29lneKb5MurLp2hog21osDf-RBMOffjx6uknp5dP974vsduTTWXyLfyxWV5L_veuH1Dyonwc-AcAEO6EnmIO9InRA-NQhfeqFUPjmFZ16t1bShC9Q4bMi6oC6AA
+        version:
+          type: integer
+          description: The REST API version of this resource.
+          example: 1
+        dbName:
+          type: string
+          description: A combination of the sandbox name and the database name.
+          example: prod:all
+        websoketHost:
+          type: string
+          description: A combination of the sandbox name and the database name.
+          example: query-service-interactive-ws-prod-va7.cloud.adobe.io
+      description: An object containing the connection parameters.
+x-refined-from:
+- adobe-suite-aep-flow-service-openapi.yaml
+- adobe-suite-aep-query-service-openapi.yaml
+x-original-swagger-version: '2.0'

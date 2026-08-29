@@ -1,0 +1,869 @@
+openapi: 3.2.0
+info:
+  title: Flow Service API - Sources Flows API
+  description: "Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services. You can ingest data from a variety of sources such as Adobe applications, cloud-based storages, databases, and many others. The service provides a RESTful API from which all supported sources are connectable.\n>**NOTE**: Refer to [Flow Service API - Destinations](https://developer.adobe.com/experience-platform-apis/references/destinations/) if you are looking for API documentation to perform operations on *destinations* in Experience Platform.\n- **Related documentation**:\n  - [Sources documentation](https://www.adobe.com/go/sources-overview-en)\n\n- **Visualize API calls with Postman** (a free, third-party software):\n  - [Flow Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Flow%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/connections\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html?lang=en)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Flows
+  description: Flows (or dataflows) represent the transfer of data between source and target. They include details on the transformations applied to your data, the current status of your flow, and details on the most recent run iteration of your flow. Flows also contain metadata, attributes inherited from the base, source, and target connections, as well as a unique flow ID. An instance of a flow is specific to an organization.
+paths:
+  /flows:
+    get:
+      tags:
+      - Flows
+      summary: List flows
+      description: Retrieve a list of flows in your organization by making a GET request to the `/flows` endpoint.
+      operationId: listFlows
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: A comma-separated list of top-level object properties to be returned in the response. This parameter is used to filter the response data based on the properties provided. For example, `property=lastRunDetails.startedAtUTC>=1670880253121` returns only the flows whos last run iterations were started during or after the specified epoch time in milliseconds. This parameter is also used to cut down the amount of data returned in the response body. For example, `property=state==enabled&orderby=createdAt` returns only base connections that have a status of `enabled` in the order of their creation, in ascending order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        description: Restrict the maximum number of items returned for a given request. For example, adding a parameter of `limit=10` in a request to retrieve all base connections returns only a maximum of 10 base connections. When used to query the API, the returned response automatically includes a `continuationToken` that can be used to fetch records that were not returned due to the limits applied by the parameter.
+        schema:
+          type: integer
+      - name: orderby
+        in: query
+        description: Sort the listed resources by specified fields. For example, `orderby=name` sorts results by name in ascending order (A-Z). Adding a dash (`-`) before the field name (`orderby=-name`) sorts the results in descending order (Z-A).
+        schema:
+          type: string
+      - name: continuationToken
+        in: query
+        description: An auto-generated string token that is appended to a returned response when there are more results to be read beyond the maximum count of items that can be returned.
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: A boolean value specifying if the count of resources should be returned. By default the count is not returned (`count=false`)
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of flows that match the request parameters in JSON format.
+          x-summary: Flow List Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowListResponse'
+        '400':
+          description: The request is invalid.
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    post:
+      tags:
+      - Flows
+      summary: Create a flow
+      description: Use this endpoint to create a flow instance.
+      operationId: createFlow
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        description: "- **name** - **(Required)** The name of the flow to be created.\n- **description** - (Optional) The description provides information and details regarding the flow to be created.\n- **flowSpec** - **(Required)** The flowSpec contains information regarding flow specifications, including its flow specification ID and version.\n  - **id** - The specific flow specification ID used to create a flow.\n  - **version** - Specifies the version of the flow specification ID. Omitting this value will default to the most recent version.\n\n- **sourceConnectionIds** - **(Required)** The ID of the source connection generated using the source's base connection ID and connection specification IDs.\n- **targetConnectionIds** - **(Required)** The ID of the target connection. This ID is needed to manage a destination connection to Platform.\n- **transformations** - **(Required)** Contains various transformations that will be done as part of the flow.\n  - **name** - **(Required)** The name assigned to the transformation.\n  - **params** - **(Required)** Contains information about the transformation that will be completed. Sources categorized as either CRM or relational database require the use of the \"deltaColumn\" param. Other categories do not.\n  \n- **scheduleParams** - **(Required)** Contains information regarding the ingestion scheduling of the flow.\n  - **startTime** - Designates the start time for flow in epoch time in seconds.\n  - **frequency** - Designates the scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.\n  - **interval** - Designates the period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.\n  - **backfill** - A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.\n\n  "
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFlowRequest'
+        required: true
+      responses:
+        '201':
+          description: Returns the ID of the newly created flow and its corresponding etag.
+          x-summary: Flow Created
+          headers:
+            Location:
+              description: Location of the newly created flow instance.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFlowResponse'
+              example:
+                id: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+                etag: '"7e05b480-0000-0200-0000-638e84a00000"'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /flows/{FLOW_ID}:
+    get:
+      tags:
+      - Flows
+      summary: Retrieve a flow's details
+      description: Use this endpoint to retrieve a single instance of an existing flow.
+      operationId: retrieveFlow
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: FLOW_ID
+        in: path
+        description: The flow entity with the corresponding ID.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns the details of specified flow in JSON format.
+          x-summary: Flow Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    delete:
+      tags:
+      - Flows
+      summary: Delete a flow
+      description: Use this endpoint to delete an instance of a flow.
+      operationId: deleteByFlow
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: FLOW_ID
+        in: path
+        description: The ID of the flow you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Flow successfully deleted (No content).
+          x-summary: Flow Deleted
+          content: {}
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Flows
+      summary: Update a flow
+      description: Use this endpoint to update a flow.
+      operationId: patchFlow
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: if-match
+        in: header
+        description: A parameter required when updating a connection or a dataflow. When making a PUT or PATCH request, you must add an `if-match` header parameter and include the current version/etag of the resource that you want to update to complete the update.
+        required: true
+        schema:
+          type: string
+      - name: FLOW_ID
+        in: path
+        description: The ID of the flow you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: '- **op** - **(Required)** The operation call used to define the action needed to update the connection. Operations include `add`, `replace`, and `remove`.
+
+          - **path** - (Optional) The path of the parameter to be updated.
+
+          - **value** - **(Required)** The new value you want to update your parameter with.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchInstruction'
+        required: true
+      responses:
+        '200':
+          description: Successful operation. A successful response returns the updated flow.
+          x-summary: Flow Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFlowResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /flows/search:
+    post:
+      tags:
+      - Flows
+      summary: Retrieves list of flows based on a given filtering criteria.
+      description: Use this endpoint to retrieve a list of flows given a particular set of filtering criteria.
+      operationId: getFlowsByFilters
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: continuationToken
+        in: query
+        description: continuationToken
+        required: false
+        schema:
+          type: string
+      - name: x-active-sandbox-ids
+        in: header
+        required: false
+        schema:
+          type: string
+      requestBody:
+        description: The filtering parameters to be applied to the query for a flow.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowFilterRequest'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns a list of flows that meet the filtering criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowListResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /flows/{FLOW_ID}/action:
+    post:
+      tags:
+      - Flows
+      summary: Perform a state transition action given flow object.
+      description: Use this endpoint to perform a state transition action on a given flow object.
+      operationId: postStateTransition
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: If-Match
+        in: header
+        description: If-Match
+        required: false
+        schema:
+          type: string
+      - name: op
+        in: query
+        description: The operative action to be performed during the request.
+        required: true
+        schema:
+          type: string
+          enum:
+          - ENABLE
+          - DISABLE
+          - FINALIZE_UPDATE
+          - FINALIZE
+          - PUBLISH
+      - name: subOp
+        in: query
+        description: The sub-operative action to be performed during the request.
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - APPLY
+            - ROLLBACK
+            - PROGRESS
+      - name: FLOW_ID
+        in: path
+        description: The ID of the queried flow.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StateActionDTO'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated flow.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFlowResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+components:
+  schemas:
+    SourceConnectionMetaInfoDTOWrapper:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        baseConnection:
+          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
+    CreateFlowResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        etag:
+          type: string
+          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
+          example: '"7e05b480-0000-0200-0000-638e84a00000"'
+      description: Location of the newly created flow instance
+    FlowMetaInfoDTO:
+      type: object
+      properties:
+        sourceConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceConnectionMetaInfoDTOWrapper'
+        targetConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
+    ConnectionMetaInfoDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    FlowItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        createdAt:
+          type: integer
+          description: The epoch time in milliseconds when the flow was created.
+          format: int64
+          example: 1670284443204
+        updatedAt:
+          type: integer
+          description: The epoch time in milliseconds when the flow was updated.
+          format: int64
+          example: 1670284532205
+        createdBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who created the flow. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        updatedBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the flow. In the case of service tokens, the value for `updatedBy` is the same as `updatedClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        createdClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who created the flow. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+          example: exc_app
+        updatedClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who last updated the flow. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+          example: exc_app
+        sandboxId:
+          type: string
+          description: The unique identifier of the sandbox in which the operation will take place.
+          example: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        sandboxName:
+          type: string
+          description: The name of the sandbox in which the operation will take place. If a sandbox name is not provided then the default sandbox for the org will be used.
+          example: prod
+        imsOrgId:
+          type: string
+          description: The organization ID to which the source connection belongs to.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        name:
+          type: string
+          description: The name of the flow.
+          example: Google Cloud Storage Flow
+        description:
+          type: string
+          description: An optional description used to provide further information about the flow.
+          example: A Google Cloud Storage flow for ACME customer data
+        flowSpec:
+          type: object
+          properties: {}
+          description: The ID of the flow specification that corresponds with cloud storage sources.
+          example: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+        state:
+          type: string
+          description: The state of the flow. "For example, state=`enabled`."
+          example: enabled
+        version:
+          type: string
+          description: The specific version of the flow.
+          example: '"7e05f181-0000-0200-0000-638e84f40000"'
+        etag:
+          type: string
+          description: The etag value generated and assigned to a flow after a flow is created.
+          example: '"7e05f181-0000-0200-0000-638e84f40000"'
+        sourceConnectionIds:
+          type: array
+          items:
+            type: string
+            description: The source connection ID used to create a flow.
+            example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        targetConnectionIds:
+          type: array
+          items:
+            type: string
+            description: The target connection ID used to create a flow.
+            example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
+        inheritedAttributes:
+          $ref: '#/components/schemas/FlowMetaInfoDTO'
+        scheduleParams:
+          $ref: '#/components/schemas/ScheduleSpecDTO'
+        transformations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowTransformationDTO'
+        runs:
+          type: string
+          example: /runs?property=flowId==3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        lastOperation:
+          type: object
+          properties:
+            started:
+              type: integer
+              description: The epoch time in milliseconds when the run was created.
+              example: 1670284443413
+            updated:
+              type: integer
+              description: The number of times in which the run has been updated.
+              example: 0
+            operation:
+              type: string
+              description: The operation that was lused used for the run.
+              example: create
+        lastRunDetails:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the last iteration of the run.
+              example: 98fbed6e-f896-4b19-b279-b0d56d732d8d
+            state:
+              type: string
+              description: The status of the last iteration of the run. Statuses can be `success` or `failed`.
+              example: success
+            startedAtUTC:
+              type: integer
+              description: The epoch time in milliseconds when the run was started.
+              example: 1670284458833
+            completedAtUTC:
+              type: integer
+              description: The epoch time in milliseconds when the run was completed.
+              example: 1670284518048
+    FlowFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+        projectionFields:
+          type: string
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    StatusDTO:
+      type: object
+      properties:
+        value:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - COMPLETED
+          - SUCCESS
+          - PARTIAL_SUCCESS
+          - FAILED
+          - PARTIAL_FAILURE
+          - QUEUED
+          - SCHEDULED
+        properties:
+          type: object
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    TransformationSpecDTO:
+      type: object
+      properties:
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
+    ScheduleSpecDTO:
+      type: object
+      properties:
+        startTime:
+          type: integer
+          description: The start time of the flow in epoch time in seconds.
+          format: int64
+          example: 1590091157
+        frequency:
+          type: string
+          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
+          example: minute
+        interval:
+          type: string
+          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
+          example: '15'
+        backfill:
+          type: boolean
+          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
+          example: true
+    FlowListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 7
+    TargetConnectionMetaInfoDTOWrapper:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
+        connectionSpec:
+          type: object
+          properties:
+            id:
+              type: string
+              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
+            version:
+              type: string
+              example: '1.0'
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
+    FlowTransformationDTO:
+      required:
+      - name
+      - params
+      type: object
+      properties:
+        name:
+          type: string
+          example: Mapping
+        params:
+          $ref: '#/components/schemas/TransformationSpecDTO'
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    CreateFlowRequest:
+      required:
+      - flowSpec
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the flow.
+          example: Google Cloud Storage Flow
+        description:
+          type: string
+          description: An optional description used to add further information to a flow.
+          example: A Google Cloud Storage flow for ACME customer data
+        flowSpec:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The flow spec ID that corresponds the flow specification required to generate a flow for a cloud storage source.
+              example: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+            version:
+              type: string
+              description: The current version of the flow specification.
+              example: '1.0'
+        sourceConnectionIds:
+          type: array
+          items:
+            type: string
+            description: The source connection ID used to create a flow.
+            example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        targetConnectionIds:
+          type: array
+          items:
+            type: string
+            description: The target connection ID used to create a flow.
+            example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
+        transformations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowTransformationDTO'
+        scheduleParams:
+          $ref: '#/components/schemas/ScheduleSpecDTO'
+x-original-swagger-version: '2.0'

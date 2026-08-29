@@ -1,0 +1,414 @@
+openapi: 3.2.0
+info:
+  title: Media Edge Download API
+  description: The OpenAPI specification for Media Edge API
+  version: 0.1.0
+servers:
+- url: https://edge.adobedc.net/ee/va/v1
+tags:
+- name: Download
+paths:
+  /downloaded:
+    post:
+      tags:
+      - Download
+      description: Provides the ability to track media consumption while a user is offline.
+      summary: Downloaded
+      operationId: downloaded
+      parameters:
+      - name: configId
+        in: query
+        description: The datastream ID
+        schema:
+          type: string
+        required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      xdm:
+                        type: object
+                        description: ''
+                        properties:
+                          mediaDownloadedEvents:
+                            type: array
+                            description: ''
+                            items:
+                              type: object
+                              properties:
+                                mediaEventTimestamp:
+                                  type: string
+                                  format: date-time
+                                  description: The time when a media event occurred
+                                mediaEventType:
+                                  type: string
+                                  description: The media event type
+                                mediaCollection:
+                                  type: object
+                                  description: 'Media collection object for specific mediaEventType. For example: for mediaEventType = media.sessionStart, the mediaCollection object can have all the properties specified to media.sessionStart described in this file.'
+                              required:
+                              - mediaEventTimestamp
+                              - mediaEventType
+                              - mediaCollection
+                          identityMap:
+                            type: object
+                            description: Specifies the list of identities
+                            properties:
+                              FPID:
+                                type: array
+                                description: ''
+                                items:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      description: ''
+                                    authenticatedState:
+                                      type: string
+                                      description: ''
+                                      default: ambiguous
+                                      enum:
+                                      - ambiguous
+                                      - authenticated
+                                      - loggedOut
+                                    primary:
+                                      type: boolean
+                                      description: ''
+                          implementationDetails:
+                            type: object
+                            description: Specifies the implementation details
+                            properties:
+                              version:
+                                type: string
+                                description: The Media SDK version used for the tracking session
+                                default: 0.0.0
+                              name:
+                                type: string
+                                description: Valid URI and adhere to RFC-3986 with non empty scheme
+                                default: https://ns.adobe.com/experience/edge
+                              environment:
+                                type: string
+                                description: The environment that the SDK is running on
+                                default: server
+                                enum:
+                                - browser
+                                - app
+                                - device
+                                - server
+                                - iot
+                          eventType:
+                            type: string
+                            default: media.downloaded
+                            description: The media downloaded event type
+                        required:
+                        - mediaCollection
+                        - identityMap
+                        - mediaDownloadedEvents
+                        - eventType
+                    required:
+                    - xdm
+            examples:
+              '0':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.downloaded
+                      identityMap:
+                        FPID:
+                        - id: CHANGEME
+                          authenticatedState: ambiguous
+                          primary: true
+                      implementationDetails:
+                        version: 0.0.1
+                        name: https://ns.adobe.com/experience/edge
+                        environment: browser
+                      mediaDownloadedEvents:
+                      - mediaEventTimestamp: '2025-09-26T15:52:24+00:00'
+                        mediaEventType: media.sessionStart
+                        mediaCollection:
+                          playhead: 0
+                          sessionDetails:
+                            name: '123456789'
+                            length: 100
+                            contentType: VOD
+                            playerName: playerName
+                            channel: channel
+                          customMetadata:
+                          - name: myCustomMetadataEmpty
+                            value: ''
+                      - mediaEventTimestamp: '2025-09-26T15:52:25+00:00'
+                        mediaEventType: media.play
+                        mediaCollection:
+                          playhead: 0
+                          qoeDataDetails:
+                            timeToStart: 12
+                      - mediaEventTimestamp: '2025-09-26T15:52:35+00:00'
+                        mediaEventType: media.chapterStart
+                        mediaCollection:
+                          playhead: 10
+                          chapterDetails:
+                            friendlyName: friendlyName
+                            index: 1
+                            length: 20
+                            offset: 0
+                      - mediaEventTimestamp: '2025-09-26T15:52:45+00:00'
+                        mediaEventType: media.ping
+                        mediaCollection:
+                          playhead: 20
+                      - mediaEventTimestamp: '2025-09-26T15:52:55+00:00'
+                        mediaEventType: media.chapterComplete
+                        mediaCollection:
+                          playhead: 30
+                      - mediaEventTimestamp: '2025-09-26T15:52:56+00:00'
+                        mediaEventType: media.adBreakStart
+                        mediaCollection:
+                          advertisingPodDetails:
+                            friendlyName: mid-roll
+                            index: 1
+                            offset: 548
+                          playhead: 30
+                      - mediaEventTimestamp: '2025-09-26T15:52:57+00:00'
+                        mediaEventType: media.adStart
+                        mediaCollection:
+                          advertisingDetails:
+                            name: Example ad
+                            advertiser: advertiser
+                            campaignID: '61140630'
+                            creativeID: '35999522'
+                            creativeURL: https://content.uplynk.com/7814bc80725c45568290544b7db3316a.m3u8
+                            length: 6
+                            friendlyName: 7814bc80725c45568290544b7db3316a
+                            placementID: '61140639'
+                            playerName: Test Scene Graph Player
+                            podPosition: 1
+                            siteID: siteID
+                          playhead: 30
+                      - mediaEventTimestamp: '2025-09-26T15:53:03+00:00'
+                        mediaEventType: media.adComplete
+                        mediaCollection:
+                          playhead: 30
+                      - mediaEventTimestamp: '2025-09-26T15:53:05+00:00'
+                        mediaEventType: media.adBreakComplete
+                        mediaCollection:
+                          playhead: 30
+                      - mediaEventType: media.error
+                        mediaCollection:
+                          errorDetails:
+                            name: 7DF2468E-197C-4431-A197-C32258365CD8
+                            source: player
+                          playhead: 30
+                          qoeDataDetails:
+                            bitrate: 0
+                            droppedFrames: 24
+                            framesPerSecond: 4
+                            timeToStart: 365330
+                        mediaEventTimestamp: '2025-09-26T15:53:07+00:00'
+                      - mediaEventTimestamp: '2025-09-26T15:53:08+00:00'
+                        mediaEventType: media.sessionComplete
+                        mediaCollection:
+                          playhead: 30
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: string
+                    description: Id that uniquely identifies a request
+                  handle:
+                    type: array
+                    description: The data returned by the backend
+                    items:
+                      type: object
+                      properties:
+                        payload:
+                          type: array
+                          description: ''
+                          items:
+                            type: object
+                            properties:
+                              sessionId:
+                                type: string
+                                description: The unique id for the session that must be sent on all the future requests of this session
+                        type:
+                          type: string
+                          description: Identifies the type of the received payload
+                        eventIndex:
+                          type: integer
+                          format: int32
+                          description: ''
+              examples:
+                '0':
+                  value:
+                    requestId: dd850e05-8c3e-4ae4-9ea8-506490978004
+                    handle:
+                    - payload:
+                      - sessionId: bfba9a5f2986d69a9a9424f6a99702562512eb244f2b65c4f1c1553e7fe9997f
+                      type: media-analytics:new-session
+                      eventIndex: 0
+                    - payload:
+                      - scope: Target
+                        hint: '34'
+                        ttlSeconds: 1800
+                      - scope: AAM
+                        hint: '7'
+                        ttlSeconds: 1800
+                      - scope: EdgeNetwork
+                        hint: va6
+                        ttlSeconds: 1800
+                      type: locationHint:result
+                    - payload:
+                      - key: kndctr_EA0C49475E8AE1870A494023_AdobeOrg_cluster
+                        value: va6
+                        maxAge: 1800
+                      - key: kndctr_EA0C49475E8AE1870A494023_AdobeOrg_identity
+                        value: CiY0Mzg5NTEyNzMzNTUxMDc5MzgzMzU2MjU5NDY5MTY3Mzc3MTc2OFIOCJ-YppX6MBgBKgNWQTbwAZ-YppX6MA==
+                        maxAge: 34128000
+                      type: state:store
+        '207':
+          description: Multi-Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: string
+                    description: Id that uniquely identifies a request
+                  handle:
+                    type: array
+                    description: The data returned by the backend
+                    items:
+                      type: object
+                      properties:
+                        payload:
+                          type: array
+                          description: ''
+                          items:
+                            type: object
+                        type:
+                          type: string
+                          description: Identifies the type of the received payload
+                        eventIndex:
+                          type: integer
+                          format: int32
+                          description: ''
+                  errors:
+                    type: array
+                    description: The list of errors for the data sent in this request
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: Link containing a more detailed description of the error
+                        status:
+                          type: integer
+                          description: The status code
+                        title:
+                          type: string
+                          description: The category of the error
+                        report:
+                          type: object
+                          description: ''
+                          properties:
+                            eventIndex:
+                              type: integer
+                              format: int32
+                              description: ''
+                            report:
+                              type: array
+                              description: ''
+                              items:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    description: The path in the request body to the property that contains the error
+                                  reason:
+                                    type: string
+                                    description: The error details
+              examples:
+                '0':
+                  value:
+                    requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+                    handle:
+                    - payload:
+                      - scope: Target
+                        hint: '34'
+                        ttlSeconds: 1800
+                      - scope: AAM
+                        hint: '7'
+                        ttlSeconds: 1800
+                      - scope: EdgeNetwork
+                        hint: va6
+                        ttlSeconds: 1800
+                      type: locationHint:result
+                    - payload:
+                      - key: kndctr_EA0C49475E8AE1870A494023_AdobeOrg_cluster
+                        value: va6
+                        maxAge: 1800
+                      - key: kndctr_EA0C49475E8AE1870A494023_AdobeOrg_identity
+                        value: CiY0Mzg5NTEyNzMzNTUxMDc5MzgzMzU2MjU5NDY5MTY3Mzc3MTc2OFIOCI-qtpf6MBgBKgNWQTbwAY-qtpf6MA==
+                        maxAge: 34128000
+                      type: state:store
+                    errors:
+                    - type: https://ns.adobe.com/aep/errors/va-edge-0400-400
+                      status: 400
+                      title: Invalid request
+                      report:
+                        eventIndex: 0
+                        details:
+                        - name: $.xdm.mediaCollection.sessionDetails.name
+                          reason: Missing required field
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 400
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: string
+                        description: The error details
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/EXEG-0003-400
+                    status: 400
+                    title: Invalid datastream ID
+                    detail: The datastream ID '66b64400-e418-4184-8fed-b57636d09' referenced in your request does not exist. Update the request with a valid datastream ID and try again.
+                    report:
+                      requestId: 75af7733-9c8a-45a9-b2a1-bb570c58a0da

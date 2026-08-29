@@ -1,0 +1,261 @@
+openapi: 3.2.0
+info:
+  version: 3.0.0
+  title: Firefly Upscale API
+  description: REST API for Adobe Firefly services including image generation, image alteration, image upscaling, video generation, and other related services.
+servers:
+- url: https://firefly-api.adobe.io
+  description: Production server.
+security:
+- X-Api-Key: []
+  AccessToken: []
+tags:
+- name: Upscale
+  description: Image upscaling with the precise upsampler.
+paths:
+  /v3/images/upscale:
+    post:
+      operationId: preciseUpsamplerV3Async
+      summary: Upscale image
+      description: Upscales an image asynchronously using the precise upsampler. Provide the input image via an upload ID from the storage API or a presigned URL. The response includes links to check status and retrieve the result. Poll the status URL until the job completes, then fetch the result for the upscaled image(s).
+      tags:
+      - Upscale
+      parameters:
+      - name: x-model-version
+        in: header
+        required: false
+        description: Model version for the upscale operation. Only `precise_upsampler_v1` is supported. Passing `creative_upsampler_v1` will return a 422 validation error.
+        schema:
+          type: string
+          enum:
+          - precise_upsampler_v1
+          default: precise_upsampler_v1
+          example: precise_upsampler_v1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreciseUpsamplerRequestV3'
+            example:
+              image:
+                source:
+                  uploadId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+              seeds:
+              - 12345
+              upscaleFactor: 2
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreciseUpscaleAcceptResponseV3'
+              example:
+                links:
+                  result:
+                    href: https://firefly-api.adobe.io/v3/status/urn:ff:jobs:example:abc123
+                  cancel:
+                    href: https://firefly-api.adobe.io/v3/cancel/urn:ff:jobs:example:abc123
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+        '404':
+          description: Requested Resource Was Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+        '422':
+          description: Input Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                invalid_model_version:
+                  summary: Invalid x-model-version value
+                  value:
+                    error_code: validation_error
+                    message: 'Invalid x-model-version: creative_upsampler_v1. Only ''precise_upsampler_v1'' is supported.'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorGeneric'
+components:
+  schemas:
+    PublicBinaryInputV3:
+      properties:
+        uploadId:
+          description: The `uploadId` from the storage API response.
+          format: uuid4
+          title: The upload ID
+          type: string
+        url:
+          description: 'The pre-signed URL of an uploaded file. Use a URL or an `uploadID` as the source for the image. Firefly only allows these listed domains in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
+          format: uri
+          maxLength: 2083
+          minLength: 1
+          title: The pre-signed URL
+          type: string
+      title: PublicBinaryInputV3
+      type: object
+    PreciseUpsamplerRequestV3:
+      type: object
+      title: PreciseUpsamplerRequestV3
+      description: Request body for upscaling an image. Provide the input image via uploadId from storage or a presigned URL. Seeds are required for reproducible results.
+      required:
+      - image
+      - seeds
+      properties:
+        image:
+          $ref: '#/components/schemas/BaseInputImageV3'
+          description: The input image for the upsampler (source uploadId or url).
+        seeds:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            type: integer
+          description: The seed for each variation. Provide one seed per output (1–4 seeds).
+        upscaleFactor:
+          default: 2
+          description: The upscale factor (2, 3, 4, or 6). Output dimensions are input dimensions multiplied by this factor.
+          allOf:
+          - $ref: '#/components/schemas/UpsampleFactor'
+    PreciseUpscaleTaskLink:
+      type: object
+      title: PreciseUpscaleTaskLink
+      required:
+      - href
+      properties:
+        href:
+          type: string
+          description: URL for the cancel or result endpoint.
+    ValidationErrorDetail:
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - type: integer
+          description: Path to the field that caused the error.
+        msg:
+          type: string
+          description: Human-readable error message.
+        type:
+          type: string
+          description: Error type identifier.
+        ctx:
+          type: object
+          additionalProperties: true
+          description: Additional context about the error.
+    UpsampleFactor:
+      type: integer
+      enum:
+      - 2
+      - 3
+      - 4
+      - 6
+      description: Supported upscale factors. Output size equals input size multiplied by this factor.
+    ValidationErrorResponse:
+      type: object
+      title: ValidationErrorResponse
+      description: Error response body for HTTP 422 (validation failures).
+      required:
+      - error_code
+      properties:
+        error_code:
+          $ref: '#/components/schemas/ValidationErrorCode422'
+        message:
+          type: string
+          description: Human-readable error description.
+        validation_errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+          description: List of field-level validation errors.
+    PreciseUpscaleAcceptResponseV3:
+      type: object
+      title: PreciseUpscaleAcceptResponseV3
+      description: Response for async upscale requests. Use links.result.href to poll for status and links.cancel.href to cancel.
+      required:
+      - links
+      properties:
+        links:
+          type: object
+          description: Links to cancel and to fetch the job status or result.
+          additionalProperties:
+            $ref: '#/components/schemas/PreciseUpscaleTaskLink'
+        progress:
+          type: number
+          description: Progress percentage when available (for example when polling status).
+    BaseInputImageV3:
+      properties:
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+          description: Source image that Firefly expands, fills, uses to generate similar images, or upscales.
+      required:
+      - source
+      title: BaseInputImageV3
+      type: object
+    ValidationErrorCode422:
+      type: string
+      title: ValidationErrorCode422
+      description: Error code for HTTP 422 responses (request validation only).
+      enum:
+      - validation_error
+      - cai_assertion_violation_error
+    ApiErrorGeneric:
+      type: object
+      title: ApiErrorGeneric
+      description: The error within the error response for non-400 failure responses.
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+        message:
+          title: Message
+          description: A human-readable error message.
+          type: string
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

@@ -1,0 +1,218 @@
+openapi: 3.2.0
+info:
+  description: REST API for Adobe Substance 3D - Firefly Services.
+  title: Adobe Substance 3D API - Firefly Services Spaces Next Frame IO API
+  version: 1.0.0
+servers:
+- url: https://s3d.adobe.io
+security:
+- bearerAuth: []
+  ApiKeyAuth: []
+tags:
+- name: SpacesNextFrameIO
+paths:
+  /v2/spacesNextFrameIO:
+    post:
+      operationId: createSpaceFromNextFrameIO_v2
+      summary: Create Space From Next Frame IO API
+      description: "## Overview\n\nThe **Substance 3D API** provides a way to upload and temporary store files.\nYou can upload folders from **next.frame.io** to create a space.\nTo upload a folder from next.frame.io, you must pass the following parameters:\n\n- **access Token**\n- **account ID**\n- **folder ID**\n\nThe result of the post is a **JSON** which contained the **id** of the space created.  \nSpace **id** can be used into a space source to use space content as a source for API operations.\n\nExample of a space source:\n\n```json\n{\n  \"space\": {\n    \"id\": \"<space_id>\"\n  }\n}\n```\n\n"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/rest_base.FileNextFrameIO'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest_base.Space'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                access_error:
+                  value:
+                    error_code: access_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              examples:
+                timeout_error:
+                  value:
+                    error_code: timeout_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              examples:
+                entity_too_large:
+                  value:
+                    error_code: entity_too_large
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                validation_error:
+                  value:
+                    error_code: validation_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              examples:
+                rate_limited:
+                  value:
+                    error_code: rate_limited
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                runtime_error:
+                  value:
+                    error_code: runtime_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+      tags:
+      - SpacesNextFrameIO
+      x-s3d-public: true
+components:
+  schemas:
+    ffapierrors.FFAPIError:
+      description: The error within the error response.
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
+          readOnly: true
+        error_code:
+          description: Associated error code.
+          type: string
+        error_details:
+          description: Optional list of individual error details.
+          type: array
+          items:
+            type: object
+        message:
+          description: Error message.
+          type: string
+      additionalProperties: false
+      required:
+      - error_code
+    rest_base.FileNextFrameIO:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.FileNextFrameIO.json
+          readOnly: true
+        accessToken:
+          description: Frame.io access token. See https://developer.adobe.com/frameio/guides/Authentication/ for obtaining a token.
+          type: string
+          examples:
+          - fio-u-base64url
+        accountId:
+          description: Frame.io account ID. This is the account identifier for the next.frame.io account owner. To find your account ID, log in to next.frame.io, navigate to your inbox, and extract the UUID from the URL (e.g., in https://next.frame.io/inbox/abcdefgh-1234-1234-1234-abcdefghijk, the account ID is abcdefgh-1234-1234-1234-abcdefghijk)
+          type: string
+          examples:
+          - 01234567-89ab-cdef-0123-456789abcdef
+        folderId:
+          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
+          type: string
+          examples:
+          - 01234567-89ab-cdef-0123-456789abcdef
+      additionalProperties: false
+      required:
+      - folderId
+      - accountId
+      - accessToken
+    rest_base.Space:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.Space.json
+          readOnly: true
+        expiry:
+          description: time at which the space will be deleted
+          type: string
+          format: date-time
+        files:
+          description: List of all files contained in Space, ordered by name.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/rest_base.SpaceFile'
+        id:
+          description: Unique identifier of this Space.
+          type: string
+        url:
+          description: URL to the full description of this Space.
+          type: string
+        archiveUrl:
+          description: URL to fetch the whole space as an archive (usually a ZIP file).
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - expiry
+      - files
+    rest_base.SpaceFile:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - name
+      - size
+  securitySchemes:
+    bearerAuth:
+      description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'
+      scheme: bearer
+      type: http
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: 'Your client ID, which acts as the API key. Pass `x-api-key: <API_KEY>` using `<API_KEY>` as the placeholder in examples.'

@@ -1,0 +1,367 @@
+openapi: 3.2.0
+info:
+  title: Illustrator API - Firefly Services Image Trace API
+  description: Illustrator API allows you to perform various operations with an Adobe Illustrator template. The API processes requests asynchronously.
+  version: 1.0.0
+  license:
+    name: Adobe Creative API License
+    url: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+servers:
+- url: https://illustrator-api.adobe.io
+  description: Production endpoint.
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Image Trace
+  description: Convert raster artwork to vector format using Illustrator Image Trace. These jobs run asynchronously.
+paths:
+  /v1/trace-image:
+    post:
+      tags:
+      - Image Trace
+      operationId: traceImage
+      summary: Submit a job
+      description: This endpoint allows you to convert a raster image (JPEG/PNG) into vector format (SVG). The request is processed asynchronously and the status of the job can be checked using the status URL provided in the response.
+      x-ffs-async-job: true
+      x-ffs-job-status-fetcher: imageTraceJobStatus
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VectorizeRequest'
+            example:
+              input:
+                source:
+                  url: https://your-bucket.s3.amazonaws.com/your-image.png
+                mediaType: image/png
+              settings:
+                preset: enhanced_general
+      responses:
+        '202':
+          description: The request has been accepted and the job is in progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLinkResponse'
+              example:
+                jobId: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+                statusUrl: https://illustrator-api.adobe.io/v1/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        '400':
+          description: Bad Request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+        '404':
+          description: Resource Not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+  /v1/status/{jobId}/image-trace:
+    get:
+      tags:
+      - Image Trace
+      operationId: imageTraceJobStatus
+      summary: Retrieve job status
+      description: Poll execution status for an Image Trace job. Use this after calling Image Trace. Poll `GET /v1/status/{jobId}` with the job ID from the trace-image response. When the job succeeds, each output item includes a presigned URL and SVG media type (`image/svg+xml`). Image Trace jobs return only `running`, `succeeded`, or `failed`.
+      x-ffs-status-fetcher: true
+      x-ffs-job-name: VectorizeAsyncJob
+      parameters:
+      - name: jobId
+        required: true
+        in: path
+        description: Job ID returned from an Image Trace job.
+        schema:
+          type: string
+          example: f7da0875-7919-486d-b915-7258c89f09e0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ImageTraceJobApiResponse'
+                - $ref: '#/components/schemas/JobStatusPollPayload'
+                - $ref: '#/components/schemas/ImageTraceJobFailedResponse'
+              examples:
+                succeeded_image_trace:
+                  summary: 'Status: Succeeded'
+                  value:
+                    jobId: f7da0875-7919-486d-b915-7258c89f09e0
+                    status: succeeded
+                    outputs:
+                    - destination:
+                        url: https://example.com/output.svg
+                      mediaType: image/svg+xml
+                running:
+                  summary: 'Status: Running'
+                  value:
+                    jobId: 48db6300-1cc5-4a31-84f6-5092fbd67484
+                    status: running
+                    Retry-After: '1'
+                failed:
+                  summary: 'Status: Failed'
+                  value:
+                    jobId: fe0f4a1a-a213-44bd-b37b-8aa2f636449c
+                    status: failed
+                    error_code: runtime_error
+                    message: An unexpected error occurred while processing your request.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+components:
+  schemas:
+    JobError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+          example: validation_error
+        message:
+          type: string
+          description: The error message.
+          example: Invalid request payload. Check validation_errors for details.
+        validation_errors:
+          description: An array of various validation errors.
+          type: array
+          items:
+            type: string
+      required:
+      - error_code
+    ImageTraceJobFailedResponse:
+      type: object
+      title: Failed
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: fe0f4a1a-a213-44bd-b37b-8aa2f636449c
+        status:
+          type: string
+          enum:
+          - failed
+          description: The job status.
+        error_code:
+          type: string
+          description: The error code.
+          example: runtime_error
+        message:
+          type: string
+          description: The error message.
+          example: An unexpected error occurred while processing your request.
+      required:
+      - jobId
+      - status
+      - error_code
+      - message
+    ImageTraceJobApiResponse:
+      type: object
+      title: Succeeded (Image Trace)
+      description: Returned when an Image Trace job completes successfully.
+      properties:
+        status:
+          type: string
+          description: The job status.
+          enum:
+          - succeeded
+        jobId:
+          type: string
+          description: The job ID.
+          example: f7da0875-7919-486d-b915-7258c89f09e0
+        outputs:
+          type: array
+          description: Array of generated SVG output files.
+          items:
+            $ref: '#/components/schemas/ImageTraceOutput'
+      required:
+      - status
+      - jobId
+      - outputs
+    VectorizeSettings:
+      type: object
+      description: Vectorization preset. Only `preset` is supported.
+      additionalProperties: false
+      properties:
+        preset:
+          type: string
+          description: Vectorization preset. `enhanced_general` favors a clean, vector-style look. `high_fidelity_photo` favors photorealistic tracing. Omit to use the service default. Other values return 400.
+          enum:
+          - enhanced_general
+          - high_fidelity_photo
+          example: enhanced_general
+    VectorizeRequest:
+      type: object
+      description: Request body for an Image Trace job. Input accepts PNG or JPEG; output is SVG.
+      properties:
+        input:
+          description: Input raster source and media type.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeInput'
+        settings:
+          description: Optional vectorization preset (`preset` only).
+          allOf:
+          - $ref: '#/components/schemas/VectorizeSettings'
+      required:
+      - input
+    LongJobError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrInvalidOauthToken
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: Oauth token is not valid
+      required:
+      - status
+      - error_code
+    JobStatusPollPayload:
+      type: object
+      title: Running
+      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
+      properties:
+        status:
+          description: The job status.
+          allOf:
+          - $ref: '#/components/schemas/JobStatus'
+          - enum:
+            - running
+        jobId:
+          type: string
+          description: The job ID.
+          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
+        Retry-After:
+          type: string
+          description: Suggested number of seconds to wait before sending another request to this endpoint.
+          example: '1'
+      required:
+      - status
+      - jobId
+      - Retry-After
+      additionalProperties: false
+    CreateRenditionOutputDestination:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to the output file.
+          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
+      required:
+      - url
+    VectorizeInputMediaType:
+      type: string
+      description: The media type of the input raster file.
+      enum:
+      - image/png
+      - image/jpeg
+    JobLinkResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        statusUrl:
+          type: string
+          description: The status URL.
+          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+      required:
+      - jobId
+      - statusUrl
+    ImageTraceOutput:
+      type: object
+      properties:
+        destination:
+          description: Details of the location where the output is located.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
+        mediaType:
+          type: string
+          enum:
+          - image/svg+xml
+          description: Media type of the generated output.
+      required:
+      - destination
+      - mediaType
+      additionalProperties: false
+    VectorizeInput:
+      type: object
+      properties:
+        source:
+          description: The source containing the raster file to vectorize.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeSourceUrl'
+        mediaType:
+          description: The media type of the source file.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeInputMediaType'
+      required:
+      - source
+      - mediaType
+    VectorizeSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL pointing to the input raster file.
+          example: https://your-bucket.s3.amazonaws.com/your-image.png
+      required:
+      - url
+    JobStatus:
+      type: string
+      description: The job status.
+      enum:
+      - running
+      - failed
+      - succeeded
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

@@ -1,0 +1,971 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Cloud Manager Pipeline Execution API
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+servers:
+- url: https://cloudmanager.adobe.io
+tags:
+- name: Pipeline Execution
+paths:
+  /api/program/{programId}/pipeline/{pipelineId}/execution:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: Get current pipeline execution
+      description: Returns current pipeline execution if any.
+      operationId: getCurrentExecution
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of current execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecution'
+        '404':
+          description: No pipeline execution exits or unknown pipeline or program
+    put:
+      tags:
+      - Pipeline Execution
+      summary: Start the pipeline
+      description: Starts the Pipeline. This works only if the pipeline is not already started.
+      operationId: startPipeline
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: pipelineExecutionMode
+        in: query
+        description: The mode in which to run the execution. EMERGENCY mode will skip certain steps and is only available to select AMS customers.
+        required: false
+        schema:
+          type: string
+          enum:
+          - NORMAL
+          - EMERGENCY
+          default: NORMAL
+      - name: stepId
+        in: query
+        description: Identifier of the step from which the re-execution will start
+        required: false
+        schema:
+          type: string
+      - name: sourceExecutionId
+        in: query
+        description: Identifier of the source execution from which the execution will start
+        required: false
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Must always be application/json
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Successfully started pipeline execution
+          headers:
+            location:
+              description: The URL of the new execution
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecution'
+        '400':
+          description: Request conflicts with the expected state of pipeline
+        '404':
+          description: No pipeline execution exits or unknown pipeline or application
+        '412':
+          description: Pipeline is busy
+        '503':
+          description: Pipeline execution cannot be started because of unplanned maintenance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemUnderMaintenanceExceptionMapper'
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: Get pipeline execution
+      description: Returns a pipeline execution by id
+      operationId: getExecution
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecution'
+        '404':
+          description: No pipeline execution exits or unknown pipeline or application
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}/phase/{phaseId}/step/{stepId}:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: Get step state
+      description: ''
+      operationId: stepState
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: phaseId
+        in: path
+        description: Identifier of the phase
+        required: true
+        schema:
+          type: string
+      - name: stepId
+        in: path
+        description: Identifier of the step
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of step state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecutionStepState'
+        '403':
+          description: Missing permission for user to read step
+        '404':
+          description: Pipeline execution does not exist
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}/phase/{phaseId}/step/{stepId}/advance:
+    put:
+      tags:
+      - Pipeline Execution
+      summary: Advance
+      description: Post to this url in order to advance the current pipeline execution, if paused and waiting for user interaction. Link is present in output only in that case. The input depends on the actual reason for which the pipeline execution stopped.
+      operationId: advancePipelineExecution
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: phaseId
+        in: path
+        description: Identifier of the phase
+        required: true
+        schema:
+          type: string
+      - name: stepId
+        in: path
+        description: Identifier of the step
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Must always be application/json
+        required: true
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Successful resume of pipeline execution
+        '403':
+          description: Missing permission for user to advance the pipeline execution
+        '404':
+          description: No pipeline execution exits or unknown pipeline or program
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Input for advance. See documentation at https://www.adobe.io/experience-cloud/cloud-manager/guides/api-usage/advancing-and-cancelling-steps/ for details.
+        required: true
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}/phase/{phaseId}/step/{stepId}/cancel:
+    put:
+      tags:
+      - Pipeline Execution
+      summary: Cancel
+      description: Post to this url in order to cancel the current pipeline execution. Link is present in output only in that case.
+      operationId: cancelPipelineExecutionStep
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: phaseId
+        in: path
+        description: Identifier of the phase
+        required: true
+        schema:
+          type: string
+      - name: stepId
+        in: path
+        description: Identifier of the step
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Must always be application/json
+        required: true
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Successful cancel of pipeline execution
+        '403':
+          description: Missing permission for user to cancel the current pipeline execution
+        '404':
+          description: No pipeline execution exits or unknown pipeline or program
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        description: Input for cancel. See documentation at https://www.adobe.io/experience-cloud/cloud-manager/guides/api-usage/advancing-and-cancelling-steps/ for details.
+        required: true
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}/phase/{phaseId}/step/{stepId}/logs:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: Get logs
+      description: Get the logs associated with a step.
+      operationId: getStepLogs
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: phaseId
+        in: path
+        description: Identifier of the phase
+        required: true
+        schema:
+          type: string
+      - name: stepId
+        in: path
+        description: Identifier of the step
+        required: true
+        schema:
+          type: string
+      - name: file
+        in: query
+        description: Identifier of the log file
+        required: false
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        required: false
+        description: Specify application/json in this header to receive a JSON response. Otherwise, a 307 response code will be returned with a Location header.
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+        '403':
+          description: Missing permission for user to read logs
+        '404':
+          description: Pipeline execution does not exist
+  /api/program/{programId}/pipeline/{pipelineId}/execution/{executionId}/phase/{phaseId}/step/{stepId}/metrics:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: Get step metrics
+      description: ''
+      operationId: stepMetric
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: executionId
+        in: path
+        description: Identifier of the execution
+        required: true
+        schema:
+          type: string
+      - name: phaseId
+        in: path
+        description: Identifier of the phase
+        required: true
+        schema:
+          type: string
+      - name: stepId
+        in: path
+        description: Identifier of the step
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineStepMetrics'
+        '403':
+          description: Missing permission for user to read metrics
+        '404':
+          description: Pipeline execution does not exist
+  /api/program/{programId}/pipeline/{pipelineId}/executions:
+    get:
+      tags:
+      - Pipeline Execution
+      summary: List Executions
+      description: Returns the history of pipeline executions in a newest to oldest order
+      operationId: getExecutions
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program.
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Pagination start parameter
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Pagination limit parameter
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of execution history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecutionListRepresentation'
+        '403':
+          description: Missing permission for user to read executions
+        '404':
+          description: Pipeline does not exist
+components:
+  schemas:
+    RequestedPageDetails:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
+          type: string
+        property:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+      description: Filtering and sorting page details
+    Redirect:
+      type: object
+      required:
+      - redirect
+      properties:
+        redirect:
+          type: string
+          description: The url to redirect to.
+    PipelineExecutionListRepresentation:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            executions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PipelineExecution'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: List of pipeline executions
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    PipelineExecution:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Pipeline execution identifier
+        programId:
+          type: string
+          example: '14'
+          description: Identifier of the program. Unique within the space.
+          readOnly: true
+        pipelineId:
+          type: string
+          example: '10'
+          description: Identifier of the pipeline. Unique within the space.
+          readOnly: true
+        artifactsVersion:
+          type: string
+          description: Version of the artifacts generated during this execution
+        user:
+          type: string
+          example: 0123456789ABCDE@AdobeID
+          description: AdobeID who started the pipeline. Empty for auto triggered builds
+        status:
+          type: string
+          description: Status of the execution
+          enum:
+          - NOT_STARTED
+          - RUNNING
+          - CANCELLING
+          - CANCELLED
+          - FINISHED
+          - ERROR
+          - FAILED
+        trigger:
+          type: string
+          description: How the execution was triggered.
+          enum:
+          - ON_COMMIT
+          - MANUAL
+          - PUSH_UPGRADES
+        pipelineExecutionMode:
+          type: string
+          description: The mode in which the execution occurred. EMERGENCY mode will skip certain steps and is only available to select AMS customers
+          enum:
+          - NORMAL
+          - EMERGENCY
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the execution was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the status of the execution last changed
+        finishedAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the execution completed
+        pipelineType:
+          type: string
+          example: CI_CD
+          description: Pipeline type
+          enum:
+          - CI_CD
+          - CODE_GENERATOR
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            stepStates:
+              type: array
+              items:
+                $ref: '#/components/schemas/PipelineExecutionStepState'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: Get the program of the execution
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline:
+              description: Get the pipeline of the execution
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A representation of an execution of a CI/CD Pipeline.
+    Metric:
+      type: object
+      properties:
+        id:
+          type: string
+          description: KPI result identifier
+        severity:
+          type: string
+          description: Severity of the metric
+          enum:
+          - critical
+          - important
+          - informational
+        passed:
+          type: boolean
+          description: Whether metric is considered passed
+          default: false
+        override:
+          type: boolean
+          description: Whether user override the failed metric
+          default: false
+        actualValue:
+          type: string
+          description: Expected value for the metric
+        expectedValue:
+          type: string
+          description: Expected value for the metric
+        comparator:
+          type: string
+          description: Comparator used for the metric
+          enum:
+          - GT
+          - GTE
+          - LT
+          - LTE
+          - EQ
+          - NEQ
+        kpi:
+          type: string
+          description: KPI identifier
+      description: A representation of a specific metric generated by a CI/CD Pipeline step.
+    PipelineStepMetrics:
+      type: object
+      properties:
+        metrics:
+          type: array
+          description: metrics
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Metric'
+    PipelineExecutionStepState:
+      type: object
+      properties:
+        id:
+          type: string
+        stepId:
+          type: string
+        phaseId:
+          type: string
+        action:
+          type: string
+          example: build
+          description: Name of the action
+        repository:
+          type: string
+          description: Target repository
+        branch:
+          type: string
+          description: Target branch
+        environment:
+          type: string
+          description: Target environment
+        environmentId:
+          type: string
+          description: Target environment id
+        environmentType:
+          type: string
+          description: Target environment type
+        startedAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the step state started running
+        finishedAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the step completed
+        commitId:
+          type: string
+          description: Target commit id
+        details:
+          type: object
+          description: Additional details of the step
+          $ref: '#/components/schemas/PipelineExecutionStepStateDetails'
+        status:
+          type: string
+          example: NOT_STARTED
+          description: Action status
+          enum:
+          - NOT_STARTED
+          - RUNNING
+          - FINISHED
+          - ERROR
+          - ROLLING_BACK
+          - ROLLED_BACK
+          - WAITING
+          - CANCELLED
+          - FAILED
+          - INCOMPLETE
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/execution:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline:
+              description: Get the pipeline of the execution
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline/logs:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline/metrics:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline/reExecute:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline/advance:
+              description: Post to this link in order to advance the pipeline, if paused and waiting for user interaction. Link is present in output only in that case.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/pipeline/cancel:
+              description: Post to this link in order to cancel the pipeline. Link is present in output only in that case.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: Get the program of the execution
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: Describes the status of a particular pipeline execution step for display purposes
+    SystemUnderMaintenanceExceptionMapper:
+      type: object
+    PipelineExecutionStepStateDetails:
+      type: object
+      description: Details available for each step state. The set of properties available will vary by the step action.
+      properties:
+        deployCommands:
+          type: string
+          description: For deploy steps, a JSON array encoded as a string which lists the deployment activities expected to be performed.
+        currentDeployCommandId:
+          type: string
+          description: For deploy steps, the current identifier from the deployCommands which is being executed.
+        environmentUrls:
+          type: array
+          description: For deploy steps, the the set of URLs for the environment.
+          items:
+            type: object
+            properties:
+              instanceType:
+                type: string
+              instanceUrl:
+                type: string
+        deploymentStepDescription:
+          type: string
+          description: For deploy steps, a JSON array encoded as a string which includes the detailed list of deployment activities which have been performed.
+        input:
+          type: object
+          description: Input provided when advancing the step. See documentation at https://www.adobe.io/experience-cloud/cloud-manager/guides/api-usage/advancing-and-cancelling-steps/ for details.

@@ -1,0 +1,1286 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Source connections API
+  version: '1.0'
+  description: 'Operations tagged Source connections across 2 of this provider''s published API definitions: adobe-suite-aep-destinations-openapi.yaml, adobe-suite-aep-flow-service-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://{environment}.adobe.io/data/foundation/flowservice
+  description: Adobe IO gateway endpoint
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Source connections
+  description: Source connections create and manage a connection to the internal source from where data is exported. For destination connections, the source connection can be either the Experience Platform Profile Store or the Experience Platform Data Lake. Source connections contain information like data source, data format, and the source connection ID needed to create a dataflow. A source connection instance is specific to a tenant and organization.
+paths:
+  /sourceConnections:
+    get:
+      tags:
+      - Source connections
+      summary: Retrieve a list of source connections for destinations
+      description: 'You can retrieve a list of all source connections for destinations in your organization by making a GET request to the `/sourceConnections` endpoint. <br> You can use query parameters to return only the base connections for a specific destination type. To do this, pass in the `connectionSpec.id` of the desired destination by using the `property` query parameter, as shown further below.
+
+        '
+      operationId: getSourceConnections
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      - in: query
+        name: property
+        description: 'A comma-separated list of top-level object properties to be returned in the response. Used to cut down the amount of data returned in the response body. For example, `property=id==f2d1a98b-6b8c-420b-80a1-696c3f192eb2,b6730e09-7da6-40e2-b5cf-289545056dc3,49d17eff-9fa7-4e92-b84e-ab65fcb4730a`.
+
+          '
+        required: false
+        schema:
+          type: string
+        examples:
+          filterProfileSourceConnection:
+            summary: Filter source connection to the Experience Platform Profile Store
+            value: connectionSpec.id==8a9c3494-9708-43d7-ae3f-cda01e5030e1
+          filterProfileSourceConnectionByDate:
+            summary: Filter all source connections to the Experience Platform Profile Store created after August 7th, 2022
+            value: createdAt>=1659907304000&property=connectionSpec.id==8a9c3494-9708-43d7-ae3f-cda01e5030e1
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/orderby'
+      - $ref: '#/components/parameters/count'
+      - $ref: '#/components/parameters/continuationToken'
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of source connections that match the request parameters.
+          x-summary: List of Source Connections Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceConnectionItem'
+              examples:
+                Connections:
+                  $ref: '#/components/examples/SourceConnectionsResponse'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Source connections
+      summary: Create a source connection
+      description: 'A source connection for destinations establishes the connection to the Experience Platform Profile Store or Experience Platform Data Lake. The `sourceConnection ID` returned in a successful response must be used when creating a dataflow to your desired destination.
+
+        '
+      operationId: postSourceConnection
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/Content-type'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/Create_Source_Connection_Request'
+              - $ref: '#/components/schemas/Create_Data_Lake_Source_Connection_Request'
+            examples:
+              Create_Source_Connection_Profile_Store:
+                $ref: '#/components/examples/Create_Source_Connection_Profile_Store'
+              Create_Source_Connection_Data_Lake:
+                $ref: '#/components/examples/Create_Source_Connection_Data_Lake'
+      responses:
+        '201':
+          description: A new source connection was successfully created. The response contains the unique identifier (ID) and the etag value of the source connection.
+          x-summary: Source connection created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Create_Source_Connection_Response'
+              examples:
+                Create_Source_Connection_Response:
+                  $ref: '#/components/examples/Create_Source_Connection_Response'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Unauthorized access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: connectionSpec.version 'version' is required for spec info
+          x-summary: Missing required field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    servers:
+    - url: https://{environment}.adobe.io/data/foundation/flowservice
+      description: Adobe IO gateway endpoint
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /sourceConnections/{id}:
+    get:
+      tags:
+      - Source connections
+      summary: Retrieve the details of a source connection
+      description: 'You can retrieve detailed information about a specific source connection by making a GET request to the `/sourceConnections` endpoint and providing the ID of the connection you want to inspect.
+
+        '
+      operationId: getSourceConnectionById
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the source connection you are looking to retrieve.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      responses:
+        '200':
+          description: The specified source connection was successfully retrieved.
+          x-summary: Source Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceConnectionItem'
+              examples:
+                SourceConnectionsResponseUPS:
+                  $ref: '#/components/examples/SourceConnectionsResponseUPS'
+                SourceConnectionsResponseDataLake:
+                  $ref: '#/components/examples/SourceConnectionsResponseDataLake_V2'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified source connection ID was not found. The resource may have been deleted, or the requested path was entered incorrectly.
+          x-summary: Not Found - Source Connection ID Missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: sourceConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+                errorDetails: sourceConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Source connections
+      summary: Delete a source connection
+      description: 'You can delete the specified source connection by making a DELETE request to the `/sourceConnections` endpoint and providing the ID of the source connection that you wish to delete in the request path.
+
+        '
+      operationId: deleteSourceConnectionById
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the source connection you are looking to delete.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      responses:
+        '202':
+          description: A successful response returns HTTP status 202 (No Content) and a blank body. You can confirm the deletion by attempting a lookup (GET) request to the source connection. The API will return an HTTP 404 (Not Found) error, indicating that the source connection has been deleted.
+          x-summary: Deletion Accepted - Source Connection Marked for Deletion
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified source connection ID was not found. The resource may have been deleted, or the requested path was entered incorrectly.
+          x-summary: Not Found - Source Connection ID Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: sourceConnections not found with id = [ca5c6e9a-8559-4a08-97a5-f15b756da600-]
+                errorDetails: sourceConnections not found with id = [ca5c6e9a-8559-4a08-97a5-f15b756da600-]
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    servers:
+    - url: https://{environment}.adobe.io/data/foundation/flowservice
+      description: Adobe IO gateway endpoint
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /sourceConnections/{SOURCE_CONNECTION_ID}:
+    get:
+      tags:
+      - Source connections
+      summary: Retrieve a source connection by ID
+      description: Retrieve a single source connection by making a GET request to the `/sourceConnections/{SOURCE_CONNECTION_ID}` endpoint while providing the ID of the source connection you want to retrieve.
+      operationId: retrieveSourceConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: SOURCE_CONNECTION_ID
+        in: path
+        description: The ID of the source connection you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified source connection in JSON format.
+          x-summary: Source Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceConnectionsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    delete:
+      tags:
+      - Source connections
+      summary: Delete a source connection
+      description: Use this endpoint to delete an instance of a source connection.
+      operationId: deleteSourceConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: SOURCE_CONNECTION_ID
+        in: path
+        description: The ID of the source connection you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The source connection was successfully deleted.
+          x-summary: Source Connection Deleted
+          content: {}
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Source connections
+      summary: Update a source connection
+      description: Update the information of a source connection by making a PATCH request to the `/sourceConnections/{SOURCE_CONNECTION_ID}` endpoint while providing the ID of the source connection you want to update. To update a source connection, you must also provide the current `etag` of your source connection as the `if-match` header.
+      operationId: patchSourceConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: if-match
+        in: header
+        description: A parameter required when updating a connection or a dataflow. When making a PUT or PATCH request, you must add an `if-match` header parameter and include the current version/etag of the resource that you want to update to complete the update.
+        required: true
+        schema:
+          type: string
+      - name: SOURCE_CONNECTION_ID
+        in: path
+        description: The ID of the source connection you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: '- **op** - **(Required)** The operation call used to define the action needed to update the connection. Operations include `add`, `replace`, and `remove`.
+
+          - **path** - (Optional) The path of the parameter to be updated.
+
+          - **value** - **(Required)** The new value you want to update your parameter with.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchInstruction'
+        required: true
+      responses:
+        '200':
+          description: Successful operation. A successful response returns updated source connection in JSON format.
+          x-summary: Source Connection Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceConnectionsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /sourceConnections/{SOURCE_CONNECTION_ID}/action:
+    post:
+      tags:
+      - Source connections
+      summary: Performs a state transition action on an existing source connection.
+      description: Use this endpoint to perform a state transition action on an existing source connection.
+      operationId: performAction_1
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: SOURCE_CONNECTION_ID
+        in: path
+        description: The ID of the queried source connection.
+        required: true
+        schema:
+          type: string
+      - name: op
+        in: query
+        description: The operative action to perform against the queried source connection.
+        required: true
+        schema:
+          type: string
+          enum:
+          - PUBLISH
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the source connection with the updated state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSourceConnectionResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+components:
+  parameters:
+    XApiKey:
+      in: header
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    orderby:
+      in: query
+      name: orderby
+      description: Sort response by specified fields separated by `,` and/or prefix field with `-` for descending order.
+      required: false
+      schema:
+        type: string
+    Accept:
+      in: header
+      name: Accept
+      description: An optional content negotiation header which allows you to use a specific version of the API. If you don't use it, the HTTP responses fall back to the latest version of the API.
+      schema:
+        type: string
+        default: application/json; version=1
+      required: false
+    continuationToken:
+      in: query
+      name: continuationToken
+      description: A token for fetching records for next page. This is a system-generated token.
+      required: false
+      schema:
+        type: string
+    count:
+      in: query
+      name: count
+      description: A boolean value specifying if the count of resources should be returned. By default the count is not returned (`count=false`).
+      required: false
+      schema:
+        type: boolean
+    Content-type:
+      in: header
+      name: Content-type
+      description: The type of content being sent in the body of the request. Should be 'application/json'.
+      schema:
+        type: string
+        default: application/json
+      required: true
+    XSandboxId:
+      in: header
+      name: x-sandbox-name
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+      schema:
+        type: string
+      required: true
+    Authorization:
+      in: header
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    limit:
+      in: query
+      name: limit
+      description: Limit response to a specific number of objects. Must be a positive number. For example, `limit=10`.
+      required: false
+      schema:
+        type: integer
+        maximum: 100
+    XImsOrgId:
+      in: header
+      name: x-gw-ims-org-id
+      description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+  schemas:
+    Create_Source_Connection_Request:
+      type: object
+      title: Create Profile Store Source Connection Request
+      description: 'API request to create a source connection to the Experience Platform Profile Store.  In the request payload, always use the hardcoded value `connectionSpec.id=8a9c3494-9708-43d7-ae3f-cda01e5030e1`.
+
+        '
+      required:
+      - name
+      - connectionSpec
+      properties:
+        name:
+          type: string
+          title: Name
+          description: The name of the source connection.
+        description:
+          type: string
+          title: Description
+          description: An optional description for the source connection.
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: 'Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination. For connections to the Experience Platform Profile Store, the connection spec ID is always `8a9c3494-9708-43d7-ae3f-cda01e5030e1`.
+
+                '
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    ErrorResponse:
+      type: object
+    SourceConnectionItem:
+      type: object
+      title: Source Connection Items
+      description: Parameters specific to source connections.
+      required:
+      - id
+      - createdAt
+      - updatedAt
+      - createdBy
+      - updatedBy
+      - createdClient
+      - updatedClient
+      - sandboxId
+      - imsOrgId
+      - name
+      - connectionSpec
+      - state
+      - typeInfo
+      - version
+      - etag
+      - inheritedAttributes
+      properties:
+        id:
+          type: string
+          title: Connection ID
+          description: The ID of the source connection.
+        createdAt:
+          type: integer
+          title: Connection creation time
+          description: The epoch time in milliseconds when the source connection was created.
+        updatedAt:
+          type: integer
+          title: Connection update time
+          description: The epoch time in milliseconds when the source connection was last updated.
+        createdBy:
+          type: string
+          title: Created User
+          description: The Adobe ID of the Identity Management System (IMS) user who created the source connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        updatedBy:
+          type: string
+          title: Updated User
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the source connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        createdClient:
+          type: string
+          title: Created client
+          description: The Adobe Identity Management System (IMS) client who created the source connection. This can be an application or a user. For example, the value `exc_app` represents source connections created in the Experience Platform UI.
+        updatedClient:
+          type: string
+          title: Updated client
+          description: The Adobe Identity Management System (IMS) client who last updated the source connection. This can be an application or a user. For example, the value `exc_app` represents source connections created in the Experience Platform UI.
+        imsOrgId:
+          type: string
+          title: IMS org ID
+          description: The organization ID to which the source connection belongs.
+        sandboxId:
+          type: string
+          title: Sandbox ID
+          description: The ID of the sandbox in which the source connection was created.
+        sandboxName:
+          type: string
+          title: Created client
+          description: The ID of the sandbox in which the source connection was created.
+        name:
+          type: string
+          title: Connection name
+          description: The name of the source connection.
+        etag:
+          type: string
+          title: eTag
+          description: The updated, unique eTag returned by the HTTP response. The eTag value updates with every successful update of a source connection.
+        state:
+          type: string
+          title: Connection state
+          description: 'Represents the current state of the source connection. A source connection can be `enabled` or `disabled`.
+
+            '
+          enum:
+          - enabled
+          - disabled
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          properties:
+            id:
+              type: string
+              title: Id
+              description: 'Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination. For connections to the Experience Platform Profile Store, the connection spec ID is always `8a9c3494-9708-43d7-ae3f-cda01e5030e1`. For connections to the Experience Platform Data Lake, the connection spec ID is always `23598e46-f560-407b-88d5-ea6207e49db0`.
+
+                '
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+        typeInfo:
+          type: object
+          title: Type information
+          description: Information about the data that is being exported.
+          properties:
+            id:
+              type: string
+              title: Id
+              description: ID of the data store from where data is exported. This value is always `ups`, which stands for the Unified Profile Store in Experience Platform.
+              enum:
+              - ups
+            type:
+              type: string
+              title: Type
+              description: The data type that is being exported.
+              enum:
+              - ProfileFragments
+        inheritedAttributes:
+          type: object
+          title: Inherited attributes
+          description: Attributes inherited from the base connection used when creating this connection.
+          properties:
+            baseConnection:
+              type: string
+              title: Inherited base connection ID
+              description: ID of the base connection used when creating this source connection.
+            connectionSpec:
+              type: string
+              title: Type
+              description: The connection spec used for the base connection.
+              properties:
+                id:
+                  type: string
+                  title: Id
+                  description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+                version:
+                  type: string
+                  title: Version
+                  description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+        params:
+          type: object
+          title: Params
+          description: Source Connection params.
+          properties:
+            datasets:
+              type: array
+              title: Datasets
+              description: List of datasets. Applicable only to Dataset destinations.
+              items:
+                type: object
+                properties:
+                  dataSetId:
+                    type: string
+                    title: Dataset ID
+                    description: ID of the dataset.
+                  name:
+                    title: Name
+                    description: Name of the dataset.
+                    type: string
+    GenericEntityCreationResponse:
+      type: object
+      title: Flow Creation Response
+      description: API response for a successful create operation.
+      properties:
+        id:
+          type: string
+          title: Flow ID
+          description: The dataflow ID for which the API request was made.
+        etag:
+          type: string
+          title: E-Tag
+          description: An updated etag for the dataflow ID.
+    Create_Source_Connection_Response:
+      title: Create Source Connection Response
+      description: API response for a successful create source connection operation.
+      allOf:
+      - $ref: '#/components/schemas/GenericEntityCreationResponse'
+    Create_Data_Lake_Source_Connection_Request:
+      type: object
+      title: (Beta) Create Data Lake Source Connection Request
+      description: 'API request to create a source connection to the Experience Platform Data Lake.  In the request payload, always use the hardcoded value `connectionSpec.id=23598e46-f560-407b-88d5-ea6207e49db0`.
+
+        '
+      required:
+      - name
+      - connectionSpec
+      properties:
+        name:
+          type: string
+          title: Name
+          description: The name of the source connection.
+        description:
+          type: string
+          title: Description
+          description: A description for the source connection.
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: 'Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination. For connections to the Experience Platform Data Lake, the connection spec ID is always `23598e46-f560-407b-88d5-ea6207e49db0`.
+
+                '
+              enum:
+              - 23598e46-f560-407b-88d5-ea6207e49db0
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+        params:
+          type: object
+          title: Params
+          description: Source Connection params.
+          properties:
+            datasets:
+              type: array
+              title: Datasets
+              description: List of datasets to export. See the `Configurations` section on how to access the list of datasets available for your organization. Please note that once a Source Connection is created, its datasets cannot be modified. If you need to add or remove datasets, create a new Source Connection with the updated values. Also, the Source Connection must be linked to a destination dataflow in order for its datasets to be exported. See the `Dataflows` section on how to configure a dataflow with a Source Connection.
+              items:
+                type: object
+                properties:
+                  dataSetId:
+                    type: string
+                    title: Dataset ID
+                    description: ID of the dataset.
+                  name:
+                    title: Name
+                    description: Name of the dataset.
+                    type: string
+                required:
+                - dataSetId
+                - name
+    CreateSourceConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        etag:
+          type: string
+          example: '"c207057b-0000-0200-0000-638e67070000"'
+      description: Location of the newly created source connection instance
+    SourceConnectionDataDTO:
+      type: object
+      properties:
+        format:
+          type: string
+          example: delimited
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    SourceConnectionItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the source connection.
+          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        createdAt:
+          type: integer
+          description: The epoch time in milliseconds when the source connection was created.
+          format: int64
+          example: 1670276871555
+        updatedAt:
+          type: integer
+          description: The epoch time in milliseconds when the source connection was created.
+          format: int64
+          example: 1670276871555
+        createdBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who created the source connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        updatedBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the source connection. In the case of service tokens, the value for `updatedBy` is the same as `updatedClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        createdClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who created the source connection. This can be an application or a user. For example, the value `exc_app` represents source connections created in the Experience Platform UI.
+          example: exc_app
+        updatedClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who last updated the source connection. This can be an application or a user. For example, the value `exc_app` represents source connections created in the Experience Platform UI.
+          example: exc_app
+        sandboxId:
+          type: string
+          description: The unique identifier of the sandbox in which the operation will take place.
+          example: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        sandboxName:
+          type: string
+          description: The name of the sandbox in which the operation will take place. If a sandbox name is not provided then the default sandbox for the org will be used.
+          example: prod
+        imsOrgId:
+          type: string
+          description: The organization ID to which the source connection belongs to.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        name:
+          type: string
+          description: The name of the source connection.
+          example: Google Cloud Storage source connection
+        description:
+          type: string
+          description: An optional description used to add further information about the source connection.
+          example: A Google Cloud Storage source connection for ACME customer data
+        baseConnectionId:
+          type: string
+          description: The base connection ID used to create a source connection.
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        state:
+          type: string
+          description: The state of the source connection. Possible state values include inProgress, updating, enabling, disabling, enabled, and disabled. "For example, state=`enabled`."
+          example: enabled
+        data:
+          $ref: '#/components/schemas/SourceConnectionDataDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        params:
+          type: object
+          properties:
+            path:
+              type: string
+              example: Accounts
+        version:
+          type: string
+          description: The version of the source connection.
+          example: '"5f00fba7-0000-0200-0000-5ed560520000"'
+        etag:
+          type: string
+          description: The etag value generated and assigned to a source connection when a new source connection is created.
+          example: '"5f00fba7-0000-0200-0000-5ed560520000"'
+        providerRefId:
+          type: string
+          description: A reference ID connecting the source connection to the provider.
+          example: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+        inheritedAttributes:
+          $ref: '#/components/schemas/SourceConnectionMetaInfoDTO'
+    SourceConnectionMetaInfoDTO:
+      type: object
+      properties:
+        baseConnection:
+          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    ConnectionMetaInfoDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    SourceConnectionsListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceConnectionItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 1
+    CreateSourceConnectionRequest:
+      required:
+      - connectionSpec
+      - data
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          example: Google Cloud Storage source connection
+        baseConnectionId:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        description:
+          type: string
+          example: A Google Cloud Storage source connection for ACME customer data
+        data:
+          $ref: '#/components/schemas/SourceConnectionDataDTO'
+        params:
+          type: object
+          properties:
+            path:
+              type: string
+              example: /acme/acme-customers/sales/acme-customers-sales-spring.csv
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+  examples:
+    Create_Source_Connection_Response:
+      summary: Source Connection Response
+      value:
+        id: 77eeb629-f08a-48e2-8c7b-e345e246ff45
+        etag: '"ac00c7db-0000-0200-0000-62eabd5c0000"'
+    SourceConnectionsResponse:
+      summary: Source connections response example
+      value:
+        items:
+        - id: 23f73356-d5aa-49f4-b810-c69f12fb3edd
+          createdAt: 1659993961499
+          updatedAt: 1659993961695
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Sample source connection Profile Store
+          connectionSpec:
+            id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+            version: '1.0'
+          typeInfo:
+            type: ProfileFragments
+            id: ups
+          state: enabled
+          version: '"0e0d95ae-0000-0200-0000-62a21cdd0000"'
+          etag: '"0e0d95ae-0000-0200-0000-62a21cdd0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: be3e2d03-6134-4566-9865-c40e0df8b718
+              connectionSpec:
+                id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+                version: '1.0'
+        - id: 12333356-d5aa-49f4-b810-c69f12fb3edd
+          createdAt: 1659993961493
+          updatedAt: 1659993961699
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Another sample source connection to the Profile Store
+          connectionSpec:
+            id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+            version: '1.0'
+          typeInfo:
+            type: ProfileFragments
+            id: ups
+          state: enabled
+          version: '"0e0d95ae-0000-0200-0000-62a55cdd0000"'
+          etag: '"0e0d95ae-0000-0200-0000-62a55cdd0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: be3e2d03-6134-4566-9865-c40e0df8b718
+              connectionSpec:
+                id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+                version: '1.0'
+        - id: dfe93ffd-4f87-49f4-b900-f57cd0dbab1a
+          createdAt: 1659993961499
+          updatedAt: 1659993961695
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Data Lake Source Connection
+          description: Data Lake Source Connection
+          baseConnectionId: 3c7dc58e-a1ee-4e29-b3b2-a7757fb82044
+          state: enabled
+          connectionSpec:
+            id: 23598e46-f560-407b-88d5-ea6207e49db0
+            version: '1.0'
+          params:
+            datasets:
+            - dataSetId: 616d53e0a6de2719486fb024
+              name: Company Dataset
+            - dataSetId: 972a43e0n3fe2419923bb037
+              name: Employee Dataset
+          version: '"24014573-0000-0200-0000-6372c91f0000"'
+          etag: '"24014573-0000-0200-0000-6372c91f0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: 3c7dc58e-a1ee-4e29-b3b2-a7757fb82044
+              connectionSpec:
+                id: 23598e46-f560-407b-88d5-ea6207e49db0
+                version: '1.0'
+    SourceConnectionsResponseDataLake_V2:
+      summary: (Beta) Source connection to Data Lake response example
+      value:
+        items:
+        - id: dfe93ffd-4f87-49f4-b900-f57cd0dbab1a
+          createdAt: 1659993961499
+          updatedAt: 1659993961695
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Data Lake Source Connection
+          description: Data Lake Source Connection
+          baseConnectionId: 3c7dc58e-a1ee-4e29-b3b2-a7757fb82044
+          state: enabled
+          connectionSpec:
+            id: 23598e46-f560-407b-88d5-ea6207e49db0
+            version: '1.0'
+          params:
+            datasets:
+            - dataSetId: 616d53e0a6de2719486fb024
+              name: Company Dataset
+            - dataSetId: 972a43e0n3fe2419923bb037
+              name: Employee Dataset
+          version: '"24014573-0000-0200-0000-6372c91f0000"'
+          etag: '"24014573-0000-0200-0000-6372c91f0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: 3c7dc58e-a1ee-4e29-b3b2-a7757fb82044
+              connectionSpec:
+                id: 23598e46-f560-407b-88d5-ea6207e49db0
+                version: '1.0'
+    Create_Source_Connection_Data_Lake:
+      summary: Establish a connection to the Experience Platform Data Lake
+      value:
+        name: Connecting to Data Lake
+        description: Data Lake source connection to export datasets
+        connectionSpec:
+          id: 23598e46-f560-407b-88d5-ea6207e49db0
+          version: '1.0'
+        params:
+          datasets:
+          - dataSetId: 616d53e0a6de2719486fb024
+            name: Company Dataset
+          - dataSetId: 972a43e0n3fe2419923bb037
+            name: Employee Dataset
+    Create_Source_Connection_Profile_Store:
+      summary: Establish a connection to the Experience Platform Profile Store
+      value:
+        name: Connecting to Profile Store
+        description: Optional
+        connectionSpec:
+          id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+          version: '1.0'
+    SourceConnectionsResponseUPS:
+      summary: Source connection to UPS response example
+      value:
+        items:
+        - id: 097e3d72-921b-47f5-9e99-a4487cdbd1bd
+          createdAt: 1660155681202
+          updatedAt: 1660155681587
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Sample source connection to the Profile Store
+          connectionSpec:
+            id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+            version: '1.0'
+          typeInfo:
+            type: ProfileFragments
+            id: ups
+          state: enabled
+          version: '"0e0d95ae-0000-0200-0000-62a21cdd0000"'
+          etag: '"0e0d95ae-0000-0200-0000-62a21cdd0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: be3e2d03-6134-4566-9865-c40e0df8b718
+              connectionSpec:
+                id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+                version: '1.0'
+x-refined-from:
+- adobe-suite-aep-destinations-openapi.yaml
+- adobe-suite-aep-flow-service-openapi.yaml
+x-original-swagger-version: '2.0'

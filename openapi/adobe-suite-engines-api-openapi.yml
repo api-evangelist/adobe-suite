@@ -1,0 +1,955 @@
+openapi: 3.2.0
+info:
+  title: Sensei Machine Learning Engines API
+  description: "Sensei Machine Learning API provides a mechanism for data scientists to organize and manage ML services from algorithm onboarding through experimentation and to service deployment.\n\nRelated documentation:\n  * [Data Science Workspace documentation](http://www.adobe.com/go/data-science-overview-en)\n  \nVisualize API calls with Postman (a free, third-party software):\n  * [Sensei Machine Learning API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Sensei%20Machine%20Learning%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n\n**API paths**: \n  * PLATFORM Gateway URL: https://<span>platform.adobe.io/ \n  * Base path for this API: /data/sensei\n  * Example of a complete path: https://<span>platform.adobe.io/data/sensei/engines\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`. \n  \n**API error handling**: \n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/sensei
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Engines
+  description: Engines act as an umbrella entity holding all machine learning instances. This is tied to a Docker image, Java archive, or EGG file which contains machine  learning logic to train and score a Model.
+paths:
+  /engines:
+    get:
+      tags:
+      - Engines
+      summary: List all engines
+      description: Lists all engines providing mechanisms for pagination, filtering, and sorting.
+      operationId: retrieveEngines
+      parameters:
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Start value for pagination. Indicates the starting index for the items to return.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Limit value for pagination. Indicates the requested number of items to return. The service may return a different number of items than requested.
+        schema:
+          maximum: 100
+          minimum: 0
+          type: integer
+          format: int32
+          default: 25
+      - name: orderby
+        in: query
+        description: Sort order for pagination. Indicates the fields and direction to use for sorting in priority order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+          default: '["-updated"]'
+      - name: property
+        in: query
+        description: Property matching expression for filtering paginated results. Indicates the comparison expression that items must match in order to be returned.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: List of Engines
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=engineListing.v1.json:
+              schema:
+                $ref: '#/components/schemas/EngineListing'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+    post:
+      tags:
+      - Engines
+      summary: Create a new Engine
+      description: Creates a new Engine
+      operationId: createEngine
+      parameters:
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                engine:
+                  type: string
+                  description: Engine entity description
+                  x-content-type: application/vnd.adobe.platform.sensei+json;profile=engine.v1.json
+                defaultArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for all operations by default
+                  format: binary
+                  x-content-type: application/octet-stream
+                preprocessOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'preprocess' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                featurePipelineOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'preprocess' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                trainOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'train' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                batchScoreOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'batchScore' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                validateOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'validate' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                evaluateOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'evaluate' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+                publishOverrideArtifact:
+                  type: string
+                  description: The binary Engine artifact (e.g. JAR, EGG) used for the 'publish' operation
+                  format: binary
+                  x-content-type: application/octet-stream
+      responses:
+        201:
+          x-summary: Success
+          description: Creation successful
+          headers:
+            Location:
+              description: URL indicating the location of the created Engine resource
+              schema:
+                type: string
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=engine.v1.json:
+              schema:
+                $ref: '#/components/schemas/Engine'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        415:
+          x-summary: Unsupported media type
+          description: Unsupported Media Type. The server refuses to accept the request because the payload format is in an unsupported format.
+          content: {}
+        422:
+          x-summary: Unprocessable entity
+          description: Unprocessable Entity. Client sent a correct request that contained invalid values for one or more parameters.
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+  /engines/dockerRegistry:
+    get:
+      tags:
+      - Engines
+      summary: Get Docker registry information
+      description: Get Docker registry information
+      operationId: retrieveDockerRegistryInfo
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Docker Registry Information
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=enginesDockerRegistryInfo.v1.json:
+              schema:
+                $ref: '#/components/schemas/EnginesDockerRegistryInfo'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+  /engines/{engineId}:
+    get:
+      tags:
+      - Engines
+      summary: Retrieve an Engine
+      description: Retrieves a specific Engine
+      operationId: retrieveEngine
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: engineId
+        in: path
+        description: The identifier of the Sensei Engine
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Engine object
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=engine.v1.json:
+              schema:
+                $ref: '#/components/schemas/Engine'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The resource the client is looking for isn't there.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+    put:
+      tags:
+      - Engines
+      summary: Update an Engine
+      description: Updates a specific Engine
+      operationId: updateEngine
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: engineId
+        in: path
+        description: The identifier of the Sensei Engine
+        required: true
+        schema:
+          type: string
+      - name: If-Match
+        in: header
+        description: Optional header field with ETag value provided by client
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: application/vnd.adobe.platform.sensei+json;profile=engine.v1.json
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Engine object to be updated
+        content:
+          application/vnd.adobe.platform.sensei+json;profile=engine.v1.json:
+            schema:
+              $ref: '#/components/schemas/Engine'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: Engine object
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=engine.v1.json:
+              schema:
+                $ref: '#/components/schemas/Engine'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The resource the client is looking for isn't there.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+      x-codegen-request-body-name: engine
+    delete:
+      tags:
+      - Engines
+      summary: Delete an existing Engine
+      description: Deletes a specific Engine
+      operationId: deleteEngine
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer " (for example, `Bearer {ACCESS_TOKEN}`). For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the documentation covering making API calls in the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: engineId
+        in: path
+        description: The identifier of the Sensei Engine
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Engine deleted successfully
+          content:
+            application/vnd.adobe.platform.sensei+json;profile=api-response.v1.json:
+              schema:
+                $ref: '#/components/schemas/SenseiApiResponse'
+        '400':
+          x-summary: Bad request
+          description: Bad Request. The request is malformed.
+          content: {}
+        '401':
+          x-summary: Unauthorized
+          description: Unauthorized. The request has not been applied because it lacks valid authentication credentials for the target resource.
+          content: {}
+        '403':
+          x-summary: Forbidden
+          description: Forbidden. That combination of arguments is not allowed.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The resource the client is looking for isn't there.
+          content: {}
+        '406':
+          x-summary: Not acceptable
+          description: Not Acceptable. Unacceptable content type. The caller sent an <b>Accept</b> header for a content type which does not exist on the server
+          content: {}
+        '500':
+          x-summary: Internal server error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+        '502':
+          x-summary: Bad gateway
+          description: Bad Gateway. This is an indicator that the search back-end did not send a valid response.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: Service Unavailable. This is an indicator of a potential server overload.
+          content: {}
+        504:
+          x-summary: Gateway timeout
+          description: Gateway Timeout. This is an indicator that the search back-end did not complete a response within an allowed time period.
+          content: {}
+components:
+  schemas:
+    LinkObject:
+      required:
+      - href
+      type: object
+      properties:
+        href:
+          type: string
+          description: Either an URI (RFC3986) or an URI Template (RFC6570) in which case the linkObject SHOULD have a 'templated' attribute whose value is true
+        templated:
+          type: boolean
+          description: True if the link href is templated, false otherwise which is also the default
+          default: false
+        type:
+          type: string
+          description: A hint to indicate the media type expected when dereferencing the target resource
+        method:
+          type: string
+          description: The HTTP method to be applied when using this link. This should be a valid HTTP method name such as GET, PUT, POST, PATCH, DELETE where GET implies support for HEAD as well
+          default: GET
+        title:
+          type: string
+          description: A label with a human-readable identifier (as defined by RFC5988)
+        hrefLang:
+          type: string
+          description: The language of the target resource (as defined by RFC5988)
+    MLEngineArtifact:
+      required:
+      - location
+      - name
+      - packagingType
+      type: object
+      properties:
+        location:
+          type: string
+        reference:
+          $ref: '#/components/schemas/ArtifactReference'
+        name:
+          type: string
+        executionType:
+          type: string
+        packagingType:
+          type: string
+          default: docker
+          enum:
+          - docker
+          - jar
+          - egg
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+            properties: {}
+          readOnly: true
+    EngineListing:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineSummary'
+        _page:
+          $ref: '#/components/schemas/PagingInformationAttributes'
+        _links:
+          $ref: '#/components/schemas/EngineListingLinks'
+    ArtifactReference:
+      required:
+      - artifactId
+      type: object
+      properties:
+        artifactId:
+          type: string
+        version:
+          type: string
+    PagingNavigationAttributes:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/LinkObject'
+        page:
+          $ref: '#/components/schemas/LinkObject'
+    TaskSpec:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ContainerTaskSpec
+          - SparkTaskSpec
+      description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
+      discriminator:
+        propertyName: type
+    MLInstanceTaskParameter:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        secret:
+          type: boolean
+      description: A parameter passed to an MLInstanceTask
+    MLEngineArtifactOverride:
+      required:
+      - artifact
+      - defaultMLInstanceConfigs
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        artifact:
+          $ref: '#/components/schemas/MLEngineArtifact'
+        defaultMLInstanceConfigs:
+          $ref: '#/components/schemas/MLInstanceTask'
+    MLInstanceTaskList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MLInstanceTask'
+    Engine:
+      allOf:
+      - $ref: '#/components/schemas/EngineSummary'
+      - type: object
+        properties:
+          artifacts:
+            type: object
+            properties:
+              default:
+                type: object
+                properties:
+                  image:
+                    $ref: '#/components/schemas/MLEngineArtifact'
+                  defaultMLInstanceConfigs:
+                    $ref: '#/components/schemas/MLInstanceTaskList'
+              overrides:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MLEngineArtifactOverride'
+          tags:
+            type: object
+            additionalProperties:
+              type: string
+          _links:
+            type: object
+            properties:
+              self:
+                $ref: '#/components/schemas/LinkObject'
+              getEngine:
+                $ref: '#/components/schemas/LinkObject'
+              createMLInstance:
+                $ref: '#/components/schemas/LinkObject'
+              listMLInstances:
+                $ref: '#/components/schemas/LinkObject'
+    SenseiApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+          example: https://platform.adobe.io/data/foundation/ml/problems/illegal-argument
+        title:
+          type: string
+          readOnly: true
+          example: Illegal Argument
+        status:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 400
+        detail:
+          type: string
+          readOnly: true
+          example: Model specification name must not be empty
+        additionalDetails:
+          type: object
+          additionalProperties:
+            type: string
+    MLInstanceTask:
+      type: object
+      properties:
+        name:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/MLInstanceTaskParameter'
+        specification:
+          $ref: '#/components/schemas/TaskSpec'
+        datasets:
+          type: object
+          properties:
+            inputs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  id:
+                    type: string
+                    format: urn
+                  diskSizeInGB:
+                    type: integer
+                  resType:
+                    type: string
+                    enum:
+                    - dataset
+                    - model
+                    - genericFile
+                  downloadRequired:
+                    type: boolean
+                  refInput:
+                    type: object
+                    properties:
+                      experimentRunId:
+                        type: string
+                      taskName:
+                        type: string
+                      outputName:
+                        type: string
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties: {}
+            outputs:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  id:
+                    type: string
+                    format: urn
+                  diskSizeInGB:
+                    type: integer
+                  resType:
+                    type: string
+                    enum:
+                    - dataset
+                    - model
+                    - genericFile
+                  uploadRequired:
+                    type: boolean
+                  generatedURI:
+                    type: string
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties: {}
+      description: A single execution unit of Sensei
+    EngineListingLinks:
+      allOf:
+      - $ref: '#/components/schemas/PagingNavigationAttributes'
+      - type: object
+        properties:
+          self:
+            $ref: '#/components/schemas/LinkObject'
+          createEngine:
+            $ref: '#/components/schemas/LinkObject'
+    EnginesDockerRegistryInfo:
+      type: object
+      properties:
+        host:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+        password:
+          type: string
+          readOnly: true
+    EngineSummary:
+      required:
+      - name
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        description:
+          type: string
+        documentationUrl:
+          type: string
+        type:
+          type: string
+        iconUrl:
+          type: string
+          description: Url of the thumbnail image
+        gitRepo:
+          type: string
+        algorithm:
+          type: string
+        language:
+          type: array
+          items:
+            type: string
+            enum:
+            - Python
+            - Java
+            - Scala
+            - R
+            - C++
+        mlLibrary:
+          type: string
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        createdBy:
+          type: object
+          properties:
+            displayName:
+              type: string
+            avatar:
+              type: string
+            userId:
+              type: string
+        updated:
+          type: string
+          format: date-time
+          readOnly: true
+        deleted:
+          type: boolean
+          default: false
+        _links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/LinkObject'
+    PagingInformationAttributes:
+      type: object
+      properties:
+        orderby:
+          type: string
+          readOnly: true
+        property:
+          type: string
+          readOnly: true
+        start:
+          type: string
+          readOnly: true
+        totalCount:
+          type: integer
+          format: int64
+          readOnly: true
+        count:
+          type: integer
+          format: int64
+          readOnly: true
+        next:
+          type: string
+          readOnly: true
+x-original-swagger-version: '2.0'

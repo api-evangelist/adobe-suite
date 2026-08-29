@@ -1,0 +1,117 @@
+openapi: 3.2.0
+info:
+  version: '1.0'
+  title: Schema Registry Sample data API
+  description: "Use the Schema Registry API to access the Schema Library within Adobe Experience Platform. The registry provides a user interface and RESTful API from which all available library resources are accessible.  Programmatically manage all schemas and related Experience Data Model (XDM) resources available to you within Platform. This includes those defined by Adobe, Experience Platform partners, and vendors whose applications you use.\n* **Related documentation**:\n  * [XDM documentation](http://www.adobe.com/go/xdm-home-en)\n\n* **Visualize API calls with Postman (a free, third-party software)**:\n  * [Schema Registry API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Schema%20Registry%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n* **API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io\n  * Base path for this API: /data/foundation/schemaregistry\n  * Example of a complete path for making a call to \"/stats\": https://<span>platform.adobe.io/data/foundation/schemaregistry/stats\n\n* **Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All GET requests to the Schema Registry require an `Accept` header to determine what data is returned by the system. See the [section on `Accept` headers](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/getting-started.html?lang=en#accept) in the Schema Registry developer guide for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+servers:
+- url: https://platform.adobe.io/data/foundation/schemaregistry
+tags:
+- name: Sample data
+  description: You can generate sample data for any specified schema within the Schema Library. The response object returned can then be used as the source of dataset ingestion.
+paths:
+  /rpc/sampledata/{SCHEMA_ID}:
+    get:
+      tags:
+      - Sample data
+      summary: Retrieve sample data
+      description: 'Retrieve sample data for a schema.
+
+        >**NOTE**: For more information on using this operation, see the [sample data endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/sample-data.html) on Experience League.'
+      operationId: retrieveSampleData
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept'
+      - name: SCHEMA_ID
+        description: The `meta:altId` or URL-encoded `$id` value of the schema you want to generate sample data for.
+        required: true
+        in: path
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns a sample ingestion file, mapped to the structure of the specified schema.
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  '@id': /uri-reference
+                  xdm:name: Example Offer Name
+                  xdm:representations:
+                  - xdm:channel: https://ns.adobe.com/xdm/common/uri
+                    xdm:components:
+                    - '@type': https://ns.adobe.com/experience/offer-management/content-component-text
+                      dc:format: application/vnd.adobe.photoshop
+                      dc:language:
+                      - '
+
+                        '
+                      repo:id: urn:aaid:sc:US:6dc33479-13ca-4b19-b25d-c805eff8a69e
+                      repo:name: Example Repo Name
+                      repo:resolveURL: https://plaftform.adobe.io/resolveByPath?path=&quot;/mycorp/content/projectx/fragment/prod/herobanners/banner14.html3&quot;
+                    xdm:placement: https://ns.adobe.com/xdm/common/uri
+                  xdm:status: draft
+                  xdm:tags:
+                  - https://ns.adobe.com/xdm/common/uri
+        404:
+          x-summary: Not found
+          description: No schema could be found for the specified {SCHEMA_ID}. Double-check that you are providing a valid {SCHEMA_ID} and are using the correct {IMS_ORG} and {SANDBOX_NAME} headers for that schema before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notFoundError'
+components:
+  parameters:
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string
+  schemas:
+    notFoundError:
+      type: object
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1012-404
+        title: Resource Not Found
+        status: 404
+        report:
+          registryRequestId: a6773f98-f5ba-4e3e-8ff8-320136cc6c48
+          timestamp: 10-22-2020 06:42:13
+          detailed-message: Requested resource https://ns.adobe.com/{TENANT_ID}/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117 with version 1 is not found
+        detail: Requested resource https://ns.adobe.com/{TENANT_ID}/schemas/20af3f1d4b175f27ba59529d1b51a0c79fc25df454117 with version 1 is not found

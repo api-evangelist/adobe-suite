@@ -1,0 +1,2888 @@
+openapi: 3.2.0
+info:
+  title: Reactor Libraries API
+  description: "Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.\n**Related documentation**:\n  * [Tags overview and UI documentation](https://adobe.com/go/launch_help_en)\n  * [Reactor API guides](https://adobe.com/go/reactor-api-overview)\n\n**API paths**:\n  * Reactor Gateway URL: https://<span>reactor.adobe.io\n  * Example of a complete path for making a call to `/properties`: https://<span>reactor.adobe.io/properties\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).\n  * All GET requests to the Reactor API require an `Accept` header to determine what data is returned by the system. In most cases, this value will be `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. The specific `Content-Type` value for each call is provided in the parameters sections in the endpoints listed below.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //reactor.adobe.io
+tags:
+- name: Libraries
+  description: A library is a collection of resources (extensions, rules, and data elements) that represent the desired behavior of a property. Libraries are compiled into builds, and those builds are assigned to different environments as they move down the publishing flow from testing to production.
+paths:
+  /properties/{PROPERTY_ID}/libraries:
+    get:
+      tags:
+      - Libraries
+      summary: List a property's libraries
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraries
+      parameters:
+      - name: PROPERTY_ID
+        in: path
+        description: The ID of the property whose libraries you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      - name: created_at
+        in: query
+        description: Filter by `created_at` timestamp.
+        schema:
+          type: string
+      - name: updated_at
+        in: query
+        description: Filter by `updated_at` timestamp.
+        schema:
+          type: string
+      - name: name
+        in: query
+        description: Filter by `name`.
+        schema:
+          type: string
+      - name: stale
+        in: query
+        description: Filter by `stale` status. A library becomes stale when another library on the [upstream](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html#upstream) has been changed and the current library needs to be rebuilt to reflect those changes. A library may also enter a stale state if one of the extensions it uses receives an update.
+        schema:
+          type: string
+      - name: state
+        in: query
+        description: Filter by `state`.
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of libraries belonging to the specified property.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesListResponse'
+    post:
+      tags:
+      - Libraries
+      summary: Create a library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: createLibrary
+      parameters:
+      - name: PROPERTY_ID
+        in: path
+        description: The ID of the property that you want to create a library for.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesCreatePayload'
+        required: true
+      responses:
+        '201':
+          x-summary: Success
+          description: A successful response returns the details of the newly created library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesCreateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}:
+    get:
+      tags:
+      - Libraries
+      summary: Retrieve a library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: retrieveLibrary
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library you want to look up.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesLookupResponse'
+    delete:
+      tags:
+      - Libraries
+      summary: Delete a library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: deleteLibrary
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library you want to delete.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          x-summary: No content
+          description: A successful response returns HTTP status 204 (No Content).
+          content: {}
+    patch:
+      tags:
+      - Libraries
+      summary: Update a library
+      description: 'This endpoint allows you to update the name of a library, or transition the library between different states in the [publishing flow](https://experienceleague.adobe.com/docs/launch/using/publish/publishing-flow.html).
+
+
+        When updating a library, its ID must be provided in both the request path and the request payload. These IDs must match in order for the call to be successful.
+
+
+        To transition the library between states, the payload must include a `meta` object, containing a single `action` property whose value represents the specific transition action. The available actions for a library depend on its current publishing state. See the API guide on [transitioning a library](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html#transition) for details on the available actions for each library state.
+
+
+        To update the name of a library, the payload must include an `attributes` object, containing a single `name` property with the updated value.
+
+
+        >**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: updateLibrary
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library you want to update.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesUpdatePayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the updated library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesUpdateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}/property:
+    get:
+      tags:
+      - Libraries
+      summary: Retrieve a library's property
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: retrieveLibraryProperty
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose related property you want to retrieve.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the property associated with the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesPropertyLookupResponse'
+  /libraries/{LIBRARY_ID}/builds:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's builds
+      description: '>**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+      operationId: listLibraryBuilds
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose builds you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      - name: created_at
+        in: query
+        description: Filter by `created_at` timestamp.
+        schema:
+          type: string
+      - name: updated_at
+        in: query
+        description: Filter by `updated_at` timestamp.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter by `status`.
+        schema:
+          type: string
+      - name: token
+        in: query
+        description: Filter by `token`.
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of builds belonging to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/buildsListResponse'
+    post:
+      tags:
+      - Libraries
+      summary: Create a build
+      description: 'This POST request does not accept a payload, as the build parameters are determined by the parent library.
+
+
+        >**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+      operationId: createBuild
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to create a build for.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          x-summary: Success
+          description: A successful response returns the details of the newly created build.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/buildsCreateResponse'
+  /libraries/{LIBRARY_ID}/environment:
+    get:
+      tags:
+      - Libraries
+      summary: Retrieve a library's related environment
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: retrieveLibraryEnvironment
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose related environment you want to retrieve.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the environment associated with the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesLookupEnvironmentResponse'
+  /libraries/{LIBRARY_ID}/upstream_library:
+    get:
+      tags:
+      - Libraries
+      summary: Retrieve a library's upstream library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: retrieveUpstreamLibrary
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose upstream library you want to retrieve.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the upstream library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesLookupUpstreamResponse'
+  /libraries/{LIBRARY_ID}/data_elements:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's related data elements
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraryDataElements
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose related data elements you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of data elements related to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesDataElementsListResponse'
+  /libraries/{LIBRARY_ID}/relationships/data_elements:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's data element relationships
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraryRelationships
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose data element relationships you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of data element relationships attached to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesDataElementRelationshipsListResponse'
+    post:
+      operationId: addDataElement
+      tags:
+      - Libraries
+      summary: Add data elements to a specific library.
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to add data elements to.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesCreateDataElementRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the newly created relationship.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesDataElementRelationshipsCreateResponse'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Libraries
+      summary: Remove a library's data element relationships
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: deleteLibraryRelationships
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to remove a data element relationship from.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesDeleteDataElementRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the removed relationship.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesDataElementRelationshipsDeleteResponse'
+      x-codegen-request-body-name: body
+    patch:
+      tags:
+      - Libraries
+      summary: Replace all data element relationships for a specific library
+      description: 'This call replaces all of the existing data element relationships for a library with those you provide in the payload array.
+
+
+        >**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: updateLibraryRelationships
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to replace a data element relationship for.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesUpdateDataElementRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the updated relationship.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesDataElementRelationshipsUpdateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}/relationships/environment:
+    get:
+      operationId: getLibraryEnvironmentRelationship
+      tags:
+      - Libraries
+      summary: Retrieve a library's environment relationship
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose environment relationship you want to look up.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the environment relationship attached to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesEnvironmentRelationshipLookupResponse'
+    delete:
+      tags:
+      - Libraries
+      summary: Remove a library's environment relationship
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: removeLibraryRelationship
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to remove an environment relationship from.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the removed relationship.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesEnvironmentRelationshipDeleteResponse'
+    patch:
+      tags:
+      - Libraries
+      summary: Set a library's environment relationship
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: updateLibraryRelationship
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to set an environment relationship for.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesCreateEnvironmentRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the established relationship.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesEnvironmentRelationshipCreateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}/extensions:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's related extensions
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraryExtensions
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose related extensions you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of extensions associated with the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesExtensionsListResponse'
+  /libraries/{LIBRARY_ID}/relationships/extensions:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's extension relationships
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listExtensionRelationships
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose extension relationships you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of extension relationship objects attached to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesExtensionRelationshipsListResponse'
+    post:
+      tags:
+      - Libraries
+      summary: Add extensions to a specific library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: addExtension
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to add extensions to.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesCreateExtensionRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of extension relationships attached to the library, including those just added.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesExtensionRelationshipsCreateResponse'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Libraries
+      summary: Remove a library's extensions
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: removeLibraryExtensions
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to remove extensions from.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the updated list of extensions for the library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesExtensionRelationshipsDeleteResponse'
+    patch:
+      tags:
+      - Libraries
+      summary: Replace all extensions for a specific library
+      description: 'This call replaces all of the existing extension relationships for a library with those you provide in the payload array.
+
+
+        >**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: updateLibraryExtensions
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose extensions you want to replace.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesUpdateExtensionRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of the library's replaced extensions.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesExtensionRelationshipsUpdateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}/rules:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's related rules
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraryRules
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose related rules you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of rules associated with the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesRulesListResponse'
+  /libraries/{LIBRARY_ID}/relationships/rules:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's rule relationships
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: listLibraryRuleRelationships
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose rule relationships you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of rule relationship objects attached to the specified library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesRuleRelationshipsListResponse'
+    post:
+      tags:
+      - Libraries
+      summary: Add rules to a specific library
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: addLibraryRules
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to add rules to.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesCreateRuleRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of rule relationships attached to the library, including those just added.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesRuleRelationshipsCreateResponse'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Libraries
+      summary: Remove a library's rules
+      description: '>**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: removeLibraryRules
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to remove rules from.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesDeleteRuleRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the updated list of rules for the library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesRuleRelationshipsDeleteResponse'
+      x-codegen-request-body-name: body
+    patch:
+      tags:
+      - Libraries
+      summary: Replace all rules for a specific library
+      description: 'This call replaces all of the existing rule relationships for a library with those you provide in the payload array.
+
+
+        >**NOTE**: For more information on using this operation, see the [libraries endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html) on Experience League.'
+      operationId: updateLibraryRules
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose rules you want to replace.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesUpdateRuleRelationshipsPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of the library's replaced rules.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesRuleRelationshipsUpdateResponse'
+      x-codegen-request-body-name: body
+  /libraries/{LIBRARY_ID}/notes:
+    get:
+      tags:
+      - Libraries
+      summary: List a library's notes
+      description: '>**NOTE**: For more information on using this operation, see the [notes endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/notes.html) on Experience League.'
+      operationId: listLibraryNotes
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library whose notes you want to list.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      - name: created_at
+        in: query
+        description: Filter by `created_at` timestamp.
+        schema:
+          type: string
+      - name: updated_at
+        in: query
+        description: Filter by `updated_at` timestamp.
+        schema:
+          type: string
+      - name: text
+        in: query
+        description: Filter by `text`.
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns a list of notes attached them library.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesNotesListResponse'
+    post:
+      tags:
+      - Libraries
+      summary: Create a note for a library
+      description: '>**NOTE**: For more information on using this operation, see the [notes endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/notes.html) on Experience League.'
+      operationId: createLibraryNote
+      parameters:
+      - name: LIBRARY_ID
+        in: path
+        description: The ID of the library that you want to create a note for.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/librariesNotesCreatePayload'
+        required: true
+      responses:
+        '201':
+          x-summary: Success
+          description: A successful response returns the details of the newly created note.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/librariesNotesCreateResponse'
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    librariesLookupUpstreamResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesLookupResponse'
+    librariesDataElementRelationshipsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesDataElementRelationshipsListResponse'
+    librariesNotesCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/notesLookupResponse'
+    librariesEnvironmentRelationshipLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/relationshipsLookupResponse'
+      - type: object
+        properties:
+          links:
+            type: object
+            properties:
+              related:
+                type: string
+                description: A link to the related environment for the library.
+              self:
+                type: string
+                description: A link to the environment relationship object for the library.
+    relatedResource:
+      type: object
+      properties:
+        resource:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the resource.
+                type:
+                  type: string
+                  description: The resource type.
+              description: Contains further information about the related resource.
+          description: Contains a link to the resource that that the note is attached to.
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    relationshipsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the relationships that you wish to add to the parent resource.
+          items:
+            $ref: '#/components/schemas/relationshipEntity'
+        links:
+          type: object
+          properties: {}
+          description: Contains links that can be used in subsequent fetch requests.
+    relatedLibraries:
+      type: object
+      properties:
+        libraries:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
+          description: Contains a link to the related libraries for the resource.
+    relatedCompany:
+      type: object
+      properties:
+        company:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related company.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related company.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the company.
+                type:
+                  type: string
+                  description: The resource type for the company (`companies`).
+              description: Contains further information about the related company.
+          description: Contains information about the company that owns the resource.
+    librariesNotesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/notesListResponse'
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
+    librariesRuleRelationshipsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesRuleRelationshipsListResponse'
+    librariesEnvironmentRelationshipCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesEnvironmentRelationshipLookupResponse'
+    createRelationshipsPayload:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the basic details of the entities you wish to establish relationships with.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the entity you wish to add as a relationship.
+              type:
+                type: string
+                description: The type of entity you wish to add as a relationship.
+    dataUpdateLibrary:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          required:
+          - id
+          - type
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of library being updated.
+            type:
+              type: string
+              description: Must be set to `libraries`.
+            attributes:
+              type: object
+              properties: {}
+              description: The modified attributes for the resource being updated.
+            meta:
+              type: object
+              properties:
+                action:
+                  type: string
+                  description: The library transition action. The available actions for a library depend on its current publishing state. See the API guide on [transitioning a library](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html#transition) for details on the available actions for each library state.
+              description: To transition the library between states, the payload must include a `meta` object, containing a single `action` property whose value represents the specific transition action. The available actions for a library depend on its current publishing state. See the API guide on [transitioning a library](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/libraries.html#transition) for details on the available actions for each library state.
+          description: Contains info on the library being updated and the action being performed.
+    librariesExtensionRelationshipsDeleteResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesExtensionRelationshipsListResponse'
+    relatedEnvironments:
+      type: object
+      properties:
+        environments:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environments for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environments for the resource.
+          description: Contains a link to the related environments for the resource.
+    relationshipEntity:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The resource type for the related entity.
+        id:
+          type: string
+          description: The ID for the related entity.
+    librariesExtensionRelationshipsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesExtensionRelationshipsListResponse'
+    librariesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/librariesEntity'
+    notesEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              author_display_name:
+                type: string
+                description: The display name for the note's author.
+              author_email:
+                type: string
+                description: The email address for the note's author.
+              created_at:
+                type: string
+                description: A timestamp of when the note was created in the system.
+              text:
+                type: string
+                description: The contents of the note.
+            description: Contains the note's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this note.
+            allOf:
+            - $ref: '#/components/schemas/relatedResource'
+          links:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: A link to the resource that the note is attached to.
+              self:
+                type: string
+                description: A link to the note itself.
+            description: Contains links related to the note which can be used in subsequent fetch requests.
+    librariesDataElementRelationshipsDeleteResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesDataElementRelationshipsListResponse'
+    librariesUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesLookupResponse'
+    librariesUpdateExtensionRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    librariesUpdatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataUpdateLibrary'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/librariesAttributes'
+    librariesPropertyLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/propertiesLookupResponse'
+    notesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/notesEntity'
+    buildsEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the build was created in the system.
+              status:
+                type: string
+                description: The current status of the build.
+              updated_at:
+                type: string
+                description: A timestamp of when the build was last updated.
+              token:
+                type: string
+                description: 'A unique token for the build.
+
+
+                  When a build is pushed to an Adobe-managed host (`akamai`), this token is used to identify the build within the library''s folder structure. This also prevent''s the build''s `id` value from being unnecessarily exposed. This also applies to `sftp` hosts so that libraries are constructed in the same manner.'
+            description: Contains the build's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this build.
+            allOf:
+            - $ref: '#/components/schemas/relatedDataElements'
+            - $ref: '#/components/schemas/relatedExtensions'
+            - $ref: '#/components/schemas/relatedRules'
+            - $ref: '#/components/schemas/relatedEnvironment'
+            - $ref: '#/components/schemas/relatedLibrary'
+            - $ref: '#/components/schemas/relatedProperty'
+          links:
+            type: object
+            properties:
+              environment:
+                type: string
+                description: A link to the environment that the build is assigned to.
+              library:
+                type: string
+                description: A link to the library that the build is based on.
+              self:
+                type: string
+                description: A link to the build itself.
+            description: Contains links related to the build which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              artifact_url:
+                type: string
+                description: The artifact URL for the build. This is the URL that  you embed on your webpage in order to install the build. When  embedded, this URL acts as a symlink to the `direct_artifact_url`  for the currently installed build. When you create a new build  for an environment, the symlink updates to point to the new `direct_artifact_url`  and stores the old one on the server. When republishing a build,  the symlink updates to point to the previous `direct_artifact_url`.  This allows you to easily change builds without needing to edit  client-side code.
+              direct_artifact_url:
+                type: string
+                description: The direct artifact URL for the build.
+              archive:
+                type: boolean
+                description: Indicates whether the build is archived.
+              host_type_of:
+                type: string
+                description: The host type for the environment that the build is  assigned to, either `akamai` for Adobe-managed hosting or `sftp`  for self hosting.
+            description: Contains meta information about the build.
+    librariesCreateExtensionRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    librariesRulesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/rulesListResponse'
+    relatedDataElements:
+      type: object
+      properties:
+        data_elements:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
+          description: Contains a link to the related data elements for the resource.
+    relatedRules:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
+          description: Contains a link to the related rules for the resource.
+    relatedCallbacks:
+      type: object
+      properties:
+        callbacks:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+          description: Contains a link to the related callbacks for the resource.
+    rulesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    relatedHost:
+      type: object
+      properties:
+        host:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the host.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the host.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the host.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the host.
+                type:
+                  type: string
+                  description: The resource type for the host (`hosts`).
+              description: Contains further information about the host.
+          description: Contains a link to the host that is assigned to this environment.
+    librariesEnvironmentRelationshipDeleteResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesEnvironmentRelationshipLookupResponse'
+    buildsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/buildsEntity'
+    relatedDataElementsWithSelf:
+      type: object
+      properties:
+        data_elements:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related data elements.
+              description: Contains links that can be used in a subsequent fetch calls.
+          description: Contains a link to the related data elements for the resource.
+    librariesRuleRelationshipsDeleteResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesRuleRelationshipsListResponse'
+    librariesNotesCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/notesCreatePayload'
+    notesCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreate'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/notesAttributes'
+    dataElementsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    librariesExtensionRelationshipsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesExtensionRelationshipsListResponse'
+    notesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    metaList:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  description: The current page of the response.
+                next_page:
+                  type: integer
+                  description: The next page of the response.
+                prev_page:
+                  type: integer
+                  description: The previous page of the response.
+                total_pages:
+                  type: integer
+                  description: The total number of pages in the response.
+                total_count:
+                  type: integer
+                  description: The total number of results in the response.
+              description: Contains pagination information about the list response.
+          description: Contains a `pagination` object that provides pagination information about the list response.
+    librariesEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the library was created in the system.
+              name:
+                type: string
+                description: The name of the library.
+              published_at:
+                type: string
+                description: A timestamp of when the library was published. Returns `null` if the library has not been published yet.
+              state:
+                type: string
+                description: The current state of the library within the [publishing flow](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html?lang=en#state).
+              updated_at:
+                type: string
+                description: A timestamp of when the library was last updated.
+              build_required:
+                type: boolean
+                description: Indicates whether changes have been made to the library that require a build to activate.
+              stale:
+                type: string
+                description: 'When present, this attribute indicates that the library has become stale.
+
+
+                  A library enters a stale state when another library on the [upstream](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html#upstream) has been changed and the current library needs to be rebuilt to reflect those changes. In this case, the value for the attribute would be `upstream_changed`.
+
+
+                  A library may also enter a stale state if one of the extensions it uses receives an update. In this case, the value for the attribute would be `extension_upgraded`.'
+                enum:
+                - upstream_changed
+                - extension_upgraded
+            description: Contains the library's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this library.
+            allOf:
+            - $ref: '#/components/schemas/relatedBuilds'
+            - $ref: '#/components/schemas/relatedEnvironment'
+            - $ref: '#/components/schemas/relatedDataElementsWithSelf'
+            - $ref: '#/components/schemas/relatedExtensionsWithSelf'
+            - $ref: '#/components/schemas/relatedNotes'
+            - $ref: '#/components/schemas/relatedRulesWithSelf'
+            - $ref: '#/components/schemas/relatedUpstreamLibrary'
+            - $ref: '#/components/schemas/relatedProperty'
+            - $ref: '#/components/schemas/relatedLastBuild'
+          links:
+            type: object
+            properties:
+              property:
+                type: string
+                description: A link to the property that owns the library.
+              self:
+                type: string
+                description: A link to the library itself.
+            description: Contains links related to the library which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              build_status:
+                type: string
+                description: The current build status for the library.
+              build_required_detail:
+                type: string
+                description: A message regarding the current `build_required` status for the library.
+            description: Contains meta information about the library.
+    environmentsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/environmentsEntity'
+    librariesDeleteRuleRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/deleteRelationshipsPayload'
+    librariesRuleRelationshipsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/relationshipsListResponse'
+      - type: object
+        properties:
+          links:
+            type: object
+            properties:
+              related:
+                type: string
+                description: A link to list the related rules for the library.
+              self:
+                type: string
+                description: A link to list the rule relationship objects for the library.
+    extensionsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    librariesUpdateRuleRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    librariesUpdateDataElementRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    relatedLastBuild:
+      type: object
+      properties:
+        last_build:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the build.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the build.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the build.
+                type:
+                  type: string
+                  description: The resource type for the build (`builds`).
+              description: Contains further information about the build.
+          description: Contains information about the last build for a library.
+    relationshipsLookupResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the relationships that you wish to add to the parent resource.
+          items:
+            $ref: '#/components/schemas/relationshipEntity'
+        links:
+          type: object
+          properties: {}
+          description: Contains links that can be used in subsequent fetch requests.
+    relatedEnvironment:
+      type: object
+      properties:
+        environment:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environment.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the environment.
+                type:
+                  type: string
+                  description: The resource type for the environment (`environments`).
+              description: Contains further information about the related environment.
+          description: Contains information about the environment that this resource is active under.
+    librariesDeleteDataElementRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/deleteRelationshipsPayload'
+    buildsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    librariesDataElementRelationshipsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesDataElementRelationshipsListResponse'
+    librariesDataElementsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataElementsListResponse'
+    relatedExtensions:
+      type: object
+      properties:
+        extensions:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
+          description: Contains a link to the related extensions for the resource.
+    notesAttributes:
+      required:
+      - text
+      type: object
+      properties:
+        text:
+          type: string
+          description: The contents of the note.
+    librariesDataElementRelationshipsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/relationshipsListResponse'
+      - type: object
+        properties:
+          links:
+            type: object
+            properties:
+              related:
+                type: string
+                description: A link to list the related data element entities for the library.
+              self:
+                type: string
+                description: A link to list the data element relationship objects for the library.
+    librariesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    relatedHosts:
+      type: object
+      properties:
+        hosts:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related hosts for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related hosts for the resource.
+          description: Contains a link to the related hosts for the resource.
+    relatedNotes:
+      type: object
+      properties:
+        notes:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
+          description: Contains a link to the related notes for the resource.
+    dataCreate:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          required:
+          - attributes
+          - type
+          type: object
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+            type:
+              type: string
+              description: The type of resource being created.
+              enum:
+              - app_configurations
+              - audit_events
+              - builds
+              - callbacks
+              - companies
+              - data_elements
+              - environments
+              - extensions
+              - extension_packages
+              - hosts
+              - libraries
+              - notes
+              - properties
+              - rules
+              - rule_components
+              - secrets
+          description: Contains the attributes and type for the resource being created.
+    relatedUpstreamLibrary:
+      type: object
+      properties:
+        upstream_library:
+          type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the library.
+                type:
+                  type: string
+                  description: The resource type for the library (`libraries`).
+              description: Contains basic information about the upstream library.
+          description: Contains information about the [upstream library](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html?lang=en#upstream) for this library.
+    relatedRulesWithSelf:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related rules.
+              description: Contains links that can be used in a subsequent fetch calls.
+          description: Contains a link to the related rules for the resource.
+    relatedExtensionsWithSelf:
+      type: object
+      properties:
+        extensions:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related extensions.
+              description: Contains links that can be used in a subsequent fetch calls.
+          description: Contains a link to the related extensions for the resource.
+    propertiesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/propertiesEntity'
+    librariesRuleRelationshipsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesExtensionRelationshipsListResponse'
+    librariesExtensionRelationshipsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/relationshipsListResponse'
+      - type: object
+        properties:
+          links:
+            type: object
+            properties:
+              related:
+                type: string
+                description: A link to list the related extensions for the library.
+              self:
+                type: string
+                description: A link to list the extension relationship objects for the library.
+    librariesCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreate'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/librariesAttributes'
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    librariesExtensionsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/extensionsListResponse'
+    buildsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsLookupResponse'
+    relatedLibrary:
+      type: object
+      properties:
+        library:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the library.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the library.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the library.
+                type:
+                  type: string
+                  description: The resource type for the library (`libraries`).
+              description: Contains further information about the library.
+          description: Contains a link to the library that is assigned to this environment.
+    librariesAttributes:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the library.
+    createRelationshipPayload:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the entity you wish to add as a relationship.
+            type:
+              type: string
+              description: The type of entity you wish to add as a relationship.
+              enum:
+              - app_configurations
+              - audit_events
+              - builds
+              - callbacks
+              - companies
+              - data_elements
+              - environments
+              - extensions
+              - extension_packages
+              - hosts
+              - libraries
+              - notes
+              - properties
+              - rules
+              - rule_components
+              - secrets
+          description: Lists the basic details of the entity you wish to establish a relationship with.
+    librariesCreateRuleRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    deleteRelationshipsPayload:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the basic details of the entities that you want to remove from the parent entity's list of relationships.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the entity whose relationship you wish to remove.
+              type:
+                type: string
+                description: The type of entity whose relationship you wish to remove.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    environmentsEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              archive:
+                type: boolean
+                description: Indicates whether the environment is archived.
+              created_at:
+                type: string
+                description: A timestamp of when the environment was created in the system.
+              library_path:
+                type: string
+                description: The base path for the library that has been assigned to the environment.
+              library_name:
+                type: string
+                description: The name of the JavaScript file that contains the library that has been assigned to the environment.
+              library_entry_points:
+                type: array
+                description: Contains an expanded list of all the libraries that  are built as part of this environment. Since only one library  can be built on an environment at a time, this array typically  contains the minified and unminified versions of the same library.
+                items:
+                  type: object
+                  properties:
+                    library_name:
+                      type: string
+                      description: The name of the JavaScript file that contains the library.
+                    minified:
+                      type: boolean
+                      description: Indicates whether this is the minified version of the library. The minified version of the library is significantly smaller and more efficient, and should therefore be the version that is employed on your webpage. The non-minified version contains comments and is provided for debugging purposes.
+                    references:
+                      type: array
+                      description: Contains the full path to the library, which is the `library_path` concatenated with the `library_name`.
+                      items:
+                        type: string
+                    license_path:
+                      type: string
+                      description: If this object represents a minified library, this attribute provides the full path to the un-minififed version.
+              name:
+                type: string
+                description: The name of the environment.
+              path:
+                type: string
+                description: The path for the environment.
+              stage:
+                type: string
+                description: The stage for the environment (`development`, `staging`,  or `production`).
+              updated_at:
+                type: string
+                description: A timestamp of when the environment was last updated.
+              status:
+                type: string
+                description: The current status of the environment.
+              token:
+                type: string
+                description: 'A unique token for the environment.
+
+
+                  When a build is pushed to an Adobe-managed host (`akamai`), this token is used to identify the environment within the library''s folder structure. This also prevent''s the environment''s `id` value from being unnecessarily exposed. This also applies to `sftp` hosts so that libraries are constructed in the same manner.'
+            description: Contains the environment's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this environment.
+            allOf:
+            - $ref: '#/components/schemas/relatedLibrary'
+            - $ref: '#/components/schemas/relatedBuilds'
+            - $ref: '#/components/schemas/relatedHost'
+            - $ref: '#/components/schemas/relatedProperty'
+          links:
+            type: object
+            properties:
+              property:
+                type: string
+                description: A link to the property that owns the environment.
+              self:
+                type: string
+                description: A link to the environment itself.
+            description: Contains links related to the environment which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              archive_encrypted:
+                type: boolean
+                description: Indicates whether the environment archive has been encrypted. An environment archive is ZIP file which can be downloaded for self-hosting purposes. An encrypted archive is one where a simple password has been applied for access control.
+              script_sources:
+                type: array
+                description: If `premium_cdn` has been enabled for the company that  owns this environment, this array lists the two different hosts  that the environment is associated with. One is the default host  and the other is host provided by the premium CDN.
+                items:
+                  type: string
+            description: Contains meta information about the environment.
+    librariesCreateDataElementRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipsPayload'
+    librariesCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesLookupResponse'
+    relatedBuilds:
+      type: object
+      properties:
+        builds:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related builds for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related builds for the resource.
+          description: Contains a link to the related builds for the resource.
+    librariesLookupEnvironmentResponse:
+      allOf:
+      - $ref: '#/components/schemas/environmentsLookupResponse'
+    librariesCreateEnvironmentRelationshipsPayload:
+      allOf:
+      - $ref: '#/components/schemas/createRelationshipPayload'
+    propertiesEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the property was created in the system.
+              enabled:
+                type: boolean
+                description: Indicates whether this property is enabled.
+              name:
+                type: string
+                description: The name of the property.
+              updated_at:
+                type: string
+                description: A timestamp of when the property was last updated.
+              platform:
+                type: string
+                description: The platform for the property, either `web` or `mobile`.
+              development:
+                type: boolean
+                description: Indicates whether this property is in development.
+              token:
+                type: string
+                description: 'A unique token for the property.
+
+
+                  When a build is pushed to an Adobe-managed host (`akamai`), this token is used to identify the property within the library''s folder structure. This also prevent''s the property''s `id` value from being unnecessarily exposed. This also applies to `sftp` hosts so that libraries are constructed in the same manner.'
+              domains:
+                type: array
+                description: A list of domains associated with the property.
+                items:
+                  type: string
+              undefined_vars_return_empty:
+                type: boolean
+                description: Indicates whether missing data elements return an empty string on this property.
+              rule_component_sequencing_enabled:
+                type: boolean
+                description: Indicates whether rule component sequencing is enabled on this property.
+            description: Contains the property's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this property.
+            allOf:
+            - $ref: '#/components/schemas/relatedCompany'
+            - $ref: '#/components/schemas/relatedCallbacks'
+            - $ref: '#/components/schemas/relatedHosts'
+            - $ref: '#/components/schemas/relatedEnvironments'
+            - $ref: '#/components/schemas/relatedLibraries'
+            - $ref: '#/components/schemas/relatedDataElements'
+            - $ref: '#/components/schemas/relatedExtensions'
+            - $ref: '#/components/schemas/relatedRules'
+            - $ref: '#/components/schemas/relatedNotes'
+          links:
+            type: object
+            properties:
+              company:
+                type: string
+                description: A link to the company that owns the property.
+              data_elements:
+                type: string
+                description: A link to the data elements employed by the property.
+              environments:
+                type: string
+                description: A link to the environments employed by the property.
+              extensions:
+                type: string
+                description: A link to the extensions employed by the property.
+              rules:
+                type: string
+                description: A link to the rules employed by the property.
+              self:
+                type: string
+                description: A link to the property itself.
+            description: Contains links related to the property which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              rights:
+                type: array
+                description: Lists the rights that are enabled for the property.
+                items:
+                  type: string
+            description: Contains meta information about the property.
+x-original-swagger-version: '2.0'

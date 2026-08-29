@@ -1,0 +1,378 @@
+openapi: 3.2.0
+info:
+  title: Segmentation Service Segment search API
+  description: "\nAdobe Experience Platform Segmentation Service provides a user interface and RESTful API that allows you to create audiences through segment definitions or other sources from your Real-Time Customer Profile data. These audiences are centrally configured and maintained on Platform, and are readily accessible by any Adobe solution. Use the Segmentation Service API to programmatically integrate the service's various functionalities into your experience application, providing RESTful endpoints for managing audiences, segment definitions, segment jobs, exports, schedules, and more.\n- **Related documentation**:\n    - [Segmentation Service documentation](https://www.adobe.com/go/segmentation-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Segmentation Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Segmentation%20Service%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**: \n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/core/ups\n  - Example of a complete path: https://<span>platform.adobe.io/data/core/ups/segment/definitions\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](https://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \\\"prod\\\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en)for more information.    \n  - All requests with a payload in the request body(such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/core/ups
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Segment search
+  description: Segment search allows users to search across multiple namespaces or get specific structural information about specified objects. More information about using this set of endpoints can be found in the [segment search endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/segmentation/api/segment-search.html).
+paths:
+  /search/namespaces:
+    get:
+      tags:
+      - Segment search
+      summary: List search count results
+      description: This endpoint is used to retrieve a list of search count results, which is queried across all namespaces.
+      operationId: listSearchCounts
+      parameters:
+      - name: schema.name
+        in: query
+        description: The schema class value associated with the search objects. Currently, only `_xdm.context.segmentdefinition` is supported.
+        required: true
+        schema:
+          type: string
+        example: _xdm.context.segmentdefinition
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-ups-search-version
+        in: header
+        description: The version of the Search API used. The only supported version is `1.0`.
+        schema:
+          type: string
+        example: '1.0'
+      - name: s
+        in: query
+        description: The search query, based on the Lucene query syntax.
+        schema:
+          type: string
+        example: name:test
+      responses:
+        200:
+          x-summary: Success
+          description: Retrieve a list of search counts, per namespace, based on the specified query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchNamespaceList'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+  /search/entities:
+    get:
+      tags:
+      - Segment search
+      summary: List full-text indexed objects
+      description: This endpoint retrieves a list of all full text indexed objects contained within a namespace.
+      operationId: listFullTextIndexedObjects
+      parameters:
+      - name: schemaClass
+        in: query
+        description: The schema class value associated with the search objects. Currently, only `_xdm.context.segmentdefinition` is supported.
+        required: true
+        schema:
+          type: string
+        example: _xdm.context.segmentdefinition
+      - name: namespace
+        in: query
+        description: The namespace you want to search within.
+        required: true
+        schema:
+          type: string
+        example: AAMTraits
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-ups-search-version
+        in: header
+        description: The version of the Search API used. The only supported version is `1.0`.
+        schema:
+          type: string
+        example: '1.0'
+      - name: s
+        in: query
+        description: The search query, based on the [Lucene query syntax](https://docs.microsoft.com/en-us/azure/search/query-lucene-syntax).
+        schema:
+          type: string
+        example: name:test
+      - name: entityId
+        in: query
+        description: The ID of the folder you want to search for external segment definitions in.
+        schema:
+          type: string
+        example: fastMotorcyclesFolderid
+      - name: limit
+        in: query
+        description: The number of search results to return per page. The maximum is 50.
+        schema:
+          type: number
+        example: 10
+      - name: page
+        in: query
+        description: The offset of the page. The first page starts at 0.
+        schema:
+          type: number
+        example: 2
+      responses:
+        200:
+          x-summary: Success
+          description: A paginated list of search results. Folders are shown first, followed by external segment definitions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchEntityList'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+  /search/taxonomy:
+    get:
+      tags:
+      - Segment search
+      summary: Retrieve a search object's taxonomic information
+      description: Show the search object's organization
+      operationId: retrieveSearchObjectStructure
+      parameters:
+      - name: schema.name
+        in: query
+        description: The name of the schema being searched.
+        required: true
+        schema:
+          type: string
+        example: _xdm.context.segmentdefinition
+      - name: namespace
+        in: query
+        description: namespace
+        required: true
+        schema:
+          type: string
+        example: AAMTraits
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-ups-search-version
+        in: header
+        description: The version of the Search API used.
+        schema:
+          type: string
+        example: '1.0'
+      - name: entityId
+        in: query
+        description: The ID of the object you want to get structural information about.
+        required: true
+        schema:
+          type: string
+        example: porshe911_id
+      responses:
+        200:
+          x-summary: Success
+          description: Taxonomic information associated with an entityId.  This returns an array of folders that contain the search object, the first element of the array is the root folder and last element of the array is search object's parent folder.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomySearchObject'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+components:
+  schemas:
+    SearchResultsPageObject:
+      type: object
+      properties:
+        totalCount:
+          type: number
+          description: The number of search objects found.
+          example: 20323.0
+        totalPages:
+          type: integer
+          description: The total number of pages resulting from your search.
+          format: int32
+          example: 100
+        pageOffset:
+          type: integer
+          description: The current page offset. The first page has a value of 0.
+          format: int32
+          example: 0
+        pageSize:
+          type: integer
+          description: The total number of search objects on this page.
+          format: int32
+          example: 10
+    SearchEntityObject:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the object that is indexed for full text search.
+          example: folder2
+        base64EncodedSourceId:
+          type: string
+          description: The base64 encoded version of the sourceId.
+          example: REZrcUMyX3Vmb2xkZXIyLUFBTVNlZ21lbnRzQS01ZTBlMjU2MzQyYzI0ZjE4YWQyZDc1MDg1
+        sourceId:
+          type: object
+          description: The non-base64 encoded version of the sourceId.
+        isFolder:
+          type: boolean
+          description: A boolean that shows whether or not the search object is a folder.
+          example: true
+        parentFolderId:
+          type: string
+          description: The ID of the folder that contains this search object or root if the object exists and the root level.
+          example: root
+        name:
+          type: string
+          description: The name of the search object.
+          example: Segment definition that targets males age 45 to 50 living on the west coast
+        description:
+          type: string
+          description: A description attached to the search object.
+          example: Under development, targeting east coast millionaires that buy red cars.
+      description: An individual search result after issuing a full text search.
+    SearchNamespaceList:
+      type: object
+      properties:
+        namespaces:
+          type: array
+          description: A list of namespaces and the number of search objects resulting from the search for each namespace.
+          example:
+          - namespace: AAMTraits
+            displayName: AAMTraits
+            count: 45
+          - namespace: AAMSegments
+            displayName: AAMSegments
+            count: 10
+          - namespace: SegmentsAISegments
+            displayName: SegmentsAISegments
+            count: 3
+          items:
+            $ref: '#/components/schemas/SearchNamespaceObject'
+        totalCount:
+          type: string
+          description: The total number of namespaces returned.
+          example: '3'
+        status:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Extra information about the search status.
+              example: Success
+    TaxonomySearchObject:
+      type: object
+      properties:
+        taxonomy:
+          type: array
+          description: List of folder IDs and names. This list starts at the root folder and then traverses through the subfolders until it reaches the folder that contains the search object specified by the entityId.
+          example:
+          - id: carTraits
+            base64EncodedSourceId: RFVGamdpRk1BZy01ZTY4MzBmYzM5N2I0NTE4YWFhMWEwOGY1
+            name: AAMTraits for Cars
+            parentFolderId: root
+          - id: fastCarsFolder
+            base64EncodedSourceId: RFVGZ01BLTVlNjgzMGZjMzk3YjQ1MThhYWExYTA4Zg2
+            name: Fast Cars
+            parentFolderId: carTraits
+          - id: porsche
+            base64EncodedSourceId: REFGZ01CLTVlNjczMGZjMzk3YjQ1MThhZGIxYTA4Zg==
+            name: Porshe
+            parentFolderId: redCarsFolderId
+          items:
+            $ref: '#/components/schemas/TaxonomySearchValue'
+        status:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Extra information about the search status.
+              example: Cannot find entityId redcarsFolderId.
+    TaxonomySearchValue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the searchable object.
+        base64EncodedSourceId:
+          type: string
+          description: The base64 encoded version of the source ID.
+        name:
+          type: string
+          description: The name of the searchable object.
+        parentFolderId:
+          type: string
+          description: The ID of the parent folder.
+    SearchNamespaceObject:
+      type: object
+      properties:
+        namespace:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the namespace.
+              count:
+                type: number
+                description: The number of objects within the namespace.
+    SearchEntityList:
+      type: object
+      properties:
+        entities:
+          type: array
+          description: A list of namespaces and the number of search objects resulting from the search for each entity.
+          items:
+            $ref: '#/components/schemas/SearchEntityObject'
+        page:
+          $ref: '#/components/schemas/SearchResultsPageObject'
+        status:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Extra information about the search status.
+              example: Search system is not setup correctly.
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string

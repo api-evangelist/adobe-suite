@@ -1,0 +1,873 @@
+openapi: 3.2.0
+info:
+  title: Flow Service API - Sources Runs API
+  description: "Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services. You can ingest data from a variety of sources such as Adobe applications, cloud-based storages, databases, and many others. The service provides a RESTful API from which all supported sources are connectable.\n>**NOTE**: Refer to [Flow Service API - Destinations](https://developer.adobe.com/experience-platform-apis/references/destinations/) if you are looking for API documentation to perform operations on *destinations* in Experience Platform.\n- **Related documentation**:\n  - [Sources documentation](https://www.adobe.com/go/sources-overview-en)\n\n- **Visualize API calls with Postman** (a free, third-party software):\n  - [Flow Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Flow%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/connections\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html?lang=en)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Runs
+  description: Runs (or flow runs) represent the instance of a flow execution. For example, if a flow is scheduled to run hourly at 9 AM, 10 AM, and 11 AM, then you would have three instances of a run. Runs retain metric summaries on your flow executions, including information on the duration of the run, size of the data, file count, and a status update. An instance of a run is specific to an organization.
+paths:
+  /runs:
+    get:
+      tags:
+      - Runs
+      summary: List flow runs
+      description: Use this endpoint to list all flow run iterations in your organization.
+      operationId: listFlowRuns
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: A comma-separated list of top-level object properties to be returned in the response. This parameter is used to filter the response data based on the properties provided. For example, `property=lastRunDetails.startedAtUTC>=1670880253121` returns only the flows whos last run iterations were started during or after the specified epoch time in milliseconds. This parameter is also used to cut down the amount of data returned in the response body. For example, `property=state==enabled&orderby=createdAt` returns only base connections that have a status of `enabled` in the order of their creation, in ascending order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        description: Restrict the maximum number of items returned for a given request. For example, adding a parameter of `limit=10` in a request to retrieve all base connections returns only a maximum of 10 base connections. When used to query the API, the returned response automatically includes a `continuationToken` that can be used to fetch records that were not returned due to the limits applied by the parameter.
+        schema:
+          type: integer
+      - name: orderby
+        in: query
+        description: Sort the listed resources by specified fields. For example, `orderby=name` sorts results by name in ascending order (A-Z). Adding a dash (`-`) before the field name (`orderby=-name`) sorts the results in descending order (Z-A).
+        schema:
+          type: string
+      - name: continuationToken
+        in: query
+        description: An auto-generated string token that is appended to a returned response when there are more results to be read beyond the maximum count of items that can be returned.
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: A boolean value specifying if the count of resources should be returned. By default the count is not returned (`count=false`)
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of runs in JSON format.
+          x-summary: Run List Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowRunsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Runs
+      summary: Create a new run
+      description: Create a new run for a given flow by making a POST request to the `/runs` endpoint while providing the ID of the flow that you want to make a run for. In order to create a run against an existing flow, the flow must be scheduled for one-time ingestion.
+      operationId: createFlowRun
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFlowRunRequest'
+        required: true
+      responses:
+        '201':
+          description: Returns new run ID and etag.
+          x-summary: Run Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFlowRunResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+  /runs/{RUN_ID}:
+    get:
+      tags:
+      - Runs
+      summary: Retrieve a single flow run
+      description: Use this endpoint to retrieve a single flow run iteration.
+      operationId: retrieveFlowRun
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: RUN_ID
+        in: path
+        description: The ID of the run you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified run in JSON format.
+          x-summary: Run Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowRunsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    put:
+      tags:
+      - Runs
+      summary: Update a new flow run
+      description: Use this endpoint to update a flow run iteration.
+      operationId: updateRun
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: If-Match
+        in: header
+        description: If-Match
+        required: true
+        schema:
+          type: string
+      - name: RUN_ID
+        in: path
+        description: The ID of the flow run that you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The following request updates the queried flow run.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFlowRunRequest'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated flow run iteration.
+          headers:
+            Location:
+              description: Location of the updated Flow instance
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/FlowRunItemDTO'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowRunItemDTO'
+              examples:
+                success:
+                  value:
+                    id: ae4532-fe4324-f34vsd32
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /runs/{RUN_ID}/action:
+    post:
+      tags:
+      - Runs
+      summary: Perform an action on a given flowRun object.
+      description: Use this endpoint to perform an action against a given flow run object.
+      operationId: postAction
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: If-Match
+        in: header
+        description: If-Match
+        required: false
+        schema:
+          type: string
+      - name: op
+        in: query
+        description: The operative action to be performed on the queried flow run.
+        required: true
+        schema:
+          type: string
+          enum:
+          - RE_TRIGGER
+      - name: RUN_ID
+        in: path
+        description: The ID of the flow run that you want to update.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated flow run.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowRunItemDTO'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+components:
+  schemas:
+    RecordSummaryDTO:
+      type: object
+      description: The model for capturing metrics regarding records. Any errors that pertain to the server are included here.
+      properties:
+        inputRecordCount:
+          type: integer
+        createdRecordCount:
+          type: integer
+        updatedRecordCount:
+          type: integer
+        skippedRecordCount:
+          type: integer
+        failedRecordCount:
+          type: integer
+        deletedRecordCount:
+          type: integer
+        warningRecordCount:
+          type: integer
+        skippedInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+        failedInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+        extensions:
+          type: object
+          properties: {}
+    FlowRunItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the run.
+          example: 7af3ba45-4952-4371-8361-1b30134be7eb
+        createdAt:
+          type: integer
+          description: The epoch time in milliseconds when the flow run connection was created.
+          format: int64
+          example: 1670444672602
+        updatedAt:
+          type: integer
+          description: The epoch time in milliseconds when the flow run was created.
+          format: int64
+          example: 1670444707059
+        createdBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who created the flow run. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        updatedBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the flow run. In the case of service tokens, the value for `updatedBy` is the same as `updatedClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        createdClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who created the flow run. This can be an application or a user. For example, the value `exc_app` represents flow runs created in the Experience Platform UI.
+          example: exc_app
+        updatedClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who last updated the flow run. This can be an application or a user. For example, the value `exc_app` represents flow runs created in the Experience Platform UI.
+          example: exc_app
+        sandboxId:
+          type: string
+          description: The unique identifier of the sandbox in which the operation will take place.
+          example: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        sandboxName:
+          type: string
+          description: The name of the sandbox in which the operation will take place. If a sandbox name is not provided then the default sandbox for the org will be used.
+          example: prod
+        imsOrgId:
+          type: string
+          description: The organization ID to which the source connection belongs to.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        flowId:
+          type: string
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        flowSpec:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the flow specification used to generate the flow.
+              example: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+            version:
+              type: string
+              description: The current version of the flow specification used to generate the flow.
+              example: '1.0'
+        providerRefId:
+          type: string
+          description: The ID of the provider.
+          example: M-3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d-incremental-0:cd0ab404-960a-422d-b2f6-2ca5063606f2
+        eTag:
+          type: string
+          description: The etag value generated and assigned to a flow run when a new flow run is created.
+          example: '"7e08a7b4-0000-0200-0000-6390f6a30000"'
+        metrics:
+          type: object
+          properties:
+            durationSummary:
+              type: object
+              properties:
+                startedAtUTC:
+                  type: integer
+                  description: The epoch time in milliseconds when the iteration of the flow run was started.
+                  example: 1670444654036
+                completedAtUTC:
+                  type: integer
+                  description: The epoch time in milliseconds when the iteration of the flow run was completed.
+                  example: 1670444685455
+              description: The model for capturing metrics regarding the duration of the flow run.
+            sizeSummary:
+              type: object
+              properties:
+                inputBytes:
+                  type: integer
+                  description: The total bytes in input.
+                  example: 124
+                outputBytes:
+                  type: integer
+                  description: The total bytes in output.
+                  example: 1884
+              description: The model for capturing metrics regarding the size of the data.
+            recordSummary:
+              type: object
+              properties:
+                inputRecordCount:
+                  type: integer
+                  description: The total records in input.
+                  example: 2
+                createdRecordCount:
+                  type: integer
+                  description: The total records created.
+                  example: 2
+                outputRecordCount:
+                  type: integer
+                  description: The total records in output.
+                  example: 2
+                failedRecordCount:
+                  type: integer
+                  description: The total records failed.
+                  example: 0
+              description: The model for capturing metrics regarding records.
+            fileSummary:
+              type: object
+              properties:
+                inputFileCount:
+                  type: integer
+                  description: The total count of input files.
+                  example: 1
+                outputFileCount:
+                  type: integer
+                  description: The total count of output files.
+                  example: 1
+                manifest:
+                  type: object
+                  properties:
+                    fileInfo:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          path:
+                            type: string
+                            example: https://platform.adobe.io/data/foundation/export/batches/01GKQEBS103JPWNZNJTEVFVDMY/meta?path=input_files
+                          pathPrefix:
+                            type: string
+                            example: /acme/acme-customers/sales/acme-customers-sales-spring.csv
+              description: The model for capturing metrics regarding files.
+            statusSummary:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: The status of the iteration of the flow run.
+                  example: success
+              description: The model for capturing the status of the data ingestion.
+        activites:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID assigned to the activity.
+                example: 4f008a00-3a04-11eb-adc1-0242ac120002
+              name:
+                type: string
+                description: The name of the activity. This value is auto-generated.
+                example: Google Cloud Storage Copy Activity
+              updatedAtUTC:
+                type: integer
+                description: Displays the epoch time in milliseconds when the flow run was last updated.
+                example: 0
+              durationSummary:
+                type: object
+                properties:
+                  startedAtUTC:
+                    type: integer
+                    description: The epoch time in milliseconds when the iteration of flow run was started.
+                    example: 1670444654036
+                  completedAtUTC:
+                    type: integer
+                    description: The epoch time in milliseconds when the iteration of the flow run was completed.
+                    example: 1670444685455
+              latencySummary:
+                type: object
+                properties: {}
+                description: The model for capturing metrics regarding data latency.
+              sizeSummary:
+                type: object
+                properties:
+                  inputBytes:
+                    type: integer
+                    description: The total bytes in input.
+                    example: 0
+                  outputBytes:
+                    type: integer
+                    description: The total bytes in output.
+                    example: 0
+                description: The model for capturing metrics regarding the size of the data.
+              recordSummary:
+                type: object
+                properties: {}
+                description: The model for capturing metrics regarding records. Any errors that pertain to the server are included here.
+              fileSummary:
+                type: object
+                properties:
+                  inputFileCount:
+                    type: integer
+                    example: 1
+                description: The model for capturing metrics regarding files.
+              statusSummary:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  extensions:
+                    type: object
+                    properties: {}
+                description: The model for capturing the status of the data ingestion. Any errors that pertaion to the transfer of data are included here.
+    DurationSummaryDTO:
+      type: object
+      properties:
+        startedAtUTC:
+          type: integer
+          format: int64
+        completedAtUTC:
+          type: integer
+          format: int64
+        extensions:
+          type: object
+    FlowRunsListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRunItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 12
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
+    LatencySummaryDTO:
+      type: object
+      description: The model for capturing metrics regarding data latency.
+      properties:
+        minMs:
+          type: integer
+        maxMs:
+          type: integer
+        avgMs:
+          type: integer
+        extensions:
+          type: object
+          properties: {}
+    SizeSummaryDTO:
+      type: object
+      description: The model for capturing metrics regarding the size of the data.
+      properties:
+        inputBytes:
+          type: integer
+          description: The total bytes in input.
+          example: 0
+        outputBytes:
+          type: integer
+          description: The total bytes in output.
+          example: 0
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    FlowRunPredecessorDTO:
+      type: object
+      properties:
+        flowId:
+          type: string
+        flowRunId:
+          type: string
+        flowSpec:
+          type: object
+    UpdateFlowRunRequest:
+      type: object
+      properties:
+        flowId:
+          type: string
+        flowSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        providerRefId:
+          type: string
+        parentFlowRunId:
+          type: string
+        childFlowRunIds:
+          type: array
+          items:
+            type: string
+        params:
+          type: object
+        predecessors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRunPredecessorDTO'
+        metrics:
+          $ref: '#/components/schemas/FlowRunMetricsDTO'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityDTO'
+        recordTypes:
+          type: array
+          items:
+            type: string
+    CreateFlowRunResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 3fb0418e-1804-45d6-8d56-dd51f05c0baf
+        etag:
+          type: string
+          example: '"1100c53e-0000-0200-0000-627138980000"'
+    FileManifest:
+      type: object
+      properties:
+        path:
+          type: string
+        outputBytes:
+          type: integer
+          format: int64
+        pathPrefix:
+          type: string
+    ActivityDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID assigned to the activity.
+          example: 4f008a00-3a04-11eb-adc1-0242ac120002
+        name:
+          type: string
+          description: The name of the activity. This value is auto-generated.
+          example: Google Cloud Storage Copy Activity
+        updatedAtUTC:
+          type: integer
+          description: Displays the epoch time in milliseconds when the flow run was last updated.
+          example: 0
+        durationSummary:
+          type: object
+          properties:
+            startedAtUTC:
+              type: integer
+              description: The epoch time in milliseconds when the iteration of flow run was started.
+              example: 1670444654036
+            completedAtUTC:
+              type: integer
+              description: The epoch time in milliseconds when the iteration of the flow run was completed.
+              example: 1670444685455
+        latencySummary:
+          type: object
+          properties:
+            minMs:
+              type: integer
+            maxMs:
+              type: integer
+            avgMs:
+              type: integer
+            extensions:
+              type: object
+              properties: {}
+          description: The model for capturing metrics regarding data latency.
+        sizeSummary:
+          type: object
+          description: The model for capturing metrics regarding the size of the data.
+          properties:
+            inputBytes:
+              type: integer
+              description: The total bytes in input.
+              example: 0
+            outputBytes:
+              type: integer
+              description: The total bytes in output.
+              example: 0
+        recordSummary:
+          type: object
+          properties: {}
+          description: The model for capturing metrics regarding records. Any errors that pertain to the server are included here.
+        fileSummary:
+          type: object
+          properties:
+            inputFileCount:
+              type: integer
+              example: 1
+              description: The model for capturing metrics regarding files.
+        statusSummary:
+          type: object
+          properties:
+            status:
+              type: string
+              example: success
+            extensions:
+              type: object
+              properties: {}
+              description: The model for capturing the status of the data ingestion. Any errors that pertaion to the transfer of data are included here.
+    FlowRunMetricsDTO:
+      type: object
+      properties:
+        durationSummary:
+          $ref: '#/components/schemas/DurationSummaryDTO'
+        latencySummary:
+          $ref: '#/components/schemas/LatencySummaryDTO'
+        sizeSummary:
+          $ref: '#/components/schemas/SizeSummaryDTO'
+        recordSummary:
+          $ref: '#/components/schemas/RecordSummaryDTO'
+        fileSummary:
+          $ref: '#/components/schemas/FileSummaryDTO'
+        statusSummary:
+          $ref: '#/components/schemas/StatusSummaryDTO'
+        customSummary:
+          readOnly: true
+          type: object
+    FileSummaryDTO:
+      type: object
+      properties:
+        inputFileCount:
+          type: integer
+          format: int64
+        outputFileCount:
+          type: integer
+          format: int64
+        skippedFileCount:
+          type: integer
+          format: int64
+        failedFileCount:
+          type: integer
+          format: int64
+        extensions:
+          type: object
+        manifest:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/FileManifest'
+        activityRefs:
+          type: array
+          items:
+            type: string
+    CreateFlowRunRequest:
+      type: object
+      properties:
+        flowId:
+          type: string
+          description: The ID of the flow in which your run will be created against.
+          example: a57c12ae-a406-4a37-95ac-a8e3455e5a52
+        params:
+          type: object
+          properties:
+            startTime:
+              type: integer
+              description: The epoch time in milliseconds when the new run iteration will start.
+              example: 1670455537
+            windowStartTime:
+              type: integer
+              description: The epoch time in milliseconds that specifies the start time for when data will be pulled.
+              example: 1670455537
+            windowEndTime:
+              type: integer
+              description: The epoch time in milliseconds that specifies the end time for when data will be retrieved up to.
+              example: 1670455947
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    StatusSummaryDTO:
+      type: object
+      description: The model for capturing metrics regarding the size of the data.
+      properties:
+        status:
+          type: string
+          example: success
+        extensions:
+          type: object
+          properties: {}
+          description: The model for capturing the status of the data ingestion. Any errors that pertaion to the transfer of data are included here.
+x-original-swagger-version: '2.0'

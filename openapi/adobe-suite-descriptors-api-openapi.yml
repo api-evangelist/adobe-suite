@@ -1,0 +1,586 @@
+openapi: 3.2.0
+info:
+  version: '1.0'
+  title: Schema Registry Descriptors API
+  description: "Use the Schema Registry API to access the Schema Library within Adobe Experience Platform. The registry provides a user interface and RESTful API from which all available library resources are accessible.  Programmatically manage all schemas and related Experience Data Model (XDM) resources available to you within Platform. This includes those defined by Adobe, Experience Platform partners, and vendors whose applications you use.\n* **Related documentation**:\n  * [XDM documentation](http://www.adobe.com/go/xdm-home-en)\n\n* **Visualize API calls with Postman (a free, third-party software)**:\n  * [Schema Registry API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Schema%20Registry%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n* **API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io\n  * Base path for this API: /data/foundation/schemaregistry\n  * Example of a complete path for making a call to \"/stats\": https://<span>platform.adobe.io/data/foundation/schemaregistry/stats\n\n* **Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All GET requests to the Schema Registry require an `Accept` header to determine what data is returned by the system. See the [section on `Accept` headers](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/getting-started.html?lang=en#accept) in the Schema Registry developer guide for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+servers:
+- url: https://platform.adobe.io/data/foundation/schemaregistry
+tags:
+- name: Descriptors
+  description: Schema descriptors are tenant-level metadata used to provide interpretive details on how data based on certain schemas may relate or interact with one another.
+paths:
+  /{CONTAINER_ID}/descriptors:
+    get:
+      tags:
+      - Descriptors
+      summary: List descriptors
+      description: 'Schemas define a static view of data entities, but do not provide specific details on how data based on these schemas (datasets) may relate to one another. Platform allows you to describe these relationships and other interpretive metadata about a schema through the use of descriptors.
+
+
+        Descriptors are tenant-level metadata for schemas, meaning they are unique to your IMS Organization and all descriptor operations take place in the `tenant` container.
+
+
+        Each schema can have one or more schema descriptor entities applied to it. Each schema descriptor entity includes a descriptor `@type` and the `sourceSchema` to which it applies. Once applied, these descriptors apply to all datasets created using the schema.
+
+
+        >**NOTE**: For more information on using this operation, see the [descriptors endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html) on Experience League.'
+      operationId: listDescriptors
+      parameters:
+      - $ref: '#/components/parameters/containerIdList'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/acceptDescriptors'
+      - $ref: '#/components/parameters/property'
+      - name: orderby
+        description: Sort response by specified fields separated by "," and/or prefix field with "-" for descending order. Used by the v2 option of the API, as indicated by the `Accept` header.
+        required: false
+        in: query
+        schema:
+          type: string
+      - name: limit
+        description: Specify a limit for the number of response results to be displayed (must be between 0 and 500). Used by the v2 option of the API, as indicated by the `Accept` header.
+        required: false
+        in: query
+        schema:
+          type: number
+      - name: start
+        description: The start value of the first `orderBy` field. The value of this parameter be the same data type as that of the `orderBy` field (e.g. strings or integers). Used by the v2 option of the API, as indicated by the `Accept` header.
+        required: false
+        in: query
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns a list of all existing descriptors, separated by type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listDescriptorsResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The `Accept` header is invalid or missing. Ensure that you are providing a valid `Accept` header for the descriptors endpoint with no version supplied (e.g. `application/vnd.adobe.xdm+json`) before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/acceptErrorDescriptorList'
+  /{CONTAINER_ID}/descriptors/{DESCRIPTOR_ID}:
+    get:
+      tags:
+      - Descriptors
+      summary: Retrieve a descriptor
+      description: 'View the details of a specific descriptor by performing a lookup (GET) request using the `@id` of the descriptor. Descriptors are not versioned, therefore no `Accept` header is required in the lookup request.
+
+
+        >**NOTE**: For more information on using this operation, see the [descriptors endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html) on Experience League.'
+      operationId: retrieveDescriptor
+      parameters:
+      - $ref: '#/components/parameters/containerIdLookup'
+      - $ref: '#/components/parameters/DESCRIPTOR_ID'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns the details of the descriptor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/identityDescriptorResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The `Accept` header is invalid or missing. Ensure that you are providing a valid `Accept` header for the descriptors endpoint with no version supplied (e.g. `application/vnd.adobe.xdm+json`) before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/acceptErrorDescriptorLookup'
+  /tenant/descriptors:
+    post:
+      tags:
+      - Descriptors
+      summary: Create a descriptor
+      description: You can create a new descriptor by making a POST request. The required request payload fields vary based on the `@type` of descriptor being defined. For details on the requirements for each descriptor type, refer to the section on [defining descriptors](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html#defining-descriptors) on Experience League.
+      operationId: createDescriptor
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/content-type'
+      - $ref: '#/components/parameters/descriptorPayload'
+      responses:
+        201:
+          x-summary: Success
+          description: A successful response returns the details of the newly created descriptor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createDescriptorResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The request payload was incorrectly formatted. Check your payload formatting before trying again.
+  /tenant/descriptors/{DESCRIPTOR_ID}:
+    put:
+      tags:
+      - Descriptors
+      summary: Update a descriptor
+      description: 'You can update a descriptor by making a PUT request. This action essentially rewrites the existing descriptor, therefore the payload must include all fields that were required when the descriptor was first defined.
+
+
+        >**NOTE**: For more information on using this operation, see the [descriptors endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html) on Experience League.'
+      operationId: updateDescriptor
+      parameters:
+      - $ref: '#/components/parameters/DESCRIPTOR_ID'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/content-type'
+      - $ref: '#/components/parameters/descriptorPayload'
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns the details of the updated descriptor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createDescriptorResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The request payload was incorrectly formatted. Check your payload formatting before trying again.
+    delete:
+      tags:
+      - Descriptors
+      summary: Delete a descriptor
+      description: '>**NOTE**: For more information on using this operation, see the [descriptors endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html) on Experience League.'
+      operationId: deleteDescriptor
+      parameters:
+      - $ref: '#/components/parameters/DESCRIPTOR_ID'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        204:
+          x-summary: No content
+          description: A successful response returns an empty response body and HTTP status 204 (No Content), indicating that the descriptor has been deleted.
+        '403':
+          description: Forbidden
+        404:
+          x-summary: Not found
+          description: The resource is not found.
+components:
+  parameters:
+    containerIdList:
+      name: CONTAINER_ID
+      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
+      required: true
+      in: path
+      schema:
+        type: string
+    property:
+      name: property
+      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
+      in: query
+      required: false
+      schema:
+        type: string
+    containerIdLookup:
+      name: CONTAINER_ID
+      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      required: true
+      in: path
+      schema:
+        type: string
+    descriptorPayload:
+      name: body
+      description: The required request payload fields vary based on the `@type` of descriptor being defined. For details on the requirements for each descriptor type, refer to the section on [defining descriptors](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/descriptors.html?lang=en#defining-descriptors) in the API guide.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/createDescriptor'
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    DESCRIPTOR_ID:
+      name: DESCRIPTOR_ID
+      description: The unique ID (`@id`) of the descriptor in question.
+      required: true
+      in: path
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    acceptDescriptors:
+      name: Accept
+      description: 'The desired response format. Descriptors require unique `Accept` headers using `xdm` instead of `xed`. The following values are permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xdm-id+json</code></td><td>Returns a list of descriptor IDs, grouped by their <code>@type</code>.</td></tr><tr><td><code>application/vnd.adobe.xdm-link+json</code></td><td>Returns a list of descriptor API paths, grouped by their <code>@type</code>.</td></tr><tr><td><code>application/vnd.adobe.xdm+json</code></td><td>Returns a list of descriptor objects, grouped by their <code>@type</code>.</td></tr><tr><td><code>application/vnd.adobe.xdm-v2{-id/-link}+json</code></td><td>Including the <code>-v2</code> option in any of the above <code>Accept</code> headers permits paging functionality, returning a results array with a <code>_page</code> attribute that can be used to request the next page if needed.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string
+  schemas:
+    listDescriptorsResponse:
+      type: object
+      properties:
+        xdm:alternateDisplayInfo:
+          type: array
+          description: Lists the friendly name descriptors owned by your organization.
+          items:
+            $ref: '#/components/schemas/friendlyNameDescriptorResponse'
+        xdm:descriptorIdentity:
+          type: array
+          description: Lists the identity descriptors owned by your organization.
+          items:
+            $ref: '#/components/schemas/identityDescriptorResponse'
+        xdm:descriptorReferenceIdentity:
+          type: array
+          description: Lists the reference identity descriptors owned by your organization.
+          items:
+            $ref: '#/components/schemas/referenceDescriptorResponse'
+        xdm:descriptorOneToOne:
+          type: array
+          description: Lists the relationship descriptors owned by your organization.
+          items:
+            $ref: '#/components/schemas/relationshipDescriptorResponse'
+    registryMetadata:
+      type: object
+      description: Contains registry-specific metadata about the XDM resource.
+      properties:
+        repo:createdDate:
+          type: integer
+          description: A Unix timestamp of when the resource was created.
+        repo:lastModifiedDate:
+          type: integer
+          description: A Unix timestamp of when the resource was last modified.
+        xdm:createdClientId:
+          type: string
+          description: The ID of the client that created the resource.
+        xdm:lastModifiedClientId:
+          type: string
+          description: The ID of the client that last modified the resource.
+        xdm:createdUserId:
+          type: string
+          description: The ID of the user that created the resource.
+        xdm:lastModifiedUserId:
+          type: string
+          description: The ID of the user that last modified the resource.
+        etag:
+          type: string
+          description: An HTTP entity tag (ETag) for the resource.
+        meta:globalLibVersion:
+          type: string
+          description: The current global library version of the resource.
+        meta:usageCount:
+          type: integer
+          description: The number of instances where this resource is referenced by other XDM resources.
+    acceptErrorDescriptorLookup:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1009-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: 4f016ac4-46c8-45cd-aeb8-59b52d46462f
+          timestamp: 11-05-2021 07:17:57
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.xdm+json'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.xdm+json'
+    metaRegistryMetadata:
+      type: object
+      properties:
+        meta:registryMetadata:
+          $ref: '#/components/schemas/registryMetadata'
+    createDescriptorResponse:
+      allOf:
+      - $ref: '#/components/schemas/basicDescriptorDetails'
+      - $ref: '#/components/schemas/descriptorOrgAndVersion'
+      - $ref: '#/components/schemas/resourceContainers'
+      example:
+        '@id': 557ab9db09a9451820c1dca6b8bc13473695ac63c56934eb
+        '@type': xdm:alternateDisplayInfo
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/5b8d40b434bec502955d3e0144c4ce14d096897c6b0ca11f
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /homeAddress
+        imsOrg: '{IMS_ORG}'
+        version: '1'
+        xdm:description:
+          en_us: The home address for the customer.
+        meta:containerId: tenant
+        meta:sandboxId: 36ac3b60-e3df-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+    referenceDescriptorResponse:
+      allOf:
+      - $ref: '#/components/schemas/basicDescriptorDetails'
+      - $ref: '#/components/schemas/descriptorOrgAndVersion'
+      - properties:
+          xdm:identityNamespace:
+            type: string
+            description: The [identity namespace](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html) of the destination schema's primary identity field, which the target field (`sourceProperty`) in the source schema references.
+      - $ref: '#/components/schemas/resourceContainers'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        '@id': bde9eb256ec3ddb51491459d00ddd4e0c3b03d16
+        '@type': xdm:descriptorReferenceIdentity
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /_{TENANT_ID}/favoriteProduct
+        imsOrg: '{IMS_ORG}'
+        version: '1'
+        xdm:identityNamespace: productID
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+        meta:registryMetadata:
+          repo:createdDate: 1570569826581
+          repo:lastModifiedDate: 1570569826581
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+    basicDescriptorDetails:
+      allOf:
+      - properties:
+          '@id':
+            type: string
+            description: The unique ID for the descriptor.
+      - $ref: '#/components/schemas/createDescriptor'
+    identityDescriptorResponse:
+      allOf:
+      - $ref: '#/components/schemas/basicDescriptorDetails'
+      - $ref: '#/components/schemas/descriptorOrgAndVersion'
+      - properties:
+          xdm:namespace:
+            type: string
+            description: The [identity namespace](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html) that this descriptor applies to the target field (`sourceProperty`). An identity namespace can be referenced using its string-based `code` value (e.g. `Email`) or its corresponding integer `id` (e.g. `6`).
+          xdm:property:
+            type: string
+            description: If `xdm:namespace` uses the namespace's string-based identifier, this value should be set to `xdm:code`. If `xdm:namespace` uses the namespace's integer ID, this value should be set to `xdm:id`.
+          xdm:isPrimary:
+            type: boolean
+            description: Indicates whether this target field (`sourceProperty`) represents the primary identity for the target schema (`sourceSchema`).
+      - $ref: '#/components/schemas/resourceContainers'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        '@id': 8f52618ac104afa0da2b1d7c1cc8ac4a0da66a53
+        '@type': xdm:descriptorIdentity
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/837ea89d1103906bf6f2710064ae40b1
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /personalEmail/address
+        imsOrg: '{IMS_ORG}'
+        version: '1'
+        xdm:namespace: Email
+        xdm:property: xdm:code
+        xdm:isPrimary: true
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+        meta:registryMetadata:
+          repo:createdDate: 1556055659091
+          repo:lastModifiedDate: 1556055659091
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+    friendlyNameDescriptorResponse:
+      allOf:
+      - $ref: '#/components/schemas/basicDescriptorDetails'
+      - $ref: '#/components/schemas/descriptorOrgAndVersion'
+      - properties:
+          xdm:title:
+            type: string
+            description: The alternate display title that the descriptor applies to the target field (`sourceProperty`).
+          xdm:description:
+            type: string
+            description: The alternate description that the descriptor applies to the target field (`sourceProperty`).
+      - $ref: '#/components/schemas/resourceContainers'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        '@id': 6acc5b7c0fc15159463ac1f1dbcb0c5950f330f2db740105
+        '@type': xdm:alternateDisplayInfo
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/4177bdbd4b2b328061bdd077dce25ea020b80d5c208553e0
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /_experience/analytics/customDimensions/eVars/eVar1
+        imsOrg: '{IMS_ORG}'
+        version: '1'
+        xdm:title:
+          en_us: Internal Campaign
+        xdm:description:
+          en_us: Internal campaign eVar.
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+        meta:registryMetadata:
+          repo:createdDate: 1611685171098
+          repo:lastModifiedDate: 1611685171098
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+    descriptorOrgAndVersion:
+      type: object
+      properties:
+        imsOrg:
+          type: string
+          description: The ID of the IMS Organization that owns this descriptor.
+        version:
+          type: string
+          description: The current major version of the descriptor.
+    relationshipDescriptorResponse:
+      allOf:
+      - $ref: '#/components/schemas/basicDescriptorDetails'
+      - properties:
+          xdm:destinationSchema:
+            type: string
+            description: The `$id` of the destination schema in the relationship.
+          xdm:destinationVersion:
+            type: string
+            description: The latest major version of the destination schema in the relationship.
+      - $ref: '#/components/schemas/descriptorOrgAndVersion'
+      - $ref: '#/components/schemas/resourceContainers'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        '@id': 11b03201c4cbc99f99abe33523d49cc24a636330
+        '@type': xdm:descriptorOneToOne
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /_{TENANT_ID}/favoriteProduct
+        xdm:destinationSchema: https://ns.adobe.com/{TENANT_ID}/schemas/74ec84c38fefa486bc81c03a172933f1
+        xdm:destinationVersion: 1
+        imsOrg: '{IMS_ORG}'
+        version: '1'
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+        meta:registryMetadata:
+          repo:createdDate: 1570569826248
+          repo:lastModifiedDate: 1570569826248
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+    acceptErrorDescriptorList:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1008-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: c9b7df97-10bf-4a82-b139-2926a6585172
+          timestamp: 11-05-2021 07:16:36
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.xdm-id+json'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.xdm-id+json'
+    createDescriptor:
+      type: object
+      properties:
+        '@type':
+          type: string
+          description: The descriptor type.
+          enum:
+          - xdm:alternateDisplayInfo
+          - xdm:descriptorIdentity
+          - xdm:descriptorReferenceIdentity
+          - xdm:descriptorOneToOne
+          - xdm:descriptorRelationship
+        xdm:sourceSchema:
+          type: string
+          description: The URI `$id` of the schema that this descriptor applies to.
+        xdm:sourceVersion:
+          type: string
+          description: The latest major version of the `sourceSchema`.
+        xdm:sourceProperty:
+          type: string
+          description: The path to the field within the `sourceSchema` that this descriptor applies to.
+      example:
+        '@type': xdm:descriptorIdentity
+        xdm:sourceSchema: https://ns.adobe.com/{TENANT_ID}/schemas/5b8d40b434bec502955d3e0144c4ce14d096897c6b0ca11f
+        xdm:sourceVersion: 1
+        xdm:sourceProperty: /homeAddress
+        xdm:description:
+          en_us: The home address for the customer.
+    errorBasic:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The XDM error code.
+        title:
+          type: string
+          description: The error code title.
+        status:
+          type: integer
+          description: The HTTP status code for the error.
+        report:
+          type: object
+          description: Contains registry information about the error.
+          properties:
+            registryRequestId:
+              type: string
+              description: A unique ID for the report.
+            timestamp:
+              type: string
+              description: A timestamp of when the error occurred.
+            detailed-message:
+              type: string
+              description: A detailed message about what caused the error.
+            sub-errors:
+              type: array
+              description: Contains details about other errors that this error is a parent of.
+              items:
+                $ref: '#/components/schemas/errorBasic'
+        detail:
+          type: string
+          description: A detailed message about what caused the error.
+    resourceContainers:
+      type: object
+      properties:
+        meta:containerId:
+          type: string
+          description: The container for the schema, either `global` or `tenant`.
+        meta:sandboxId:
+          type: string
+          description: The ID of the Platform sandbox that contains the schema.
+        meta:sandboxType:
+          type: string
+          description: The type of Platform sandbox that contains the schema, either `production` or `development`.

@@ -1,0 +1,656 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Metrics API
+  version: '1.0'
+  description: 'Operations tagged Metrics across 2 of this provider''s published API definitions: adobe-suite-aep-observability-insights-openapi.yaml, adobe-suite-analytics-openapi.json. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //{environment}.adobe.io/data/infrastructure/observability/insights
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: https://analytics.adobe.io/api
+tags:
+- name: Metrics
+  description: Observability metrics are parameters used to gain statistical insights into actions being performed in Adobe Experience Platform. These insights include counts of available Platform resources and statistics on data ingestion.
+paths:
+  /metrics:
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve metrics data (V1)
+      description: '>**NOTE**: This method is now deprecated. For the latest functionality, please the POST method for this endpoint instead.
+
+
+
+        The first version of the API allows you to retrieve metric data by supplying applicable metrics in the request path as query parameters.'
+      operationId: retrieveMetricsV1
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: metric
+        in: query
+        description: Metrics you wish the API to return insights from. Refer to the documentation for a list of [accepted metrics](http://www.adobe.com/go/observability-metrics-en).
+        required: true
+        style: form
+        explode: true
+        schema:
+          maxItems: 6
+          minItems: 1
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+      - name: id
+        in: query
+        description: ID associated with the resourceType in the metric.
+        schema:
+          type: string
+      - name: dateRange
+        in: query
+        description: A Date Range in ISO 8601 format. Defaults to 30 days if not present for time-series metrics. Defaults to the last day if not present for single-stat metrics.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns information on the metrics specified in the request path.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/v1Response'
+            application/problem+json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/v1Response'
+        '400':
+          description: Something was wrong with the request. Typically this means an invalid metric was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400error'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/400error'
+      deprecated: true
+    post:
+      tags:
+      - Metrics
+      summary: Retrieve metrics data (V2)
+      description: 'This endpoint retrieves metric data based on the properties provided in the request payload.
+
+        >**NOTE**: The Observability Insights API currently does not support pagination and returns all matching results in a single response body. To limit response sizes, choose a higher-level `granularity` value or limit the date range indicated by `start` and `end`. > >For more information on using this operation, see the [metrics endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/observability/api/metrics.html) on Experience League.'
+      operationId: retrieveMetricsV2
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-id
+        in: header
+        description: The id of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/metricsRequest'
+        required: false
+      responses:
+        '200':
+          description: A successful response returns information on the metrics specified in the request payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metricResponses:
+                    $ref: '#/components/schemas/metricsResponses'
+      x-codegen-request-body-name: body
+    servers:
+    - url: //{environment}.adobe.io/data/infrastructure/observability/insights
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /{globalCompanyId}/metrics:
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve metrics for a report suite
+      description: This returns the metrics list primarily for the Analytics product. The platform identity API Returns a list of all possible metrics for the supported systems.
+      operationId: getMetrics
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: rsid
+        in: query
+        description: ID of desired report suite
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale that system named metrics should be returned in
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: segmentable
+        in: query
+        description: Filter the metrics by if they are valid in a segment.
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: expansion
+        in: query
+        description: Add extra metadata to items (comma-delimited list)
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - tags
+            - allowedForReporting
+            - categories
+          enum:
+          - tags
+          - allowedForReporting
+          - categories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsMetric'
+        '400':
+          description: Invalid JSON input
+        '403':
+          description: Insufficient access to perform operation
+        '500':
+          description: Unexpected internal server error
+    servers:
+    - url: https://analytics.adobe.io/api
+  /{globalCompanyId}/metrics/{id}:
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve a metric by ID
+      description: ''
+      operationId: getMetric
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The id of the metric for which to retrieve info. Note ids are values like pageviews, not metrics/pageviews
+        required: true
+        schema:
+          type: string
+      - name: rsid
+        in: query
+        description: ID of desired report suite
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale that system named metrics should be returned in
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: expansion
+        in: query
+        description: Add extra metadata to items (comma-delimited list)
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - tags
+            - allowedForReporting
+            - categories
+          enum:
+          - tags
+          - allowedForReporting
+          - categories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsMetric'
+        '400':
+          description: Invalid JSON input
+        '403':
+          description: Insufficient access to perform operation
+        '500':
+          description: Unexpected internal server error
+    servers:
+    - url: https://analytics.adobe.io/api
+components:
+  schemas:
+    pageResponse:
+      type: string
+      description: If the response is paginated, indicates the current pagination value. Returns null in the case of no pagination.
+    400error:
+      allOf:
+      - $ref: '#/components/schemas/error'
+    granularity:
+      type: string
+      description: The time interval that the returned metric data is divided by. For example, a value of `DAY` returns metrics for each day between the start and end date, whereas a value of `MONTH` would group metric results by month instead.
+      example: DAY
+    itemsResponse:
+      type: array
+      description: A list of returned metrics.
+      example:
+      - timestamp: 2020-08-17 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 102.3
+      - timestamp: 2020-08-16 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 502.0
+      - timestamp: 2020-08-15 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 19.2
+      - timestamp: 2020-08-14 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 1003.5
+      - timestamp: 2020-08-13 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 248.7
+      - timestamp: 2020-08-12 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 175.5
+      items:
+        type: object
+        properties:
+          timestamp:
+            type: string
+            description: An ISO 8601 timestamp for the metrics provided in the sibling `metrics` property.
+            format: date-time
+          metrics:
+            type: object
+            properties: {}
+            description: An object containing the queried metric data for the associated `timestamp`.
+    linksResponse:
+      type: string
+      description: If the response is paginated, includes URL paths to the current and next page in the response. Returns null in the case of no pagination.
+    filterObject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The type of entity to filter metrics against. Currently, only `dataSetID` is supported.
+          example: dataSetId
+        value:
+          type: string
+          description: The ID of one or more datasets. Multiple dataset IDs can be provided as a single string, with each ID separated by vertical bar characters (`|`).
+          example: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
+        groupBy:
+          type: boolean
+          description: If multiple datasets were specified in the `filters` property for a metric and this this property to true in the request, the response object will contain the ID of the dataset that the corresponding `dps` property applies to. If excluded or set to false, the corresponding `dps` response property applies to all datasets provided in the `filters` array (or all datasets in Platform if no filters were provided).
+          example: true
+    timeSeriesResponse:
+      type: object
+      properties:
+        granularity:
+          $ref: '#/components/schemas/granularity'
+        items:
+          $ref: '#/components/schemas/itemsResponse'
+        _page:
+          $ref: '#/components/schemas/pageResponse'
+        _links:
+          $ref: '#/components/schemas/linksResponse'
+      description: An object containing time-series metrics exposed by the API.
+    datapointObject:
+      type: object
+      properties:
+        groupBy:
+          type: object
+          properties:
+            datasetID:
+              type: string
+              description: The ID of the dataset that the corresponding dps property applies to.
+          description: 'If multiple datasets were specified in the filter property for a metric, and the groupBy option was set to true in the request, this object will contain the ID of the dataset that the corresponding dps property applies to.
+
+            If this object appears empty in the response, the corresponding dps property applies to all datasets provided in the filters array (or all datasets in Platform if no filters were provided).'
+        dps:
+          type: object
+          properties: {}
+          description: A collection of datapoints for the specified metric, keyed by timestamp.
+    v1Response:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the metric's associated resource type. Defaults to null if no relevant ID is found.
+          example: 'null'
+        imsOrgId:
+          type: string
+          description: The unique identifier for your IMS Organization ({IMS_ORG}).
+          example: ''
+        timeseries:
+          $ref: '#/components/schemas/timeSeriesResponse'
+        stats:
+          type: object
+          properties: {}
+          description: An object containing single-stat metrics exposed by the API.
+          example:
+            stats.ingestion.dataset.count': 1000000
+    metricsResponses:
+      type: array
+      description: An array that contains the returned metrics.
+      example:
+      - metric: timeseries.ingestion.dataset.recordsuccess.count
+        filters:
+        - name: dataSetId
+          value: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
+          groupBy: true
+        datapoints:
+        - groupBy:
+            dataSetId: 5edcfb2fbb642119194c7d94
+          dps:
+            '2020-07-14T00:00:00Z': 44
+            '2020-07-15T00:00:00Z': 46
+            '2020-07-16T00:00:00Z': 36
+            '2020-07-17T00:00:00Z': 50
+            '2020-07-18T00:00:00Z': 38
+            '2020-07-19T00:00:00Z': 40
+            '2020-07-20T00:00:00Z': 42
+            '2020-07-21T00:00:00Z': 42
+            '2020-07-22T00:00:00Z': 50
+        - groupBy:
+            dataSetId: 5eddb21420f516191b7a8dad
+          dps:
+            '2020-07-14T00:00:00Z': 44
+            '2020-07-15T00:00:00Z': 46
+            '2020-07-16T00:00:00Z': 36
+            '2020-07-17T00:00:00Z': 50
+            '2020-07-18T00:00:00Z': 38
+            '2020-07-19T00:00:00Z': 40
+            '2020-07-20T00:00:00Z': 42
+            '2020-07-21T00:00:00Z': 42
+            '2020-07-22T00:00:00Z': 50
+        granularity: DAY
+      - metric: timeseries.ingestion.dataset.dailysize
+        filters:
+        - name: dataSetId
+          value: 5eddb21420f516191b7a8dad
+          groupBy: false
+        datapoints:
+        - groupBy: {}
+          dps:
+            '2020-07-14T00:00:00Z': 38455
+            '2020-07-15T00:00:00Z': 40213
+            '2020-07-16T00:00:00Z': 31476
+            '2020-07-17T00:00:00Z': 43705
+            '2020-07-18T00:00:00Z': 33227
+            '2020-07-19T00:00:00Z': 34977
+            '2020-07-20T00:00:00Z': 36735
+            '2020-07-21T00:00:00Z': 36737
+            '2020-07-22T00:00:00Z': 43715
+        granularity: DAY
+      items:
+        $ref: '#/components/schemas/metricObjectResponse'
+    metricObjectResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+          example: timeseries.ingestion.dataset.recordsuccess.count
+        filters:
+          type: array
+          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
+          items:
+            $ref: '#/components/schemas/filterObject'
+        datapoints:
+          type: array
+          description: An array whose objects represent the results of the specified metric and filters. The number of objects in the array depends on the filter options provided in the request. If no filters were provided, the array will only contain a single object that represents all datasets.
+          items:
+            $ref: '#/components/schemas/datapointObject'
+        granularity:
+          $ref: '#/components/schemas/granularity'
+    metricObject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+          example: timeseries.ingestion.dataset.recordsuccess.count
+        filters:
+          type: array
+          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
+          items:
+            $ref: '#/components/schemas/filterObject'
+        aggregator:
+          type: string
+          description: Specifies the aggregation function that should be used to group multiple times-series records into single results. For detailed information on available aggregators, refer to the [OpenTSDB documentation](http://opentsdb.net/docs/build/html/user_guide/query/aggregators.html).
+          example: sum
+    error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: The error code from Observability Insights.
+        httpStatus:
+          type: integer
+          description: The HTTP status code of the error.
+        title:
+          type: string
+          description: A short summary of the problem type.
+        details:
+          type: string
+          description: An explanation of the problem that occurred.
+    metricsRequest:
+      type: object
+      properties:
+        start:
+          type: string
+          description: An ISO 8601 timestamp that represents the start of the date range to return metrics from.
+          example: 2020-07-14 00:00:00+00:00
+        end:
+          type: string
+          description: An ISO 8601 timestamp that represents the end of the date range to return metrics from.
+          example: 2020-07-22 00:00:00+00:00
+        granularity:
+          type: string
+          description: The time interval that the returned metric data is divided by. For example, a value of `DAY` returns metrics for each day between the start and end date, whereas a value of `MONTH` would group metric results by month instead.
+          example: DAY
+        metrics:
+          type: array
+          description: A list of metrics to query for.
+          example:
+          - name: timeseries.ingestion.dataset.recordsuccess.count
+            filters:
+            - name: dataSetId
+              value: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
+              groupBy: true
+            aggregator: sum
+          - name: timeseries.ingestion.dataset.dailysize
+            filters:
+            - name: dataSetId
+              value: 5eddb21420f516191b7a8dad
+              groupBy: false
+            aggregator: sum
+          items:
+            $ref: '#/components/schemas/metricObject'
+    TaggedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: the tag id
+        name:
+          type: string
+          description: 'the tag name '
+        description:
+          type: string
+          description: the tag description
+        components:
+          type: array
+          description: the list of components that have been tagged with this tag
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TaggedComponent'
+      description: Tag Model
+    AnalyticsMetric:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+          - STRING
+          - INT
+          - DECIMAL
+          - CURRENCY
+          - PERCENT
+          - TIME
+          - ENUM
+          - ORDERED_ENUM
+        extraTitleInfo:
+          type: string
+        category:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+        support:
+          type: array
+          items:
+            type: string
+        allocation:
+          type: boolean
+        precision:
+          type: integer
+          format: int32
+        calculated:
+          type: boolean
+        segmentable:
+          type: boolean
+        description:
+          type: string
+        polarity:
+          type: string
+          enum:
+          - positive
+          - negative
+        helpLink:
+          type: string
+        allowedForReporting:
+          type: boolean
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
+      required: true
+      schema:
+        type: string
+x-refined-from:
+- adobe-suite-aep-observability-insights-openapi.yaml
+- adobe-suite-analytics-openapi.json
+x-original-swagger-version: '2.0'

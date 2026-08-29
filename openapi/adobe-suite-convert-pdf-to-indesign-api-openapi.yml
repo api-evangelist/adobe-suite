@@ -1,0 +1,678 @@
+openapi: 3.2.0
+info:
+  description: Firefly Service's RESTful InDesign API offers resources to automate tedious, time-consuming design tasks through scalable cloud services, encouraging more personalization at scale, creative automation, and faster content delivery.
+  version: ''
+  title: Firefly Services - InDesign Convert PDF to InDesign API
+  termsOfService: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+  contact:
+    email: idservices@adobe.com
+servers:
+- url: https://indesign.adobe.io
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Convert PDF to InDesign
+  description: Convert PDF documents to InDesign (INDD or IDML) format. The output is a ZIP file containing the converted documents and all associated assets.
+paths:
+  /v3/convert-pdf-to-indesign:
+    post:
+      summary: Convert PDF to InDesign document
+      description: Converts PDF documents to editable InDesign (INDD or IDML) format. The output is a ZIP file (default name 'output.zip') containing subfolders (named after each input PDF) with the converted document and associated assets. If `embedLinks` is false, assets are provided in a separate folder within the ZIP. If `embedLinks` is true, all links are embedded in the InDesign file. Returns warnings for missing fonts and links.
+      operationId: convertPDFToInDesign
+      tags:
+      - Convert PDF to InDesign
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertToInDesignRequest'
+        description: This job request object specifies parameters for converting PDF to InDesign format.
+        required: true
+      responses:
+        '202':
+          $ref: '#/components/responses/Accepted'
+        '400':
+          $ref: '#/components/responses/BadParams'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v3/status/{convert-pdf-to-indesign_job_id}:
+    get:
+      operationId: getConvertPDFToInDesignJobStatus
+      summary: Get status - Convert PDF to InDesign API
+      description: Returns the latest status of a job, in this case a PDF to InDesign conversion job. Poll this endpoint to retrieve the job results, warnings, and download URL of the output, in this case an output ZIP file.
+      tags:
+      - Convert PDF to InDesign
+      parameters:
+      - name: convert-pdf-to-indesign_job_id
+        in: path
+        description: The ID of the Convert PDF to InDesign job you want to see the status of. This comes from the response of the Convert PDF to InDesign request.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Status of a Convert to InDesign job execution.
+          content:
+            application/json:
+              schema:
+                type: object
+                oneOf:
+                - $ref: '#/components/schemas/notstartedEvent'
+                - $ref: '#/components/schemas/runningEvent'
+                - $ref: '#/components/schemas/succeededEvent'
+                - $ref: '#/components/schemas/failedEvent'
+                - $ref: '#/components/schemas/partialSuccessEvent'
+              examples:
+                succeeded:
+                  summary: Convert to InDesign Job Succeeded
+                  description: Example response when a PDF to InDesign conversion job completes successfully. The output is a ZIP file containing the converted INDD/IDML documents and assets.
+                  value:
+                    jobId: 413d57e8-1092-4476-8a9f-16eacabd2d6d
+                    timestamp: '2025-12-17T06:08:45.267Z'
+                    status: succeeded
+                    data:
+                      outputs:
+                      - outputPath: output/test
+                        input: test.pdf
+                        warnings:
+                          missingLinks:
+                          - file:/Users/labuser/Downloads/Untitled-1%20Folder1/doc1%20Folder/Links/testAI-3.ai
+                          missingFonts:
+                          - Abelone Regular
+                    outputs:
+                    - destination:
+                        url: ''
+                      source: output.zip
+          headers:
+            retry-after:
+              schema:
+                type: integer
+              description: The number of seconds until the user should try again.
+            Content-Type:
+              schema:
+                type: string
+              description: The type of content returned (e.g., `application/json`).
+            Content-Length:
+              schema:
+                type: integer
+              description: The length of the response.
+        '400':
+          $ref: '#/components/responses/BadParams'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    failedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job is in a failed state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - failed
+          errors:
+            type: array
+            description: A list of errors that caused the job to fail.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the failure.
+                message:
+                  type: string
+                  description: The error message for the failure
+                source:
+                  type: string
+                  description: The source file of the error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the failure(if any), if applicable.
+    ConvertToInDesignRequest:
+      allOf:
+      - $ref: '#/components/schemas/BaseJobRequestWithOutput'
+      - description: Inputs for converting PDF to InDesign document.
+        type: object
+        required:
+        - params
+        properties:
+          params:
+            type: object
+            required:
+            - targetDocuments
+            - outputMediaType
+            properties:
+              targetDocuments:
+                description: Array of PDF documents to convert. Each entry corresponds to the filename of the PDF document to convert. Currently supports one document at a time.
+                type: array
+                items:
+                  type: string
+                minItems: 1
+                maxItems: 1
+              outputMediaType:
+                description: The MIME type of the output file.
+                type: string
+                enum:
+                - application/x-indesign
+                - application/vnd.adobe.indesign-idml-package
+                default: application/x-indesign
+              embedLinks:
+                description: If true, all links (images and other assets) from the PDF are embedded directly in the resulting INDD/IDML file. If false (default), the INDD/IDML file is created with external links, and all assets are provided in a separate folder within the output ZIP.
+                type: boolean
+                default: false
+              outputFilebaseString:
+                description: The name of the output ZIP file. If not specified, defaults to 'output.zip'.
+                type: string
+                default: output.zip
+    OutputAsset:
+      description: The URL where the output assets are to be posted after the job is processed.
+      type: object
+      required:
+      - destination
+      - source
+      properties:
+        destination:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The URL of the asset.
+            storageType:
+              type: string
+              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
+              enum:
+              - Azure
+              - Dropbox
+              - AWS
+        source:
+          type: string
+          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
+    InputAsset:
+      type: object
+      description: The URL where the asset will be fetched.
+      required:
+      - source
+      properties:
+        source:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The pre-signed URL of the input asset. This is the URL of the asset that will be downloaded and acted upon during the job.
+        destination:
+          type: string
+          description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
+    runningEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: Job is in running state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - running
+          message:
+            type: string
+            description: A description of the current running state.
+    BaseJobRequestWithOutput:
+      allOf:
+      - $ref: '#/components/schemas/BaseJobRequest'
+      - description: The base job request for any job with the option to specify output URLs.
+        type: object
+        properties:
+          outputs:
+            type: array
+            items:
+              $ref: '#/components/schemas/OutputAsset'
+    BaseEvent:
+      type: object
+      description: The job event response object.
+      properties:
+        jobId:
+          description: The GUID for the job.
+          type: string
+    partialSuccessEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded with some non-critical errors.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - partial_success
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the successfully generated assets.
+          errors:
+            type: array
+            description: A list of errors that occurred during a partially successful job.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the partial failure.
+                message:
+                  type: string
+                  description: The error message for the partial failure
+                source:
+                  type: string
+                  description: The source file of the partial failure error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the partial failure(if any), if applicable.
+    succeededEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - succeeded
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the generated assets.
+    notstartedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The status when a job is in queued state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - not_started
+    BaseJobRequest:
+      description: The base job request for any job.
+      required:
+      - assets
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputAsset'
+          description: Information about the assets, which will be used to process the job.
+        params:
+          type: object
+          properties:
+            generalSettings:
+              description: General settings.
+              type: object
+              properties:
+                fonts:
+                  description: Settings related to fonts. It is recommended to include fonts to avoid missing fonts warnings when processing the job.
+                  type: object
+                  properties:
+                    fontsDirectories:
+                      description: This lists the font directories for the input InDesign documents. "Document Fonts" in parallel to the document will continue to work even without specifying them.  <br></br> If none are specified, a temporary base directory (working directory) will be considered as a font directory.
+                      type: array
+                      items:
+                        type: string
+                        description: This provides a path to a directory relative to a temporary base directory (working directory) where the fonts can be found. It cannot go up using '..' or '/'. Should be a valid path. For specifying a working directory, mention '.'.
+                links:
+                  description: Settings related to links.
+                  type: object
+                  properties:
+                    replaceLinks:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - targetDocument
+                        - mapping
+                        properties:
+                          targetDocument:
+                            description: The document in which the relinking is to be done. Relinking of assets is required to ensure that there are no missing links in the output document.
+                            type: string
+                          mapping:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                              - newAssetRelativePath
+                              properties:
+                                newAssetRelativePath:
+                                  type: string
+                                  description: This provides a path relative to a temporary base directory (working directory) where the asset to be linked to can be found. It cannot go up using '..' or '/'. Should be a valid file name.
+                                currentURI:
+                                  type: string
+                                  description: The existing URI of the link that needs relinking. If multiple links with this URI are found, all will be relinked. If `linkID` is provided, this attribute will be ignored. Either `currentURI` or `linkID` should be present.
+                                linkID:
+                                  type: integer
+                                  description: The ID of the link which is to be relinked. If `currentURI` is also provided, it will be ignored. Either `currentURI` or `linkID` should be present.
+                appLogs:
+                  description: Describes parameters regarding application logs.
+                  type: object
+                  properties:
+                    logsRelativePath:
+                      type: string
+                      description: This provides a path to a file, relative to the temporary base directory (working directory). This file is where the application's logs are to be dumped.
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The format of the content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Retry-After:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Accepted:
+      description: The job has been accepted for processing.
+      content:
+        application/json:
+          schema:
+            properties:
+              jobId:
+                type: string
+                description: The job ID.
+              statusUrl:
+                type: string
+                description: The status URL.
+      headers:
+        link:
+          schema:
+            type: string
+          description: The status URL for a retry.
+        retry-after:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content that is returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    BadParams:
+      description: Bad Parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

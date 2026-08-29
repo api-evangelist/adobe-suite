@@ -1,0 +1,541 @@
+openapi: 3.2.0
+info:
+  title: Adobe Status API Reference Registry API
+  description: "This guide will help you complete the setup needed to call Status API's. <br /><br />\nThe following sections contain sample code snippets for generating tokens. Once the setup is complete, you can find the API specs under Events and Registry.  All the API's have CLI, Javascript and NodeJS code request samples. <br /><br />\nIf you chose to use Postman to call the Status API's, please see the section 'Postman Collection'. It has downloadable collection files that you can use to get started. <br /><br />\nYou will need OAuth token and API key to call Status API's. Please find the sample code below.<br />\n    \n<SecurityDefinitions />\n\n\n# Code Snippets\n## NodeJS\n- Make sure `node` installed on your machine\n- Add all required packages into the project eg., `npm install axios`\n- Get the credentials from the developer console website -> 'OAuth Server-to-Server' credentials page of your project and replace the values in the sample code\n\n```javascript\nconst axios = require(\"axios\")\n\nconst oauth_token_endpoint = 'https://ims-na1.adobelogin.com/ims/token/v3';\n\n// Get the below values from the developer console project's 'OAuth Server-to-Server' credentials page\nconst CLIENT_ID = 'a68bc04-----------92e86df4513ff';\nconst CLIENT_SECRET = process.env.CLIENT_SECRET;\nconst SCOPES = 'creative_cloud, openid, additional_info.ownerOrg, AdobeID, org.read, read_organizations, additional_info.roles, gnav, additional_info.company, additional_info.projectedProductContext';\n\nconst query_params= `client_id=${CLIENT_ID}`;\nconst REQUEST_URL = oauth_token_endpoint + '?' + query_params;\n\n\nconst get_access_token = async auth_code => {\n  \n  return await axios ({\n    method: 'post',\n    url: REQUEST_URL,\n    data: {\n      'client_secret': CLIENT_SECRET,\n      'grant_type': 'client_credentials',\n      'scope': SCOPES\n    },\n    headers: {\n      'Content-Type': 'application/x-www-form-urlencoded'\n    }\n  });\n};\n\nget_access_token().then((response)=> {\n  if(response.status === 200) {\n    console.log(response.data); // access token \n  }\n});\n```\n## Python\n- Below code tested in Python version 3.9\n- Install requests and os. eg., `pip3 install \"requests\"`\n- Get the credentials from the developer console website -> 'OAuth Server-to-Server' credentials page of your project and replace the values in the sample code \n\n```python\nimport requests\nimport os\n\n# Update CLIENT_ID and CLIENT_SECRET with your config\n# which can be obtain from the Adobe Developer Console integration\nCLIENT_ID = \"a68bc04-----------92e86df4513ff\";\nCLIENT_SECRET = os.environ['CLIENT_SECRET'];\nSCOPES = \"creative_cloud, openid, additional_info.ownerOrg, AdobeID, org.read, read_organizations, additional_info.roles, gnav, additional_info.company, additional_info.projectedProductContext\";\nheaders = {\"content-type\": \"application/x-www-form-urlencoded\"}\nurl = \"https://ims-na1.adobelogin.com/ims/token/v3\"\n\ndata = { \n  \"client_secret\": CLIENT_SECRET,\n    \"grant_type\": \"client_credentials\",\n    \"scope\": SCOPES\n}\nparams = {'client_id': CLIENT_ID}\nresponse = requests.post(url, params=params, data=data, headers=headers)\nif(response.status_code == 200):\n  print(response.text) # access token\n\n\n```\n\n# Postman Collection \n- Download Status API postman collection and environment variable from here - [Postman Collection](/adobe-status/postman-collection-and-env.zip)  \n- Import both collection and environment variables into your postman \n- Replace CLIENT_ID and CLIENT_SECRET in environment variable with yours and run collection endpoints \n### Environment Variable Reference\n![alt text](/adobe-status/images/status-api-env.png \"Adobe Status API Environment Variable\")\n### Status API Postman Collection Reference\n![alt text](/adobe-status/images/status-api-collection.png \"Adobe Status API Collection\")\n![alt text](/adobe-status/images/status-api-testing.png \"Adobe Status API Collection Endpoint Validation\")\n# Throttling Policy\nWe have a throttling policy in place. We accept up to 50 requests / 5 secs per user's session. Your throttled requests will receive an error code—HTTP Status 429 (Too Many Requests) response with a Retry-After header, following the [RFC 7231](https://tools.ietf.org/html/rfc7231#section-7.1.3) HTTP standard.\n"
+  contact:
+    name: Status.adobe
+    url: https://status.adobe.com
+    email: statuscom-adobe-support@adobe.com
+  version: '1.0'
+servers:
+- url: https://status.adobe.io/
+security:
+- Authorization: []
+  api_key: []
+tags:
+- name: Registry
+  description: Query and view the product taxonomy of Adobe Products and Services.
+paths:
+  /api/v1/clouds:
+    get:
+      tags:
+      - Registry
+      summary: Clouds
+      description: List the top-level product families for all Adobe Products and Services.
+      operationId: cloudsUsingGET
+      parameters:
+      - name: cloudId
+        in: query
+        description: List of cloud ids for which you want to retrieve the cloud detail.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: cloudName
+        in: query
+        description: Partial or complete cloud name for which you want to retrieve the cloud detail.
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cloud'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/clouds?api_key=<key>&cloudId=<string>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/clouds.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/clouds.js
+  /api/v1/products:
+    get:
+      tags:
+      - Registry
+      summary: Products
+      description: List all the Adobe Products and Services across Clouds.
+      operationId: productsUsingGET
+      parameters:
+      - name: cloudId
+        in: query
+        description: List of cloud ids for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productId
+        in: query
+        description: List of product ids for which you want to retrieve the product detail.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productName
+        in: query
+        description: Partial or complete product name for which you want to retrieve the product detail.
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/products?api_key=<key>&cloudId=<string>&productId=<string>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/products.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/products.js
+  /api/v1/eventTypes:
+    get:
+      tags:
+      - Registry
+      summary: Event Types
+      description: List all the types of events that can impact Adobe Products and Services.
+      operationId: eventTypesUsingGET
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/eventTypes?api_key=<key>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/eventtypes.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/eventtypes.js
+  /api/v1/regions:
+    get:
+      tags:
+      - Registry
+      summary: Regions
+      description: List all the regions that can be impacted by Adobe Status Events.
+      operationId: regionsUsingGET
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegionDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/regions?api_key=<key>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/regions.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/regions.js
+  /api/v1/locales:
+    get:
+      tags:
+      - Registry
+      summary: Locales
+      description: List all the locales for the messages for an event impacting Adobe products.
+      operationId: localesUsingGET
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocaleDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/locales?api_key=<key>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/locales.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/locales.js
+  /api/v1/messages:
+    get:
+      tags:
+      - Registry
+      summary: Messages
+      description: List all the messages for an event impacting Adobe products.
+      operationId: messagesUsingGET
+      parameters:
+      - name: messageToken
+        in: query
+        description: Message token for which you want to retrieve the messages.
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagesDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/messages?api_key=<key>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/messages.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/messages.js
+  /api/v1/messages/{locale}:
+    get:
+      tags:
+      - Registry
+      summary: Messages By Locale
+      description: List all the messages for a locale, for an event impacting Adobe products.<br /> <b>Note:</b> Use Locales API(`/api/v1/locales`) to get supported locales
+      operationId: messagesUsingGET_1
+      parameters:
+      - name: locale
+        in: path
+        description: Locale for fetching message details.
+        required: true
+        schema:
+          type: string
+      - name: messageToken
+        in: query
+        description: Message token for which you want to retrieve the messages.
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagesDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/messages/es?api_key=<key>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/messagesbylocale.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/messagesbylocale.js
+components:
+  schemas:
+    Message:
+      title: Message
+      type: object
+      properties:
+        htmlMessage:
+          type: string
+        textMessage:
+          type: string
+        token:
+          type: string
+    CloudProduct:
+      title: CloudProduct
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Offering:
+      title: Offering
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    Cloud:
+      title: Cloud
+      type: object
+      properties:
+        cloudProducts:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/CloudProduct'
+        id:
+          type: string
+        name:
+          type: string
+    RegionDto:
+      title: RegionDto
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    LocaleDto:
+      title: LocaleDto
+      type: object
+      properties:
+        languageName:
+          type: string
+        localeCode:
+          type: string
+    Environment:
+      title: Environment
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        regionId:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    Product:
+      title: Product
+      type: object
+      properties:
+        environments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Environment'
+        id:
+          type: string
+        name:
+          type: string
+        productOfferings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Offering'
+        productServices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductService'
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegionDto'
+    MessagesDto:
+      title: MessagesDto
+      type: object
+      properties:
+        incidentMessages:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Message'
+        languageCode:
+          type: string
+        maintenanceMessages:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Message'
+    ProductService:
+      title: ProductService
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+  securitySchemes:
+    Authorization:
+      description: '[To generate OAuth Authorization token](https://developer.adobe.com/developer-console/docs/guides/authentication/ServerToServerAuthentication/implementation/)'
+      type: http
+      scheme: bearer
+    api_key:
+      type: apiKey
+      description: Use the api key `StatusAdobeIOClient`
+      name: api_key
+      in: query

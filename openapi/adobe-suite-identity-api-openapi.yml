@@ -1,0 +1,454 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Identity API
+  version: '1.0'
+  description: 'Operations tagged Identity across 2 of this provider''s published API definitions: adobe-suite-aep-identity-service-openapi.yaml, adobe-suite-marketo-identity-openapi.json. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://{environment}.adobe.io/data/core
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: https://localhost:8080/
+tags:
+- name: Identity
+  description: Identity services provide access to a profile identity in XID form.
+paths:
+  /identity/identity:
+    get:
+      tags:
+      - Identity
+      summary: Retrieve an identity
+      description: 'You can retrieve an identity (in the form of an XID string) by
+
+        performing a GET request, given the identity namespace and an ID in that
+
+        identity namespace.
+
+        '
+      operationId: retrieveIdentity
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/x-uis-cst-ctx'
+      - $ref: '#/components/parameters/x-request-id'
+      - $ref: '#/components/parameters/accept'
+      - name: namespace
+        in: query
+        description: namespace code. One of `namespace` or `nsid` is required.
+        schema:
+          type: string
+          example: adcloud
+      - name: nsid
+        in: query
+        description: namespace id. One of `namespace` or `nsid` is required. `nsid` will only be used if `namespace` was not provided.
+        schema:
+          type: integer
+      - name: id
+        in: query
+        description: Id in given namespace
+        required: true
+        schema:
+          type: string
+          example: '2521328045094711779817'
+      responses:
+        '200':
+          description: OK
+          x-summary: Success - Data Retrieved
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+              example:
+                xid: HHDAHDKYYD
+        '400':
+          description: Bad Request from the client
+          x-summary: Bad Request - Invalid Input
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: InvalidInput
+                status: 400
+                detail: The provided namespace=CRMID and id=ssbtest124March262019crmi1 is invalid. Please provide a valid namespace and id in your request.
+        '401':
+          description: IMS token is missing required scope.
+          x-summary: Unauthorized - Missing or Invalid Scope
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: UnauthorizedAccessInvalidScope
+                status: 401
+                detail: Token does not have valid scope. Either 'acp_core_identity' scope or 'acp_foundation' scope is required.
+        '403':
+          description: Insufficient permissions
+          x-summary: Unauthorized - Missing Permissions
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                type: https://ns.adobe.com/aep/errors/UIS-4064-403
+                status: 403
+                title: Insufficient permissions
+                detail: 'The authorization token provided in the request does not have the permissions to access: READ IdentityGraph. Please contact your system administrator to fix this issue.
+
+                  '
+                report:
+                  tenantInfo:
+                    imsOrgId: 09A55EBC5639E6017F000101@AdobeOrg,
+                    sandboxId: 8129954a-fa83-43ba-a995-4bfa8373ba2b,
+                    sandboxName: Prod
+                  additionalContext: null
+                  errorChain: []
+        '429':
+          description: Request rate is large
+          x-summary: Too Many Requests - Rate Limit Exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: RequestRateTooLarge
+                status: 429
+                detail: Request rate is large. Please try again later.
+        '500':
+          description: Unexpected Internal application error
+          x-summary: Server Error - Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: InternalServerError
+                status: 500
+                detail: 'An unexpected internal error occurred in the server. This
+
+                  might indicate a problem with the request, or might
+
+                  indicate a problem in the server side code.
+
+                  '
+    servers:
+    - url: https://{environment}.adobe.io/data/core
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /identity/oauth/token:
+    get:
+      tags:
+      - Identity
+      summary: Identity
+      description: 'Retrieve an access token from Marketo Engage. Calls to this endpoint are not counted towards API call limit.
+
+        '
+      operationId: identityUsingGET
+      x-badges:
+      - name: MCP
+        position: before
+        color: '#2D9D78'
+      parameters:
+      - name: client_id
+        in: query
+        description: Client ID from Admin > Integration > Launchpoint menu.
+        required: true
+        schema:
+          type: string
+          format: string
+      - name: client_secret
+        in: query
+        description: Client Secret from Admin > Integration > Launchpoint menu.
+        required: true
+        schema:
+          type: string
+          format: string
+      - name: grant_type
+        in: query
+        description: Grant type.
+        required: true
+        schema:
+          type: string
+          format: string
+          enum:
+          - client_credentials
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseOfIdentity'
+    post:
+      tags:
+      - Identity
+      summary: Identity
+      description: 'Retrieve an access token from Marketo. Calls to this endpoint are not counted towards API call limit.
+
+        '
+      operationId: identityUsingPOST
+      x-badges:
+      - name: MCP
+        position: before
+        color: '#2D9D78'
+      parameters:
+      - name: client_id
+        in: query
+        description: Client ID from Admin > Integration > Launchpoint menu.
+        required: true
+        schema:
+          type: string
+          format: string
+      - name: client_secret
+        in: query
+        description: Client Secret from Admin > Integration > Launchpoint menu.
+        required: true
+        schema:
+          type: string
+          format: string
+      - name: grant_type
+        in: query
+        description: Grant type.
+        required: true
+        schema:
+          type: string
+          format: string
+          enum:
+          - client_credentials
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseOfIdentity'
+    servers:
+    - url: https://localhost:8080/
+components:
+  schemas:
+    ServiceErrorStatus:
+      type: object
+      properties:
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+        status:
+          type: integer
+          description: HTTP error code describing the problem
+        detail:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        type:
+          type: string
+          description: Link to error type
+        reason:
+          type: string
+          description: A short, human-readable summary of the problem type
+        message:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        report:
+          type: object
+          properties:
+            tenantInfo:
+              description: Sandbox details
+              type: object
+              properties:
+                imsOrgId:
+                  type: string
+                sandboxId:
+                  type: string
+                sandboxName:
+                  type: string
+            additionalContext:
+              description: Additional details relevant to the error.
+              type: object
+              properties:
+                userId:
+                  type: string
+            errorChain:
+              description: Where multiple errors occurred leading up to the returned response, additional errors are included in this field.
+              type: array
+              items:
+                type: object
+                properties:
+                  serviceId:
+                    type: string
+                  errorCode:
+                    type: string
+                  invokingServiceId:
+                    type: string
+                  errorMessage:
+                    type: string
+                  unixTimeStampMs:
+                    type: integer
+    IdResponse:
+      type: object
+      properties:
+        xid:
+          $ref: '#/components/schemas/Id'
+    Id:
+      type: string
+      description: Identity string as returned by /identity/identity GET api.
+    ResponseOfIdentity:
+      type: object
+      required:
+      - access_token
+      - scope
+      - expires_in
+      - token_type
+      properties:
+        access_token:
+          description: The token that you pass with subsequent calls to authenticate with the target instance
+          type: string
+        scope:
+          description: The owning API-only user of the custom service that was used to authenticate
+          type: string
+        expires_in:
+          description: Remaining lifespan of the current token in seconds
+          type: integer
+        token_type:
+          description: The OAuth authentication method
+          type: string
+          enum:
+          - bearer
+  parameters:
+    accept:
+      name: Accept
+      in: header
+      description: The version of the resource's representation.
+      schema:
+        type: string
+        default: application/json
+    authorization:
+      name: Authorization
+      in: header
+      description: 'The access token which can be copied from your Experience Platform
+
+        integration, prefixed with "Bearer ". For more information on how to
+
+        obtain this value, visit the [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-uis-cst-ctx:
+      name: x-uis-cst-ctx
+      in: header
+      description: Customer context to be used for stub response.
+      schema:
+        type: string
+        example: stub
+    x-request-id:
+      name: x-request-id
+      in: header
+      description: Request id to be used for tracing this request.
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: 'The API key which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: 'The Organization ID which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+
+        '
+      schema:
+        type: string
+        example: prod
+x-refined-from:
+- adobe-suite-aep-identity-service-openapi.yaml
+- adobe-suite-marketo-identity-openapi.json
+x-original-swagger-version: '2.0'

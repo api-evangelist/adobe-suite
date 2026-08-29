@@ -1,0 +1,117 @@
+openapi: 3.2.0
+info:
+  title: Privacy Service Consent API
+  description: "Adobe Experience Platform Privacy Service provides a common, centralized facilitation of access/delete requests and opt-out-of-sale requests for private data on Adobe Experience Cloud applications. The service includes a UI for selecting and creating requests, a business layer that processes incoming and outgoing traffic, a data store for audit and logging information, and temporary storage for data retrieval while requests are pending or waiting to be viewed.\nUse the Privacy Service API to create or manage privacy jobs to access or delete user information, manage opt-out requests, and more. - **Related documentation**:\n  - [Privacy Service documentation](http://www.adobe.com/go/privacy-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n  - [Privacy Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Privacy%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/core/privacy\n  - Example of a complete path: https://<span>platform.adobe.io/data/core/privacy/jobs\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the guide on [getting started with the Privacy Service API](http://www.adobe.com/go/privacy-getting-started-en).\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: https://{environment}.adobe.io/data/core/privacy
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Consent
+  description: Certain privacy regulations require businesses to honor customer opt-out-of-sale requests. The Privacy Service API allows you to process these opt-out requests for Experience Cloud applications.
+paths:
+  /consent:
+    post:
+      tags:
+      - Consent
+      summary: Process a customer opt-out-of-sale request
+      description: '>**NOTE**: For more information on using this operation, see the [consent endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/consent.html) on Experience League.'
+      operationId: processCCPASalesConsent
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token provided after authorization in the format `Bearer {ACCESS_TOKEN}`. See the guide on [getting started with the Privacy Service API](http://www.adobe.com/go/privacy-getting-started-en) for steps on how to obtain this value.
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: Your specific API key for your unique Platform configuration (`{API_KEY}`). See the guide on [getting started with the Privacy Service API](http://www.adobe.com/go/privacy-getting-started-en) for steps on how to obtain this value.
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: A unique identifier for your organization (`{IMS_ORG}`). See the guide on [getting started with the Privacy Service API](http://www.adobe.com/go/privacy-getting-started-en) for steps on how to obtain this value.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The payload for a consent request must include an `optOutOfSale` property and a list of user IDs (categorized by namespace).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacySaleConsentResource'
+        required: true
+      responses:
+        '202':
+          x-summary: Accepted
+          description: A successful response returns returns HTTP status 202 (Accepted) with no payload, indicating that the request was accepted by Privacy Service and is undergoing processing.
+          content: {}
+        '400':
+          x-summary: Bad request
+          description: The request is incomplete or malformed.
+          content: {}
+        '403':
+          x-summary: Missing access permissions
+          description: You do not have access permissions for this endpoint.
+          content: {}
+        '404':
+          x-summary: Not found
+          description: The requested resource could not be found. Double-check that your ID values are accurate.
+          content: {}
+        '500':
+          x-summary: Internal service error
+          description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+          content: {}
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    PrivacySaleConsentResource:
+      type: object
+      properties:
+        optOutOfSale:
+          type: boolean
+          description: When set to true, indicates that the users provided under `entities` wish to opt-out of the sale or sharing of their personal data.
+        entities:
+          type: array
+          description: An array of objects indicating the users who the consent request applies to. Each object contains a namespace and an array of values to match individual users with that namespace.
+          items:
+            $ref: '#/components/schemas/PrivacySaleConsentDetails'
+        requestId:
+          type: string
+          description: An optional ID value for the request.
+        transactionId:
+          type: string
+          description: An optional ID value for the transaction that generated the consent request.
+        orgId:
+          type: string
+          description: An optional ID value for the organization that made the consent request.
+      example:
+        optOutOfSale: true
+        entities:
+        - nameSpace: email
+          values:
+          - dsmith@acme.com
+          - ajones@acme.com
+        - nameSpace: ECID
+          values:
+          - '443636576799758681021090721276'
+    PrivacySaleConsentDetails:
+      type: object
+      properties:
+        nameSpace:
+          type: string
+          description: Each object in the `entities` array must contain one of the standard [identity namespaces](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/appendix.html?lang=en#standard-namespaces) recognized by the Privacy Service API.
+        values:
+          uniqueItems: true
+          type: array
+          description: An array of values for each user, corresponding with the provided `nameSpace`.
+          items:
+            type: string
+x-original-swagger-version: '2.0'

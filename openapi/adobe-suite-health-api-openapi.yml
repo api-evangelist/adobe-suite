@@ -1,0 +1,156 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Health API
+  version: '1.0'
+  description: 'Operations tagged health across 2 of this provider''s published API definitions: adobe-suite-journey-optimizer-messaging-openapi.yaml, adobe-suite-lightroom-openapi.json. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://platform-stage.adobe.io/ajo
+  description: Stage Environment
+- url: https://platform.adobe.io/ajo
+  description: Production Environment
+- url: https://lr.adobe.io/
+tags:
+- name: health
+paths:
+  /im/health:
+    parameters:
+    - $ref: '#/components/parameters/x-api-key'
+    - $ref: '#/components/parameters/x-gw-ims-org-id'
+    get:
+      summary: Health of Unitary API Service
+      tags:
+      - health
+      security:
+      - imsUserToken: []
+      description: Health of Unitary API Service
+      responses:
+        '200':
+          description: Health Response
+    servers:
+    - url: https://platform-stage.adobe.io/ajo
+      description: Stage Environment
+    - url: https://platform.adobe.io/ajo
+      description: Production Environment
+  /v2/health:
+    get:
+      tags:
+      - health
+      summary: Lightroom Services health check
+      description: Will return the Lightroom server version ID (a hexadecimal value not guaranteed to be sequential) if the services are up.
+      operationId: getHealth
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+        '403':
+          $ref: '#/components/responses/ForbiddenKey'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+components:
+  parameters:
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The ims org id for which the action is being taken.
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key belonging to the calling client.
+      required: true
+      in: header
+      schema:
+        type: string
+  schemas:
+    ServiceUnavailable:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 9999
+        description:
+          type: string
+          enum:
+          - Service is temporarily unavailable
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
+  examples:
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+  responses:
+    ForbiddenKey:
+      description: The request failed because the API Key is not valid.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                enum:
+                - 403003
+              description:
+                type: string
+                enum:
+                - API Key is invalid
+  securitySchemes:
+    imsUserToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+externalDocs:
+  description: Find out more about Lightroom
+  url: https://www.adobe.com/products/photoshop-lightroom.html
+x-refined-from:
+- adobe-suite-journey-optimizer-messaging-openapi.yaml
+- adobe-suite-lightroom-openapi.json
+x-original-swagger-version: '2.0'

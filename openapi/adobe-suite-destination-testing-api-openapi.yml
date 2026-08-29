@@ -1,0 +1,397 @@
+openapi: 3.2.0
+info:
+  description: "Adobe Experience Platform Destination SDK (also referred to as the *Destination Authoring API*) is a suite of configuration APIs that allow you to configure destination integration patterns for Experience Platform to deliver audience and profile data to your endpoint, based on data and authentication formats of your choice. \n- **Related documentation**:\n    - [Destination SDK overview](http://www.adobe.com/go/destination-sdk-overview-en)\n    - [Getting started](http://www.adobe.com/go/destination-sdk-getting-started-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Destination Authoring API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Destination%20Authoring%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io\n    - Base path for this API: /data/core/activation/authoring\n    - Example of a complete path for making a call to \"/destinations\": https://<span>platform.adobe.io/data/core/activation/authoring/destinations\n\n- **Required headers**:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors)."
+  version: '1.0'
+  title: Destination Authoring Destination testing API
+servers:
+- url: https://platform.adobe.io/data/core/activation/authoring
+  description: Production server
+tags:
+- name: Destination testing
+  description: The Destination Authoring API provides several tools to test file-based and streaming destinations. Read the overview documents for testing [file-based](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/batch-destinations/file-based-destination-testing-overview) and [streaming destinations](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/streaming-destination-testing-overview) to understand the tools available to you.
+paths:
+  /sample-profiles:
+    get:
+      tags:
+      - Destination testing
+      summary: Retrieve a list of sample profiles for a given destination configuration or destination instance
+      description: 'Use this API endpoint to generate sample profiles for two separate use cases. You can either: <ul><li>Generate profiles to use when [crafting and testing a message transformation template](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/create-template) - by using destination ID as a query parameter, or </li><li> generate profiles to use when making calls to [test if your destination is configured correctly](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/streaming-destination-testing-overview) - by using destination instance ID as a query parameter.</li></ul>'
+      operationId: retrieveSampleInputForDestinationInstance
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: destinationInstanceId
+        in: query
+        description: 'Also known as order ID. The ID of the destination instance based on which you are generating sample profiles. <br><br> Get the destination instance ID that you should use here from the URL when browsing a connection with your destination. '
+        schema:
+          type: string
+      - name: destinationId
+        in: query
+        description: The ID of the destination configuration based on which you are generating sample profiles. The destination ID that you should use here is the ID that corresponds to a destination configuration, created using the `/destinations` endpoint. Refer to the [Retrieve a list of destination configurations](#operation/listDestinations) operation.
+        schema:
+          type: string
+      - name: count
+        in: query
+        description: '*Optional*. The number of sample profiles that you are generating. The parameter can take values between `1 - 1000.` <br><br> If the count parameter is not specified, then the default number of generated profiles is determined by the `maxUsersPerRequest` value in the [destination server configuration](http://www.adobe.com/go/destination-sdk-server-template-configuration-en). If this property is not defined, then Adobe will generate one sample profile.'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: A successful response returns sample profiles for the given destination instance ID or destination configuration ID.
+          x-summary: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/getSampleProfileResponse'
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination instance ID or destination configuration ID before trying again.
+          x-summary: Resource Not Found
+  /testing/template/sample/{DESTINATION_CONFIGURATION_ID}:
+    get:
+      tags:
+      - Destination testing
+      summary: Retrieve a sample destination template
+      description: Retrieve a sample template corresponding to the destination's `destinationID`. For more information, see the functionality documentation on [generating a sample template](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-template-api).
+      operationId: retrieveDestinationDefaultTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: DESTINATION_CONFIGURATION_ID
+        in: path
+        description: The ID of the destination configuration for which you are generating a message transformation template. <br><br> The destination ID that you should use here is the ID that corresponds to a destination configuration, created using the `/destinations` endpoint. Refer to the [Retrieve a list of destination configurations](#operation/listDestinations) operation for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with a sample template that you can edit to match your expected data format. For an example of a returned template, see the [Get sample template API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/api-reference/developer-tools-reference/sample-template-api.html?lang=en#generate-sample-template).
+          x-summary: Successful Response
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination configuration ID before trying again.
+          x-summary: Resource Not Found
+  /testing/template/render:
+    post:
+      tags:
+      - Destination testing
+      summary: Render test profiles based on a test destination template
+      description: You can render exported data by making a POST request to the `testing/template/render` endpoint and providing the destination ID of the destination configuration and the template you created using the sample template API endpoint.
+      operationId: createTemplateRenderer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        description: Data needed to render test profiles using provided template
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/testingTemplateRender'
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 along with sample exported profiles that match the format you configured in the template. For an example of returned profiles, see the [Render template API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/api-reference/developer-tools-reference/render-template-api.html?lang=en#multiple-profiles-no-body).
+          x-summary: Successful Response
+          content:
+            application/json:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination configuration ID before trying again.
+          x-summary: Resource Not Found
+  /testing/destinationInstance/{DESTINATION_INSTANCE_ID}:
+    post:
+      tags:
+      - Destination testing
+      summary: Send a message to the partner endpoint
+      description: This API endpoint tests the connection to your destination by sending messages to the partner endpoint. Optionally, you can send a list of profiles in the request. If you do not send any profiles, Experience Platform generates those internally. In this case, you can view the profiles that were used for validation in the response you receive from your endpoint. <br><br> To use this endpoint, you must have a connection to your destination in the Experience Platform UI. Refer to the *important* note at the top of the [Destination testing API tutorial](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/api-reference/developer-tools-reference/destination-testing-api.html?lang=en).
+      operationId: postTestingDestinationInstance
+      parameters:
+      - name: DESTINATION_INSTANCE_ID
+        in: path
+        description: Also known as order ID. The ID of the destination instance based on which you are generating sample profiles. <br><br> Get the destination instance ID that you should use here from the URL when browsing a connection with your destination. Refer to the Destination SDK documentation for more information on [obtaining the destination instance ID](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/destination-testing-api#get-destination-instance-id).
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        description: List of profiles to test the destination with.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputProfileList'
+      responses:
+        '200':
+          description: The call to the destination endpoint was successful.
+          x-summary: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationTestingResponse'
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination instance ID before trying again.
+          x-summary: Resource Not Found
+components:
+  schemas:
+    IrisResponse:
+      type: object
+      properties:
+        body:
+          type: string
+          example: '{ "attributes": [  { "external_id": "external_id-h29Fq"  , "AdobeExperiencePlatformSegments": { "add": [  "Nirvana fans" ,  "RHCP fans"   ], "remove": [  ] }  ,  "key":  "string"    }  ] }'
+          description: The body returned by the destination endpoint in response to the test call made by Experience Platform.
+        code:
+          type: string
+          example: 200
+          description: The code returned by the destination endpoint in response to the test call made by Experience Platform.
+        headers:
+          type: string
+          example:
+          - Connection: keep-alive
+          - Content-Type: application/json
+          - Server: nginx
+          - Vary: Origin,Accept-Encoding
+          - transfer-encoding: chunked
+          description: The headers returned by the destination endpoint in response to the test call made by Experience Platform.
+      title: IrisResponse
+    DestinationTestingResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DestinationTestingProcessResultList'
+        inputProfiles:
+          type: array
+          description: Returns the profiles that were sent in the test request to the destination endpoint.
+          example:
+          - segmentMembership:
+              ups:
+                374a9a6c-c719-4cdb-a660-155a2838e6d6:
+                  lastQualificationTime: '2021-05-13T12:16:27.248585Z'
+                  status: realized
+                896f8776-9498-47b4-b994-51cb3f61c2c5:
+                  lastQualificationTime: '2021-05-13T12:16:27.248605Z'
+                  status: realized
+            identityMap:
+              ECID:
+              - id: ECID-Z3i2t
+              external_id:
+              - id: external_id-h29Fq
+            attributes:
+              firstName:
+                value: John
+          items:
+            $ref: '#/components/schemas/getSampleProfileResponse'
+      title: DestinationTestingResponse
+    DestinationTestingProcessResult:
+      type: object
+      description: A summary of the HTTP call to the destination endpoint and the request received back from the endpoint.
+      properties:
+        traceId:
+          type: string
+          description: An ID used for debugging purposes, that Experience Platform adds to the response received from the destination.
+        request:
+          $ref: '#/components/schemas/DestinationTestingRequest'
+        response:
+          $ref: '#/components/schemas/IrisResponse'
+      title: DestinationTestingProcessResult
+    JsonNode:
+      type: object
+    InputProfileList:
+      type: object
+      properties:
+        profiles:
+          description: Optionally, you can add profiles to the call when testing your destination. <br><br> To generate profiles to use on this call, read [Generate sample profiles based on the source schema](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api). If you don't add any profiles to the call, Experience Platform will generate and send dummy profiles.
+          example:
+          - segmentMembership:
+              ups:
+                374a9a6c-c719-4cdb-a660-155a2838e6d6:
+                  lastQualificationTime: '2021-05-13T12:16:27.248585Z'
+                  status: realized
+                896f8776-9498-47b4-b994-51cb3f61c2c5:
+                  lastQualificationTime: '2021-05-13T12:16:27.248605Z'
+                  status: realized
+            identityMap:
+              ECID:
+              - id: ECID-Z3i2t
+              external_id:
+              - id: external_id-h29Fq
+            attributes:
+              firstName:
+                value: John
+          type: array
+          items:
+            $ref: '#/components/schemas/JsonNode'
+    getSampleProfileResponse:
+      type: object
+      properties:
+        segmentMembership:
+          description: A map object which describes the individual’s segment memberships. For more information on `segmentMembership`, read [Segment Membership Details](https://experienceleague.adobe.com/docs/experience-platform/xdm/field-groups/profile/segmentation.html?lang=en).
+          type: object
+          example:
+            ups:
+              03fb9938-8537-4b4c-87f9-9c4d413a0ee5:
+                lastQualificationTime: '2021-06-30T18:40:07.591378Z'
+                status: realized
+              27e05542-d6a3-46c7-9c8e-d59d50229530:
+                lastQualificationTime: '2021-06-30T18:40:07.591380Z'
+                status: realized
+          properties:
+            ups:
+              description: Indicates the segments that the profile is a member of.
+              example: 03fb9938-8537-4b4c-87f9-9c4d413a0ee5
+              type: object
+              properties:
+                lastQualificationTime:
+                  description: A timestamp of the last time this profile qualified for the segment.
+                  example: '2021-06-30T18:40:07.591378Z'
+                  type: string
+                status:
+                  description: 'Indicates whether the segment membership has been realized as part of the current request. The following values are accepted: <ul><li>`existing`: The profile was already part of the segment prior to the request, and continues to maintain its membership.</li><li>`realized`: The profile is entering the segment as part of the current request.</li><li>`exited`: The profile is exiting the segment as part of the current request.</li></ul>'
+                  example: realized
+                  type: string
+        attributes:
+          description: Attributes present on the profile.
+          example:
+            personalEmail:
+              address: john.smith@abc.com
+          items:
+            type: string
+        identityMap:
+          description: A map-type field that describes the various identity values for an individual, along with their associated namespaces. For more information on `identityMap`, read [Basis of schema composition](https://experienceleague.adobe.com/docs/experience-platform/xdm/schema/composition.html?lang=en#identityMap).
+          type: array
+          example:
+            ECID:
+            - id: ECID-7VEsJ
+          items:
+            type: string
+    testingTemplateRender:
+      type: object
+      properties:
+        destinationId:
+          description: The ID of the destination configuration for which you are rendering exported data.
+          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
+          type: string
+        template:
+          description: The character-escaped version of the template based on which you are rendering exported data.
+          example: "{# THIS is an example template for multiple profiles #}\n{\n    \"profiles\": [\n        {% for profile in input.profiles %}\n            {\n                \"identities\": [\n                    {% for email in profile.identityMap.email %}\n                        {\n                            \"type\": \"email\",\n                            \"id\": \"{{ email.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n\n                    {# Add a comma only if we have both emails and external_ids. #}\n                    {% if profile.identityMap.email is not empty and profile.identityMap.external_id is not empty %}\n                        ,\n                    {% endif %}\n\n                    {% for external in profile.identityMap.external_id %}\n                        {\n                            \"type\": \"external_id\",\n                            \"id\": \"{{ external.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n                ],\n                \"AdobeExperiencePlatformSegments\": {\n                    \"add\": [\n                        {% for segment in profile.segmentMembership.ups | added %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ],\n                    \"remove\": [\n                        {# Alternative syntax for filtering segments by status: #}\n                        {% for segment in removedSegments(profile.segmentMembership.ups) %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ]\n                }\n            }{% if not loop.last %},{% endif %}\n        {% endfor %}\n    ]\n}"
+          type: string
+        profiles:
+          type: array
+          description: Optionally, you can add profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api#generate-sample-profiles-source-schema).
+          items:
+            $ref: '#/components/schemas/getSampleProfileResponse'
+    DestinationTestingProcessResultList:
+      type: object
+      properties:
+        aggregationKey:
+          description: The aggregation key used in the test call to your destination endpoint.
+          type: object
+          properties:
+            destinationInstanceId:
+              type: string
+              description: The destination instance ID of the destination that you are testing.
+              example: null
+            segmentId:
+              type: string
+              description: The ID of the segment which includes the profiles in the request.
+              example: null
+            segmentStatus:
+              type: string
+              description: The status of the segment which includes the profiles in the request.
+              example: realized
+            identityNamespaces:
+              type: array
+              description: The identity namespaces of the profiles in the request.
+              items:
+                type: object
+                example:
+                - email
+                - phone
+        httpCalls:
+          type: array
+          items:
+            $ref: '#/components/schemas/DestinationTestingProcessResult'
+      title: DestinationTestingProcessResultList
+    DestinationTestingRequest:
+      type: object
+      properties:
+        body:
+          type: string
+        headers:
+          $ref: '#/components/schemas/JsonNode'
+        method:
+          type: string
+        uri:
+          type: string
+      title: DestinationTestingRequest
+  parameters:
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+      required: true
+      schema:
+        type: string
+      in: header

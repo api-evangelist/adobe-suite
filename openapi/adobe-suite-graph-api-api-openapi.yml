@@ -1,0 +1,705 @@
+openapi: 3.2.0
+info:
+  title: Identity Service Graph API
+  description: "Delivering relevant digital experiences requires having a complete\nunderstanding of your customer. This is made more difficult when your\ncustomer data is fragmented across disparate systems, causing each\nindividual customer to appear to have multiple \"identities\". Adobe\nExperience Platform Identity Service provides a RESTful API to help you to\ngain a better view of your customers and their behavior. By bridging\nidentities across devices and systems, you are better able to deliver\nimpactful, personal digital experiences in real-time. <br><br>\n\nUse the Identity Service API to manage identities, namespaces, and clusters\nlinked to the Identity Graph. <br><br>\n\n**Related documentation**:\n  * [Identity Service documentation](https://www.adobe.com/go/identity-overview-en)\n\n**Visualize API calls with Postman (a free, third-party software)**:\n  * [Identity Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Identity%20Service.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n**API paths**:\n  * PLATFORM Gateway URL: https://<span>platform-{REGION}.adobe.io\n    * Information on <code>{REGION}</code> values can be found in the [Identity Service developer guide](https://experienceleague.adobe.com/docs/experience-platform/identity/api/getting-started.html).\n  * Base path for this API: /data/core/\n  * Example of a complete path: https://<span>platform-va7.adobe.io/data/core/identity/cluster/members\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).\n"
+  version: 1.0.0
+servers:
+- url: https://{environment}.adobe.io/data/core
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Graph API
+  description: Graph API provides access to groupings of identities as linked in the identity graph.
+paths:
+  /identity/v2/graph:
+    post:
+      tags:
+      - Graph API
+      operationId: getGraphs
+      summary: List linked identities
+      description: 'Given set of identities, returns all linked identities in the graph corresponding to each identity.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/x-request-id'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: "JSON object containing the list of xids/composite_xids identities for which to retrieved \nlinked identities in the same format and additional filters. <br/><br/>\nLinked identities can be returned as a `set` or `graph` projection by setting `projection_type`.<br/><br/>\nThe `projection_type: graph` option can be used alongside `require_edge_meta_data: true` to provide\ninformation about the datasets and batches which have contributed to each edge.\n"
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/GraphRequestCompositeXids'
+              - $ref: '#/components/schemas/GraphRequestXids'
+            examples:
+              setOfMembersWithNamespaceCodeFilter:
+                summary: get a set of linked identities using the namespace code
+                value:
+                  composite_xids:
+                  - ns: adcould
+                    id: '2521328045094711779817'
+                  projection_type: set
+              graphOfMembersWithNamespaceIdFilter:
+                summary: get a graph of linked identities using the namespace id
+                value:
+                  composite_xids:
+                  - nsid: 411
+                    id: '2521328045094711779817'
+                  projection_type: graph
+                  require_edge_meta_data: true
+              graphOfMembersWithXids:
+                summary: get a graph of linked identities using xids
+                value:
+                  xids:
+                  - HHDAHDKYYD
+                  - ABXZDAFGYY
+                  projection_type: graph
+                  require_edge_meta_data: true
+        required: true
+      responses:
+        '200':
+          description: OK
+          x-summary: Success - Data Retrieved
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json;version=2.2.1;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/GraphResponse'
+              examples:
+                setOfMembersWithNamespaceCodeFilter:
+                  summary: get a set of linked identities using the namespace code
+                  value:
+                    version: '2.0'
+                    graphs:
+                    - composite_xid:
+                        ns: adcloud
+                        id: '2521328045094711779817'
+                      members:
+                      - ns: adcloud
+                        id: '2521328045094711779817'
+                      - ns: ECID
+                        id: '1111111111111'
+                      - ns: Email
+                        id: janeDoe@adobe.com
+                      - ns: Email
+                        id: johnDoe@adobe.com
+                      - ns: Phone
+                        id: 0000000009
+                    unprocessed_composite_xids: []
+                    algo_type: STITCH_ALL
+                graphOfMembersWithNamespaceIdFilter:
+                  summary: get a graph of linked identities using the namespace id
+                  value:
+                    version: '2.0'
+                    graphs:
+                    - composite_xid:
+                        nsid: 411
+                        id: '2521328045094711779817'
+                      vertices:
+                      - composite_xid:
+                          nsid: 411
+                          id: '2521328045094711779817'
+                        last_updated_ts: 1724757940000
+                      - composite_xid:
+                          nsid: 4
+                          id: '1111111111111'
+                        last_updated_ts: 1724757940000
+                      - composite_xid:
+                          nsid: 6
+                          id: janeDoe@adobe.com
+                        last_updated_ts: 1724313364568
+                      - composite_xid:
+                          nsid: 6
+                          id: johnDoe@adobe.com
+                        last_updated_ts: 1724313364568
+                      - composite_xid:
+                          nsid: 7
+                          id: 0000000009
+                        last_updated_ts: 1724313042154
+                      edges:
+                      - composite_xid_pair:
+                        - nsid: 411
+                          id: '2521328045094711779817'
+                        - nsid: 7
+                          id: 0000000009
+                        first_established_ts: 1724313042154
+                        last_established_ts: 1724313042154
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPZ6KNDF
+                      - composite_xid_pair:
+                        - nsid: 6
+                          id: janeDoe@adobe.com
+                        - nsid: 6
+                          id: johnDoe@adobe.com
+                        first_established_ts: 1724313364568
+                        last_established_ts: 1724313364568
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPA21687
+                      - composite_xid_pair:
+                        - nsid: 411
+                          id: '2521328045094711779817'
+                        - nsid: 6
+                          id: johnDoe@adobe.com
+                        first_established_ts: 1724313364568
+                        last_established_ts: 1724313364568
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPA21687
+                      - composite_xid_pair:
+                        - nsid: 411
+                          id: '2521328045094711779817'
+                        - nsid: 4
+                          id: '1111111111111'
+                        first_established_ts: 1724757940000
+                        last_established_ts: 1724757940000
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPZ6KAKD
+                    unprocessed_composite_xids: []
+                    algo_type: STITCH_ALL
+                graphOfMembersWithXids:
+                  summary: get a graph of linked identities using xids
+                  value:
+                    version: '2.0'
+                    graphs:
+                    - xid: HHDAHDKYYD
+                      vertices:
+                      - xid: HHDAHDKYYD
+                        last_updated_ts: 1724757940000
+                      - xid: HHDAHDKABD
+                        last_updated_ts: 1724757940000
+                      - xid: AD1JBUOPJD
+                        last_updated_ts: 1724313364568
+                      - xid: UGJUHGFKUG
+                        last_updated_ts: 1724313364568
+                      - xid: YUGVgfjgikFSFUK
+                        last_updated_ts: 1724313042154
+                      edges:
+                      - xid_pair:
+                        - HHDAHDKYYD
+                        - YUGVgfjgikFSFUK
+                        first_established_ts: 1724313042154
+                        last_established_ts: 1724313042154
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPZ6KNDF
+                      - xid_pair:
+                        - AD1JBUOPJD
+                        - UGJUHGFKUG
+                        first_established_ts: 1724313364568
+                        last_established_ts: 1724313364568
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPA21687
+                      - xid_pair:
+                        - HHDAHDKYYD
+                        - UGJUHGFKUG
+                        first_established_ts: 1724313364568
+                        last_established_ts: 1724313364568
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPA21687
+                      - xid_pair:
+                        - HHDAHDKYYD
+                        - HHDAHDKABD
+                        first_established_ts: 1724757940000
+                        last_established_ts: 1724757940000
+                        dataset_ids:
+                        - 66b61a17dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPZ6KAKD
+                    - xid: ABXZDAFGYY
+                      vertices:
+                      - xid: ABXZDAFGYY
+                        last_updated_ts: 1724757940000
+                      - xid: LKGUYP588hguj
+                        last_updated_ts: 1724757940000
+                      - xid: BVR478768HGFJHVJK
+                        last_updated_ts: 1724757940000
+                      edges:
+                      - xid_pair:
+                        - ABXZDAFGYY
+                        - LKGUYP588hguj
+                        first_established_ts: 1724757940000
+                        last_established_ts: 1724757940000
+                        dataset_ids:
+                        - 66b61a54dd6e6e1767a897fd
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPZ6KN11
+                      - xid_pair:
+                        - ABXZDAFGYY
+                        - BVR478768HGFJHVJK
+                        first_established_ts: 1724757940000
+                        last_established_ts: 1724757940000
+                        dataset_ids:
+                        - 66b61a54dd6e6e1ea7a89713
+                        batch_ids:
+                        - 01J5WGCRZCK5C0Y30SKPA21612
+                    unprocessed_composite_xids: []
+                    algo_type: STITCH_ALL
+        '400':
+          description: Bad Request from the client
+          x-summary: Bad Request - Invalid Input
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;version=2.2.1;charset=utf-8;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                reason: 'Validation error Request id: id-api-http-8qUg8oSANC.'
+                message: Graph Request Invalid - projection types available are [graph|set].
+        '401':
+          description: IMS token is missing required scope.
+          x-summary: Unauthorized - Missing or Invalid Scope
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: UnauthorizedAccessInvalidScope
+                status: 401
+                detail: Token does not have valid scope. Either 'acp_core_identity' scope or 'acp_foundation' scope is required.
+        '403':
+          description: Insufficient permissions
+          x-summary: Unauthorized - Missing Permissions
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                type: https://ns.adobe.com/aep/errors/UIS-4064-403
+                status: 403
+                title: Insufficient permissions
+                detail: 'The authorization token provided in the request does not have the permissions to access: READ IdentityGraph. Please contact your system administrator to fix this issue.
+
+                  '
+                report:
+                  tenantInfo:
+                    imsOrgId: 09A55EBC5639E6017F000101@AdobeOrg,
+                    sandboxId: 8129954a-fa83-43ba-a995-4bfa8373ba2b,
+                    sandboxName: Prod
+                  additionalContext: null
+                  errorChain: []
+        '429':
+          description: Request rate is large
+          x-summary: Too Many Requests - Rate Limit Exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: RequestRateTooLarge
+                status: 429
+                detail: Request rate is large. Please try again later.
+        '500':
+          description: Unexpected Internal application error
+          x-summary: Server Error - Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                title: InternalError
+                status: 500
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    GraphRequestTraverse:
+      type: object
+      properties:
+        predicate:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphPredicate'
+    GraphRequestBase:
+      type: object
+      properties:
+        projection_type:
+          type: string
+          description: 'This is a required field dictating the format of the returned graph: a set of members or a graph with vertices and edges.
+
+            '
+          enum:
+          - set
+          - graph
+        graph_type:
+          type: string
+        traverse:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphRequestTraverse'
+        filter:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphRequestFilter'
+        aam_properties:
+          type: object
+          description: 'This filter cannot be used with projection_type: graph.
+
+            '
+          properties:
+            return_data_sources:
+              type: boolean
+        require_edge_meta_data:
+          type: boolean
+          description: 'This is and optional field that is used to add edge meta data in the response, such as dataset_ids and batch_ids.
+
+            It will only apply if the requested projection_type is graph.
+
+            '
+    GraphResponseEdge:
+      type: object
+      properties:
+        composite_xid_pair:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphResponseCompositeXid'
+        xid_pair:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+        first_established_ts:
+          type: integer
+        last_established_ts:
+          type: integer
+        dataset_ids:
+          type: array
+          description: 'This field is returned for requests with require_edge_meta_data: true
+
+            '
+          items:
+            type: string
+        batch_ids:
+          type: array
+          description: 'This field is returned for requests with require_edge_meta_data: true
+
+            '
+          items:
+            type: string
+    GraphRequestXids:
+      allOf:
+      - type: object
+        properties:
+          xids:
+            type: array
+            items:
+              $ref: '#/components/schemas/Id'
+            minItems: 1
+            maxItems: 1000
+      - $ref: '#/components/schemas/GraphRequestBase'
+    GraphResponseCompositeXid:
+      type: object
+      properties:
+        nsid:
+          description: Namespace id
+          type: integer
+        id:
+          description: Identity in given namespace
+          type: string
+        ns:
+          description: Namespace code
+          type: string
+    Id:
+      type: string
+      description: Identity string as returned by /identity/identity GET api.
+    GraphResponseDataSources:
+      type: object
+      properties:
+        composite_xid:
+          $ref: '#/components/schemas/GraphResponseCompositeXid'
+        xid:
+          $ref: '#/components/schemas/Id'
+        ds_ids:
+          type: array
+          items:
+            type: integer
+    GraphRequestFilter:
+      type: object
+      properties:
+        predicate:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphPredicate'
+        order_by:
+          type: string
+        limit:
+          type: string
+    GraphPredicate:
+      type: object
+      properties:
+        v_prop:
+          type: string
+        e_prop:
+          type: string
+        op:
+          type: string
+        value:
+          type: string
+    GraphResponse:
+      type: object
+      properties:
+        version:
+          type: string
+        graphs:
+          type: object
+          properties:
+            vertices:
+              type: array
+              description: 'This field is returned for requests with projection_type: graph <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                $ref: '#/components/schemas/GraphResponseVerticle'
+            edges:
+              type: array
+              description: 'This field is returned for requests with projection_type: graph <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                $ref: '#/components/schemas/GraphResponseEdge'
+            members:
+              type: array
+              description: 'This field is returned for requests with projection_type: set <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                oneOf:
+                - $ref: '#/components/schemas/GraphResponseCompositeXid'
+                - $ref: '#/components/schemas/Id'
+            datasources:
+              type: array
+              items:
+                $ref: '#/components/schemas/GraphResponseDataSources'
+        unprocessed_composite_xids:
+          type: array
+          description: 'This field is returned when the requested identity is formatted as composite_xid
+
+            '
+          items:
+            $ref: '#/components/schemas/GraphResponseCompositeXid'
+        unprocessed_xids:
+          type: array
+          description: 'This field is returned when the requested identity is formatted as xid
+
+            '
+          items:
+            $ref: '#/components/schemas/Id'
+    ServiceErrorStatus:
+      type: object
+      properties:
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+        status:
+          type: integer
+          description: HTTP error code describing the problem
+        detail:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        type:
+          type: string
+          description: Link to error type
+        reason:
+          type: string
+          description: A short, human-readable summary of the problem type
+        message:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        report:
+          type: object
+          properties:
+            tenantInfo:
+              description: Sandbox details
+              type: object
+              properties:
+                imsOrgId:
+                  type: string
+                sandboxId:
+                  type: string
+                sandboxName:
+                  type: string
+            additionalContext:
+              description: Additional details relevant to the error.
+              type: object
+              properties:
+                userId:
+                  type: string
+            errorChain:
+              description: Where multiple errors occurred leading up to the returned response, additional errors are included in this field.
+              type: array
+              items:
+                type: object
+                properties:
+                  serviceId:
+                    type: string
+                  errorCode:
+                    type: string
+                  invokingServiceId:
+                    type: string
+                  errorMessage:
+                    type: string
+                  unixTimeStampMs:
+                    type: integer
+    GraphResponseVerticle:
+      type: object
+      properties:
+        last_updated_ts:
+          type: integer
+        composite_xid:
+          $ref: '#/components/schemas/GraphResponseCompositeXid'
+        xid:
+          $ref: '#/components/schemas/Id'
+    GraphRequestCompositeXids:
+      allOf:
+      - type: object
+        properties:
+          composite_xids:
+            type: array
+            items:
+              $ref: '#/components/schemas/GraphResponseCompositeXid'
+            minItems: 1
+            maxItems: 1000
+      - $ref: '#/components/schemas/GraphRequestBase'
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: 'The access token which can be copied from your Experience Platform
+
+        integration, prefixed with "Bearer ". For more information on how to
+
+        obtain this value, visit the [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-request-id:
+      name: x-request-id
+      in: header
+      description: Request id to be used for tracing this request.
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: 'The Organization ID which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: 'The API key which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the request. Use 'application/json'.
+      required: true
+      schema:
+        type: string
+        default: application/json
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+
+        '
+      schema:
+        type: string
+        example: prod
+x-original-swagger-version: '2.0'

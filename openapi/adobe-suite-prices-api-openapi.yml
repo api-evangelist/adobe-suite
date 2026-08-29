@@ -1,0 +1,764 @@
+openapi: 3.2.0
+info:
+  title: Catalog Data Ingestion Prices API
+  description: 'The Catalog Data Ingestion API allows you to create and manage products and price books and directly integrate catalog data with the Commerce catalog service.
+
+
+    This API provides the following resource collections to create and update catalog data:
+
+
+    - <strong>[Product Metadata](#tag/ProductMetadata)</strong>—define and manage product attribute metadata including display settings, search characteristics, filtering options, and sorting rules.
+
+    - <strong>[Category Metadata](#tag/CategoryMetadata)</strong>—define and manage category attribute metadata.
+
+    - <strong>[Categories](#tag/Categories)</strong>—Define and manage categories with hierarchical structure to build navigation menu.
+
+    - <strong>[Products](#tag/Products)</strong>—Define and manage catalog items with their attributes (name, description, SKU, images, and variants).
+
+    - <strong>[Price books](#tag/Price-Books)</strong>—Define and manage pricing scopes for different customer tiers and markets.
+
+    - <strong>[Prices](#tag/Prices)</strong>—Define and manage product SKU prices and their associated price books.
+
+    - <strong>[Product Layers](#tag/Product-Layers)</strong>—Define and manage product layers to customize and override base product data for specific contexts, locales, or business requirements.
+
+    '
+  version: 1.0.0
+servers:
+- url: https://na1-sandbox.api.commerce.adobe.com/{tenantId}
+  variables:
+    tenantId:
+      default: string
+tags:
+- name: Prices
+  description: "Manage product SKU prices across different price books and customer tiers. Define regular prices,\ndiscounts, and tiered pricing for specific customer segments or markets by specifying a price book id.\n\nBefore creating prices with the Prices API, first create [Price books](#tag/Price-Books). Prices that reference a non-existing price book are ignored.\n\nThe Prices API supports three main pricing components:\n\n* **Regular Price** - The base price for a product SKU in a specific price book\n* **Discounts** - Percentage or fixed amount discounts applied to the regular price\n* **Tiered Pricing** - Quantity-based pricing that offers different prices based on purchase quantity.\n  Tiered pricing can be configured as a fixed or percentage price.\n\n<h3>Price lookup logic</h3>\n\nThe product price lookup follows a hierarchical path through price books. The search starts at the specified price book\nand traverses upward through parent price books until it finds a price or reaches the root level. A product is not assigned\na price if:\n  - No price is found in the entire hierarchy\n  - The price book specified in a price record has not been created\n\n<h3>Important notes</h3>\n\n* You cannot define prices for configurable products. Prices for configurable products are calculated based on the price of the selected product variant.\n* Each discount requires a unique `code` identifier to distinguish between different discount types.\n* Tier quantities must be greater than 1.\n\n<h3>Best practices</h3>\n\n**Price Book Management**\n* Create price books before defining prices\n* Use descriptive price book IDs and names\n* Plan your pricing hierarchy before implementation\n* Test price book relationships in development\n\n**Pricing Strategy**\n* Use consistent discount codes across your catalog\n* Implement tiered pricing for bulk purchase incentives\n* Consider geographic and customer segment pricing\n* Monitor price performance and adjust strategies\n\n**Data Management**\n* Validate all price data before sending to production\n* Use bulk operations for large price updates\n* Implement proper error handling for failed requests\n* Keep backup copies of pricing configurations\n\n**Performance Considerations**\n* Batch price updates for better performance\n* Use gzip compression for large payloads\n* Monitor API rate limits (300 requests per minute)\n* Implement retry logic for failed requests\n\n<strong>Common Use Cases</strong>\n\n**Seasonal Pricing**\n```json\n{\n  \"sku\": \"summer-dress\",\n  \"priceBookId\": \"us-seasonal\",\n  \"regular\": 89.99,\n  \"discounts\": [\n    {\n      \"code\": \"summer_sale\",\n      \"percentage\": 30\n    }\n  ]\n}\n```\n\n**Customer Segment Pricing**\n```json\n{\n  \"sku\": \"premium-product\",\n  \"priceBookId\": \"us-vip\",\n  \"regular\": 199.99,\n  \"discounts\": [\n    {\n      \"code\": \"vip_member\",\n      \"percentage\": 20\n    }\n  ],\n  \"tierPrices\": [\n    {\n      \"qty\": 2,\n      \"percentage\": 10\n    }\n  ]\n}\n```\n\n**Bulk Purchase Incentives**\n```json\n{\n  \"sku\": \"office-supplies\",\n  \"priceBookId\": \"us-business\",\n  \"regular\": 15.99,\n  \"tierPrices\": [\n    {\n      \"qty\": 10,\n      \"price\": 12.99\n    },\n    {\n      \"qty\": 25,\n      \"price\": 10.99\n    },\n    {\n      \"qty\": 50,\n      \"percentage\": 35\n    }\n  ]\n}\n```\n"
+paths:
+  /v1/catalog/products/prices:
+    post:
+      tags:
+      - Prices
+      summary: Create prices
+      description: 'Create or replace existing product prices with support for regular pricing, discounts, and tiered pricing.
+
+
+        <h3>Pricing structure</h3>
+
+
+        Each price record can include:
+
+
+        * **Regular Price** - The base price for the product SKU
+
+        * **Discounts** - Percentage or fixed amount discounts applied to the regular price
+
+        * **Tiered Pricing** - Quantity-based pricing for bulk purchases
+
+
+        <h3>Discount configuration</h3>
+
+
+        Discounts can be configured in two ways:
+
+
+        * **Fixed Amount Discounts** - Use `price` field to specify a fixed discount amount (e.g., 10.00 for $10 off)
+
+        * **Percentage Discounts** - Use `percentage` field to specify a discount percentage (e.g., 20 for 20% off)
+
+
+        Each discount requires a unique `code` identifier to distinguish between different discount types.
+
+
+        <h3>Tiered pricing</h3>
+
+
+        Tiered pricing offers different prices based on purchase quantity:
+
+
+        * **Tier Fixed Prices** - Use `price` field with `qty` to specify quantity-based fixed prices
+
+        * **Tier Percentage Discounts** - Use `percentage` field with `qty` to specify quantity-based percentage discounts
+
+
+        Tier quantities must be greater than 1.
+
+
+        <h3>Pricing for configurable products</h3>
+
+        Because configurable product price is calculated based on the price of the selected product variant, you don''t need to send the price
+
+        data for configurable product SKUs. Sending price data for these SKUs can cause incorrect price calculations.
+
+        '
+      operationId: createPrices
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedPrices'
+            examples:
+              FeedWithNewProductPrice:
+                summary: Add product price information with discounts and tiered pricing
+                description: 'Add product price information to the catalog data with examples of regular pricing,
+
+                  percentage discounts, and tiered pricing for bulk purchases.
+
+                  '
+                value:
+                - sku: red-pants
+                  priceBookId: us
+                  regular: 20
+                - sku: red-pants
+                  priceBookId: dealer-north
+                  regular: 19.9
+                  discounts:
+                  - code: seasonal_sale
+                    percentage: 10
+                  - code: loyalty_discount
+                    price: 2.0
+                  tierPrices:
+                  - qty: 5
+                    percentage: 15
+                  - qty: 10
+                    price: 15.0
+              FeedWithComplexPricing:
+                summary: Complex pricing with multiple discount types and tier levels
+                description: 'Example showing complex pricing scenarios with multiple discount types,
+
+                  tiered pricing for different quantity levels, and geographic pricing variations.
+
+                  '
+                value:
+                - sku: premium-watch
+                  priceBookId: us-premium
+                  regular: 299.99
+                  discounts:
+                  - code: holiday_sale
+                    percentage: 15
+                  - code: vip_member
+                    price: 25.0
+                  tierPrices:
+                  - qty: 2
+                    percentage: 10
+                  - qty: 5
+                    percentage: 20
+                  - qty: 10
+                    price: 250.0
+                - sku: premium-watch
+                  priceBookId: us-wholesale
+                  regular: 250.0
+                  discounts:
+                  - code: bulk_discount
+                    percentage: 25
+                  tierPrices:
+                  - qty: 10
+                    price: 200.0
+                  - qty: 25
+                    price: 175.0
+                  - qty: 50
+                    percentage: 40
+    patch:
+      tags:
+      - Prices
+      summary: Update prices
+      description: 'Change existing product prices, discounts, and tiered pricing.
+
+
+        When the update is processed, the merge strategy is used to apply changes to `scalar` and `object` type fields.
+
+
+        For `array` type fields, a new value can be appended to the existing list. For an object list, you can update a specific object by matching on a key field. The following fields are supported:
+
+        * `discounts` - match on `code`
+
+        * `tierPrices` - match on `qty`
+
+
+        <h3>Update strategies</h3>
+
+
+        * **Regular Price** - Updated using merge strategy
+
+        * **Discounts Array** - Updated using the append or merge strategy
+
+        * **Tiered Pricing Array** - Updated using the append or merge strategy
+
+
+        <h3>Discount and tier pricing updates</h3>
+
+
+        When updating discounts or tiered pricing:
+
+
+        * Include all desired discounts/tiers in the array
+
+        * The entire array replaces the existing configuration
+
+        * To remove all discounts/tiers, send an empty array
+
+        * To add new discounts/tiers, include both existing and new items
+
+
+        <h3>Best practices</h3>
+
+
+        * Always include the complete array of discounts/tiers when updating
+
+        * Use descriptive discount codes for easier management
+
+        * Ensure tier quantities are in ascending order
+
+        * Test updates in a development environment first
+
+
+        > **Note:** Before submitting an update request, verify that the target entity exists using the [products GraphQL query](https://developer.adobe.com/commerce/services/includes/autogenerated/merchandising-api#products) to check the prices assigned to the product SKU. Update operations do not verify that the entity exists. Requests targeting a nonexistent entity are accepted, but the update has no effect.
+
+        '
+      operationId: updatePrices
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedPricesUpdate'
+            examples:
+              FeedWithProductPricesInformation:
+                summary: Update product prices with enhanced discounts and tiered pricing
+                description: 'Update existing product prices for the given SKU ("red-pants") and price book id ("dealer-north").
+
+                  This example shows how to update both discounts and tiered pricing simultaneously:
+
+                  * **discounts**: Update the existing `seasonal_sale` discount and add a new `holiday_sale` discount
+
+                  * **tierPrices**: Update the existing  percentage discount for quantity 5 and add a new discount for quantity 20
+
+                  '
+                value:
+                - sku: red-pants
+                  priceBookId: dealer-north
+                  discounts:
+                  - code: seasonal_sale
+                    percentage: 30
+                  - code: holiday_sale
+                    price: 5.0
+                  tierPrices:
+                  - qty: 5
+                    percentage: 20
+                  - qty: 20
+                    price: 13
+  /v1/catalog/products/prices/delete:
+    post:
+      tags:
+      - Prices
+      summary: Delete prices
+      description: 'Delete existing product prices
+
+        '
+      operationId: deletePrices
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedPricesDelete'
+            examples:
+              FeedWithProductPricesInformation:
+                summary: Delete product prices
+                description: 'Delete the existing product prices information
+
+                  '
+                value:
+                - sku: red-pants
+                  priceBookId: dealer-north
+components:
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+  schemas:
+    DiscountsFinalPrice:
+      title: Fixed Amount Discount
+      description: 'Fixed amount discount that reduces the regular price by a specific monetary value.
+
+        Example: $100 regular price with a $10 fixed discount results in $90 final price.
+
+        '
+      type: object
+      required:
+      - code
+      - price
+      properties:
+        code:
+          type: string
+          description: 'Unique identifier for the discount. Must be unique within the price record.
+
+            Use descriptive codes for easier management (e.g., "loyalty_discount", "holiday_sale").
+
+            '
+          example: loyalty_discount
+        price:
+          type: number
+          format: float
+          description: 'Fixed discount amount in the same currency as the price book.
+
+            Must be a positive number less than the regular price.
+
+            '
+          example: 10.0
+    FeedPrices:
+      title: FeedPrices
+      description: 'Product price information with support for regular pricing, discounts, and tiered pricing.
+
+        Each price record must reference an existing price book and can include multiple discount types
+
+        and tiered pricing levels for different quantity thresholds.
+
+        '
+      required:
+      - sku
+      - priceBookId
+      - regular
+      type: object
+      properties:
+        sku:
+          type: string
+          description: 'Product SKU identifier. Must match an existing product in the catalog.
+
+            For configurable products, use the variant SKU, not the parent SKU.
+
+            '
+          example: red-pants-xl
+        priceBookId:
+          type: string
+          description: 'Price book identifier. Must reference an existing price book.
+
+            Prices referencing non-existing price books are ignored.
+
+            '
+          example: us-retail
+        regular:
+          type: number
+          format: float
+          description: 'Base price for the product SKU in the specified price book.
+
+            This is the price before any discounts or tiered pricing are applied.
+
+            '
+          example: 29.99
+        discounts:
+          type: array
+          description: 'Array of active discounts applied to the regular price.
+
+            Each discount requires a unique code identifier.
+
+            Supports both percentage and fixed amount discounts.
+
+            '
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/DiscountsFinalPrice'
+            - $ref: '#/components/schemas/DiscountsPercentage'
+          example:
+          - code: seasonal_sale
+            percentage: 15
+          - code: loyalty_discount
+            price: 5.0
+        tierPrices:
+          type: array
+          description: 'Array of tiered pricing for quantity-based discounts.
+
+            Quantities must be greater than 1. Supports both percentage and fixed price tiers.
+
+            '
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/TierFinalPrice'
+            - $ref: '#/components/schemas/TierPercentage'
+          example:
+          - qty: 5
+            percentage: 10
+          - qty: 10
+            price: 25.0
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    DiscountsPercentage:
+      title: Percentage Discount
+      description: 'Percentage discount that reduces the regular price by a specified percentage.
+
+        Example: $100 regular price with a 20% discount results in $80 final price.
+
+        '
+      type: object
+      required:
+      - code
+      - percentage
+      properties:
+        code:
+          type: string
+          description: 'Unique identifier for the discount. Must be unique within the price record.
+
+            Use descriptive codes for easier management (e.g., "seasonal_sale", "vip_member").
+
+            '
+          example: seasonal_sale
+        percentage:
+          type: number
+          format: float
+          description: 'Discount percentage as a positive number. Valid range is 0.01 to 99.99 (1% to 99.99%).
+
+            '
+          example: 15.5
+    FeedPricesUpdate:
+      title: FeedPrices
+      description: Product price information.
+      required:
+      - sku
+      - priceBookId
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Product SKU
+        priceBookId:
+          type: string
+          description: Price book id
+        regular:
+          type: number
+          format: float
+          description: Regular price
+        discounts:
+          type: array
+          description: Active discounts
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/DiscountsFinalPrice'
+            - $ref: '#/components/schemas/DiscountsPercentage'
+        tierPrices:
+          type: array
+          description: Tier prices for quantities greater-than one
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/TierFinalPrice'
+            - $ref: '#/components/schemas/TierPercentage'
+    TierFinalPrice:
+      title: Tier Final Price
+      description: 'Final price offered for bulk purchases at a specific quantity threshold.
+
+        Example: $100 regular price with tier price of $80 for quantity of 5 or more.
+
+        '
+      type: object
+      required:
+      - qty
+      - price
+      properties:
+        qty:
+          type: number
+          format: float
+          description: 'Minimum quantity required to qualify for this tier price.
+
+            Must be greater than 1.
+
+            '
+          example: 5
+        price:
+          type: number
+          format: float
+          description: 'Fixed price offered for the specified quantity threshold.
+
+            Must be a positive number less than or equal to the regular price.
+
+            '
+          example: 80.0
+    FeedPricesDelete:
+      title: FeedPricesDelete
+      description: Delete product price information.
+      required:
+      - sku
+      - priceBookId
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Product SKU
+        priceBookId:
+          type: string
+          description: Price book id
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    400ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: FAILED
+        message:
+          type: string
+          description: Error summary.
+        errors:
+          type: array
+          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
+          items:
+            $ref: '#/components/schemas/FeedItemFailedValidationResult'
+      example:
+        status: FAILED
+        message: Items validation failed for 2 items
+        errors:
+        - itemIndex: 0
+          code: status
+          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
+          value: active
+        - itemIndex: 1
+          code: source
+          message: required property 'source' not found
+          value: ''
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    TierPercentage:
+      title: Tier Percentage Discount
+      description: 'Percentage discount applied to the regular price when purchasing at or above a specific quantity threshold.
+
+        Example: $100 regular price with 20% discount for quantity of 10 or more.
+
+        '
+      type: object
+      required:
+      - qty
+      - percentage
+      properties:
+        qty:
+          type: number
+          format: float
+          description: 'Minimum quantity required to qualify for this tier discount.
+
+            Must be greater than 1.
+
+            '
+          example: 10
+        percentage:
+          type: number
+          format: float
+          description: 'Discount percentage applied to the specified quantity threshold.
+
+            Valid range is 0.01 to 99.99 (1% to 99.99%).
+
+            '
+          example: 20.0
+  responses:
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
+    InvalidItemsResponse:
+      x-summary: Request rejected
+      description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
+
+
+        Common causes of validation errors include:
+
+
+        * **Invalid SKU**: SKU does not exist in the catalog
+
+        * **Invalid Price Book**: Price book ID does not exist
+
+        * **Invalid Discount Code**: Duplicate or invalid discount codes
+
+        * **Invalid Tier Quantities**: Quantities not in ascending order or less than 2
+
+        * **Configurable Product Price**: Attempting to set price for configurable product SKU
+
+        * **Invalid Price Format**: Non-numeric or negative price values
+
+        * **Incorrect Category Slug**: Invalid category slug format
+
+        * **Incorrect hierarchy configuration**: Misconfiguration of price book parent-child relationship
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/400ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+externalDocs:
+  url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
+  description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

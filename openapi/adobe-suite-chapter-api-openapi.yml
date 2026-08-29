@@ -1,0 +1,587 @@
+openapi: 3.2.0
+info:
+  title: Media Edge Chapter API
+  description: The OpenAPI specification for Media Edge API
+  version: 0.1.0
+servers:
+- url: https://edge.adobedc.net/ee/va/v1
+tags:
+- name: Chapter
+paths:
+  /chapterStart:
+    post:
+      summary: Chapter start
+      description: Signals the start of a chapter
+      tags:
+      - Chapter
+      operationId: chapterStart
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      xdm:
+                        type: object
+                        description: ''
+                        properties:
+                          mediaCollection:
+                            type: object
+                            description: ''
+                            properties:
+                              playhead:
+                                type: integer
+                                description: The Playhead represents the current playback position within the media content
+                              chapterDetails:
+                                type: object
+                                description: ''
+                                properties:
+                                  offset:
+                                    type: integer
+                                    description: The offset of the chapter inside the content (in seconds) from the start
+                                  length:
+                                    type: integer
+                                    description: The length of the chapter, in seconds
+                                  index:
+                                    type: integer
+                                    description: The position (index, integer) of the chapter inside the content
+                                  friendlyName:
+                                    type: string
+                                    description: The name of the chapter and/or segment
+                                required:
+                                - index
+                                - length
+                                - offset
+                              sessionID:
+                                type: string
+                                description: The Media Session ID uniquely identifies an instance of a content stream during an individual playback session
+                              customMetadata:
+                                type: array
+                                description: Custom data set by the client in the form of key->value pairs
+                                items:
+                                  type: object
+                                  properties:
+                                    name:
+                                      type: string
+                                      description: The name of the custom property preceded by _{tenantName}
+                                    value:
+                                      type: string
+                                      description: The value of the custom property
+                              qoeDataDetails:
+                                type: object
+                                description: QoE (Quality of Experience) Data Details capture performance-related metrics and user experience data
+                                properties:
+                                  bitrate:
+                                    type: integer
+                                    format: int32
+                                    description: The bitrate value (in kbps)
+                                  droppedFrames:
+                                    type: integer
+                                    format: int32
+                                    description: The total count of frames dropped during playback
+                                  framesPerSecond:
+                                    type: integer
+                                    format: int32
+                                    description: The current stream frame-rate (in frames per second)
+                                  timeToStart:
+                                    type: integer
+                                    format: int32
+                                    description: Duration (in seconds) between video load and start
+                            required:
+                            - chapterDetails
+                            - playhead
+                            - sessionID
+                          eventType:
+                            type: string
+                            default: media.chapterStart
+                            description: The media event type
+                          timestamp:
+                            type: string
+                            format: date-time
+                            description: The time when a media event occurred
+                        required:
+                        - mediaCollection
+                        - timestamp
+                        - eventType
+                    required:
+                    - xdm
+            examples:
+              '0':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.chapterStart
+                      mediaCollection:
+                        sessionID: 5c32e1a6ef6b58be5136ba8db2f79f1d251d3121a898bc8fb60123b8fdb9aa1c
+                        playhead: 10
+                        chapterDetails:
+                          friendlyName: Chapter 1
+                          length: 10
+                          index: 1
+                          offset: 0
+                        customMetadata:
+                        - name: _{tenantName}.c1
+                          value: myCustomValue1
+                      timestamp: '2022-03-04T13:37:56+00:00'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 400
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: array
+                        description: ''
+                        items:
+                          type: object
+                          description: ''
+                          properties:
+                            name:
+                              type: string
+                              description: The path to the invalid property
+                            reason:
+                              type: string
+                              description: The reason why the property is invalid
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0400-400
+                    status: 400
+                    title: Bad Request
+                    detail: Invalid request. Please check your input and try again.
+                    report:
+                      details:
+                      - name: $.events[0].xdm.mediaCollection.chapterDetails.index
+                        reason: Missing required field
+                      - name: $.events[0].xdm.mediaCollection.chapterDetails.length
+                        reason: Missing required field
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 404
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: string
+                        description: The error details
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0404-404
+                    status: 404
+                    title: Not Found
+                    detail: The requested resource could not be found but may be available again in the future.
+                    report:
+                      details: Error processing request. If the session is longer than 24h, please start a new one. Returning Not Found
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+  /chapterComplete:
+    post:
+      summary: Chapter complete
+      description: Signals the completion of a chapter
+      tags:
+      - Chapter
+      operationId: chapterComplete
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      xdm:
+                        type: object
+                        description: ''
+                        properties:
+                          mediaCollection:
+                            type: object
+                            description: ''
+                            properties:
+                              playhead:
+                                type: integer
+                                description: The Playhead represents the current playback position within the media content
+                              sessionID:
+                                type: string
+                                description: The Media Session ID uniquely identifies an instance of a content stream during an individual playback session
+                              qoeDataDetails:
+                                type: object
+                                description: QoE (Quality of Experience) Data Details capture performance-related metrics and user experience data
+                                properties:
+                                  bitrate:
+                                    type: integer
+                                    format: int32
+                                    description: The bitrate value (in kbps)
+                                  droppedFrames:
+                                    type: integer
+                                    format: int32
+                                    description: The total count of frames dropped during playback
+                                  framesPerSecond:
+                                    type: integer
+                                    format: int32
+                                    description: The current stream frame-rate (in frames per second)
+                                  timeToStart:
+                                    type: integer
+                                    format: int32
+                                    description: Duration (in seconds) between video load and start
+                            required:
+                            - playhead
+                            - sessionID
+                          eventType:
+                            type: string
+                            default: media.chapterComplete
+                            description: The media event type
+                          timestamp:
+                            type: string
+                            format: date-time
+                            description: The time when a media event occurred
+                        required:
+                        - mediaCollection
+                        - timestamp
+                        - eventType
+                    required:
+                    - xdm
+            examples:
+              '0':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.chapterComplete
+                      mediaCollection:
+                        sessionID: 5c32e1a6ef6b58be5136ba8db2f79f1d251d3121a898bc8fb60123b8fdb9aa1c
+                        playhead: 25
+                      timestamp: '2022-03-04T13:39:00+00:00'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 400
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: array
+                        description: ''
+                        items:
+                          type: object
+                          description: ''
+                          properties:
+                            name:
+                              type: string
+                              description: The path to the invalid property
+                            reason:
+                              type: string
+                              description: The reason why the property is invalid
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0400-400
+                    status: 400
+                    title: Bad Request
+                    detail: Invalid request. Please check your input and try again.
+                    report:
+                      details:
+                      - name: $.events[0].xdm.mediaCollection.playhead
+                        reason: Missing required field
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 404
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: string
+                        description: The error details
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0404-404
+                    status: 404
+                    title: Not Found
+                    detail: The requested resource could not be found but may be available again in the future.
+                    report:
+                      details: Error processing request. If the session is longer than 24h, please start a new one. Returning Not Found
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+  /chapterSkip:
+    post:
+      summary: Chapter skip
+      description: Signals that the chapter was skipped
+      tags:
+      - Chapter
+      operationId: chapterSkip
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      xdm:
+                        type: object
+                        description: ''
+                        properties:
+                          mediaCollection:
+                            type: object
+                            description: ''
+                            properties:
+                              playhead:
+                                type: integer
+                                description: The Playhead represents the current playback position within the media content
+                              sessionID:
+                                type: string
+                                description: The Media Session ID uniquely identifies an instance of a content stream during an individual playback session
+                              qoeDataDetails:
+                                type: object
+                                description: QoE (Quality of Experience) Data Details capture performance-related metrics and user experience data
+                                properties:
+                                  bitrate:
+                                    type: integer
+                                    format: int32
+                                    description: The bitrate value (in kbps)
+                                  droppedFrames:
+                                    type: integer
+                                    format: int32
+                                    description: The total count of frames dropped during playback
+                                  framesPerSecond:
+                                    type: integer
+                                    format: int32
+                                    description: The current stream frame-rate (in frames per second)
+                                  timeToStart:
+                                    type: integer
+                                    format: int32
+                                    description: Duration (in seconds) between video load and start
+                            required:
+                            - playhead
+                            - sessionID
+                          eventType:
+                            type: string
+                            default: media.chapterSkip
+                            description: The media event type
+                          timestamp:
+                            type: string
+                            format: date-time
+                            description: The time when a media event occurred
+                        required:
+                        - mediaCollection
+                        - timestamp
+                        - eventType
+                    required:
+                    - xdm
+            examples:
+              '0':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.chapterSkip
+                      mediaCollection:
+                        sessionID: 5c32e1a6ef6b58be5136ba8db2f79f1d251d3121a898bc8fb60123b8fdb9aa1c
+                        playhead: 25
+                      timestamp: '2022-03-04T13:39:00+00:00'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 400
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: array
+                        description: ''
+                        items:
+                          type: object
+                          description: ''
+                          properties:
+                            name:
+                              type: string
+                              description: The path to the invalid property
+                            reason:
+                              type: string
+                              description: The reason why the property is invalid
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0400-400
+                    status: 400
+                    title: Bad Request
+                    detail: Invalid request. Please check your input and try again.
+                    report:
+                      details:
+                      - name: $.events[0].xdm.mediaCollection.playhead
+                        reason: Missing required field
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 404
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: string
+                        description: The error details
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0404-404
+                    status: 404
+                    title: Not Found
+                    detail: The requested resource could not be found but may be available again in the future.
+                    report:
+                      details: Error processing request. If the session is longer than 24h, please start a new one. Returning Not Found
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900

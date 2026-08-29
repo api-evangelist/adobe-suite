@@ -1,0 +1,601 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Job Status API
+  version: '1.0'
+  description: 'Operations tagged Job Status across 2 of this provider''s published API definitions: adobe-suite-firefly-indesign-openapi.json, adobe-suite-firefly-photoshop-v2-openapi.json. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://indesign.adobe.io
+- url: https://photoshop-api.adobe.io
+  description: Prod server.
+tags:
+- name: Job Status
+  description: 'Track job execution status and lifecycle events. Retrieves the most recent status event for jobs across different execution stages: `not_started` (job creation), `running` (execution begins), `succeeded` (complete), `partial_success` (complete with non-critical errors), `failed` (execution failure).'
+paths:
+  /v3/status/{id}:
+    get:
+      operationId: getJobStatus
+      summary: Get the status of a job
+      description: Returns the latest status of an executed custom script job.
+      tags:
+      - Job Status
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the job you want to see the status of. This comes from the response of the executed job request.
+        required: true
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: Number of output items to return per page when outputs are paginated. Defaults to 10.
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 10
+      - name: page
+        in: query
+        description: Zero-based page index to retrieve when outputs are paginated. Defaults to 0.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Status of an API Job execution.
+          content:
+            application/json:
+              schema:
+                type: object
+                oneOf:
+                - $ref: '#/components/schemas/notstartedEvent'
+                - $ref: '#/components/schemas/runningEvent'
+                - $ref: '#/components/schemas/succeededEvent'
+                - $ref: '#/components/schemas/failedEvent'
+                - $ref: '#/components/schemas/partialSuccessEvent'
+          headers:
+            retry-after:
+              schema:
+                type: integer
+              description: The number of seconds until the user should try again.
+            Content-Type:
+              schema:
+                type: string
+              description: The type of content returned (e.g., `application/json`).
+            Content-Length:
+              schema:
+                type: integer
+              description: The length of the response.
+        '400':
+          $ref: '#/components/responses/BadParams'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - AccessToken: []
+        X-Api-Key: []
+    servers:
+    - url: https://indesign.adobe.io
+  /v2/status/{jobId}:
+    get:
+      description: Retrieves the current status and details of a specific job including metadata, outputs, and processing information. Use this endpoint to poll jobs submitted to Photoshop v2 operations and POST /v1/auto-crop.
+      operationId: getJobStatus
+      parameters:
+      - description: Unique identifier for the job to retrieve status information
+        example: 550e8400-e29b-41d4-a716-446655440000
+        in: path
+        name: jobId
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+          description: Job status retrieved successfully
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad request - Invalid job ID format or missing required parameters
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized - Invalid or missing access token
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not found - Job with the specified ID does not exist
+      summary: Get Job Status
+      tags:
+      - Job Status
+      security:
+      - Authorization: []
+        X-Api-Key: []
+    servers:
+    - url: https://photoshop-api.adobe.io
+      description: Prod server.
+components:
+  responses:
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The format of the content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Retry-After:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    BadParams:
+      description: Bad Parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+  schemas:
+    failedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job is in a failed state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - failed
+          errors:
+            type: array
+            description: A list of errors that caused the job to fail.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the failure.
+                message:
+                  type: string
+                  description: The error message for the failure
+                source:
+                  type: string
+                  description: The source file of the error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the failure(if any), if applicable.
+    runningEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: Job is in running state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - running
+          message:
+            type: string
+            description: A description of the current running state.
+    BaseEvent:
+      type: object
+      description: The job event response object.
+      properties:
+        jobId:
+          description: The GUID for the job.
+          type: string
+    partialSuccessEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded with some non-critical errors.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - partial_success
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the successfully generated assets.
+          errors:
+            type: array
+            description: A list of errors that occurred during a partially successful job.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the partial failure.
+                message:
+                  type: string
+                  description: The error message for the partial failure
+                source:
+                  type: string
+                  description: The source file of the partial failure error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the partial failure(if any), if applicable.
+    succeededEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - succeeded
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the generated assets.
+    notstartedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The status when a job is in queued state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - not_started
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
+    JobStatusResponse:
+      type: object
+      properties:
+        createdTime:
+          type: string
+          format: date-time
+        errorDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+        jobId:
+          type: string
+        modifiedTime:
+          type: string
+          format: date-time
+        result:
+          $ref: '#/components/schemas/Result'
+        status:
+          type: string
+    Result:
+      type: object
+      properties:
+        additionalFields:
+          type: object
+          additionalProperties:
+            type: object
+        outputs:
+          type: object
+    ErrorDetails:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code for this specific validation error
+        errors:
+          type: array
+          description: List of detailed validation errors when multiple errors occur. This field is optional and only populated when there are multiple validation errors.
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        message:
+          type: string
+          description: Human-readable string describing this specific validation error
+      description: 'Error response containing error code, message, and optional list of validation errors.
+
+
+        Error Code Reference:
+
+        | Error Code                    | Message                             |
+
+        | ----------------------------- | ------------------------------------|
+
+        |                               |                                     |
+
+        | 401013                        | Oauth token is not valid            |
+
+        | validation_error              | Validation failed                   |
+
+        | unsupported_method            | Method not allowed                  |
+
+        | invalid_content_type          | Unsupported media type              |
+
+        | unknown_job_id                | Job not found                       |
+
+        | unauthorized_forbidden        | The quota for the calling user has exhausted OR
+
+        |                               | The Service is experiencing high traffic. please retry after a brief wait OR
+
+        |                               | The user is not entitled to call this service OR
+
+        |                               | The user is currently blocked by the admin OR
+
+        |                               | The user is having an invalid subscription OR
+
+        |                               | The user is blocked due to a violation OR
+
+        |                               | The user is having an invalid scope |
+
+        | unauthorized_legal_reasons    | The user is unauthorised due to geo ip blocking failure OR
+
+        |                               | The user is unauthorised due to user profile region failure from floodgate |
+
+        | unauthorized_rate_limited     | The user is unauthorised due to rate limit. When present, Retry-After header (seconds) indicates delay before retrying. |
+
+        | runtime_error                 | There was a problem while attempting to perform the operation. Please try again. |
+
+        | invalid_json                  | The request payload is having invalid JSON (fallback) |
+
+        '
+    ValidationError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code for this specific validation error
+        message:
+          type: string
+          description: Human-readable string describing this specific validation error
+      description: Represents a single validation error with error code and message
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.
+    Authorization:
+      description: User access token (Bearer xxx)
+      scheme: Bearer
+      type: http
+x-refined-from:
+- adobe-suite-firefly-indesign-openapi.json
+- adobe-suite-firefly-photoshop-v2-openapi.json
+x-original-swagger-version: '2.0'

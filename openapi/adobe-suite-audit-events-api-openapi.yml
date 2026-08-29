@@ -1,0 +1,765 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Audit events API
+  version: '1.0'
+  description: 'Operations tagged Audit events across 2 of this provider''s published API definitions: adobe-suite-aep-audit-query-openapi.yaml, adobe-suite-aep-reactor-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //{environment}.adobe.io/data/foundation
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: //reactor.adobe.io
+tags:
+- name: Audit events
+  description: Audit events are timestamped records of observed activities in Experience Platform. The API allows you to query events over the last 90 days and create export requests from the last 365 days in 90 day intervals.
+paths:
+  /audit/events:
+    get:
+      tags:
+      - Audit events
+      summary: List audit events
+      operationId: listAuditEvents
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: x-request-id
+        in: header
+        description: A tracing ID associated with the request. If one is not provided on the request, the server generates one automatically.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: 'You can filter list results by including a `property` query parameter. The value must be an array that contains one or more of a list of properties, where each property is prefixed with `property` and seperated with a `?` (for example: `?property=action==create&property=assetType==Sandbox`). If multiple values for the `property` parameter are provided, then all filters must match in order for an event to be returned. Only the last 1000 records are displayed irrespective of the various filters selected.
+
+
+          The properties that can be used for filtering are `type`, `timestamp`, `status`, `action`, `user`, `assetType`, `assetId`, `assetName`, and `requestId`.
+
+
+          When filtering by `timestamp`, it is best practice to use a range using `>` and `<` operators rather than an exact value. For example: `?property=timestamp<2020-02-08T02:46:48.610862Z&property=timestamp>2020-01-01T02:46:48.610862Z`.
+
+
+          If you want to filter results using multiple values for a single filter, pass in a comma-separated list of values. For example, `property=action==create,update` returns audit events whose `action` property is either `create` or `update`.
+
+
+          You can order list results by including an `orderBy` query parameter. The value may be one or more properties which are listed in ordering priority. The name of a property may be prefixed with a `+` to indicate `ascending` ordering or `-` to indicate `descending` ordering. By default, the list is returned in `descending` order on the `timestamp` property. If a property is provided without a prefix, it will by sorted in `ascending` order.'
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        description: The maximum number of results to return, with a limit of 1000.
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: start
+        in: query
+        description: A pointer to the first item for the returned search results. To access the next page of results, this parameter should increment by the same amount indicated by `limit`. For example, to access the next page of results for a request with `limit=50`, use the parameter `start=50`, then `start=100` for the page after that, and so on.
+        schema:
+          type: integer
+          format: int32
+      - name: queryId
+        in: query
+        description: When making a query to the `/audit/events` endpoint, the response includes a `queryId` string property. If you wish to make the same query in a separate call, you can include the ID value as a single query parameter instead of having to manually configure the search parameters again.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns a list of audit events that match the request query.
+          x-summary: List of audit events retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionModel'
+        '400':
+          description: The request was malformed. Ensure that you are including all required headers before trying again.
+          x-summary: Malformed request
+          content: {}
+        '404':
+          description: The resource was not found.
+          x-summary: Resource not found
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /audit/export:
+    get:
+      tags:
+      - Audit events
+      summary: Export a list of audit events
+      operationId: exportAuditEvents
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: x-request-id
+        in: header
+        description: A tracing ID associated with the request. If one is not provided on the request, the server generates one automatically.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: 'You can filter list results by including a `property` query parameter. The value must be an array that contains one or more of a list of properties, where each property is prefixed with `property` and seperated with a `?` (for example: `?property=action==create&property=assetType==Sandbox`). If multiple values for the `property` parameter are provided, then all filters must match in order for an event to be returned. Only the last 10,000 records are displayed irrespective of the various filters selected.
+
+
+          The properties that can be used for filtering are `type`, `timestamp`, `status`, `action`, `user`, `assetType`, `assetId`, `assetName`, and `requestId`.
+
+
+          When filtering by `timestamp`, it is best practice to use a range using `>` and `<` operators rather than an exact value. For example: `?property=timestamp<2020-02-08T02:46:48.610862Z&property=timestamp>2020-01-01T02:46:48.610862Z`.
+
+
+          If you want to filter results using multiple values for a single filter, pass in a comma-separated list of values. For example, `property=action==create,update` returns audit events whose `action` property is either `create` or `update`.
+
+
+          You can order list results by including an `orderBy` query parameter. The value may be one or more properties which are listed in ordering priority. The name of a property may be prefixed with a `+` to indicate `ascending` ordering or `-` to indicate `descending` ordering. By default, the list is returned in `descending` order on the `timestamp` property. If a property is provided without a prefix, it will by sorted in `ascending` order.'
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '204':
+          description: The request was successful but no results were found.
+          x-summary: No results found
+          content: {}
+        '307':
+          description: The request was successful and the results have been generated into a CSV file for export. A link to the export file is provided in the `Location` response header. This link points to a blob storage location for the logs.
+          x-summary: Export successful; download link provided
+          content: {}
+        '400':
+          description: The request was malformed. Ensure that you are including all required headers before trying again.
+          x-summary: Malformed request
+          content: {}
+        '404':
+          description: The resource was not found.
+          x-summary: Resource not found
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /audit_events:
+    get:
+      tags:
+      - Audit events
+      summary: List audit events
+      description: '>**NOTE**: For more information on using this operation, see the [audit events endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/audit-events.html) on Experience League.'
+      operationId: listAuditEvents
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      - name: page[size]
+        in: query
+        description: Limits the number of results per page (for example, `page[size]=50`). Can be used in conjunction with `page[number]` to manage response pagination.
+        schema:
+          maximum: 100
+          type: integer
+          default: 25
+      - name: page[number]
+        in: query
+        description: 'The page index to return for the listing response (for example, `page[number]=2`). Can be used in conjunction with `page[size]` to manage response pagination.
+
+          >**NOTE**: Responses for listing calls contain a `meta.pagination` object which contains the indexes for the current, previous, and next pages in the response. To access these pages, use their index values for this parameter in subsequent API calls.'
+        schema:
+          type: integer
+          default: 1
+      - name: created_at
+        in: query
+        description: Filter by `created_at` timestamp.
+        schema:
+          type: string
+      - name: updated_at
+        in: query
+        description: Filter by `updated_at` timestamp.
+        schema:
+          type: string
+      - name: type_of
+        in: query
+        description: Filter by `type`.
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns an array of audit events, including their IDs and attributes.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/auditEventsListResponse'
+    servers:
+    - url: //reactor.adobe.io
+  /audit_events/{EVENT_ID}:
+    get:
+      tags:
+      - Audit events
+      summary: Retrieve an audit event
+      description: '>**NOTE**: For more information on using this operation, see the [audit events endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/audit-events.html) on Experience League.'
+      operationId: retrieveAuditEvent
+      parameters:
+      - name: EVENT_ID
+        in: path
+        description: The ID of the audit event you want to look up.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Accept
+        in: header
+        description: All GET requests must include this header with the value of `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the details of the audit event.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/auditEventsLookupResponse'
+    servers:
+    - url: //reactor.adobe.io
+components:
+  schemas:
+    AbstractAuditLog:
+      title: AbstractAuditLog
+      type: object
+      properties:
+        action:
+          type: string
+          description: The type of action recorded for the audit event.
+          enum:
+          - Add
+          - Create
+          - Dataset Activate
+          - Dataset Remove
+          - Delete
+          - Disable
+          - Disable For Profile
+          - Enable
+          - Enable For Profile
+          - Profile Activate
+          - Profile Remove
+          - Remove
+          - Reset
+          - Segment Activate
+          - Segment Remove
+          - Update
+        assetId:
+          type: string
+          description: A unique identifier for the Experience Platform resource that the action was performed on.
+        assetName:
+          type: string
+          description: The name of the Experience Platform resource that the action was performed on.
+        assetType:
+          type: string
+          description: The type of Experience Platform resource that the action was performed on.
+          enum:
+          - Class
+          - Computed Attributes
+          - Data Types
+          - Dataset
+          - Destination
+          - Destination Account
+          - Field Group
+          - Merge Policy
+          - Mixin
+          - Product Profile
+          - Sandbox
+          - Schema
+          - Segment
+          - Source Account
+          - Source Data Flow
+        authId:
+          type: string
+          description: The authorization ID for the audit event.
+        enhancedEvents:
+          type: array
+          description: A list of enhanced event objects belonging to the core event.
+        failureCode:
+          type: string
+          description: If the event involved an operation failing, this property indicates the specific failure code.
+        id:
+          type: string
+          description: A unique ID for the audit event.
+        imsOrgId:
+          type: string
+          description: The IMS Org ID for the organization that the event took place under.
+        permissionResource:
+          type: string
+          description: The product or capability that provided the permission perform the action.
+          enum:
+          - Activation
+          - ActivationAssociation
+          - AnalyticsSource
+          - AudienceManagerSource
+          - BizibleSource
+          - CustomerAttributesSource
+          - Dataset
+          - EnterpriseSource
+          - LaunchSource
+          - MarketoSource
+          - ProductProfile
+          - ProfileConfig
+          - Sandbox
+          - Schema
+          - Segment
+          - StreamingSource
+        permissionType:
+          type: string
+          description: The permission type involved with the action.
+        region:
+          type: string
+          description: The region code for the event.
+          enum:
+          - AUS5
+          - NLD2
+          - VA7
+        requestId:
+          type: string
+          description: The request ID for the event, if one exists.
+        sandboxName:
+          type: string
+          description: The name of the sandbox that the event took place in.
+        status:
+          type: string
+          description: The status of the action.
+          enum:
+          - Allow
+          - Deny
+          - Failure
+          - Success
+        timestamp:
+          type: string
+          description: A timestamp of when the event took place.
+          example: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+        version:
+          type: string
+          description: The version of the Experience Platform resource that the action was performed on.
+    CollectionModel:
+      title: CollectionModel
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            events:
+              type: array
+              description: Contains the list of returned audit logs.
+              items:
+                $ref: '#/components/schemas/AbstractAuditLog'
+          description: Contains a single property, `events`, which contains the list of returned audit logs.
+        _links:
+          $ref: '#/components/schemas/Links'
+      example:
+        _embedded:
+          events:
+          - userEmail: '{USER_ID}'
+            userIpAddresses: []
+            enhancedEvents:
+            - ENHANCED_EVENT: null
+            id: 32b72208-3035-4bc6-b434-39e34401a864
+            version: '1.0'
+            imsOrgId: '{IMS_ORG}'
+            sandboxName: prod
+            sandboxId: '{SANDBOX_ID}'
+            region: VA7
+            requestId: 5NphpgUQdQnjTWOcS9DSMs2wD1EUMlYG
+            authId: your-authentication-id
+            permissionResource: Sandbox
+            permissionType: RESET
+            assetType: Sandbox
+            assetId: prod
+            assetName: prod
+            action: Reset
+            status: Allow
+            failureCode: ''
+            timestamp: 2021-08-04T21:58:09.745+0000
+          - userEmail: '{USER_ID}'
+            userIpAddresses: []
+            enhancedEvents:
+            - ENHANCED_EVENT: null
+            id: a178736a-8fa1-47da-bac5-b0d9e741e414
+            version: '1.0'
+            imsOrgId: '{IMS_ORG}'
+            sandboxName: prod
+            sandboxId: '{SANDBOX_ID}'
+            region: VA7
+            requestId: 7AlGIAhWvaEzYWHLzvuf26AAFAkqSyKg
+            authId: 60fc1077-4aef-4e1f-a5ff-f64183e060f4
+            permissionResource: Sandbox
+            permissionType: RESET
+            assetType: Sandbox
+            assetId: prod
+            assetName: prod
+            action: Reset
+            status: Allow
+            failureCode: ''
+            timestamp: 2021-08-04T21:28:00.301+0000
+          - userEmail: '{USER_ID}'
+            userIpAddresses: []
+            enhancedEvents:
+            - ENHANCED_EVENT: null
+            id: ccfe8c77-9b93-481d-a561-0b2edf3b77dc
+            version: '1.0'
+            imsOrgId: '{IMS_ORG}'
+            sandboxName: prod
+            sandboxId: '{SANDBOX_ID}'
+            region: VA7
+            requestId: hArqS4CAa8wfRPnKuxV4yaA82atxwzYu
+            authId: your-authentication-id
+            permissionResource: Sandbox
+            permissionType: RESET
+            assetType: Sandbox
+            assetId: prod
+            assetName: prod
+            action: Reset
+            status: Allow
+            failureCode: ''
+            timestamp: 2021-08-04T20:58:07.750+0000
+        _links:
+          self:
+            href: https://platform-int.adobe.io/data/foundation/audit/events?limit=10&start=0&property=type%253D%253Dcore
+          next:
+            href: https://platform-int.adobe.io/data/foundation/audit/events?queryId=cXVlcnlJZD0xYjA4MDM4MV81ZWNkXzRjNTZfYTM2N18zYWExOWI5YzNhNTlfMTYyODExNDY5MTg1NSZ0b3RhbEVsZW1lbnRzPTI2&start=10&limit=10
+          page:
+            href: https://platform-int.adobe.io/data/foundation/audit/events?queryId=cXVlcnlJZD0xYjA4MDM4MV81ZWNkXzRjNTZfYTM2N18zYWExOWI5YzNhNTlfMTYyODExNDY5MTg1NSZ0b3RhbEVsZW1lbnRzPTI2&limit=10{&start}
+            templated: true
+        page:
+          size: 10
+          totalElements: 3
+          totalPages: 1
+          number: 1
+        queryId: cXVlcnlJZD0xYjA4MDM4MV81ZWNkXzRjNTZfYTM2N18zYWExOWI5YzNhNTlfMTYyODExNDY5MTg1NSZ0b3RhbEVsZW1lbnRzPTI2
+    Links:
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the currently displayed response page.
+          description: Contains the URL for the currently displayed response page.
+        next:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the next response page.
+          description: Contains the URL for the next response page.
+        page:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The templated URL for viewing other response pages.
+            templated:
+              type: boolean
+              description: Indicates that the sibling `href` property is a template.
+          description: Contains a templated URL for viewing other response pages.
+      description: Contains pagination URLs to view the rest of the response.
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    metaList:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  description: The current page of the response.
+                next_page:
+                  type: integer
+                  description: The next page of the response.
+                prev_page:
+                  type: integer
+                  description: The previous page of the response.
+                total_pages:
+                  type: integer
+                  description: The total number of pages in the response.
+                total_count:
+                  type: integer
+                  description: The total number of results in the response.
+              description: Contains pagination information about the list response.
+          description: Contains a `pagination` object that provides pagination information about the list response.
+    auditEventsEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              attributed_to_display_name:
+                type: string
+                description: The display name for the user that triggered the action recorded by the audit event.
+              attributed_to_email:
+                type: string
+                description: The email address for the user that triggered the action recorded by the audit event.
+              created_at:
+                type: string
+                description: A timestamp of when the audit event was created in the system.
+              display_name:
+                type: string
+                description: The display name for the entity the audit event is associated with.
+              type_of:
+                type: string
+                description: 'The  type of audit event. Audit events types are structured using the syntax `{RESOURCE_TYPE}.{EVENT}` (for example, `build.created`).
+
+
+
+                  `{RESOURCE_TYPE}` can be any of the following:
+
+
+
+                  * `property`
+
+                  * `extension`
+
+                  * `data_element`
+
+                  * `rule`
+
+                  * `rule_component`
+
+                  * `library`
+
+                  * `build`
+
+                  * `environment`
+
+                  * `host`
+
+
+
+
+                  `{EVENT}` can any of the following:
+
+
+
+                  * `created`
+
+                  * `updated`
+
+                  * `deleted`'
+              updated_at:
+                type: string
+                description: A timestamp of when the audit event was last updated.
+              entity:
+                type: string
+                description: A JSON payload represented as a string, containing the  details of the entity associated with the audit event.
+            description: Contains the audit event's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this audit event.
+            allOf:
+            - $ref: '#/components/schemas/relatedProperty'
+            - $ref: '#/components/schemas/relatedEntity'
+          links:
+            type: object
+            properties:
+              entity:
+                type: string
+                description: A link to the entity associated with the audit event.
+              property:
+                type: string
+                description: A link to the property that owns the audit event.
+              self:
+                type: string
+                description: A link to the audit event itself.
+            description: Contains links related to the audit event which can be used in subsequent fetch requests.
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
+    auditEventsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/auditEventsEntity'
+    relatedEntity:
+      type: object
+      properties:
+        entity:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related entity.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related entity.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the entity.
+                type:
+                  type: string
+                  description: The resource type for the entity.
+              description: Contains further information about the related entity.
+          description: Contains details about the entity associated with the audit event.
+    auditEventsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+x-refined-from:
+- adobe-suite-aep-audit-query-openapi.yaml
+- adobe-suite-aep-reactor-openapi.yaml
+x-original-swagger-version: '2.0'

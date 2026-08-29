@@ -1,0 +1,860 @@
+openapi: 3.2.0
+info:
+  title: PDF Services PDF Properties API
+  description: "<p><ul>\n\t<li>Learn more about using \n\t<a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/api-usage/\"> Adobe PDF Services API.</a>\n\t</li>\n\t<li> Invoking PDF Services API requires an Adobe-provided credential, <a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token\">learn more about authentication.</a>\n\t</li>\n<li><a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/#sdk\">Downloadable SDKs</a></li>\n<li><a href=\"https://raw.githubusercontent.com/AdobeDocs/pdfservices-api-documentation/main/src/pages/resources/Platform%20PDF%20Services%20Postman%20Collection.zip\" download>Click here</a> to download sample Postman collection</li>\n<li><a href=\"https://raw.githubusercontent.com/AdobeDocs/pdfservices-api-documentation/main/src/pages/resources/Platform%20PDF%20Services%20with%20External%20Storage%20Postman%20Collection.zip\">Click here</a> to download sample Postman collection with External Storage</li><li><a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/service-region-configuration-for-apis/\">Click here</a> to know more about <b>multi-region support</b> for PDF Services API</li><li><a href=\"https://community.adobe.com/t5/document-services-apis/ct-p/ct-Document-Cloud-SDK\">Support Forum</a></li><li>First released on 26th September, 2022</li><li>To use your custom external storage, click <a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/pdf-external-storage-sol\">here</a>.</li></ul></p>"
+  version: ''
+servers:
+- url: https://pdf-services-ue1.adobe.io
+- url: https://pdf-services-ew1.adobe.io
+tags:
+- name: PDF Properties
+  description: Extract basic information about a PDF document.
+paths:
+  /operation/pdfproperties:
+    post:
+      tags:
+      - PDF Properties
+      summary: Extract basic information about a PDF document.
+      description: Extract basic information about the document such as page count, pdf version, if the file is encrypted, if the file linearized, if the file contains embedded files etc.
+      operationId: pdfoperations.pdfproperties
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Params for Pdf Properties Operation. Refer to the External Section below for using external storage with PDF Properties Operation.
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/PDFPropertiesInternal'
+              - $ref: '#/components/schemas/PDFPropertiesExternal'
+        required: true
+      responses:
+        '201':
+          description: Request creation for the operation and status uri generated, which can be found in the 'location' header.
+          headers:
+            location:
+              description: Job status URI for polling the results
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '404':
+          description: Resource Not Found.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/404'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+      x-codegen-request-body-name: body
+  /operation/pdfproperties/{jobID}/status:
+    get:
+      tags:
+      - PDF Properties
+      summary: Poll the PDF properties job for completion
+      operationId: pdfoperations.pdfproperties.jobstatus
+      parameters:
+      - name: jobID
+        in: path
+        description: Job ID of the request
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A response with job information.
+          headers:
+            content-type:
+              description: The content type of the status call response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PDFPropertiesJobStatus'
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the status call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status400'
+        '404':
+          description: Resource Not Found.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus404'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-server:
+              description: The name and version of the server.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus500'
+components:
+  schemas:
+    PDFPropertiesDone:
+      title: done
+      description: Response in case of 'done' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - done
+        metadata:
+          description: 'Json containing metadata information about pdf document such as the title, the fonts used, and security settings. '
+          type: object
+          properties:
+            document:
+              type: object
+              description: Details like page count, pdf version, number of times PDF is edited, if it is a XFA, has form fields etc.
+              properties:
+                is_XFA:
+                  description: Document is based on the XFA (Extensible Forms Architecture) format or not
+                  type: boolean
+                has_acroform:
+                  description: If the file contains any form fields.
+                  type: boolean
+                file_size:
+                  description: Size of input PDF file.
+                  type: string
+                has_embedded_files:
+                  description: Document contains embedded files or not.
+                  type: boolean
+                incremental_save_count:
+                  description: Number of times the file is edited and saved.
+                  type: number
+                is_certified:
+                  description: Document has been digitally signed with a certifying signature or not.
+                  type: boolean
+                is_signed:
+                  description: If the PDF file is digitally signed.
+                  type: boolean
+                is_encrypted:
+                  description: If the file is encrypted.
+                  type: boolean
+                is_linearized:
+                  description: If it is a linearized PDF file that makes viewing faster over the Internet.
+                  type: boolean
+                is_portfolio:
+                  description: If it is a portfolio PDF - multiple documents are packaged together into one PDF File.
+                  type: boolean
+                is_tagged:
+                  description: If it is a tagged PDF.
+                  type: boolean
+                is_FTPDF:
+                  description: 'If it is a Fully Tagged PDF file. '
+                  type: boolean
+                page_count:
+                  description: Number of pages in file.
+                  type: number
+                pdf_version:
+                  description: PDF version of the document.
+                  type: string
+                pdfa_compliance_level:
+                  description: Returns the pdfa compliance level for the input file
+                  type: string
+                pdfe_compliance_level:
+                  description: Returns the pdfe compliance level for the input file
+                  type: string
+                pdfua_compliance_level:
+                  description: Returns the pdfua compliance level for the input file
+                  type: string
+                pdfvt_compliance_level:
+                  description: Returns the pdfvt compliance level for the input file
+                  type: string
+                pdfx_compliance_level:
+                  description: Returns the pdfx compliance level for the input file
+                  type: string
+                fonts:
+                  type: array
+                  description: Tag describing list of fonts in input pdf
+                  items:
+                    type: object
+                    properties:
+                      font_type:
+                        description: Font technology (type) - eg. Type 1, TrueType, OpenType
+                        type: string
+                      family_name:
+                        description: Font's family name. Example - For font "Times Bold Italic", family name is "Times"
+                        type: string
+                      name:
+                        description: The PostScript name of the font
+                        type: string
+                    additionalProperties: false
+                XMP:
+                  description: Tag describing properties.
+                  type: string
+                info_dict:
+                  type: object
+                  description: Information related to file
+                  properties:
+                    CreationDate:
+                      description: Date of file creation.
+                      type: string
+                    Creator:
+                      description: The one by which the PDF is created. Eg. Adobe Acrobat 21.5.
+                      type: string
+                    ModDate:
+                      description: Date when the file is last modified.
+                      type: string
+                    Producer:
+                      description: By which we get PDF for example Adobe Acrobat 21.5 Image Conversion Plug-in.
+                      type: string
+                    Author:
+                      description: The one who created the PDF.
+                      type: string
+                    Title:
+                      description: Title of PDF if there.
+                      type: string
+            security_info:
+              type: object
+              description: Details related to encryption if it is an encrypted PDF like encrypted for metadata, file attachments, permissions for copying, editing, printing etc.
+              properties:
+                encryption:
+                  type: object
+                  description: Password, encryption algorithm related information.
+                  properties:
+                    algorithm:
+                      description: Encryption algorithm used like AES
+                      type: string
+                    bit_length:
+                      description: The number of bits in a key used by a cryptographic algorithm.
+                      type: number
+                    encrypt_attachments_only:
+                      description: If the PDF is encrypted only for file attachments.
+                      type: boolean
+                    encrypt_metadata:
+                      description: If the PDF is encrypted for metadata.
+                      type: boolean
+                    has_owner_password:
+                      description: If the file has a password for any permissions ( like to edit, copy etc)
+                      type: boolean
+                    has_user_password:
+                      description: If the file has a password to open it.
+                      type: boolean
+                  additionalProperties: false
+                permissions:
+                  type: object
+                  description: Permission settings include restricting printing, content copying, editing, page extracting, commenting, etc in the PDF
+                  properties:
+                    assistive_technology:
+                      description: Whether or not the file will be exposed to a screen reader.
+                      type: boolean
+                    form_filling:
+                      description: Permission for filling in form fields.
+                      type: boolean
+                    copying:
+                      description: Permission for copying the content of file.
+                      type: boolean
+                    page_extraction:
+                      description: Permission for extracting pages.
+                      type: boolean
+                    document_assembly:
+                      description: Permission for adding or inserting pages.
+                      type: boolean
+                    commenting:
+                      description: Permission to add comments to file.
+                      type: boolean
+                    printing:
+                      description: Permission for printing the file.
+                      type: string
+                    editing:
+                      description: Permission for editing the content in file.
+                      type: boolean
+                  additionalProperties: false
+              additionalProperties: false
+            pages:
+              type: array
+              description: Json array consisting page level properties
+              items:
+                type: object
+                properties:
+                  page_number:
+                    description: Page number starting from 0.
+                    type: number
+                  is_scanned:
+                    description: If the page is scanned or not.
+                    type: boolean
+                  has_structure:
+                    description: If the page has structure/tagging.
+                    type: boolean
+                  height:
+                    description: Dimension of the page.
+                    type: number
+                  width:
+                    description: Dimension of the page.
+                    type: number
+                  content:
+                    type: object
+                    properties:
+                      is_empty:
+                        description: If it is an empty/blank page.
+                        type: boolean
+                      has_images:
+                        description: If the page has any images.
+                        type: boolean
+                      number_of_images:
+                        description: Number of images in that page.
+                        type: number
+                      only_images:
+                        description: If the page consists only images.
+                        type: boolean
+                      has_text:
+                        description: If the pages has any text.
+                        type: boolean
+                additionalProperties: false
+      example:
+        status: done
+        metadata:
+          pages:
+          - page_number: 0
+            is_scanned: false
+            width: 595.0
+            has_structure: false
+            content:
+              number_of_images: 0
+              only_images: false
+              has_text: true
+              has_images: false
+              is_empty: false
+            height: 842.0
+          document:
+            is_linearized: false
+            pdfe_compliance_level: ''
+            is_tagged: false
+            is_portfolio: false
+            is_certified: false
+            is_encrypted: false
+            info_dict:
+              CreationDate: null
+              Producer: null
+              Creator: null
+              ModDate: null
+            is_FTPDF: false
+            pdf_version: '1.6'
+            has_acroform: false
+            file_size: 4550.09 KB
+            is_signed: false
+            incremental_save_count: 0
+            has_embedded_files: false
+            is_XFA: false
+            fonts:
+            - name: BAAAAA+LiberationSans-Bold
+              font_type: TrueType
+              family_name: Liberation Sans
+            pdfa_compliance_level: ''
+            pdfvt_compliance_level: ''
+            pdfx_compliance_level: ''
+            pdfua_compliance_level: ''
+            XMP: null
+            page_count: 101
+            signature_details:
+            - signee_name: Signed by Simon Haringa
+              signing_date_time: Jul 18, 2023 11:31:33 +0000
+              signature_type: UNKNOWN
+              cert_info:
+                valid_from: Apr 26, 2019 18:00:25 +0000
+                valid_upto: Apr 24, 2024 18:00:25 +0000
+                cert_status: UNKNOWN
+                trust_sources:
+                - UNKNOWN
+            - signee_name: Signed by Simon Alex Haringa
+              signing_date_time: Jul 18, 2023 11:32:38 +0000
+              signature_type: QES
+              cert_info:
+                valid_from: Nov 15, 2022 11:50:02 +0000
+                valid_upto: Nov 15, 2023 11:50:02 +0000
+                cert_status: VALID
+                trust_sources:
+                - AATL
+                - EUTL
+            - signee_name: Certified by Adobe Acrobat Sign
+              signing_date_time: Jul 21, 2023 08:14:50 +0000
+              signature_type: UNKNOWN
+              cert_info:
+                valid_from: Dec 20, 2022 00:00:00 +0000
+                valid_upto: Dec 19, 2025 23:59:59 +0000
+                cert_status: UNKNOWN
+                trust_sources:
+                - UNKNOWN
+            - signee_name: Signed by Adobe Acrobat Sign
+              signing_date_time: Jul 21, 2023 08:14:51 +0000
+              signature_type: UNKNOWN
+              cert_info:
+                valid_from: Dec 20, 2022 00:00:00 +0000
+                valid_upto: Dec 19, 2025 23:59:59 +0000
+                cert_status: UNKNOWN
+                trust_sources:
+                - UNKNOWN
+          permissions: null
+    Satus429:
+      properties:
+        error_code:
+          description: 'The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific. '
+          type: string
+        message:
+          description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>429001</td><td>Service usage limit reached</td></tr><tr><td>429002</td><td>Developer key usage limit reached</td></tr><tr><td>429050</td><td>Too many requests</td></tr></table>"
+          type: string
+      example:
+        error_code: '429050'
+        message: Too many requests
+    Status400:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INVALID_JOB_ID</td><td>Invalid job id present in path param.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INVALID_JOB_ID
+          message: Invalid job id present in path param.
+    PDFPropertiesExternal:
+      title: External
+      description: Params for PDF Properties Operation
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/ExternalStorageInput'
+        params:
+          description: Params for PDF Properties processing
+          type: object
+          properties:
+            pageLevel:
+              description: To get page level properties of the PDF.
+              type: boolean
+              default: false
+        notifiers:
+          $ref: '#/components/schemas/notifiers'
+      example:
+        input:
+          uri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/e0983a2df4d647a8818e2c5e06f85169_097819C664A2BBC20A49421A%40techacct.adobe.com/d7dc8346-f984-4c05-a276-4a1831a19146?X-Amz-Security-Token=FwoGZXIvYXdzEML%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDNgsF%2FxAk7585OhJpSLSAQc%2FNC8n50ag2ut24XYriaC72ihx1vpAniZeiex4DWR6GfqWad%2BLefSSVRdoy3j5ltJnw1eaCuVZ85sKHZru6DTAaXX408Ke%2FRPnf%2BVt7x0ZmZT%2FFLq6R8DKMe82v8%2FeaBkfxsquo5m7CXIg1%2BwBwrQ1dwsBv6FZhxqSDBbtpDRh%2B9Qvjzbw4xybzPWwa8pC8AN3bdd66J6Pa2NQKGtpPfEz6D1kOSqbNwE0m0ysyrLmK%2B2N8O46U2VZMpC6De8zpAHFLw7BirSQtilS0NY%2BNCJ4tSjOioWmBjItbRVda0hvUrHl0C6Sle7nRjw44nXT1mWsBalV9nIKICeKQ5k8h%2Bfuhg21I9lR&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230726T160950Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3599&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20230726%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=f70693e5e6cf429f2f5b99fbdb48aacc7dc0152bec0f26f4e7f9622b159e181a
+          storage: S3
+        params:
+          pageLevel: false
+        notifiers:
+        - type: CALLBACK
+          data:
+            url: https://dummy.callback.org/
+            headers:
+              x-api-key: dummykey
+              access-token: dummytoken
+      required:
+      - input
+      additionalProperties: false
+    notifiers:
+      description: Specifies the notifiers to be invoked on the completion of job. To know more about notifiers, please see the <a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/webhook-notification/">documentation</a>.
+      type: array
+      items:
+        properties:
+          type:
+            description: Specifies the notifier type. Currently supported value is "CALLBACK" only.
+            type: string
+          data:
+            description: Specifies the data needed to invoke the notifier.
+            type: object
+        required:
+        - type
+        - data
+    '404':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>NOT_FOUND</td><td>Asset not found.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: NOT_FOUND
+          message: Asset not found.
+    ExternalStorageInput:
+      title: Input
+      description: Params representing input object.
+      type: object
+      properties:
+        uri:
+          description: Input file Download Signed URI.
+          type: string
+        storage:
+          description: Specifies the type of the external storage
+          type: string
+          enum:
+          - S3
+          - SHAREPOINT
+          - DROPBOX
+          - BLOB
+      required:
+      - uri
+    inprogress:
+      description: Response in case of 'in progress' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - in progress
+      example:
+        status: in progress
+    Satus401:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>UNAUTHORIZED</td><td>Not authorised to perform the operation.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: UNAUTHORIZED
+          message: Not authorised to perform the operation.
+    failed:
+      description: Response in case of 'failed' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - failed
+        error:
+          type: object
+          properties:
+            status:
+              description: Http status code returned by the service
+              type: integer
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>status</th><th>code</th><th>message</th></tr><tr><td>400</td><td>CORRUPT_DOCUMENT</td><td>For $(format) mime-type The input file appears to be corrupted and cannot be processed.</td></tr><tr><td>400</td><td>PASSWORD_PROTECTED</td><td>Source file is protected and cannot be processed.</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr></table>"
+              type: string
+      example:
+        status: failed
+        error:
+          status: 500
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request
+    '401':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>UNAUTHORIZED</td><td>Not authorised to perform the operation.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: UNAUTHORIZED
+          message: Not authorised to perform the operation.
+    Satus404:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>NOT_FOUND</td><td>Job not found.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: NOT_FOUND
+          message: Job not found.
+    PDFPropertiesJobStatus:
+      oneOf:
+      - $ref: '#/components/schemas/inprogress'
+      - $ref: '#/components/schemas/PDFPropertiesDone'
+      - $ref: '#/components/schemas/failed'
+    '400':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>BAD_REQUEST</td><td>Bad Request.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: BAD_REQUEST
+          message: Bad Request.
+    '500':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr><tr><td>UNKNOWN</td><td>Unknown error.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request.
+    '429':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>TOO_MANY_REQUESTS</td><td>Too Many Requests.</td></tr><tr><td>INSUFFICIENT_QUOTA</td><td>Either Quota for this operation is not available or Free trial quota is exhausted. Please visit (www.adobe.com/go/pdftoolsapi_home) to start using free trial quota or (www.adobe.com/go/pdftoolsapi_err_quota) to upgrade to paid credentials.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: TOO_MANY_REQUESTS
+          message: Too Many Requests.
+    Satus500:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr><tr><td>UNKNOWN</td><td>Unknown error.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request.
+    PDFPropertiesInternal:
+      title: Internal
+      description: Params for PDF Properties Operation
+      type: object
+      properties:
+        assetID:
+          description: A file assetID. For more details <a href = 'https://developer.adobe.com/document-services/docs/apis/#tag/Assets'> click here </a>.
+          type: string
+        pageLevel:
+          description: To get page level properties of the PDF.
+          type: boolean
+          default: false
+        notifiers:
+          $ref: '#/components/schemas/notifiers'
+      example:
+        assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+        pageLevel: false
+        notifiers:
+        - type: CALLBACK
+          data:
+            url: https://dummy.callback.org/
+            headers:
+              x-api-key: dummykey
+              access-token: dummytoken
+      required:
+      - assetID
+      additionalProperties: false
+x-tagGroups:
+- name: Authentication
+  tags:
+  - Generate Token
+- name: Files
+  tags:
+  - Assets
+- name: PDF Operations
+  tags:
+  - Combine PDF
+  - Compress PDF
+  - Create PDF
+  - Document Generation
+  - Export PDF
+  - Export PDF Form Data
+  - Extract PDF
+  - Html to PDF
+  - Import PDF Form Data
+  - Linearize PDF
+  - OCR
+  - Page Manipulation
+  - PDF Accessibility Auto-Tag
+  - PDF Accessibility Checker
+  - PDF Electronic Seal
+  - PDF Properties
+  - PDF To Images
+  - PDF To Markdown
+  - PDF Watermark
+  - Protect PDF
+  - Remove Protection
+  - Split PDF

@@ -1,0 +1,728 @@
+openapi: 3.2.0
+info:
+  description: "Adobe Experience Platform Destination SDK (also referred to as the *Destination Authoring API*) is a suite of configuration APIs that allow you to configure destination integration patterns for Experience Platform to deliver audience and profile data to your endpoint, based on data and authentication formats of your choice. \n- **Related documentation**:\n    - [Destination SDK overview](http://www.adobe.com/go/destination-sdk-overview-en)\n    - [Getting started](http://www.adobe.com/go/destination-sdk-getting-started-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Destination Authoring API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Destination%20Authoring%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io\n    - Base path for this API: /data/core/activation/authoring\n    - Example of a complete path for making a call to \"/destinations\": https://<span>platform.adobe.io/data/core/activation/authoring/destinations\n\n- **Required headers**:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors)."
+  version: '1.0'
+  title: Destination Authoring Audience metadata templates API
+servers:
+- url: https://platform.adobe.io/data/core/activation/authoring
+  description: Production server
+tags:
+- name: Audience metadata templates
+  description: Audience metadata templates allow you to programmatically manage audiences in your destination. <br><br> For a description of when to use this endpoint, see the overview on [audience metadata management](http://www.adobe.com/go/destination-sdk-audience-metadata-en) in the Destination SDK documentation.
+paths:
+  /audience-templates:
+    get:
+      tags:
+      - Audience metadata templates
+      summary: Retrieve all audience templates
+      description: You can retrieve a list of all audience templates for your IMS Organization by making a `GET` request to the `/authoring/audience-templates` endpoint.
+      operationId: listAudienceTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with a list of audience templates that you have access to, based on the IMS Org ID and sandbox name that you used. One instanceId corresponds to one audience template.
+          x-summary: Audience templates retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/audienceTemplateResponse'
+              examples:
+                default:
+                  value:
+                    items:
+                    - instanceId: 34ab9cc2-2536-44a5-9dc5-b2fea60b3bd6
+                      createdDate: '2021-07-26T19:30:52.012490Z'
+                      lastModifiedDate: '2021-07-27T21:25:42.763478Z'
+                      metadataTemplate:
+                        create:
+                          url: https://api.moviestar.com/v1/adaccounts/{{customerData.accountId}}/segments
+                          httpMethod: POST
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          requestBody:
+                            json:
+                              segments:
+                              - name: '{{segment.name}}'
+                                description: '{{segment.description}}'
+                                source_type: FIRST_PARTY
+                                ad_account_id: '{{customerData.accountId}}'
+                                retention_in_days: 180
+                          responseFields:
+                          - value: '{{body.segments[0].segment.id}}'
+                            name: externalAudienceId
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        update:
+                          url: https://adsapi.moviestar.com/v1/adaccounts/{{customerData.accountId}}/segments
+                          httpMethod: PUT
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          requestBody:
+                            json:
+                              segments:
+                              - id: '{{segment.alias}}'
+                                name: '{{segment.name}}'
+                                description: '{{segment.description}}'
+                          responseFields:
+                          - value: '{{body.segments[0].segment.id}}'
+                            name: externalAudienceId
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        delete:
+                          url: https://adsapi.moviestar.com/v1/segments/{{segment.alias}}
+                          httpMethod: DELETE
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        name: Moviestar destination audience template - Example 1
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Access forbidden
+    post:
+      tags:
+      - Audience metadata templates
+      summary: Create an audience template
+      description: You can create a new audience template by making a `POST` request to the `/authoring/audience-templates` endpoint. <br><br> For some destinations created using Destination SDK, you need to create an audience metadata configuration to programmatically create, update, or delete audience metadata in the destination. <br><br> The request creates a new audience template, configured by the parameters provided in the payload. The payload includes all parameters accepted by the `/authoring/audience-templates` endpoint. Note that you do not have to add all parameters on the call and that the template is customizable, according to your API requirements.
+      operationId: createAudienceTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        description: The following request creates a new audience template, configured by the parameters provided in the payload. The payload below includes all parameters accepted by the `/authoring/audience-templates` endpoint. Note that you do not have to add all parameters on the call and that the template is customizable, according to your API requirements. <br><br> Example payload with a Test Webhook Audience Template including create, update, delete operations for both audiences and destinations, plus validations. See the full example in the [create audience template documentation](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/metadata-api/create-audience-template.html).
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/audienceTemplate'
+            examples:
+              default:
+                value:
+                  metadataTemplate:
+                    name: Test Webhook Audience Template
+                    create:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{segment.name}}'
+                          type: segment
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            segmentEnrichmentAttributes: '{% set columns = [] %}{% for atr in segmentEnrichmentAttributes %}{% set columns = columns|merge([atr.source]) %}{% endfor %}{{ columns | toJson }}'
+                          external_id: '{{segment.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    update:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments/{{segment.alias}}
+                      httpMethod: PUT
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{segment.name}}'
+                          type: segment
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            segmentEnrichmentAttributes: '{% set columns = [] %}{% for atr in segmentEnrichmentAttributes %}{% set columns = columns|merge([atr.source]) %}{% endfor %}{{ columns | toJson }}'
+                          external_id: '{{segment.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    delete:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments/{{segment.alias}}
+                      httpMethod: DELETE
+                      headers:
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    createDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/createDestination
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{destination.name}}'
+                          type: destination
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            enrichmentAttributes: '{{destination.enrichmentAttributes}}'
+                          external_id: '{{destination.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    updateDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/updateDestination
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{destination.name}}'
+                          type: destination
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            enrichmentAttributes: '{{destination.enrichmentAttributes}}'
+                          external_id: '{{destination.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    deleteDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/deleteDestination
+                      httpMethod: DELETE
+                      headers:
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                      validations:
+                      - field: string
+                        regex: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with details of your newly created audience template.
+          x-summary: Audience template created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/audienceTemplateResponse'
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to incorrect payload formatting
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+  /audience-templates/{INSTANCE_ID}:
+    get:
+      tags:
+      - Audience metadata templates
+      summary: Retrieve a specific audience template
+      description: You can retrieve detailed information about a specific audience template by making a GET request to the `/audience-templates` endpoint and providing the ID of the audience template you want to retrieve.
+      operationId: retrieveAudienceTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the audience template you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with the details of the audience template corresponding to the INSTANCE_ID provided on the call.
+          x-summary: Audience template configuration retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/audienceTemplateResponse'
+              examples:
+                default:
+                  value:
+                    items:
+                    - instanceId: 34ab9cc2-2536-44a5-9dc5-b2fea60b3bd6
+                      createdDate: '2021-07-26T19:30:52.012490Z'
+                      lastModifiedDate: '2021-07-27T21:25:42.763478Z'
+                      metadataTemplate:
+                        create:
+                          url: https://api.moviestar.com/v1/adaccounts/{{customerData.accountId}}/segments
+                          httpMethod: POST
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          requestBody:
+                            json:
+                              segments:
+                              - name: '{{segment.name}}'
+                                description: '{{segment.description}}'
+                                source_type: FIRST_PARTY
+                                ad_account_id: '{{customerData.accountId}}'
+                                retention_in_days: 180
+                          responseFields:
+                          - value: '{{body.segments[0].segment.id}}'
+                            name: externalAudienceId
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        update:
+                          url: https://adsapi.moviestar.com/v1/adaccounts/{{customerData.accountId}}/segments
+                          httpMethod: PUT
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          requestBody:
+                            json:
+                              segments:
+                              - id: '{{segment.alias}}'
+                                name: '{{segment.name}}'
+                                description: '{{segment.description}}'
+                          responseFields:
+                          - value: '{{body.segments[0].segment.id}}'
+                            name: externalAudienceId
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        delete:
+                          url: https://adsapi.moviestar.com/v1/segments/{{segment.alias}}
+                          httpMethod: DELETE
+                          headers:
+                          - value: application/json
+                            header: Content-Type
+                          - value: Bearer {{oauth2ServiceAccessToken}}
+                            header: Authorization
+                          responseErrorFields:
+                          - value: '{{root}}'
+                            name: message
+                        name: Moviestar destination audience template - Example 1
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to incorrect formatting
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct audience template configuration ID before trying again.
+          x-summary: Resource not found
+    put:
+      tags:
+      - Audience metadata templates
+      summary: Update an audience template
+      description: You can update an existing audience template by making a `PUT` request to the `/authoring/audience-templates` endpoint with the updated payload. <br><br> To obtain an existing audience template and its corresponding `{INSTANCE_ID}`, see [Retrieve an audience template](#operation/retrieveAudienceTemplate). <br><br> The request updates an existing audience metadata template, configured by the parameters provided in the payload.
+      operationId: updateAudienceTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the audience template that you want to update. To obtain an existing audience template and its corresponding INSTANCE_ID, see [Retrieve a audience template](#operation/retrieveAudienceTemplate).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The following request updates an existing audience metadata template, configured by the parameters provided in the payload. See the full example in the [update audience template documentation](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/metadata-api/update-audience-template.html).
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/audienceTemplate'
+            examples:
+              default:
+                value:
+                  metadataTemplate:
+                    name: Test Webhook Audience Template
+                    create:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{segment.name}}'
+                          type: segment
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            segmentEnrichmentAttributes: '{% set columns = [] %}{% for atr in segmentEnrichmentAttributes %}{% set columns = columns|merge([atr.source]) %}{% endfor %}{{ columns | toJson }}'
+                          external_id: '{{segment.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    update:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments/{{segment.alias}}
+                      httpMethod: PUT
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{segment.name}}'
+                          type: segment
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            segmentEnrichmentAttributes: '{% set columns = [] %}{% for atr in segmentEnrichmentAttributes %}{% set columns = columns|merge([atr.source]) %}{% endfor %}{{ columns | toJson }}'
+                          external_id: '{{segment.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    delete:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/segments/{{segment.alias}}
+                      httpMethod: DELETE
+                      headers:
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    createDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/createDestination
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{destination.name}}'
+                          type: destination
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            enrichmentAttributes: '{{destination.enrichmentAttributes}}'
+                          external_id: '{{destination.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    updateDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/updateDestination
+                      httpMethod: POST
+                      headers:
+                      - value: application/json
+                        header: Content-Type
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      requestBody:
+                        json:
+                          name: '{{destination.name}}'
+                          type: destination
+                          metadata:
+                            org_id: '{{destination.imsOrgId}}'
+                            sandbox: '{{destination.sandboxName}}'
+                            destination_id: '{{destination.id}}'
+                            destination_name: '{{destination.name}}'
+                            enrichmentAttributes: '{{destination.enrichmentAttributes}}'
+                          external_id: '{{destination.id}}'
+                      responseFields:
+                      - value: '{{headers.X-Request-Id}}'
+                        name: externalAudienceId
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+                    deleteDestination:
+                      url: https://your-webhook-site/0bd222fa-8ae2-433b-8f0e-f2ce137b0ee4/{{customerData.customerID}}/deleteDestination
+                      httpMethod: DELETE
+                      headers:
+                      - value: Bearer {{authData.token}}
+                        header: Authorization
+                      responseErrorFields:
+                      - value: '{{root}}'
+                        name: message
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with details of your updated audience template.
+          x-summary: Audience template updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/audienceTemplateResponse'
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to incorrect formatting
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct audience template configuration ID before trying again.
+          x-summary: Resource not found
+    delete:
+      tags:
+      - Audience metadata templates
+      summary: Delete an audience template
+      description: You can delete an existing audience template by making a `DELETE` request to the `/authoring/audience-templates` endpoint with the `{INSTANCE_ID}` of the audience template that you want to delete. <br><br> To obtain an existing audience template and its corresponding `{INSTANCE_ID}`, see [Retrieve an audience template](#operation/retrieveAudienceTemplate).
+      operationId: deleteAudienceTemplate
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the audience template you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 along with an empty HTTP response.
+          x-summary: Resource deleted successfully
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct audience template configuration ID before trying again.
+          x-summary: Resource not found
+components:
+  schemas:
+    audienceTemplate:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/audienceTemplate'
+      properties:
+        metadataTemplate:
+          type: object
+          allOf:
+          - $ref: '#/components/schemas/metadataTemplate'
+        validations:
+          type: array
+          description: Runs validations for any fields in the template configuration before making a call to the partner API. For example, you could validate that the user’s account ID is input correctly.
+          items:
+            $ref: '#/components/schemas/validation'
+    validation:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Indicates if validations should be run for any fields before API calls are made to your destination. For example, you can use `{{validations.accountId}}` to validate the user’s account ID.
+          example: Account ID
+        regex:
+          type: string
+          description: Indicates how the field should be structured in order for the validation to pass.
+          example: ^[0-9]*$
+    audienceRestTemplate:
+      type: object
+      description: Includes all required components (URL, HTTP method, headers, request and response body) to make an HTTP call to your API, to programmatically create, update, delete, or validate segments/audiences in your platform and sync the information back to Experience Platform.
+      properties:
+        url:
+          type: string
+          example: https://adsapi.moviestar.com/v1/adaccounts/{{customerData.accountId}}/segments
+          description: The URL and endpoint of your API, which is used for creating, updating, deleting, or validating audiences/segments in your platform.
+        httpMethod:
+          type: string
+          example: POST
+          description: 'The method used on your endpoint to programmatically create, update, delete, or validate the segment/audience in your destination. For example: `POST`, `PUT`, `DELETE`.'
+        headers:
+          type: array
+          example:
+          - value: application/json
+            header: Content-Type
+          - value: Bearer {{oauth2ServiceAccessToken}}
+            header: Authorization
+          description: Specifies any HTTP headers that should be added to the call to your API.
+          items:
+            $ref: '#/components/schemas/headerKeyValuePair'
+        requestBody:
+          type: object
+          example:
+            json:
+              segments:
+              - name: '{{segment.name}}'
+                description: '{{segment.description}}'
+                source_type: FIRST_PARTY
+                ad_account_id: '{{customerData.accountId}}'
+                retention_in_days: 180
+          description: Specifies the content of the message body that should be sent to your API. The parameters that should be added to the `requestBody` object depend on which fields your API accepts. For an example, refer to the [first template example](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/audience-metadata-management#configuration-examples) in the Audience metadata functionality document.
+        responseFields:
+          type: array
+          example:
+          - value: '{{body.segments[0].segment.id}}'
+            name: externalAudienceId
+          description: Specify any response fields that your API returns when called. For an example, refer to the template examples in the [Audience metadata functionality document](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/audience-metadata-management#configuration-examples).
+          items:
+            $ref: '#/components/schemas/templateKeyValuePair'
+        responseErrorFields:
+          type: array
+          example:
+          - value: '{{root}}'
+            name: message
+          description: Specify any error response fields that your API returns when called. For an example, refer to the template examples in the [Audience metadata functionality document](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/audience-metadata-management#configuration-examples).
+          items:
+            $ref: '#/components/schemas/templateKeyValuePair'
+    audienceTemplateResponse:
+      allOf:
+      - $ref: '#/components/schemas/response'
+      - $ref: '#/components/schemas/audienceTemplate'
+    response:
+      properties:
+        instanceId:
+          type: string
+          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
+          title: Instance ID
+          description: The unique ID of an object.
+        createdDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Created date
+          description: Created date in UTC.
+        lastModifiedDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Last modified date
+          description: Last update date in UTC.
+    metadataTemplate:
+      type: object
+      description: Contains the settings for your audience metadata template.
+      properties:
+        name:
+          type: string
+          description: The name of the audience metadata template for your destination. This name will appear in any partner-specific error message in the Experience Platform user interface, followed by the error message parsed from `metadataTemplate.create.responseErrorFields`.
+        create:
+          description: Includes all required components (URL, HTTP method, headers, request and response body) to make an HTTP call to your API, to programmatically create segments/audiences in your platform and sync the information back to Adobe Experience Platform.
+          $ref: '#/components/schemas/audienceRestTemplate'
+        update:
+          description: Includes all required components (URL, HTTP method, headers, request and response body) to make an HTTP call to your API, to programmatically update segments/audiences in your platform and sync the information back to Adobe Experience Platform.
+          $ref: '#/components/schemas/audienceRestTemplate'
+        delete:
+          description: Includes all required components (URL, HTTP method, headers, request and response body) to make an HTTP call to your API, to programmatically delete segments/audiences in your platform.
+          $ref: '#/components/schemas/audienceRestTemplate'
+        validate:
+          $ref: '#/components/schemas/audienceRestTemplate'
+    headerKeyValuePair:
+      type: object
+      properties:
+        header:
+          type: string
+          description: Indicates a header that should be appended in calls to your destination.
+        value:
+          type: string
+          description: Indicates the value of the header that should be appended in calls to your destination.
+    templateKeyValuePair:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the response field that your API returns when called.
+        value:
+          type: string
+          description: The content of the response field that your API returns when called.
+  parameters:
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+      required: true
+      schema:
+        type: string
+      in: header

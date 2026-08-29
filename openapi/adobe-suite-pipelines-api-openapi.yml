@@ -1,0 +1,602 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Cloud Manager Pipelines API
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+servers:
+- url: https://cloudmanager.adobe.io
+tags:
+- name: Pipelines
+paths:
+  /api/program/{programId}/pipelines:
+    get:
+      tags:
+      - Pipelines
+      summary: List Pipelines
+      description: Returns all the pipelines that the requesting user has access to in an program
+      operationId: getPipelines
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: Type of the pipelines
+        required: false
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Pagination start parameter
+        required: false
+        schema:
+          type: string
+          default: '0'
+      - name: limit
+        in: query
+        description: Pagination limit parameter
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 500
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineList'
+  /api/program/{programId}/pipeline/{pipelineId}:
+    get:
+      tags:
+      - Pipelines
+      summary: Get Pipeline
+      description: Returns a pipeline by its id
+      operationId: getPipeline
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of pipeline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pipeline'
+        '404':
+          description: Pipeline not found
+    delete:
+      tags:
+      - Pipelines
+      summary: Delete a Pipeline
+      description: Delete a pipeline. All the data is wiped.
+      operationId: deletePipeline
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+    patch:
+      tags:
+      - Pipelines
+      summary: Patches Pipeline
+      description: Patches a pipeline within an program.
+      operationId: patchPipeline
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Must always be application/json
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pipeline'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelineUpdate'
+        description: The update to the pipeline
+        required: true
+  /api/program/{programId}/pipeline/{pipelineId}/cache:
+    delete:
+      tags:
+      - Pipelines
+      summary: Invalidate Cache
+      description: Remove all cached artifacts and resets the cache to an empty state.
+      operationId: invalidateCache
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: pipelineId
+        in: path
+        description: Identifier of the pipeline
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+components:
+  schemas:
+    RequestedPageDetails:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
+          type: string
+        property:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+      description: Filtering and sorting page details
+    PipelineList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            pipelines:
+              type: array
+              items:
+                $ref: '#/components/schemas/Pipeline'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+    PipelinePhaseUpdate:
+      type: object
+      required:
+      - type
+      description: Describes an update to a phase of a pipeline
+      properties:
+        name:
+          type: string
+          example: BUILD_1
+          description: Name of the phase
+        type:
+          type: string
+          example: BUILD
+          description: Type of the phase
+          enum:
+          - BUILD
+          - DEPLOY
+        repositoryId:
+          type: string
+          description: For BUILD phase type. Identifier of the source repository. The code from this repository will be build at the start of this phase. If not provided, the current value is retained.
+        branch:
+          type: string
+          description: For BUILD phase type. Name of the tracked branch or a fully qualified git tag (e.g. refs/tags/v1). If not provided, the current value is retained.
+        environmentId:
+          type: string
+          description: For DEPLOY phase type. Identifier of the target environment.
+        steps:
+          type: array
+          description: Steps to update within the phase.
+          items:
+            $ref: '#/components/schemas/PipelineStepUpdate'
+    PipelineStepUpdate:
+      type: object
+      required:
+      - type
+      description: Describes an update to a phase of a pipeline
+      properties:
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepUpdateOptions'
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    PipelineStep:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepOptions'
+      description: Describes a step from a phase of a pipeline
+    PipelineStepOptions:
+      type: object
+      description: Options for a pipeline step. Will vary based on step action and platform.
+      properties:
+        skipDetachingDispatchers:
+          type: boolean
+          description: For deploy steps on AMS pipelines, if true will not detach dispatcher from the load balancer.
+        dispatcherCacheInvalidationPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
+        dispatcherCacheFlushPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
+        cse:
+          type: string
+          enum:
+          - MY_CSE
+          - ANY_CSE
+          description: For managed steps on AMS pipelines, which CSE will be responsible for CSE oversight.
+        popularPagesWeight:
+          type: integer
+          format: int32
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the popular pages bucket.
+        newPagesWeight:
+          type: integer
+          format: int32
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the new pages bucket.
+        otherPagesWeight:
+          type: integer
+          format: int32
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the other pages bucket.
+        imageAssetsWeight:
+          type: integer
+          format: int32
+          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test images.
+        pdfAssetsWeight:
+          type: integer
+          format: int32
+          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test PDF files.
+    PipelineStepUpdateOptions:
+      type: object
+      properties:
+        dispatcherCacheInvalidationPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
+        dispatcherCacheFlushPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
+    Pipeline:
+      type: object
+      required:
+      - name
+      - phases
+      properties:
+        id:
+          type: string
+          example: '29'
+          description: Identifier of the pipeline. Unique within the program.
+        programId:
+          type: string
+          example: '14'
+          description: Identifier of the program. Unique within the space.
+        name:
+          type: string
+          example: AcmeCorp Main Pipeline
+          description: Name of the pipeline
+          minLength: 1
+          maxLength: 64
+        trigger:
+          type: string
+          example: MANUAL
+          description: 'How should the execution be triggered. ON_COMMIT: each time one or more commits are pushed and the Pipeline is idle then a execution is triggered. MANUAL: triggerd through UI or API.'
+          enum:
+          - ON_COMMIT
+          - MANUAL
+        status:
+          type: string
+          example: IDLE
+          description: Pipeline status
+          enum:
+          - IDLE
+          - BUSY
+          - WAITING
+        createdAt:
+          type: string
+          format: date-time
+          description: Create date
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Update date
+          readOnly: true
+        lastStartedAt:
+          type: string
+          format: date-time
+          description: Last pipeline execution start
+          readOnly: true
+        lastFinishedAt:
+          type: string
+          format: date-time
+          description: Last pipeline execution end
+          readOnly: true
+        phases:
+          type: array
+          description: Pipeline phases in execution order
+          items:
+            $ref: '#/components/schemas/PipelinePhase'
+          maxItems: 100
+          minItems: 1
+        type:
+          type: string
+          example: CI_CD
+          description: Pipeline type
+          enum:
+          - CI_CD
+          - CODE_GENERATOR
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Program this pipeline belongs to.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/execution:
+              description: Current pipeline execution if any
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/execution/id:
+              description: Get pipeline execution by id
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/executions:
+              description: Get all historic executions for this pipeline.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/variables:
+              description: Custom pipeline variables
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/rollbackLastSuccessfulExecution:
+              description: Start a CI/CD rollback execution
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/cache:
+              description: Pipeline cache
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A representation of a CI/CD Pipeline
+    PipelineUpdate:
+      type: object
+      description: Describe an update to a pipeline
+      properties:
+        phases:
+          type: array
+          description: Pipeline phases to update
+          items:
+            $ref: '#/components/schemas/PipelinePhaseUpdate'
+    PipelinePhase:
+      type: object
+      required:
+      - type
+      properties:
+        name:
+          type: string
+          example: DEV Build
+          description: Name of the phase
+        type:
+          type: string
+          example: DEPLOY
+          description: Type of the phase
+          enum:
+          - VALIDATE
+          - BUILD
+          - DEPLOY
+        repositoryId:
+          type: string
+          description: "Identifier of the source repository. The code from this repository will be build at the start of this phase. \nMandatory if type=BUILD"
+        branch:
+          type: string
+          description: "Name of the tracked branch or a fully qualified git tag (e.g. refs/tags/v1). \n Assumed to be `master` if missing."
+        environmentId:
+          type: string
+          description: Identifier of the target environment. Mandatory if type=DEPLOY
+        environmentType:
+          type: string
+          description: Type of environment (for example stage or prod, readOnly = true)
+          enum:
+          - dev
+          - stage
+          - prod
+          - rde
+          - preprod
+        steps:
+          type: array
+          description: Steps to be included in the phase in execution order. Might be added or not, depending on permissions or configuration
+          items:
+            $ref: '#/components/schemas/PipelineStep'
+      description: Describes a phase of a pipeline

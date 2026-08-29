@@ -1,0 +1,671 @@
+openapi: 3.2.0
+info:
+  description: "The endpoints described here are routed through analytics.adobe.io. In order to use these endpoints you must create an oAuth client that is subscribed to access the Adobe Analytics Reporting API. \n\n To view the API References for non-core Analytics 2.0 APIs, select the **API Reference** drop-down menu at the top of the page. \n\n Note: Adobe may add optional request and response members (name/value pairs) to existing API objects at any time and without notice or changes in versioning. Adobe recommends that you refer to the API documentation of any third-party tool you integrate with our APIs so that such additions are ignored in processing if not understood. If implemented properly, such additions are non-breaking changes for your implementation. Adobe will not remove parameters or add required parameters without first providing standard notification through release notes."
+  title: Adobe Analytics Segments API
+  version: '2.0'
+servers:
+- url: https://analytics.adobe.io/api
+tags:
+- name: Segments
+paths:
+  /{globalCompanyId}/segments:
+    get:
+      tags:
+      - Segments
+      summary: Retrieve all segments
+      description: ''
+      operationId: segments_getSegments
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: rsids
+        in: query
+        description: Filter list to only include segments tied to specified RSID list (comma-delimited)
+        required: false
+        schema:
+          type: string
+      - name: segmentFilter
+        in: query
+        description: Filter list to only include segments in the specified list (comma-delimited list of IDs)
+        required: false
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: name
+        in: query
+        description: Filter list to only include segments that contains the Name
+        required: false
+        schema:
+          type: string
+      - name: tagNames
+        in: query
+        description: Filter list to only include segments that contains one of the tags
+        required: false
+        schema:
+          type: string
+      - name: filterByPublishedSegments
+        in: query
+        description: Filter list to only include segments where the published field is set to one of the allowable values (all, true, false).
+        required: false
+        schema:
+          type: string
+          enum:
+          - all
+          - 'true'
+          - 'false'
+          default: all
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: sortDirection
+        in: query
+        description: Sort direction (ASC or DESC
+        required: false
+        schema:
+          type: string
+          default: ASC
+      - name: sortProperty
+        in: query
+        description: Property to sort by (name, modified_date, id is currently allowed)
+        required: false
+        schema:
+          type: string
+          default: id
+      - name: expansion
+        in: query
+        description: Comma-delimited list of additional segment metadata fields to include on response.
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - reportSuiteName
+            - ownerFullName
+            - modified
+            - tags
+            - compatibility
+            - definition
+            - publishingStatus
+            - definitionLastModified
+            - categories
+          enum:
+          - reportSuiteName
+          - ownerFullName
+          - modified
+          - tags
+          - compatibility
+          - definition
+          - publishingStatus
+          - definitionLastModified
+          - categories
+      - name: includeType
+        in: query
+        description: Include additional segments not owned by user. The "all" option takes precedence over "shared"
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - shared
+            - all
+            - templates
+          enum:
+          - shared
+          - all
+          - templates
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSegmentResponseItem'
+        '400':
+          description: Unable to retrieve list of segments shared with user
+        '401':
+          description: Owner filter error; user specified is not in the same company as the requesting user
+        '403':
+          description: Requesting non-shared segments for other users is restricted to admin users
+        '500':
+          description: External API error; Segment retrieval failed
+    post:
+      tags:
+      - Segments
+      summary: Create a segment
+      description: ''
+      operationId: segments_createSegment
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: locale
+        in: query
+        description: Locale. Valid values include 'en_US', 'fr_FR', 'ja_JP', 'de_DE', 'es_ES', 'ko_KR', 'pt_BR', 'zh_CN', and 'zh_TW'.
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: expansion
+        in: query
+        description: Comma-delimited list of additional segment metadata fields to include on response.
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - reportSuiteName
+            - ownerFullName
+            - modified
+            - tags
+            - compatibility
+            - definition
+            - publishingStatus
+            - definitionLastModified
+            - categories
+          enum:
+          - reportSuiteName
+          - ownerFullName
+          - modified
+          - tags
+          - compatibility
+          - definition
+          - publishingStatus
+          - definitionLastModified
+          - categories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSegmentResponseItem'
+        '400':
+          description: Invalid input; name, rsid, and definition are all required. Definition must be formatted as a JSON Object.
+        '500':
+          description: External API error; Segment create or retrieval failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsSegment'
+        description: JSON-formatted Object containing key/value pairs for segment creation.
+        required: true
+  /{globalCompanyId}/segments/validate:
+    post:
+      tags:
+      - Segments
+      summary: Create validation for segment
+      description: Returns a segment validation for the segment contained in the post body of the report.
+      operationId: segments_validateSegment
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: rsid
+        in: query
+        description: RSID to run the report against
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentCompatibility'
+        '400':
+          description: Bad JSON input; request not formatted correctly
+        '500':
+          description: Unexpected error;
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        description: Segment definition
+        required: true
+  /{globalCompanyId}/segments/{id}:
+    get:
+      tags:
+      - Segments
+      summary: Retrieve a segment by ID
+      description: ''
+      operationId: segments_getSegment
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The segment ID to retrieve
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale. Valid values include 'en_US', 'fr_FR', 'ja_JP', 'de_DE', 'es_ES', 'ko_KR', 'pt_BR', 'zh_CN', and 'zh_TW'.
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: expansion
+        in: query
+        description: Comma-delimited list of additional segment metadata fields to include on response.
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - reportSuiteName
+            - ownerFullName
+            - modified
+            - tags
+            - compatibility
+            - definition
+            - publishingStatus
+            - definitionLastModified
+            - categories
+          enum:
+          - reportSuiteName
+          - ownerFullName
+          - modified
+          - tags
+          - compatibility
+          - definition
+          - publishingStatus
+          - definitionLastModified
+          - categories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSegmentResponseItem'
+        '403':
+          description: Requesting non-shared segments for other users is restricted to admin users
+        '500':
+          description: External API error; segment retrieval failed
+    put:
+      tags:
+      - Segments
+      summary: Update a segment by ID
+      description: ''
+      operationId: segments_updateSegment
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: Segment ID to be updated
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale. Valid values include 'en_US', 'fr_FR', 'ja_JP', 'de_DE', 'es_ES', 'ko_KR', 'pt_BR', 'zh_CN', and 'zh_TW'.
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: expansion
+        in: query
+        description: Comma-delimited list of additional segment metadata fields to include on response.
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - reportSuiteName
+            - ownerFullName
+            - modified
+            - tags
+            - compatibility
+            - definition
+            - publishingStatus
+            - definitionLastModified
+            - categories
+          enum:
+          - reportSuiteName
+          - ownerFullName
+          - modified
+          - tags
+          - compatibility
+          - definition
+          - publishingStatus
+          - definitionLastModified
+          - categories
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSegmentResponseItem'
+        '400':
+          description: Definition must be formatted as a JSON Object
+        '401':
+          description: Company mismatch; segment ownership can only be transferred within the same organization
+        '403':
+          description: User does not have permission to update this segment
+        '500':
+          description: External API error; Segment update or retrieval failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: object
+        description: JSON-formatted Object containing key/value pairs to be updated.
+    delete:
+      tags:
+      - Segments
+      summary: Delete a segment by ID
+      description: ''
+      operationId: segments_deleteSegment
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The segment ID to be deleted
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale. Valid values include 'en_US', 'fr_FR', 'ja_JP', 'de_DE', 'es_ES', 'ko_KR', 'pt_BR', 'zh_CN', and 'zh_TW'.
+        required: false
+        schema:
+          type: string
+          default: en_US
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          description: External API error; Segment delete failed
+components:
+  schemas:
+    TaggedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    SegmentCompatibility:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        message:
+          type: string
+        validator_version:
+          type: string
+        supported_products:
+          type: array
+          items:
+            type: string
+        supported_schema:
+          type: array
+          items:
+            type: string
+        supported_features:
+          type: array
+          items:
+            type: string
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: the tag id
+        name:
+          type: string
+          description: 'the tag name '
+        description:
+          type: string
+          description: the tag description
+        components:
+          type: array
+          description: the list of components that have been tagged with this tag
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TaggedComponent'
+      description: Tag Model
+    Owner:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: the login id of the owner
+        name:
+          type: string
+          description: the friendly full login name of the owner, included when the expansion parameter ownerFullName is true
+        login:
+          type: string
+          description: the friendly full login name of the owner, included when the expansion parameter ownerFullName is true
+    AnalyticsSegment:
+      type: object
+      properties:
+        name:
+          type: string
+          description: A name for the segment.
+        description:
+          type: string
+          description: A description of the segment.
+        rsid:
+          type: string
+          description: The report suite id.
+        reportSuiteName:
+          type: string
+          description: The friendly name for the report suite id.
+        owner:
+          description: The owner of the segment as an Owner object.
+          $ref: '#/components/schemas/Owner'
+        definition:
+          type: object
+          description: The segment definition as a JSON object
+          $ref: '#/components/schemas/AnalyticsSegmentDefinition'
+        compatibility:
+          type: object
+          description: Analytics products that the segment is compatible with
+          $ref: '#/components/schemas/SegmentCompatibility'
+        definitionLastModified:
+          type: string
+          format: date-time
+        categories:
+          type: array
+          items:
+            type: string
+        siteTitle:
+          type: string
+          description: A name for the report suite.  This is deprecated and should use the report suite name instead.
+        tags:
+          type: array
+          description: All existing tags associated with the segment.
+          items:
+            $ref: '#/components/schemas/Tag'
+        modified:
+          type: string
+          format: date-time
+        created:
+          type: string
+          format: date-time
+    AnalyticsSegmentDefinition:
+      type: object
+      properties:
+        container:
+          type: object
+          properties:
+            context:
+              type: string
+            func:
+              type: string
+            pred:
+              type: object
+              properties:
+                val:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    name:
+                      type: string
+                    func:
+                      type: string
+                str:
+                  type: string
+                func:
+                  type: string
+        func:
+          type: string
+        version:
+          type: array
+          items:
+            type: integer
+            format: int32
+    AnalyticsSegmentResponseItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the segment.
+        name:
+          type: string
+          description: A name for the segment.
+        description:
+          type: string
+          description: A description of the segment.
+        rsid:
+          type: string
+          description: The report suite id.
+        reportSuiteName:
+          type: string
+          description: The friendly name for the report suite id.
+        owner:
+          description: The owner of the segment as an Owner object.
+          $ref: '#/components/schemas/Owner'
+        definition:
+          type: object
+          description: The segment definition as a JSON object
+          $ref: '#/components/schemas/AnalyticsSegmentDefinition'
+        compatibility:
+          type: object
+          description: Analytics products that the segment is compatible with
+          $ref: '#/components/schemas/SegmentCompatibility'
+        definitionLastModified:
+          type: string
+          format: date-time
+        categories:
+          type: array
+          items:
+            type: string
+        siteTitle:
+          type: string
+          description: A name for the report suite.  This is deprecated and should use the report suite name instead.
+        tags:
+          type: array
+          description: All existing tags associated with the segment.
+          items:
+            $ref: '#/components/schemas/Tag'
+        modified:
+          type: string
+          format: date-time
+        created:
+          type: string
+          format: date-time
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
+      required: true
+      schema:
+        type: string

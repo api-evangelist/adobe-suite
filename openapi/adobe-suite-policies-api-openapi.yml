@@ -1,0 +1,871 @@
+openapi: 3.2.0
+info:
+  title: Policy Service Policies API
+  description: "Adobe Experience Platform Data Governance simplifies and streamlines the process of categorizing data and creating data usage policies. Once data labels have been applied and data usage policies are in place, marketing actions can be evaluated to ensure the correct use of data.\n\nUse the Policy Service API to programmatically manage data usage labels, policies, and marketing actions. The API also provides endpoints to evaluate marketing actions against specific data usage labels to test for policy violations.\n\nNote: You can use the [Dataset Service API](./dataset-service.yaml) to manage data usage labels for an existing dataset.\n- **Related documentation**:\n  - [Data Governance documentation](http://www.adobe.com/go/data-governance-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n  - [Policy Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Policy%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/dulepolicy\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/dulepolicy/labels/custom\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/dulepolicy
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Policies
+  description: Data usage policies are rules that describe the kinds of marketing actions that are allowed or not allowed to be performed on data within Adobe Experience Platform.
+paths:
+  /policies/core:
+    get:
+      tags:
+      - Policies
+      summary: List core policies
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: listCorePolicies
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: 'Filters responses based on whether a specific property exists, or whose value passes a conditional expression (e.g. `?property=name==C1`). Only the `name` property is supported for core resources. For custom resources, additional supported property values include `status`, `created`, `createdClient`, `createdUser`, `updated`, `updatedClient`, and `updatedUser`. '
+        schema:
+          type: string
+      - name: orderby
+        in: query
+        description: A comma-separated list of properties by which the returned list of resources will be sorted.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: start
+        in: query
+        description: 'Indicates the pagination value for the returned list. This value should be obtained from a previous call''s `_page.next` property. Should be omitted for a first page of results. '
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: A positive integer, indicating the number of results to limit the response to.
+        schema:
+          type: integer
+      - name: duleLabels
+        in: query
+        description: A comma-separated list of data usage label names. Using this parameter returns only those policies whose `deny` expression references any of the labels in the list.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: marketingAction
+        in: query
+        description: Restricts returned policies to those that reference a given marketing action ID.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns all core policies.
+          x-summary: Core policies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoliciesPage'
+  /policies/core/{POLICY_ID}:
+    get:
+      tags:
+      - Policies
+      summary: Retrieve a core policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: retrieveCorePolicy
+      parameters:
+      - name: POLICY_ID
+        in: path
+        description: The ID of the policy to be retrieved.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns the details of the retrieved policy.
+          x-summary: Policy retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorePolicyResponse'
+        '404':
+          description: No policy was found for the given ID.
+          x-summary: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorePolicyNotFound'
+  /policies/custom:
+    get:
+      tags:
+      - Policies
+      summary: List custom policies
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: listCustomPolicies
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: 'Filters responses based on whether a specific property exists, or whose value passes a conditional expression (e.g. `?property=name==C1`). Only the `name` property is supported for core resources. For custom resources, additional supported property values include `status`, `created`, `createdClient`, `createdUser`, `updated`, `updatedClient`, and `updatedUser`. '
+        schema:
+          type: string
+      - name: orderby
+        in: query
+        description: A comma-separated list of properties by which the returned list of resources will be sorted.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: start
+        in: query
+        description: 'Indicates the pagination value for the returned list. This value should be obtained from a previous call''s `_page.next` property. Should be omitted for a first page of results. '
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: A positive integer, indicating the number of results to limit the response to.
+        schema:
+          type: integer
+      - name: duleLabels
+        in: query
+        description: A comma-separated list of data usage label names. Using this parameter returns only those policies whose `deny` expression references any of the labels in the list.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      - name: marketingAction
+        in: query
+        description: Restricts returned policies to those that reference a given marketing action ID.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns a list of custom policies.
+          x-summary: Custom policies retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPoliciesPage'
+    post:
+      tags:
+      - Policies
+      summary: Create a custom policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: createCustomPolicy
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: The type of content being sent in the body of the request. In POST, PUT, or PATCH requests to the Policy Service API, the value must be set to `application/json`.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The custom policy to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyRequest'
+        required: true
+      responses:
+        '201':
+          description: A successful response returns the details of newly created policy.
+          x-summary: Custom policy created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPolicyResponse'
+        '400':
+          description: One or more of the required fields in the request body were either missing or malformed.
+          x-summary: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePolicyError'
+      x-codegen-request-body-name: policy
+  /policies/custom/{POLICY_ID}:
+    get:
+      tags:
+      - Policies
+      summary: Retrieve a custom policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: retrieveCustomPolicy
+      parameters:
+      - name: POLICY_ID
+        in: path
+        description: The ID of the custom policy being retrieved.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns details of the retrieved custom policy.
+          x-summary: Custom policy retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyResponse'
+        '404':
+          description: No policy was found for the given ID.
+          x-summary: Custom policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPolicyNotFound'
+    put:
+      tags:
+      - Policies
+      summary: Update a custom policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: updateCustomPolicy
+      parameters:
+      - name: POLICY_ID
+        in: path
+        description: The ID of the policy being updated.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: The type of content being sent in the body of the request. In POST, PUT, or PATCH requests to the Policy Service API, the value must be set to `application/json`.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The updated information for the policy, in its entirety.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyRequest'
+        required: true
+      responses:
+        '200':
+          description: A successful response returns details of the updated policy.
+          x-summary: Policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyResponse'
+        '400':
+          description: One or more of the required fields in the request body were either missing or malformed.
+          x-summary: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePolicyError'
+        '404':
+          description: No policy was found for the given ID.
+          x-summary: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPolicyNotFound'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - Policies
+      summary: Delete a custom policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: deleteCustomPolicy
+      parameters:
+      - name: POLICY_ID
+        in: path
+        description: The ID of the policy to be deleted.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP Status 200 (OK) with an empty body, indicating the entity was deleted.
+          x-summary: Policy deleted successfully
+          content: {}
+        '404':
+          description: No policy was found for the given ID.
+          x-summary: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPolicyNotFound'
+    patch:
+      tags:
+      - Policies
+      summary: Update one or more attributes of a custom policy
+      description: '>**NOTE**: For more information on using this operation, see the [policies endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html) on Experience League.'
+      operationId: patchCustomPolicy
+      parameters:
+      - name: POLICY_ID
+        in: path
+        description: The ID of the policy being updated.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: The type of content being sent in the body of the request. In POST, PUT, or PATCH requests to the Policy Service API, the value must be set to `application/json`.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Use JSON Patch to update a portion of a policy.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyPatchRequest'
+        required: true
+      responses:
+        '200':
+          description: A successful response returns the details of updated policy.
+          x-summary: Policy updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyPatchResponse'
+        '400':
+          description: One or more of the required fields in the request body were either missing or malformed.
+          x-summary: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatePolicyError'
+        '404':
+          description: No policy was found for the given ID.
+          x-summary: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomPolicyNotFound'
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    PolicyBody:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the policy
+          example: Email Policy
+        status:
+          type: string
+          description: The status of the policy
+          example: ENABLED
+          enum:
+          - DRAFT
+          - ENABLED
+          - DISABLED
+        marketingActionRefs:
+          type: array
+          description: List of marketing action URI references to which this policy applies.
+          example:
+          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+          items:
+            type: string
+            format: uri
+        description:
+          type: string
+          description: A description of what this policy enforces. Specifically, the reasoning behind the denial of these marketing actions in the presence of the data usage labels.
+          example: Conditions under which we won't send marketing-based email
+        deny:
+          $ref: '#/components/schemas/PolicyExpression'
+    PatchDocument:
+      required:
+      - op
+      - path
+      type: object
+      properties:
+        op:
+          type: string
+          description: The operation to be performed.
+          enum:
+          - add
+          - remove
+          - replace
+          - move
+          - copy
+          - test
+        path:
+          type: string
+          description: A JSON Pointer path to the resource field being updated.
+        value:
+          type: object
+          properties: {}
+          description: The value to be used in the context of the patch operation.
+      description: A JSON Patch document as defined by RFC 6902. See the [JSON Patch specification](https://datatracker.ietf.org/doc/html/rfc6902) for more information.
+    BadRequestError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
+    _linksPagingCorePolicies:
+      allOf:
+      - $ref: '#/components/schemas/_linksPaging'
+    PolicyRequest:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+    PoliciesPage:
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core?{?limit,start,property}
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCorePolicies'
+      - type: object
+        properties:
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/CorePolicyResponse'
+    PolicyExpression:
+      type: object
+      properties:
+        label:
+          type: string
+          description: The name of a single data usage label that applies to the policy.
+          example: C1
+        operator:
+          type: string
+          description: "Indicates the conditional relationship between the labels provided in the sibling operands array. Accepted values are:\n  \n  - `OR`: The expression resolves to true if any of the labels in the operands array are present.\n  - `AND`: The expression only resolves to true if all of the labels in the operands array are present."
+          example: AND
+          enum:
+          - AND
+          - OR
+        operands:
+          type: array
+          description: An array of objects, with each object representing either a single `label` or an additional pair of `operator` and `operands` properties. The presence of the labels and/or operations in an `operands` array resolves to true or false based on the value of its sibling operator property.
+          example:
+          - label: C1
+          - label: C3
+          items:
+            $ref: '#/components/schemas/PolicyExpression'
+      description: A boolean expression to be evaluated over the presence of data usage labels, referred to as a "policy expression". Note that a policy expression **must** consist of **either** a label **or** an operator and operands. Each operand in turn is itself a policy expression. You cannot specify both a label and an operator/operand in combination. See the [Policy Service API guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html?lang=en#create-policy) for more details on how to configure this property.
+      example:
+        operator: AND
+        operands:
+        - label: C1
+        - operator: OR
+          operands:
+          - label: C3
+          - label: C7
+    _links:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URI reference that clients may use to obtain this resource. Typically this URL ends with the `name` or `id` property of the resource.
+                  format: uri
+                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
+          description: Contains the URI reference that clients may use to obtain this resource.
+    CustomPolicyResponse:
+      allOf:
+      - $ref: '#/components/schemas/CustomPolicyRequest'
+      - $ref: '#/components/schemas/PolicyResponseCustomEval'
+    CustomPolicyRequest:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+    NotFoundError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 404
+          title: NotFound
+    PolicyResponse:
+      allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The unique ID for this policy resource, as assigned by the service.
+            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/ServiceProperties'
+    CustomPoliciesPage:
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCustomPolicies'
+      - type: object
+        properties:
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/CustomPolicyResponse'
+    PolicyPatchRequest:
+      allOf:
+      - $ref: '#/components/schemas/PatchDocument'
+    CustomPolicyNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/policies/custom/12345 not found
+    PolicyResponseCustomEval:
+      allOf:
+      - $ref: '#/components/schemas/PolicyResponse'
+      - type: object
+        properties:
+          marketingActionRefs:
+            type: array
+            example: []
+          _links:
+            type: object
+            properties:
+              self:
+                type: object
+                properties:
+                  href:
+                    type: string
+                    example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
+    PagingPropertiesCustomPolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCustomPolicies'
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+          description: A placeholder value for the error type.
+          example: /placeholder/type/uri
+        status:
+          type: integer
+          description: The HTTP status associated with the error.
+          format: int32
+        title:
+          type: string
+          description: The error title.
+        detail:
+          type: string
+          description: A description of the error.
+    PagingProperties:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of resources returned.
+              example: 1
+          description: Contains a `count` property for the number of resources returned.
+    PolicyPatchResponse:
+      allOf:
+      - $ref: '#/components/schemas/PolicyResponse'
+      - type: object
+        properties:
+          name:
+            type: string
+            example: Email Policy 001
+    _linksPagingCustomPolicies:
+      allOf:
+      - $ref: '#/components/schemas/_linksPaging'
+    ServiceProperties:
+      properties:
+        imsOrg:
+          type: string
+          description: The ID of the IMS Organization which maintains this resource. If the resource is a core resource (defined by Adobe), this value is set to "core".
+          example: '{IMS_ORG}'
+        sandboxName:
+          type: string
+          description: The name of the Platform sandbox that contains the resource.
+          example: prod
+        created:
+          type: integer
+          description: A timestamp in milliseconds when this resource was originally created.
+          format: int64
+          example: 1529696681413
+        createdClient:
+          type: string
+          description: The ID of the client that originally created this resource.
+          example: '{CLIENT_ID}'
+        createdUser:
+          type: string
+          description: The user that originally created this resource.
+          example: '{USER_ID}'
+        updated:
+          type: integer
+          description: A timestamp when this resource was last updated.
+          format: int64
+          example: 1529697651972
+        updatedClient:
+          type: string
+          description: The ID of the client that last updated this resource.
+          example: '{CLIENT_ID}'
+        updatedUser:
+          type: string
+          description: The ID of the user that last updated this resource.
+          example: '{USER_ID}'
+      allOf:
+      - $ref: '#/components/schemas/_links'
+    CreatePolicyError:
+      allOf:
+      - $ref: '#/components/schemas/BadRequestError'
+      - type: object
+        example:
+          type: string
+          detail: 'Unable to parse PolicyRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
+    CorePolicyResponse:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/_links'
+      - type: object
+        example:
+          name: Restrict email targeting
+          status: ENABLED
+          marketingActionRefs:
+          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+          description: Restrict use of data labeled C4 OR C5 for email targeting.
+          deny:
+            operator: OR
+            operands:
+            - label: C4
+            - label: C5
+          _links:
+            self:
+              href: https://platform-stage.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the core policy.
+            example: corepolicy_0003
+    _linksPaging:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URL template.
+                  format: uri
+                templated:
+                  type: string
+                  description: When present and set to `true`, indicates that this is a templated URL.
+          description: Contains a templated URL for clients to obtain this resource.
+    CorePolicyNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/policies/core/corepolicy_9999 not found
+    PagingPropertiesCorePolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCorePolicies'
+x-original-swagger-version: '2.0'

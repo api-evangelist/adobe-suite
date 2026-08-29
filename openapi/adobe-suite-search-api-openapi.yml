@@ -1,0 +1,524 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Search API
+  version: '1.0'
+  description: 'Operations tagged Search across 3 of this provider''s published API definitions: adobe-suite-aep-reactor-openapi.yaml, adobe-suite-commerce-rest-customer-openapi.yaml, adobe-suite-commerce-rest-guest-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //reactor.adobe.io
+- url: https://example.com/rest/default
+tags:
+- name: Search
+  description: The search endpoint provides a way to find resources matching a desired criteria, expressed as a query. All queries are scoped to your current company and accessible properties.
+paths:
+  /search:
+    post:
+      tags:
+      - Search
+      summary: Perform a search
+      description: 'The payload of a search request must contain a `query` object. This query object must contain at least one property whose key is a dot-notation path to the attribute being queried (e.g. `attributes.name`).
+
+        >**NOTE**: For detailed information on how to construct a search payload, see the [search endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/search.html) on Experience League.'
+      operationId: createSearch
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token generated using your Organization ID, Client ID, and JavaScript Web Token (JWT), prefixed with `bearer`. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The Client ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The Organization ID which can be copied from Adobe Developer Console. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: This header must be provided with a value of `application/vnd.api+json` on all requests that contain a JSON payload.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/searchPayload'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: A successful response returns the results of the search query.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/searchResponse'
+      x-codegen-request-body-name: body
+    servers:
+    - url: //reactor.adobe.io
+  /V1/search:
+    get:
+      tags:
+      - Search
+      description: Make Full Text Search and return found Documents
+      operationId: GetV1Search
+      parameters:
+      - name: searchCriteria[requestName]
+        in: query
+        schema:
+          type: string
+      - name: searchCriteria[filterGroups][0][filters][0][field]
+        in: query
+        description: Field
+        schema:
+          type: string
+      - name: searchCriteria[filterGroups][0][filters][0][value]
+        in: query
+        description: Value
+        schema:
+          type: string
+      - name: searchCriteria[filterGroups][0][filters][0][conditionType]
+        in: query
+        description: Condition type
+        schema:
+          type: string
+      - name: searchCriteria[sortOrders][0][field]
+        in: query
+        description: Sorting field.
+        schema:
+          type: string
+      - name: searchCriteria[sortOrders][0][direction]
+        in: query
+        description: Sorting direction.
+        schema:
+          type: string
+      - name: searchCriteria[pageSize]
+        in: query
+        description: Page size.
+        schema:
+          type: integer
+      - name: searchCriteria[currentPage]
+        in: query
+        description: Current page.
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 200 Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/framework-search-search-result-interface'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/framework-search-search-result-interface'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-response'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/error-response'
+      summary: search
+    servers:
+    - url: https://example.com/rest/default
+components:
+  schemas:
+    searchPayload:
+      required:
+      - query
+      type: object
+      properties:
+        from:
+          minimum: 0
+          type: integer
+          description: The result set offset.
+        size:
+          maximum: 100
+          type: integer
+          description: The maximum number of results to return.
+        query:
+          type: object
+          properties:
+            '{RESOURCE_FIELD_PATH}':
+              type: object
+              properties:
+                exists:
+                  type: boolean
+                  description: If included and set to `true`, the query checks whether the field exists for the resource. If included and set to `false`, the query checks whether the field does not exist. If a resource has a field with a value of `null`, that field is treated as if it does not exist.
+                range:
+                  type: object
+                  properties:
+                    gt:
+                      type: integer
+                      description: If included, the query checks whether the field is greater than the supplied value (non-inclusive).
+                    gte:
+                      type: integer
+                      description: If included, the query checks whether the field is greater than or equal to the supplied value.
+                    lt:
+                      type: integer
+                      description: If included, the query checks whether the field is less than the supplied value (non-inclusive).
+                    lte:
+                      type: integer
+                      description: If included, the query checks whether the field is less than or equal to the supplied value.
+                  description: Describes a value range for the field that the query checks for.
+                value:
+                  type: string
+                  description: If included, the query checks whether the field value matches the value of this property. It can optionally be combined with a `value_operator` property to determine how the value is interpreted when multiple space-separated terms are included in the string.
+                value_operator:
+                  type: string
+                  description: 'The boolean logic to use when matching multiple `value` terms against Reactor API resources. `value` must be included in order to use this property.
+
+
+
+                    See the section on [value operator logic](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/search.html?lang=en#value-operator) for details on how this field affects the interpretation of `value`.'
+                  default: AND
+                  enum:
+                  - AND
+                  - OR
+              description: Describes a query based on a specific field within a Reactor API resource. The key to this field must be the dot-notation path to the field in the resource object, such as `attributes.name` or `meta.latest_revision_number`.
+          description: Describes the search query as a structured JSON object.
+        sort:
+          type: array
+          description: Describes the order in which to sort results.
+          items:
+            required:
+            - '{RESOURCE_FIELD_PATH}'
+            type: object
+            properties:
+              '{RESOURCE_FIELD_PATH}':
+                type: string
+                description: Describes a specific field within a Reactor API resource  to sort by, including the sort order. The key to this field must  be the dot-notation path to the field in the resource object,  such as `attributes.name` or `meta.latest_revision_number`. The  value must be either `asc` for ascending order, or `desc` for  descending order.
+        resource_types:
+          type: array
+          description: 'Lists the resource types to query. Only searchable resource type values can be included:
+
+
+
+            * `audit_events`
+
+            * `builds`
+
+            * `callbacks`
+
+            * `data_elements`
+
+            * `environments`
+
+            * `extension_packages`
+
+            * `extensions`
+
+            * `hosts`
+
+            * `libraries`
+
+            * `properties`
+
+            * `rule_components`
+
+            * `rules`'
+          items:
+            type: string
+      example:
+        data:
+          query:
+            attributes.name:
+              value: Example
+    searchResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the details of the Reactor API resources that matched the query.
+          items:
+            type: object
+            properties: {}
+        meta:
+          type: object
+          properties:
+            total_hits:
+              type: integer
+              description: The total number of resources that matched the search query.
+          description: Provides meta information about the search results.
+      example:
+        data:
+        - id: PRc2fa6dc3c4c74f8db63476eebfc31dc6
+          type: properties
+          attributes:
+            created_at: 2020-12-14 17:59:24.424000+00:00
+            enabled: true
+            name: Kessel Example Property
+            updated_at: 2020-12-14 17:59:24.424000+00:00
+            platform: web
+            development: false
+            token: 04c3cf57fe11
+            domains:
+            - example.com
+            undefined_vars_return_empty: false
+            rule_component_sequencing_enabled: false
+          relationships:
+            company:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/company
+              data:
+                id: CO2bf094214ffd4785bb4bcf88c952a7c1
+                type: companies
+            callbacks:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/callbacks
+            hosts:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/hosts
+            environments:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/environments
+            libraries:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/libraries
+            data_elements:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/data_elements
+            extensions:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/extensions
+            rules:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/rules
+            notes:
+              links:
+                related: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/notes
+          links:
+            company: http://localhost:9010/companies/CO2bf094214ffd4785bb4bcf88c952a7c1
+            data_elements: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/data_elements
+            environments: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/environments
+            extensions: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/extensions
+            rules: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6/rules
+            self: http://localhost:9010/properties/PRc2fa6dc3c4c74f8db63476eebfc31dc6
+          meta:
+            match_score: 3.1645029
+        meta:
+          total_hits: 1
+    error-errors:
+      type: array
+      description: Errors list
+      items:
+        $ref: '#/components/schemas/error-errors-item'
+    framework-sort-order:
+      type: object
+      description: Data object for sort order.
+      properties:
+        field:
+          type: string
+          description: Sorting field.
+        direction:
+          type: string
+          description: Sorting direction.
+      required:
+      - field
+      - direction
+    error-errors-item:
+      type: object
+      description: Error details
+      properties:
+        message:
+          type: string
+          description: Error message
+        parameters:
+          $ref: '#/components/schemas/error-parameters'
+    framework-attribute-interface:
+      type: object
+      description: Interface for custom attribute value.
+      properties:
+        attribute_code:
+          type: string
+          description: Attribute code
+        value:
+          type: string
+          description: Attribute value
+      required:
+      - attribute_code
+      - value
+    framework-search-bucket-interface:
+      type: object
+      description: Interface for facet Bucket
+      properties:
+        name:
+          type: string
+          description: Field name
+        values:
+          type: array
+          description: Field values
+          items:
+            $ref: '#/components/schemas/framework-search-aggregation-value-interface'
+      required:
+      - name
+      - values
+    framework-search-aggregation-value-interface:
+      type: object
+      description: Interface Aggregation Value
+      properties:
+        value:
+          type: string
+          description: Aggregation
+        metrics:
+          type: array
+          description: Metrics
+          items:
+            type: string
+      required:
+      - value
+      - metrics
+    framework-search-document-interface:
+      type: object
+      description: Interface Search Document
+      properties:
+        id:
+          type: integer
+        custom_attributes:
+          type: array
+          description: Custom attributes values.
+          items:
+            $ref: '#/components/schemas/framework-attribute-interface'
+      required:
+      - id
+    error-parameters-item:
+      type: object
+      description: Error parameters item
+      properties:
+        resources:
+          type: string
+          description: ACL resource
+        fieldName:
+          type: string
+          description: Missing or invalid field name
+        fieldValue:
+          type: string
+          description: Incorrect field value
+    error-response:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        errors:
+          $ref: '#/components/schemas/error-errors'
+        code:
+          type: integer
+          description: Error code
+        parameters:
+          $ref: '#/components/schemas/error-parameters'
+        trace:
+          type: string
+          description: Stack trace
+      required:
+      - message
+    framework-search-aggregation-interface:
+      type: object
+      description: Interface Aggregation to get faceted data
+      properties:
+        buckets:
+          type: array
+          description: All Document fields
+          items:
+            $ref: '#/components/schemas/framework-search-bucket-interface'
+        bucket_names:
+          type: array
+          description: Document field names
+          items:
+            type: string
+      required:
+      - buckets
+      - bucket_names
+    framework-search-search-result-interface:
+      type: object
+      description: Interface SearchResultInterface
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/framework-search-document-interface'
+        aggregations:
+          $ref: '#/components/schemas/framework-search-aggregation-interface'
+        search_criteria:
+          $ref: '#/components/schemas/framework-search-search-criteria-interface'
+        total_count:
+          type: integer
+          description: Total count.
+      required:
+      - items
+      - aggregations
+      - search_criteria
+      - total_count
+    error-parameters:
+      type: array
+      description: Error parameters list
+      items:
+        $ref: '#/components/schemas/error-parameters-item'
+    framework-filter:
+      type: object
+      description: Filter which can be used by any methods from service layer.
+      properties:
+        field:
+          type: string
+          description: Field
+        value:
+          type: string
+          description: Value
+        condition_type:
+          type: string
+          description: Condition type
+      required:
+      - field
+      - value
+    framework-search-search-criteria-interface:
+      type: object
+      description: Interface SearchCriteriaInterface
+      properties:
+        request_name:
+          type: string
+        filter_groups:
+          type: array
+          description: A list of filter groups.
+          items:
+            $ref: '#/components/schemas/framework-search-filter-group'
+        sort_orders:
+          type: array
+          description: Sort order.
+          items:
+            $ref: '#/components/schemas/framework-sort-order'
+        page_size:
+          type: integer
+          description: Page size.
+        current_page:
+          type: integer
+          description: Current page.
+      required:
+      - request_name
+      - filter_groups
+    framework-search-filter-group:
+      type: object
+      description: Groups two or more filters together using a logical OR
+      properties:
+        filters:
+          type: array
+          description: A list of filters in this group
+          items:
+            $ref: '#/components/schemas/framework-filter'
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+x-refined-from:
+- adobe-suite-aep-reactor-openapi.yaml
+- adobe-suite-commerce-rest-customer-openapi.yaml
+- adobe-suite-commerce-rest-guest-openapi.yaml
+x-original-swagger-version: '2.0'

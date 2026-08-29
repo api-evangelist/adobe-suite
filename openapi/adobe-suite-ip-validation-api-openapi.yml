@@ -1,0 +1,113 @@
+openapi: 3.2.0
+info:
+  title: Data Distiller Authorization IP Validation API
+  description: "Use the Adobe Experience Platform Data Distiller Authorization API to manage IP-based access restrictions for Query Service by controlling which IP addresses are allowed. With this tool, you can configure, enforce, and monitor IP-based restrictions to meet stringent security standards within Adobe Experience Platform.\n\nNOTE: This functionality is only available to customers who have purchased the Data Distiller add on. For more information, contact your Adobe representative.\n\n**Related Documentation**:\n  * [Data Distiller Authorization API documentation](https://experienceleague.adobe.com/en/docs/experience-platform/query/auth-api/overview)\n\n**API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  * Base path for this API: /data/foundation/query/security\n  * Example of a complete path: https://<span>platform.adobe.io/data/foundation/query/security/ip-access\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on obtaining these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All requests to Platform APIs require the header `x-sandbox-name` specifying the lowercase sandbox name where the operation will take place (for example, \"prod\"). For more details, see the [sandboxes overview](https://adobe.com/go/sandbox-overview-en).\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` set to `application/json`.\n\n**API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).\n  * Refer to the IP Allow List documentation for [guidance on configuring allowed IP ranges](https://experienceleague.adobe.com/en/docs/experience-platform/query/ip-address-allowlist) and resolving common configuration issues."
+  version: 1.0.0
+servers:
+- url: https://{environment}.adobe.io/
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: IP Validation
+  description: "Use the IP Validation endpoint to verify if a specified IP address is permitted to access data within a designated sandbox in Query Service. \n"
+paths:
+  /security/validate/ip-access:
+    post:
+      tags:
+      - IP Validation
+      summary: Validate IP access for a sandbox
+      operationId: validateIPAddress
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/content-type'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ipAddress:
+                  type: string
+                  description: The IP address to be validated for sandbox access.
+                  example: 197.2.0.2
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns a boolean indicating whether the IP is allowed to access the sandbox.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isAllowed:
+                    type: boolean
+                    description: 'Indicates whether the specified IP address is permitted to access the sandbox. Returns `true` if access is allowed, and `false` otherwise.
+
+                      '
+                    example: true
+        401:
+          x-summary: Unauthorized
+          description: The authentication credentials are missing or invalid.
+        404:
+          x-summary: Not Found
+          description: The specified resource or endpoint was not found.
+        500:
+          x-summary: Internal Server Error
+          description: An unexpected server error occurred.
+components:
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The bearer token for authorization.
+      required: true
+      schema:
+        type: string
+    accept-encoding:
+      name: Accept-Encoding
+      in: header
+      description: The type of response encoding expected. The supported values are `gzip` and `identity`.
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+        - identity
+        default: identity
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. The value should be 'application/json'.
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key for Adobe Experience Platform.
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The organization ID for Adobe Experience Platform.
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox where the operation will take place.
+      required: true
+      schema:
+        type: string

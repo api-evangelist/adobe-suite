@@ -1,0 +1,739 @@
+openapi: 3.2.0
+info:
+  title: Access Control Policies API
+  description: "Access Control in Adobe Experience Platform allows organization administrators to assign roles and permissions for various Platform capabilities. The Access Control API provides a public endpoint to retrieve effective policies for a user on given resources within a specified sandbox. All other access control capabilities are provided through the [Adobe Admin Console](https://adminconsole.adobe.com).\n- Related documentation:\n    - [Access Control documentation](https://adobe.com/go/access-control-overview-en)\n\n- Visualize API calls with Postman (a free, third-party software):\n    - [Access Control API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Access%20Control%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- API paths:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io\n    - Base path for this API: /data/foundation/access-control\n    - Example of a complete path for making a call to \"/acl/effective-policies\": https://<span>platform.adobe.io/data/foundation/access-control/acl/effective-policies\n\n- Required headers:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/access-control
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Access Control Policies
+  description: Access control policies provide information about resources and permissions for the current user. More information about using this set of endpoints can be found in the [access control endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/access-control/api/getting-started.html).
+paths:
+  /acl/reference:
+    get:
+      tags:
+      - Access Control Policies
+      summary: List all available permission names and resource types
+      operationId: listPolicyNames
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/referenceResponse'
+        '400':
+          description: Bad request
+          content: {}
+        '500':
+          description: Internal server error
+          content: {}
+  /acl/effective-policies:
+    post:
+      tags:
+      - Access Control Policies
+      summary: List all effective policies
+      description: You can list all the effective policies for a user on a given resources within a sandbox by making a POST request to the `/acl/effective-policies` endpoint.
+      operationId: listEffectiveAclPolicies
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/json-header'
+      requestBody:
+        description: 'List of resource urls. Example url : /resource-types/{resourceName} or /permissions/{highLevelPermissionName}'
+        content:
+          '*/*':
+            schema:
+              type: array
+              items:
+                type: string
+                description: The permissions and resource types associated with the given schema.
+                enum:
+                - /permissions/manage-dataset
+                - /resource-types/schema
+                - /permissions/manage-schemas
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  policies:
+                    type: object
+                    properties: {}
+                    description: All the effective policies for a user on given resources.
+                    readOnly: true
+                  additionalProperties:
+                    uniqueItems: true
+                    type: array
+                    description: The permissible actions you can make, as defined by the policy.
+                    items:
+                      type: string
+                      enum:
+                      - read
+                      - write
+                      - delete
+                      - '*'
+                example: '[ ''/resource-types/schemas'': [ ''write'', ''delete'', ''read'' ''], ''/permissions/manage-schemas'': [ ''*'' ] ]'
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    resourceTypes:
+      type: object
+      properties:
+        classes:
+          type: array
+          description: Allows access to read, create, edit, and delete classes currently stored.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        connection:
+          type: array
+          description: Allows access to read, create, edit, and delete connection-level fields discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        data-types:
+          type: array
+          description: Allows access to read, create, edit, and delete data types.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        datasets-data:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields data discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        dule-label:
+          type: array
+          description: Allows access to read, create, edit, and delete Data Governance usage labels at the dataset and field level.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        identity-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete an identity descriptor. Identity descriptors signal that a particular property for a schema is a unique identifier.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        identity-namespaces:
+          type: array
+          description: Allows access to read, create, edit, and delete identity namespaces that provide context to identity data.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        mixins:
+          type: array
+          description: Allows access to read, create, edit, and delete mixins. Mixins are reuseable components which define one or more fields that represent a particular concept, such as an individual person or a mailing address.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        monitoring:
+          type: array
+          description: Allows read-only access to the monitoring dashboard.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profile-configs:
+          type: array
+          description: Allows access to read, create, edit, and delete profile configurations.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profile-datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete profile datasets.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profiles:
+          type: array
+          description: Allows access to read, create, edit, and delete profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](http://www.adobe.com/go/destination-sdk-generate-profiles-en).
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        relationship-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete relationship descriptors. Relationship descriptors establish a one-to-one relationship between a source schema and a reference schema.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        reset-sandboxes:
+          type: array
+          description: Allows access to reset sandboxes.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        sandboxes:
+          type: array
+          description: Allows access to read, create, edit, and delete sandboxes.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Allows access to read, create, edit, and delete objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        segment-jobs:
+          type: array
+          description: Allows access to read, create, edit, and delete segment jobs for your organization.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        segments:
+          type: array
+          description: Allows access to read, create, edit, and delete segments.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+      description: A list of available resource types.
+    viewNamespaces:
+      type: object
+      properties:
+        identity-namespaces:
+          type: array
+          description: Allows access to read, create, edit, and delete identity namespaces that provide context to identity data.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access for identity namespaces.
+    manageSandboxes:
+      type: object
+      properties:
+        sandboxes:
+          type: array
+          description: Allows access to read, create, edit, and delete sandboxes.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+      description: Allows access to read, create, edit, and delete sandboxes.
+    viewDatasets:
+      type: object
+      properties:
+        connection:
+          type: array
+          description: Allows access to read, create, edit, and delete connection-level fields discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        datasets-data:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields data discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        dule-label:
+          type: array
+          description: Allows access to read, create, edit, and delete Data Governance usage labels at the dataset and field level.
+          example:
+          - read
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Provides a list of objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access for datasets and schemas.
+    viewSchemas:
+      type: object
+      properties:
+        classes:
+          type: array
+          description: Allows access to read, create, edit, and delete classes currently stored.
+          example:
+          - read
+          items:
+            type: string
+        data-types:
+          type: array
+          description: Allows access to read, create, edit, and delete data types.
+          example:
+          - read
+          items:
+            type: string
+        identity-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete an identity descriptor. Identity descriptors signal that a particular property for a schema is a unique identifier.
+          example:
+          - read
+          items:
+            type: string
+        mixins:
+          type: array
+          description: Allows access to read, create, edit, and delete mixins. Mixins are reuseable components which define one or more fields that represent a particular concept, such as an individual person or a mailing address.
+          example:
+          - read
+          items:
+            type: string
+        relationship-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete relationship descriptors. Relationship descriptors establish a one-to-one relationship between a source schema and a reference schema.
+          example:
+          - read
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Provides a list of objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access to schemas and related resources.
+    manageShemas:
+      type: object
+      properties:
+        classes:
+          type: array
+          description: Allows access to read, create, edit, and delete classes currently stored.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        data-types:
+          type: array
+          description: Allows access to read, create, edit, and delete data types.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        identity-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete an identity descriptor. Identity descriptors signal that a particular property for  a schema is a unique identifier.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        mixins:
+          type: array
+          description: Allows access to read, create, edit, and delete mixins. Mixins are reuseable components which define one or more fields that represent a particular concept, such as an individual person or a mailing address.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        relationship-descriptor:
+          type: array
+          description: Allows access to read, create, edit, and delete relationship descriptors. Relationship descriptors establish a one-to-one relationship  between a source schema and a reference schema.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Allows access to read, create, edit, and delete objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+      description: Allows access to read, create, edit, and delete schemas and related resources.
+    viewProfiles:
+      type: object
+      properties:
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        profile-configs:
+          type: array
+          description: Allows access to read, create, edit, and delete profile configurations.
+          example:
+          - read
+          items:
+            type: string
+        profile-datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete profile datasets.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profiles:
+          type: array
+          description: Allows access to read, create, edit, and delete profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](http://www.adobe.com/go/destination-sdk-generate-profiles-en).
+          example:
+          - read
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Provides a list of objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          items:
+            type: string
+        segments:
+          type: array
+          description: Allows access to read, create, edit, and delete segments.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access to available profiles.
+    manageNamespaces:
+      type: object
+      properties:
+        identity-namespaces:
+          type: array
+          description: Allows access to read, create, edit, and delete identity namespaces that provide context to identity data.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+      description: Allows access to read, create, edit, and delete identity namespaces.
+    exportAudience:
+      type: object
+      properties:
+        segments:
+          type: array
+          description: Allows access to read, create, edit, and delete segments.
+          example:
+          - read
+          items:
+            type: string
+      description: Provides ability to export an audience to a dataset.
+    viewMonitoring:
+      type: object
+      properties:
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        datasets-data:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields data discovered from the dataset.
+          example:
+          - read
+          items:
+            type: string
+        monitoring:
+          type: array
+          description: Allows read-only access to the monitoring dashboard.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access to the monitoring dashboard.
+    viewSandboxes:
+      type: object
+      properties:
+        sandboxes:
+          type: array
+          description: Allows read-only access for sandboxes.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows read-only access for sandboxes belonging to your organization.
+    manageProfiles:
+      type: object
+      properties:
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          - write
+          items:
+            type: string
+        profile-configs:
+          type: array
+          description: Allows access to read, create, edit, and delete profile configurations.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profile-datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete profile datasets.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        profiles:
+          type: array
+          description: Allows access to read, create, edit, and delete profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](http://www.adobe.com/go/destination-sdk-generate-profiles-en).
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Provides a list of objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          items:
+            type: string
+        segment-jobs:
+          type: array
+          description: Allows access to read, create, edit, and delete segment jobs for your organization.
+          example:
+          - write
+          items:
+            type: string
+        segments:
+          type: array
+          description: Allows access to read, create, edit, and delete segments.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+      description: Allows access to read, create, and edit datasets that are used for customer profiles.
+    referenceResponse:
+      type: object
+      properties:
+        permissions:
+          type: object
+          properties:
+            export-audience-for-segment:
+              $ref: '#/components/schemas/exportAudience'
+            manage-datasets:
+              $ref: '#/components/schemas/manageDatasets'
+            manage-identity-namespaces:
+              $ref: '#/components/schemas/manageNamespaces'
+            manage-profiles:
+              $ref: '#/components/schemas/manageProfiles'
+            manage-sandboxes:
+              $ref: '#/components/schemas/manageSandboxes'
+            manage-shemas:
+              $ref: '#/components/schemas/manageShemas'
+            reset-sandboxes:
+              $ref: '#/components/schemas/resetSandboxes'
+            view-datasets:
+              $ref: '#/components/schemas/viewDatasets'
+            view-identity-namespaces:
+              $ref: '#/components/schemas/viewNamespaces'
+            view-monitoring-dashboard:
+              $ref: '#/components/schemas/viewMonitoring'
+            view-profiles:
+              $ref: '#/components/schemas/viewProfiles'
+            view-sandboxes:
+              $ref: '#/components/schemas/viewSandboxes'
+            view-schemas:
+              $ref: '#/components/schemas/viewSchemas'
+          description: A list of available permissions.
+        resource-types:
+          $ref: '#/components/schemas/resourceTypes'
+    resetSandboxes:
+      type: object
+      properties:
+        reset-sandboxes:
+          type: array
+          description: Allows access to reset a sandbox.
+          example:
+          - read
+          - write
+          items:
+            type: string
+      description: Allows you to reset a sandbox.
+    manageDatasets:
+      type: object
+      properties:
+        connection:
+          type: array
+          description: Allows access to read, create, edit, and delete connection-level fields discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        datasets:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        datasets-data:
+          type: array
+          description: Allows access to read, create, edit, and delete dataset-level fields data discovered from the dataset.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        dule-label:
+          type: array
+          description: Allows access to read, create, edit, and delete Data Governance usage labels at the dataset and field level.
+          example:
+          - read
+          - write
+          - delete
+          items:
+            type: string
+        schemas:
+          type: array
+          description: Provides a list of objects that describe the basic details about the schemas that are based on the class.
+          example:
+          - read
+          items:
+            type: string
+      description: Allows access to read, create, edit, and delete datasets. Read-only access for schemas.
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en). If a user token is being passed, then the user of the token must have an “org admin” role for the requested org.
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    json-header:
+      name: Content-Type
+      in: header
+      description: application/json
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+x-original-swagger-version: '2.0'

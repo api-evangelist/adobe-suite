@@ -1,0 +1,1082 @@
+openapi: 3.2.0
+info:
+  title: Flow Service API - Sources Flow specs API
+  description: "Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services. You can ingest data from a variety of sources such as Adobe applications, cloud-based storages, databases, and many others. The service provides a RESTful API from which all supported sources are connectable.\n>**NOTE**: Refer to [Flow Service API - Destinations](https://developer.adobe.com/experience-platform-apis/references/destinations/) if you are looking for API documentation to perform operations on *destinations* in Experience Platform.\n- **Related documentation**:\n  - [Sources documentation](https://www.adobe.com/go/sources-overview-en)\n\n- **Visualize API calls with Postman** (a free, third-party software):\n  - [Flow Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Flow%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/connections\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html?lang=en)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Flow specs
+  description: Flow specs retain information that define a flow. They include information on how a flow can be scheduled, whether a flow supports options like partial ingestion and error diagnostics, as well as the parameters required for different mappings from source to target. Flow specs also include information on how a flow run can be created and a list of connection spec IDs and target connection IDs that a given flow can support. Flow specs are organization agnostic.
+paths:
+  /flowSpecs:
+    get:
+      tags:
+      - Flow specs
+      summary: List flow specifications
+      description: Retrieve a list of flow specifications by making a GET request to the `/flowSpecs` endpoint.
+      operationId: listFlowSpecs
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific  virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: A comma-separated list of top-level object properties to be returned in the response. This parameter is used to filter the response data based on the properties provided. For example, `property=lastRunDetails.startedAtUTC>=1670880253121` returns only the flows whos last run iterations were started during or after the specified epoch time in milliseconds. This parameter is also used to cut down the amount of data returned in the response body. For example, `property=state==enabled&orderby=createdAt` returns only base connections that have a status of `enabled` in the order of their creation, in ascending order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of flow specifications in JSON format.
+          x-summary: Flow Specifications Listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSpecResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Flow specs
+      summary: Create a new flow spec.
+      description: Use this endpoint to create a new flow spec.
+      operationId: createFlowSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        description: The following request creates a new flow spec.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFlowSpecRequest'
+      responses:
+        '201':
+          description: The flow spec has been successfully created.
+          headers:
+            Location:
+              description: Location of the newly created Flow Spec instance
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/FlowSpecItemDTO'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSpecItemDTO'
+              examples:
+                success:
+                  value:
+                    id: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+                    name: CloudStorageToAEP
+                    providerId: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+                    version: '1.0'
+                    attributes:
+                      notification:
+                        category: sources
+                        flowRun: null
+                        enabled: true
+                    sourceConnectionSpecIds:
+                    - b3ba5556-48be-44b7-8b85-ff2b69b46dc4
+                    - ecadc60c-7455-4d87-84dc-2a0e293d997b
+                    - b7829c2f-2eb0-4f49-a6ee-55e33008b629
+                    - 4c10e202-c428-4796-9208-5f1f5732b1cf
+                    - fb2e94c9-c031-467d-8103-6bd6e0a432f2
+                    - 32e8f412-cdf7-464c-9885-78184cb113fd
+                    - b7bf2577-4520-42c9-bae9-cad01560f7bc
+                    - 998b8ae3-cec0-43b7-8abe-40b1eb4ee069
+                    - be5ec48c-5b78-49d5-b8fa-7c89ec4569b8
+                    - 54e221aa-d342-4707-bcff-7a4bceef0001
+                    - c85f9425-fb21-426c-ad0b-405e9bd8a46c
+                    targetConnectionSpecIds:
+                    - c604ff05-7f1a-43c0-8e18-33bf874cb11c
+                    permissionsInfo:
+                      view:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - read
+                      manage:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - write
+                    optionSpec:
+                      name: OptionSpec
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                      type: object
+                      properties:
+                        errorDiagnosticsEnabled:
+                          title: Error diagnostics.
+                          description: Flag to enable detailed and sample error diagnostics summary.
+                          type: boolean
+                          default: false
+                        partialIngestionPercent:
+                          title: Partial ingestion threshold.
+                          description: 'Percentage which defines the threshold of errors allowed before the run is marked as failed. type: number'
+                        exclusiveMinimum: 0
+                    scheduleSpec:
+                      name: PeriodicSchedule
+                      type: Periodic
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        properties:
+                          startTime:
+                            description: epoch time
+                            type: integer
+                          frequency:
+                            type: string
+                            enum:
+                            - once
+                            - minute
+                            - hour
+                            - day
+                            - week
+                          interval:
+                            type: integer
+                          backfill:
+                            type: boolean
+                            default: true
+                        required:
+                        - startTime
+                        - frequency
+                        if:
+                          properties:
+                            frequency:
+                              const: once
+                        then:
+                          allOf:
+                          - not:
+                              required:
+                              - interval
+                          - not:
+                              required:
+                              - backfill
+                        else:
+                          required:
+                          - interval
+                          if:
+                            properties:
+                              frequency:
+                                const: minute
+                          then:
+                            properties:
+                              interval:
+                                minimum: 15
+                          else:
+                            properties:
+                              interval:
+                                minimum: 1
+                    transformationSpec:
+                    - name: Mapping
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: defines various params required for different mapping from source to target
+                        properties:
+                          mappingId:
+                            type: string
+                          mappingVersion:
+                            type: string
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /flowSpecs/{FLOW_SPEC_ID}:
+    get:
+      tags:
+      - Flow specs
+      summary: Retrieve a flow spec
+      description: Use this endpoint to retrieve an instance of a flow spec.
+      operationId: retrieveFlowSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: FLOW_SPEC_ID
+        in: path
+        description: The flow spec with the corresponding ID.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified flow specification in JSON format.
+          x-summary: Flow Specification Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSpecResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    put:
+      tags:
+      - Flow specs
+      summary: Updates an existing flow spec
+      description: Use this endpoint to update an existing flow spec.
+      operationId: updateFlowSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: FLOW_SPEC_ID
+        in: path
+        description: The ID of the queried flow spec.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The following request updates the information of the queried flow spec.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFlowSpecRequest'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated flow spec.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSpecItemDTO'
+              examples:
+                success:
+                  value:
+                    id: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+                    name: CloudStorageToAEP
+                    providerId: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+                    version: '1.0'
+                    attributes:
+                      notification:
+                        category: sources
+                        flowRun:
+                          enabled: true
+                    sourceConnectionSpecIds:
+                    - b3ba5556-48be-44b7-8b85-ff2b69b46dc4
+                    - ecadc60c-7455-4d87-84dc-2a0e293d997b
+                    - b7829c2f-2eb0-4f49-a6ee-55e33008b629
+                    - 4c10e202-c428-4796-9208-5f1f5732b1cf
+                    - fb2e94c9-c031-467d-8103-6bd6e0a432f2
+                    - 32e8f412-cdf7-464c-9885-78184cb113fd
+                    - b7bf2577-4520-42c9-bae9-cad01560f7bc
+                    - 998b8ae3-cec0-43b7-8abe-40b1eb4ee069
+                    - be5ec48c-5b78-49d5-b8fa-7c89ec4569b8
+                    - 54e221aa-d342-4707-bcff-7a4bceef0001
+                    - c85f9425-fb21-426c-ad0b-405e9bd8a46c
+                    targetConnectionSpecIds:
+                    - c604ff05-7f1a-43c0-8e18-33bf874cb11c
+                    permissionsInfo:
+                      view:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - read
+                      manage:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - write
+                    optionSpec:
+                      name: OptionSpec
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        properties:
+                          errorDiagnosticsEnabled:
+                            title: Error diagnostics.
+                            description: Flag to enable detailed and sample error diagnostics summary.
+                            type: boolean
+                            default: false
+                          partialIngestionPercent:
+                            title: Partial ingestion threshold.
+                            description: Percentage which defines the threshold of errors allowed before the run is marked as failed.
+                            type: number
+                            exclusiveMinimum: 0
+                    scheduleSpec:
+                      name: PeriodicSchedule
+                      type: Periodic
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        properties:
+                          startTime:
+                            description: epoch time
+                            type: integer
+                          frequency:
+                            type: string
+                            enum:
+                            - once
+                            - minute
+                            - hour
+                            - day
+                            - week
+                          interval:
+                            type: integer
+                          backfill:
+                            type: boolean
+                            default: true
+                        required:
+                        - startTime
+                        - frequency
+                        if:
+                          properties:
+                            frequency:
+                              const: once
+                        then:
+                          allOf:
+                          - not: null
+                            required:
+                            - interval
+                          - not: null
+                            required:
+                            - backfill
+                        else:
+                          required:
+                          - interval
+                          if:
+                            properties:
+                              frequency:
+                                const: minute
+                          then:
+                            properties:
+                              interval:
+                                minimum: 15
+                          else:
+                            properties:
+                              interval:
+                                minimum: 1
+                    transformationSpec:
+                    - name: Mapping
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: Defines various params required for different mapping from source to target.
+                        properties:
+                          mappingId:
+                            type: string
+                          mappingVersion:
+                            type: string
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /flowSpecs/search:
+    post:
+      tags:
+      - Flow specs
+      summary: Retrieve a list of flow specs based on a given filtering criteria.
+      description: Use this endpoint to retrieve a list of flow specs given a set of filtering parameters.
+      operationId: searchFlowSpecs
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        description: The following request establishes a set of filtering paramters to be used to search for specific flow specs.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowSpecFilterRequest'
+        required: true
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns a list of flow specs in JSON format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSpecResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+components:
+  schemas:
+    UpdateFlowSpecRequest:
+      type: object
+      required:
+      - name
+      - providerId
+      properties:
+        transformationSpecDTOS:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationSpecDTO'
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        optionSpec:
+          $ref: '#/components/schemas/OptionSpecDTO'
+        scheduleSpec:
+          $ref: '#/components/schemas/ScheduleSpecDTO'
+        runSpec:
+          $ref: '#/components/schemas/RunSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
+        sourceConnectionSpecIds:
+          type: array
+          items:
+            type: string
+        targetConnectionSpecIds:
+          type: array
+          items:
+            type: string
+    CreateFlowSpecRequest:
+      type: object
+      required:
+      - name
+      - providerId
+      properties:
+        transformationSpecDTOS:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationSpecDTO'
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        optionSpec:
+          $ref: '#/components/schemas/OptionSpecDTO'
+        scheduleSpec:
+          $ref: '#/components/schemas/ScheduleSpecDTO'
+        runSpec:
+          $ref: '#/components/schemas/RunSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
+        sourceConnectionSpecIds:
+          type: array
+          items:
+            type: string
+        targetConnectionSpecIds:
+          type: array
+          items:
+            type: string
+    ScheduleSpecDTO:
+      type: object
+      properties:
+        startTime:
+          type: integer
+          description: The start time of the flow in epoch time in seconds.
+          format: int64
+          example: 1590091157
+        frequency:
+          type: string
+          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
+          example: minute
+        interval:
+          type: string
+          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
+          example: '15'
+        backfill:
+          type: boolean
+          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
+          example: true
+    RunSpecDTO:
+      type: object
+      description: Defines various params required for creating flow run for the speicific spec.
+      properties:
+        startTime:
+          type: integer
+          description: An integer that defines the start time of the run. The value is represented in Unix epoch time.
+        windowStartTime:
+          type: integer
+          description: An integer that defines the start time of the window against which data is to be pulled. The value is represented in Unix epoch time
+        windowEndTime:
+          type: integer
+          description: An integer that defines the end time of the window against which data is to be pulled. The value is represented in Unix epoch time.
+    PermissionDTO:
+      type: object
+      properties:
+        manage:
+          type: array
+          description: Defines the type of access available to the `manage` permission.
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - write
+        view:
+          type: array
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - read
+            description: Defines the type of access available to the `view` permission.
+      description: Contains information regarding the permissions applied to the queried source.
+    PolicyItemDTO:
+      type: object
+      properties:
+        duleLabels:
+          type: array
+          items:
+            type: string
+        enforcementRefs:
+          type: array
+          items:
+            type: string
+    FlowSpecFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+        groupByProperty:
+          type: string
+        projectionFields:
+          type: string
+    OptionSpecDTO:
+      type: object
+      properties:
+        errorDiagnosticsEnabled:
+          type: boolean
+          description: Flag to enable detailed and sample error diagnostics summary.
+          example: true
+        partialIngestionPercent:
+          type: integer
+          description: Percentage which defines the threshold of errors allowed before the run is marked as failed
+          example: 5
+    FlowSpecResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowSpecItemDTO'
+    TransformationSpecDTO:
+      type: object
+      properties:
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
+    EntitlementSpecDTO:
+      type: object
+      properties:
+        operation:
+          type: string
+          description: The type of checks to be applied on entitlements array.
+          example: anyOf
+        entitlements:
+          type: array
+          items:
+            type: string
+            description: The name of the entitlement supported.
+    FlowSpecItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the flow specification.
+          example: 9753525b-82c7-4dce-8a9b-5ccfce2b9876
+        name:
+          type: string
+          description: The name of the flow specification.
+          example: CloudStorageToAEP
+        providerId:
+          type: string
+          description: The ID of the provider.
+          example: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+        version:
+          type: string
+          description: The version of the flow specification.
+          example: '1.0'
+        sourceConnectionSpecIds:
+          type: array
+          description: Contains a list of connection specification IDs that correspond to different sources supported by the queried flow specification.
+          items:
+            type: string
+            example: ''
+        targetConnectionSpecIds:
+          type: array
+          items:
+            type: string
+            description: The specification ID that connects a source to data lake.
+            example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
+        optionSpec:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: object
+                properties:
+                  type: object
+                  properties:
+                    errorDiagnosticsEnabled:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                          example: Error diagnostics
+                        description:
+                          type: string
+                          example: Flag to enable detailed and sample error diagnostics summary.
+                        type:
+                          type: string
+                          example: boolean
+                        default:
+                          type: boolean
+                          example: false
+                    partialIngestionPercent:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                          example: Partial ingestion threshold
+                        description:
+                          type: string
+                          example: Percentage which defines the threshold of errors allowed before the run is marked as failed.
+                        type:
+                          type: string
+                          example: number
+                        exclusiveMinimum:
+                          type: integer
+                          example: 0
+        transformationSpecs:
+          type: object
+          properties:
+            name:
+              type: string
+              example: Mapping
+            spec:
+              type: object
+              properties:
+                schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: object
+                description:
+                  type: string
+                  example: Defines various params required for different mapping from source to target
+                properties:
+                  type: object
+                  properties:
+                    mappingId:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: string
+                    mappingVersion:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: string
+        scheduleSpec:
+          type: object
+          properties:
+            name:
+              type: string
+              example: PeriodicSchedule
+            type:
+              type: string
+              example: Periodic
+            spec:
+              type: object
+              properties:
+                schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: object
+                properties:
+                  type: object
+                  properties:
+                    startTime:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          example: epoch time
+                        type:
+                          type: string
+                          example: integer
+                    frequency:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: string
+                        enum:
+                          type: array
+                          example:
+                          - once
+                          - minute
+                          - hour
+                          - day
+                          - week
+                          items:
+                            type: string
+                    interval:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: integer
+                    backfill:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: boolean
+                        default:
+                          type: boolean
+                          example: true
+                required:
+                  type: array
+                  example:
+                  - startTime
+                  - frequency
+                  items:
+                    type: string
+                if:
+                  type: object
+                  properties:
+                    properties:
+                      type: object
+                      properties:
+                        frequency:
+                          type: object
+                          properties:
+                            const:
+                              type: string
+                              example: once
+                then:
+                  type: object
+                  properties:
+                    allOf:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          not:
+                            type: object
+                            properties:
+                              required:
+                                type: array
+                                items:
+                                  type: string
+                  example:
+                    allOf:
+                    - not:
+                        required:
+                        - interval
+                    - not:
+                        required:
+                        - backfill
+                else:
+                  type: object
+                  properties:
+                    required:
+                      type: array
+                      example:
+                      - interval
+                      items:
+                        type: string
+                    if:
+                      type: object
+                      properties:
+                        properties:
+                          type: object
+                          properties:
+                            frequency:
+                              type: object
+                              properties:
+                                const:
+                                  type: string
+                                  example: minute
+                    then:
+                      type: object
+                      properties:
+                        properties:
+                          type: object
+                          properties:
+                            interval:
+                              type: object
+                              properties:
+                                minimum:
+                                  type: integer
+                                  example: 15
+                    else:
+                      type: object
+                      properties:
+                        properties:
+                          type: object
+                          properties:
+                            interval:
+                              type: object
+                              properties:
+                                minimum:
+                                  type: integer
+                                  example: 1
+        attributes:
+          type: object
+          properties:
+            isSourceFlow:
+              type: boolean
+              example: true
+            flacValidationSupported:
+              type: boolean
+              example: true
+            frequency:
+              type: string
+              example: batch
+            notification:
+              type: object
+              properties:
+                category:
+                  type: string
+                  example: sources
+                flowRun:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      example: true
+        permissionsInfo:
+          type: object
+          properties:
+            manage:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: lowLevel
+                  name:
+                    type: string
+                    example: EnterpriseSource
+                  permissions:
+                    type: array
+                    example:
+                    - write
+                    items:
+                      type: string
+            view:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: lowLevel
+                  name:
+                    type: string
+                    example: EnterpriseSource
+                  permissions:
+                    type: array
+                    example:
+                    - read
+                    items:
+                      type: string
+x-original-swagger-version: '2.0'

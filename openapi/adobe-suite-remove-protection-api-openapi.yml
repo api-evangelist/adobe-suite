@@ -1,0 +1,678 @@
+openapi: 3.2.0
+info:
+  title: PDF Services Remove Protection API
+  description: "<p><ul>\n\t<li>Learn more about using \n\t<a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/api-usage/\"> Adobe PDF Services API.</a>\n\t</li>\n\t<li> Invoking PDF Services API requires an Adobe-provided credential, <a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token\">learn more about authentication.</a>\n\t</li>\n<li><a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/#sdk\">Downloadable SDKs</a></li>\n<li><a href=\"https://raw.githubusercontent.com/AdobeDocs/pdfservices-api-documentation/main/src/pages/resources/Platform%20PDF%20Services%20Postman%20Collection.zip\" download>Click here</a> to download sample Postman collection</li>\n<li><a href=\"https://raw.githubusercontent.com/AdobeDocs/pdfservices-api-documentation/main/src/pages/resources/Platform%20PDF%20Services%20with%20External%20Storage%20Postman%20Collection.zip\">Click here</a> to download sample Postman collection with External Storage</li><li><a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/service-region-configuration-for-apis/\">Click here</a> to know more about <b>multi-region support</b> for PDF Services API</li><li><a href=\"https://community.adobe.com/t5/document-services-apis/ct-p/ct-Document-Cloud-SDK\">Support Forum</a></li><li>First released on 26th September, 2022</li><li>To use your custom external storage, click <a href=\"https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/pdf-external-storage-sol\">here</a>.</li></ul></p>"
+  version: ''
+servers:
+- url: https://pdf-services-ue1.adobe.io
+- url: https://pdf-services-ew1.adobe.io
+tags:
+- name: Remove Protection
+  description: Remove password protection from a PDF File
+paths:
+  /operation/removeprotection:
+    post:
+      tags:
+      - Remove Protection
+      summary: Remove password protection from a PDF File
+      description: Remove security from a PDF document. If the PDF is protected by owner password then the owner password is required in the field password to remove security otherwise user password is required.
+      operationId: pdfoperations.removeprotection
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Params for Remove Protection PDF Operation. Refer to the External Section below for using external storage with Remove Protection Operation.
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/RemoveProtectionInternal'
+              - $ref: '#/components/schemas/RemoveProtectionExternal'
+        required: true
+      responses:
+        '201':
+          description: Request creation for the operation and status uri generated, which can be found in the 'location' header.
+          headers:
+            location:
+              description: Job status URI for polling the results
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '404':
+          description: Resource Not Found.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/404'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+      x-codegen-request-body-name: body
+  /operation/removeprotection/{jobID}/status:
+    get:
+      tags:
+      - Remove Protection
+      summary: Poll the remove protection job for completion
+      operationId: pdfoperations.removeprotection.jobstatus
+      parameters:
+      - name: jobID
+        in: path
+        description: Job ID of the request
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A response with job information.
+          headers:
+            content-type:
+              description: The content type of the status call response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveProtectionJobStatus'
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the status call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status400'
+        '404':
+          description: Resource Not Found.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus404'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-server:
+              description: The name and version of the server.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Satus500'
+components:
+  schemas:
+    done:
+      title: done
+      oneOf:
+      - $ref: '#/components/schemas/internal'
+      - $ref: '#/components/schemas/externalstatus'
+    Satus404:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>NOT_FOUND</td><td>Job not found.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: NOT_FOUND
+          message: Job not found.
+    '400':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>BAD_REQUEST</td><td>Bad Request.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: BAD_REQUEST
+          message: Bad Request.
+    '500':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr><tr><td>UNKNOWN</td><td>Unknown error.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request.
+    external:
+      title: External with an output URI in the request
+      description: Response in case of 'done' status using signed urls
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - done
+      example:
+        status: done
+    externaldonewithoutoutput:
+      title: External without an output URI in the request
+      description: Response in case of 'done' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - done
+        asset:
+          $ref: '#/components/schemas/responseAsset'
+      example:
+        status: done
+        asset:
+          metadata:
+            type: application/pdf
+            size: 200791
+          downloadUri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/6bb12fd8-3233-4340-916b-4835917857be?X-Amz-Security-Token=FwoGZXIvYXdzEE0aDOLg7PFwVB1bjEMxQCLTAe3pjf%2Fgl2Pj%2FcjOaY%2BHfduju9SXTp1Pn8C4GapIXm%2F8tuR4cGPYGC0goU21qZxCq9R%2F8z2bOmB2EL%2BZrhbPLbaNcpzf5Vud%2B3Bmn61MEJiBdU%2BhZqasX5YhVxdnzhfpl5KfKeq2kwROVMqJcyHGdxw5h0%2Bi0sD2I8sqkbPmnBi0WOtYNwz7TQq42oe8W5KYHpq6WMya9OQgx0u7qg0inYwBnQu5UQ9NJJQY2MSU11IuZ0uE%2B%2FNAPuq3VfEIn3txK%2FFfIxGz9%2BInehhHroKjBFULzy0olY2rlwYyLQDwHHr2eyuy%2BaoGVaq%2BSUNH8T0OKIicbbZfQ5wjF0hK2FzVXwfebtDG4qq%2BiA%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220803T190422Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20220803%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=5d8c3f421c68c009b4471919a319ba460495c72afe51674d23266bc124fe9a56
+          assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+    RemoveProtectionExternal:
+      title: External
+      description: Params for Remove Protection PDF Operation
+      type: object
+      properties:
+        input:
+          $ref: '#/components/schemas/ExternalStorageInput'
+        output:
+          $ref: '#/components/schemas/ExternalStorageOutput'
+        params:
+          description: Params for Remove Protection processing.
+          type: object
+          properties:
+            password:
+              description: Password required for removing security/permissions from the PDF document.
+              type: string
+          required:
+          - password
+        notifiers:
+          $ref: '#/components/schemas/notifiers'
+      example:
+        input:
+          uri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/e0983a2df4d647a8818e2c5e06f85169_097819C664A2BBC20A49421A%40techacct.adobe.com/834084d9-e902-46a0-bfdb-11c9d81cb82d?X-Amz-Security-Token=FwoGZXIvYXdzEPf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDBXjqT4C%2F7joNmRVSCLTAQazARqHHw1uYicsoXFeqvQ8jnZhcxcJkDY3DDIVi1f5%2Bgi5a0Lz%2FRV7yZGkhQ5cK03D7QwWZikWu%2FPlmVWuOMzqCpQk9cF8oRDUfSoKGmkNIbcYchZUfSD3v%2Bk7F82cgRybsBpehOQsZxY67rcoaR4fSHej9UIJLrUaeVERkDcHBVa2Pl0d%2FwF2Wn3zKGP%2BNrDnn2uK51i9Mtq0clCgTfTBCc4Mt6oZYyYXWRQWHqss9bZmW0cOEno2d4e2YwFINolenhOYjVNV6pYOAbidQqkTYcwogKWgpQYyLWivFRFSt91vrkc%2Ba24l55sim59RhLYxeN1c5vKiPuJzzz8Lq4whh6crixrwDg%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230707T133502Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3599&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20230707%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=aac63e7f2a7baef8a07a821fb5b5d7820e1c8287bd75f3ed8604dcb57386e8be
+          storage: S3
+        output:
+          uri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/e0983a2df4d647a8818e2c5e06f85169_097819C664A2BBC20A49421A%40techacct.adobe.com/cd8ba077-98aa-4f88-b63c-78ef5a18e1b8?X-Amz-Security-Token=FwoGZXIvYXdzEPf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDFO%2Fye5bzll%2B8gzn4SLTAXEbkG1qef0EhWfnj%2FrBwcek9ConiBxFQ5Xya89H2u9g4h7Y%2F%2FgbvkwvdwCp0Bh%2BPRiGgapO%2BvhPJmpD2knaa%2FmOFle9l11ya41PjORZca%2FkOCESIbEmrRJ%2FJUIkCwLYfaJ0hQl6JghQW08EsxW0%2BYfKcG%2Bf9f0Dan3p9TgeD2eoJoZXqFfuw5JxaKVU4%2BCHtDxFbUplXOhcskMhjf%2FlY4tXJ%2F3o8a%2BEgkOQLC8U%2BPmjmdiWLWOxI13EbWa3NENaiOfw1WzK%2B%2FNgiBIhM78xPQpkNqwoz6WgpQYyLUc%2FqLVbWpz%2FoQVmuvbSaaRu9vAdowKmLvv%2BjE3nrpyQ7UbqL%2Ftw67ZZgp5R0Q%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230707T133505Z&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Expires=3599&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20230707%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=0ecf516a833436083067fc4b5f8ac3f154e214a74e94c893d106f952401e577a
+          storage: S3
+        params:
+          password: XXXX
+        notifiers:
+        - type: CALLBACK
+          data:
+            url: https://dummy.callback.org/
+            headers:
+              x-api-key: dummykey
+              access-token: dummytoken
+      required:
+      - input
+      - params
+      additionalProperties: false
+    '404':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>NOT_FOUND</td><td>Asset not found.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: NOT_FOUND
+          message: Asset not found.
+    ExternalStorageInput:
+      title: Input
+      description: Params representing input object.
+      type: object
+      properties:
+        uri:
+          description: Input file Download Signed URI.
+          type: string
+        storage:
+          description: Specifies the type of the external storage
+          type: string
+          enum:
+          - S3
+          - SHAREPOINT
+          - DROPBOX
+          - BLOB
+      required:
+      - uri
+    failed:
+      description: Response in case of 'failed' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - failed
+        error:
+          type: object
+          properties:
+            status:
+              description: Http status code returned by the service
+              type: integer
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>status</th><th>code</th><th>message</th></tr><tr><td>400</td><td>CORRUPT_DOCUMENT</td><td>For $(format) mime-type The input file appears to be corrupted and cannot be processed.</td></tr><tr><td>400</td><td>PASSWORD_PROTECTED</td><td>Source file is protected and cannot be processed.</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr></table>"
+              type: string
+      example:
+        status: failed
+        error:
+          status: 500
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request
+    externalstatus:
+      title: External
+      oneOf:
+      - $ref: '#/components/schemas/externaldonewithoutoutput'
+      - $ref: '#/components/schemas/external'
+    ExternalStorageOutput:
+      title: Output
+      description: Params representing output object
+      type: object
+      properties:
+        uri:
+          description: Output file Upload Signed URI.
+          type: string
+        storage:
+          description: Specifies the type of the external storage
+          type: string
+          enum:
+          - S3
+          - SHAREPOINT
+          - DROPBOX
+          - BLOB
+    '429':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>TOO_MANY_REQUESTS</td><td>Too Many Requests.</td></tr><tr><td>INSUFFICIENT_QUOTA</td><td>Either Quota for this operation is not available or Free trial quota is exhausted. Please visit (www.adobe.com/go/pdftoolsapi_home) to start using free trial quota or (www.adobe.com/go/pdftoolsapi_err_quota) to upgrade to paid credentials.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: TOO_MANY_REQUESTS
+          message: Too Many Requests.
+    RemoveProtectionInternal:
+      title: Internal
+      description: Params for Remove Protection PDF Operation
+      type: object
+      properties:
+        assetID:
+          description: A file assetID. For more details <a href = 'https://developer.adobe.com/document-services/docs/apis/#tag/Assets'> click here </a>.
+          type: string
+        password:
+          description: Password required for removing security/permissions from the PDF document.
+          type: string
+        notifiers:
+          $ref: '#/components/schemas/notifiers'
+      example:
+        assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+        password: XXXXX
+        notifiers:
+        - type: CALLBACK
+          data:
+            url: https://dummy.callback.org/
+            headers:
+              x-api-key: dummykey
+              access-token: dummytoken
+      required:
+      - assetID
+      - password
+      additionalProperties: false
+    Status400:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INVALID_JOB_ID</td><td>Invalid job id present in path param.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INVALID_JOB_ID
+          message: Invalid job id present in path param.
+    inprogress:
+      description: Response in case of 'in progress' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - in progress
+      example:
+        status: in progress
+    RemoveProtectionJobStatus:
+      oneOf:
+      - $ref: '#/components/schemas/inprogress'
+      - $ref: '#/components/schemas/done'
+      - $ref: '#/components/schemas/failed'
+    responseAsset:
+      title: asset
+      description: Details of output asset document. For more details <a href = 'https://developer.adobe.com/document-services/docs/apis/#tag/Assets'> click here </a>.
+      type: object
+      properties:
+        metadata:
+          type: object
+          description: metadata details of output asset.
+          properties:
+            size:
+              description: The size of the Resource in bytes. This value helps in making range requests.
+              type: integer
+            type:
+              description: The media type of the Resource.
+              type: string
+        assetID:
+          description: An asset ID identifying an asset that is globally unique and never reused.
+          type: string
+          required: false
+        downloadUri:
+          description: The URL used to download the Resource directly to the cloud provider.
+          type: string
+      example:
+        status: done
+        asset:
+          metadata:
+            type: application/pdf
+            size: 200791
+          downloadUri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/6bb12fd8-3233-4340-916b-4835917857be?X-Amz-Security-Token=FwoGZXIvYXdzEE0aDOLg7PFwVB1bjEMxQCLTAe3pjf%2Fgl2Pj%2FcjOaY%2BHfduju9SXTp1Pn8C4GapIXm%2F8tuR4cGPYGC0goU21qZxCq9R%2F8z2bOmB2EL%2BZrhbPLbaNcpzf5Vud%2B3Bmn61MEJiBdU%2BhZqasX5YhVxdnzhfpl5KfKeq2kwROVMqJcyHGdxw5h0%2Bi0sD2I8sqkbPmnBi0WOtYNwz7TQq42oe8W5KYHpq6WMya9OQgx0u7qg0inYwBnQu5UQ9NJJQY2MSU11IuZ0uE%2B%2FNAPuq3VfEIn3txK%2FFfIxGz9%2BInehhHroKjBFULzy0olY2rlwYyLQDwHHr2eyuy%2BaoGVaq%2BSUNH8T0OKIicbbZfQ5wjF0hK2FzVXwfebtDG4qq%2BiA%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220803T190422Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20220803%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=5d8c3f421c68c009b4471919a319ba460495c72afe51674d23266bc124fe9a56
+          assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+    Satus429:
+      properties:
+        error_code:
+          description: 'The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific. '
+          type: string
+        message:
+          description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>429001</td><td>Service usage limit reached</td></tr><tr><td>429002</td><td>Developer key usage limit reached</td></tr><tr><td>429050</td><td>Too many requests</td></tr></table>"
+          type: string
+      example:
+        error_code: '429050'
+        message: Too many requests
+    notifiers:
+      description: Specifies the notifiers to be invoked on the completion of job. To know more about notifiers, please see the <a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/howtos/webhook-notification/">documentation</a>.
+      type: array
+      items:
+        properties:
+          type:
+            description: Specifies the notifier type. Currently supported value is "CALLBACK" only.
+            type: string
+          data:
+            description: Specifies the data needed to invoke the notifier.
+            type: object
+        required:
+        - type
+        - data
+    Satus401:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>UNAUTHORIZED</td><td>Not authorised to perform the operation.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: UNAUTHORIZED
+          message: Not authorised to perform the operation.
+    '401':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>UNAUTHORIZED</td><td>Not authorised to perform the operation.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: UNAUTHORIZED
+          message: Not authorised to perform the operation.
+    internal:
+      title: Internal
+      description: Response in case of 'done' status
+      type: object
+      properties:
+        status:
+          description: Job Status
+          type: string
+          enum:
+          - done
+        asset:
+          $ref: '#/components/schemas/responseAsset'
+      example:
+        status: done
+        asset:
+          metadata:
+            type: application/pdf
+            size: 200791
+          downloadUri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/6bb12fd8-3233-4340-916b-4835917857be?X-Amz-Security-Token=FwoGZXIvYXdzEE0aDOLg7PFwVB1bjEMxQCLTAe3pjf%2Fgl2Pj%2FcjOaY%2BHfduju9SXTp1Pn8C4GapIXm%2F8tuR4cGPYGC0goU21qZxCq9R%2F8z2bOmB2EL%2BZrhbPLbaNcpzf5Vud%2B3Bmn61MEJiBdU%2BhZqasX5YhVxdnzhfpl5KfKeq2kwROVMqJcyHGdxw5h0%2Bi0sD2I8sqkbPmnBi0WOtYNwz7TQq42oe8W5KYHpq6WMya9OQgx0u7qg0inYwBnQu5UQ9NJJQY2MSU11IuZ0uE%2B%2FNAPuq3VfEIn3txK%2FFfIxGz9%2BInehhHroKjBFULzy0olY2rlwYyLQDwHHr2eyuy%2BaoGVaq%2BSUNH8T0OKIicbbZfQ5wjF0hK2FzVXwfebtDG4qq%2BiA%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220803T190422Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20220803%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=5d8c3f421c68c009b4471919a319ba460495c72afe51674d23266bc124fe9a56
+          assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+    Satus500:
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr><tr><td>UNKNOWN</td><td>Unknown error.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request.
+x-tagGroups:
+- name: Authentication
+  tags:
+  - Generate Token
+- name: Files
+  tags:
+  - Assets
+- name: PDF Operations
+  tags:
+  - Combine PDF
+  - Compress PDF
+  - Create PDF
+  - Document Generation
+  - Export PDF
+  - Export PDF Form Data
+  - Extract PDF
+  - Html to PDF
+  - Import PDF Form Data
+  - Linearize PDF
+  - OCR
+  - Page Manipulation
+  - PDF Accessibility Auto-Tag
+  - PDF Accessibility Checker
+  - PDF Electronic Seal
+  - PDF Properties
+  - PDF To Images
+  - PDF To Markdown
+  - PDF Watermark
+  - Protect PDF
+  - Remove Protection
+  - Split PDF

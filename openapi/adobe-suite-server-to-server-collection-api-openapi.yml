@@ -1,0 +1,519 @@
+openapi: 3.2.0
+info:
+  description: API reference for the Adobe Experience Platform Edge Network API.
+  version: 1.0.0
+  title: Adobe Experience Platform Edge Network Server-to-server collection API
+servers:
+- url: https://edge.adobedc.net/ee/
+  description: Production environment
+tags:
+- name: Server-to-server collection
+  description: Real-time events forwarded by a private server
+paths:
+  /v2/interact:
+    post:
+      tags:
+      - Server-to-server collection
+      summary: Interact (authenticated)
+      description: Push a single event and expect a response from real-time (interactive) upstreams
+      security:
+      - ApiKeyAuth: []
+      - IMSAuth: []
+      parameters:
+      - $ref: '#/components/parameters/xGatewayImsOrgId'
+      - $ref: '#/components/parameters/datastreamId'
+      - $ref: '#/components/parameters/requestId'
+      - $ref: '#/components/parameters/requestIdHeader'
+      - $ref: '#/components/parameters/fpid'
+      requestBody:
+        $ref: '#/components/requestBodies/SingleEventRequestPayload'
+      responses:
+        200:
+          description: Successfully processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractResponse'
+        400:
+          description: Invalid input.
+        403:
+          description: Request Forbidden.
+        500:
+          description: Internal error.
+  /v2/collect:
+    post:
+      tags:
+      - Server-to-server collection
+      summary: Collect (authenticated)
+      description: Push multiple events without expecting a response content. Events can come from different end-users.
+      security:
+      - ApiKeyAuth: []
+      - IMSAuth: []
+      parameters:
+      - $ref: '#/components/parameters/datastreamId'
+      - $ref: '#/components/parameters/xGatewayImsOrgId'
+      - $ref: '#/components/parameters/requestId'
+      - $ref: '#/components/parameters/requestIdHeader'
+      - $ref: '#/components/parameters/silent'
+      requestBody:
+        $ref: '#/components/requestBodies/BatchV2RequestPayload'
+      responses:
+        202:
+          description: Successfully processed. All the events have been received and processed in order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectV2Response'
+        204:
+          description: No content. When the silent parameter is set to true and there were no critical errors.
+        400:
+          description: Invalid input.
+        403:
+          description: Request Forbidden.
+        500:
+          description: Internal error.
+components:
+  schemas:
+    SingleEvent:
+      description: Represents the single event sent in a request
+      type: object
+      properties:
+        xdm:
+          $ref: '#/components/schemas/XdmEventData'
+        data:
+          description: Free form data
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            key1:
+            - value1
+            key2:
+            - value2
+            - value3
+    EventQuery:
+      description: Explicit request / Server-side Decisioning Override
+      type: object
+      properties:
+        identity:
+          $ref: '#/components/schemas/IdentityQuery'
+    BatchV2Event:
+      description: Represents events sent in a batch
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/EventQuery'
+        xdm:
+          $ref: '#/components/schemas/XdmEventData'
+        data:
+          description: Free form data
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            key1:
+            - value1
+            key2:
+            - value2
+            - value3
+    IdentityItem:
+      description: 'Identity is used to clearly distinguish people that are interacting with digital experiences.
+
+        For more details, see [IdentityItem Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/identityitem.schema.md).
+
+        '
+      type: object
+      properties:
+        id:
+          description: Identity of the consumer in the related namespace.
+          type: string
+        authenticatedState:
+          $ref: '#/components/schemas/AuthenticatedState'
+        primary:
+          description: Indicates this identity is the preferred identity. Is used as a hint to help systems better organize how identities are queried.
+          type: boolean
+          default: false
+      required:
+      - id
+    AuthenticatedState:
+      description: The state this identity is authenticated as for this observed ExperienceEvent.
+      type: string
+      enum:
+      - ambiguous
+      - authenticated
+      - loggedOut
+      default: ambiguous
+    StateMetadata:
+      description: Client side stored information
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+              scope:
+                description: 'Differentiate between state that could be shared across applications or web properties
+
+                  (e.g. third-party cookies) and application/web property specific state (e.g. first-party cookies).
+
+                  '
+                type: string
+                enum:
+                - APPLICATION
+                - DEVICE
+        domain:
+          description: The APEX domain that will be used when materializing client-side state in 1st party cookies.
+          type: string
+      example:
+        entries: []
+    BatchV2Request:
+      description: Request for pushing multiple events
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/EventQuery'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchV2Event'
+        meta:
+          $ref: '#/components/schemas/RequestMetadata'
+      required:
+      - events
+    XdmContextData:
+      description: Property that holds the xdm context data
+      type: object
+      properties:
+        identityMap:
+          $ref: '#/components/schemas/IdentityMap'
+        environment:
+          description: 'Information about the surrounding situation the event observation occurred in, specifically detailing
+
+            transitory information such as the network or software versions.
+
+            For more details, see [Environment Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/environment.schema.md)
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            type: browser
+            browserDetails:
+              name: Chrome
+              version: 63.0.3239
+              acceptLanguage: en
+              cookiesEnabled: true
+              javaScriptEnabled: true
+              javaScriptVersion: 1.8.5
+              javaEnabled: true
+              javaVersion: Java SE 8
+              viewportHeight: 900
+              viewportWidth: 1680
+            colorDepth: 16777216
+            viewportHeight: 667
+            viewportWidth: 375
+        device:
+          description: 'An identified device that is an application or browser instance that is trackable across sessions, normally by cookies.
+
+            For more details, see [Device Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/device.schema.md)
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            typeID: TypeIdentifier-111
+            typeIDService: https://ns.adobe.com/xdm/external/deviceatlas
+            type: mobile
+            manufacturer: Apple
+            model: iPhone Xs
+            modelNumber: A1586
+            screenHeight: 667
+            screenWidth: 375
+            colorDepth: 16777216
+            screenOrientation: portrait
+        application:
+          description: 'Details related to the application generated interactions. Application refers to a software experience,
+
+            such as a mobile or desktop application that can be installed, run, closed, uninstalled by the end-user.
+
+            For more details, see [Application Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/application.schema.md)
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            id: A123
+            name: Myapp
+            version: 1.0.1
+            launches:
+              value: 1
+        placeContext:
+          description: 'The transient circumstances related to the place or physical location of the observation.
+
+            Examples include location specific information such as weather, local time, traffic, day of the week, workday vs. holiday, working hours.
+
+            For more details, see [PlaceContext Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/placecontext.schema.md)
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            localTime: '2001-07-04T12:08:56+01:00'
+            localTimezoneOffset: -360
+            geo:
+              countryCode: JP
+              stateProvince: JP-13
+              city: Tōkyō
+              postalCode: 141-0032
+        web:
+          description: 'Information recorded via an ExperienceEvent that is specific to the World Wide Web channel,
+
+            including the web page, referrer and/or link related to the on-page interaction.
+
+            For more details, see [WebInfo Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/webinfo.schema.md).
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            webPageDetails:
+              siteSection: Product section
+              server: example.com
+              name: product home
+              URL: https://www.example.com
+            webReferrer:
+              URL: https://www.adobe.com/index2.html
+              type: external
+        commerce:
+          description: 'The entities related to buying and selling activity. For more details, see
+
+            [Commerce Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/commerce.schema.md).
+
+            '
+          type: object
+          additionalProperties: true
+          example:
+            order:
+              purchaseID: '123'
+              priceTotal: 100
+              currencyCode: USD
+            purchases:
+              value: 34
+    EventHandle:
+      description: Details and results for a given event
+      type: object
+      properties:
+        eventIndex:
+          description: Encodes the event to which this handle is attached as the index in the events array in EdgeRequest
+          type: integer
+        type:
+          type: string
+        payload:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      example:
+        eventIndex: 0
+        type: state:store
+        payload:
+        - key: kndctr_53A16ACB5CC1D3760A495C99_AdobeOrg_optout
+          value: ''
+          maxAge: 7200
+      required:
+      - type
+      - payload
+    IdentityMap:
+      description: 'Defines a map containing a set of end user identities, keyed on either namespace integration code or the namespace ID of the identity.
+
+        Within each namespace, the identity is unique. The values of the map are an array, meaning that more than one identity of each namespace may be carried.
+
+        For more details, see [IdentityMap Schema](https://github.com/adobe/xdm/blob/master/docs/reference/context/identitymap.schema.md).
+
+        '
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/IdentityItem'
+      example:
+        email:
+        - id: john.doe@example.com
+          authenticatedState: authenticated
+    SingleEventRequest:
+      description: Request for pushing a single event
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/EventQuery'
+        event:
+          $ref: '#/components/schemas/SingleEvent'
+        meta:
+          $ref: '#/components/schemas/RequestMetadata'
+      required:
+      - event
+    XdmEventData:
+      allOf:
+      - type: object
+      - $ref: '#/components/schemas/XdmContextData'
+      - properties:
+          _id:
+            description: A unique identifier for the time-series event.
+            type: string
+          eventMergeId:
+            description: An ID to correlate or merge multiple Experience Events together that are essentially the same event or should be merged. This is intended to be populated by the data producer prior to ingestion.
+            type: string
+            example: 9fb4e78d-b0bf-4d99-b987-cb37abdbcd15
+          eventType:
+            description: Event type
+            type: string
+            example: view:load
+          timestamp:
+            type: string
+            format: date-time
+            description: The time when an event or observation occurred.
+            example: '2017-09-26T15:52:25+00:00'
+    InteractResponse:
+      type: object
+      properties:
+        requestId:
+          description: The entropy-augmented identifier for this request, in the format `<requestId>-<entropy>` (for example, `708e4f90-5bff-41c5-8f4b-6c15bab76b11-f46e48eb52594815`). If a requestId was supplied in the request it is used as the prefix; otherwise a generated UUID is used. This value always differs from any caller-supplied requestId. Match on the prefix when correlating requests to responses.
+          type: string
+        handle:
+          description: Contains one or multiple handles for each received event
+          type: array
+          items:
+            $ref: '#/components/schemas/EventHandle'
+      required:
+      - requestId
+      - handle
+    RequestMetadata:
+      description: Metadata passed to solutions and to the API itself with possibility of overriding at event level
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/StateMetadata'
+    CollectV2Response:
+      type: object
+      properties:
+        requestId:
+          description: The entropy-augmented identifier for this request, in the format `<requestId>-<entropy>` (for example, `708e4f90-5bff-41c5-8f4b-6c15bab76b11-f46e48eb52594815`). If a requestId was supplied in the request it is used as the prefix; otherwise a generated UUID is used. This value always differs from any caller-supplied requestId. Match on the prefix when correlating requests to responses.
+          type: string
+      required:
+      - requestId
+    IdentityQuery:
+      description: Configures how the Gateway will interact with the Identity Service
+      type: object
+      properties:
+        fetch:
+          description: Specifies the namespaces for which identities should be returned
+          type: array
+          items:
+            type: string
+        idSyncRespondWithPixel:
+          type: boolean
+        idSyncRedirectUrl:
+          type: string
+      example:
+        fetch: []
+  parameters:
+    silent:
+      in: query
+      name: silent
+      schema:
+        type: boolean
+        default: false
+      description: 'Optional boolean parameter indicating whether the API returns 204 No Content with an empty payload or not.
+
+        Critical errors are reported using the corresponding HTTP Status Code and payload, however.
+
+        Applicable to /v2/collect API only.
+
+        '
+      required: false
+    requestId:
+      in: query
+      name: requestId
+      schema:
+        type: string
+        format: uuid
+      description: 'Provide an external request tracing ID; it can also be supplied in the x-request-id header.
+
+        The Edge Network always appends a 16-character hex entropy suffix to the provided value (or generates a new UUID if none is provided) to guarantee uniqueness across concurrent requests.
+
+        The returned identifier uses the format `<requestId>-<entropy>` (for example, `708e4f90-5bff-41c5-8f4b-6c15bab76b11-f46e48eb52594815`).
+
+        Because the entropy suffix is always added, the value in the response always differs from the value supplied in the request. When correlating requests to responses, match on the prefix of the returned requestId rather than an exact string match.
+
+        '
+      required: false
+    xGatewayImsOrgId:
+      in: header
+      name: x-gw-ims-org-id
+      schema:
+        type: string
+      description: Organization ID
+    fpid:
+      in: cookie
+      name: FPID
+      schema:
+        type: string
+      description: 'First Party ID value
+
+        '
+      required: false
+    datastreamId:
+      in: query
+      name: datastreamId
+      schema:
+        type: string
+        default: '8888888'
+      description: The datastream ID.
+      required: true
+    requestIdHeader:
+      in: header
+      name: x-request-id
+      schema:
+        type: string
+        format: uuid
+      description: 'Alternate way to supply an external request tracing ID (equivalent to the requestId query parameter).
+
+        The Edge Network always appends a 16-character hex entropy suffix to the provided value (or generates a new UUID if none is provided) to guarantee uniqueness across concurrent requests.
+
+        The returned identifier uses the format `<x-request-id>-<entropy>` (for example, `708e4f90-5bff-41c5-8f4b-6c15bab76b11-f46e48eb52594815`).
+
+        Because the entropy suffix is always added, the value in the response always differs from the value supplied in the request. When correlating requests to responses, match on the prefix of the returned requestId rather than an exact string match.
+
+        '
+      required: false
+  requestBodies:
+    SingleEventRequestPayload:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SingleEventRequest'
+    BatchV2RequestPayload:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BatchV2Request'
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Access Key
+    IMSAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Should be a valid IMS token for authenticating with the Edge Gateway

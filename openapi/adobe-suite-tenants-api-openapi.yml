@@ -1,0 +1,203 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Cloud Manager Tenants API
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+servers:
+- url: https://cloudmanager.adobe.io
+tags:
+- name: Tenants
+paths:
+  /api/tenants:
+    get:
+      tags:
+      - Tenants
+      summary: List Tenants
+      description: Lists all tenants
+      operationId: getTenants
+      parameters:
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of tenant list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantList'
+  /api/tenant/{tenantId}:
+    get:
+      tags:
+      - Tenants
+      summary: Get Tenant
+      description: Returns a tenant by its id
+      operationId: getTenant
+      parameters:
+      - name: tenantId
+        in: path
+        description: Identifier of the tenant
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful retrieval of tenant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '404':
+          description: Tenant not found
+components:
+  schemas:
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    Tenant:
+      type: object
+      required:
+      - imsOrgId
+      - imsTenantId
+      properties:
+        id:
+          type: string
+          example: '14'
+          description: Identifier of the tenant
+        imsOrgId:
+          type: string
+          example: 1AAA222B3C4444D55E666666@AdobeOrg
+          description: IMS Organization of this tenant
+          minLength: 0
+          maxLength: 255
+        imsTenantId:
+          type: string
+          example: acmeCorp
+          description: IMS Tenant Id
+          minLength: 0
+          maxLength: 255
+        description:
+          type: string
+          example: Description for acmeCorp
+          description: Description of the tenant
+          minLength: 0
+          maxLength: 255
+        status:
+          type: string
+          example: creating
+          description: Status of the tenant
+          enum:
+          - creating
+          - ready
+          - failed
+        organisation:
+          description: Tenant-level git repository organisation
+          $ref: '#/components/schemas/Organisation'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/programs:
+              description: Programs defined in the tenant
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: Describes a __Tenant__
+    Organisation:
+      type: object
+      properties:
+        organizationName:
+          type: string
+          example: adobecloudmanager-acmeCorp
+          description: Name of the git repository organization
+          minLength: 0
+          maxLength: 50
+        status:
+          type: string
+          example: creating
+          description: Status of the organisation on-boarding process
+          enum:
+          - not_started
+          - creating
+          - ready
+          - failed
+      description: Organisation details
+    TenantList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            tenants:
+              type: array
+              items:
+                $ref: '#/components/schemas/Tenant'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation

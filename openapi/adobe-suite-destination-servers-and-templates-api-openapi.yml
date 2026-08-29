@@ -1,0 +1,3184 @@
+openapi: 3.2.0
+info:
+  description: "Adobe Experience Platform Destination SDK (also referred to as the *Destination Authoring API*) is a suite of configuration APIs that allow you to configure destination integration patterns for Experience Platform to deliver audience and profile data to your endpoint, based on data and authentication formats of your choice. \n- **Related documentation**:\n    - [Destination SDK overview](http://www.adobe.com/go/destination-sdk-overview-en)\n    - [Getting started](http://www.adobe.com/go/destination-sdk-getting-started-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Destination Authoring API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Destination%20Authoring%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io\n    - Base path for this API: /data/core/activation/authoring\n    - Example of a complete path for making a call to \"/destinations\": https://<span>platform.adobe.io/data/core/activation/authoring/destinations\n\n- **Required headers**:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors)."
+  version: '1.0'
+  title: Destination Authoring Destination servers and templates API
+servers:
+- url: https://platform.adobe.io/data/core/activation/authoring
+  description: Production server
+tags:
+- name: Destination servers and templates
+  description: Destination server configurations contain information about the server receiving the messages (the server on your side). Template configurations allow you to configure how to format the exported message to your destination. <br><br> For a description of the functionality provided by this endpoint, see the overview on [server](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/server-specs) and [template specs](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/templating-specs) in the Destination SDK documentation.
+paths:
+  /destination-servers:
+    get:
+      tags:
+      - Destination servers and templates
+      summary: Retrieve a list of destination server configurations
+      description: You can retrieve a list of all destination server configurations for your IMS Organization by making a GET request to the `/destination-servers` endpoint.
+      operationId: listDestinationServer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with a list of destination server configurations that you have access to, based on the IMS Org ID and sandbox name that you used. One instanceId corresponds to one destination server.
+          x-summary: Destination server configurations retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/destinationServerResponse'
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+    post:
+      tags:
+      - Destination servers and templates
+      summary: Create a destination server configuration
+      description: You can create a new destination server configuration by making a POST request to the `/destination-servers` endpoint.
+      operationId: createDestinationServer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/Streaming_Destination_Server_Request'
+              - $ref: '#/components/schemas/Amazon_S3_Destination_Server_Request'
+              - $ref: '#/components/schemas/SFTP_Destination_Server_Request'
+              - $ref: '#/components/schemas/Azure_Blob_Destination_Server_Request'
+              - $ref: '#/components/schemas/Azure_Data_Lake_Storage_Gen2_Destination_Server_Request'
+              - $ref: '#/components/schemas/Data_Landing_Zone_Destination_Server_Request'
+              - $ref: '#/components/schemas/Google_Cloud_Storage_Destination_Server_Request'
+            examples:
+              Real-time (streaming):
+                summary: Real-time (streaming) destination server
+                value:
+                  name: Moviestar destination server
+                  destinationServerType: URL_BASED
+                  urlBasedDestination:
+                    url:
+                      templatingStrategy: PEBBLE_V1
+                      value: https://api.moviestar.com/data/{{customerData.region}}/items
+                  httpTemplate:
+                    httpMethod: POST
+                    requestBody:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+                    contentType: application/json
+              Amazon S3:
+                summary: Amazon S3 destination server
+                value:
+                  name: S3 destination
+                  destinationServerType: FILE_BASED_S3
+                  fileBasedS3Destination:
+                    bucket:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.bucket}}'
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              SFTP:
+                summary: SFTP destination server
+                value:
+                  name: File-based SFTP destination server
+                  destinationServerType: FILE_BASED_SFTP
+                  fileBasedSFTPDestination:
+                    rootDirectory:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.rootDirectory}}'
+                    hostName:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.hostName}}'
+                    port: 22
+                    encryptionMode: PGP
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Azure Data Lake Storage Gen2:
+                summary: Azure Data Lake Storage Gen2 destination server
+                value:
+                  name: ADLS destination server
+                  destinationServerType: FILE_BASED_ADLS_GEN2
+                  fileBasedAdlsGen2Destination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Azure Blob Storage:
+                summary: Azure Blob Storage destination server
+                value:
+                  name: Blob destination server
+                  destinationServerType: FILE_BASED_AZURE_BLOB
+                  fileBasedAzureBlobDestination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                    container:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.container}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Data Landing Zone:
+                summary: Data Landing Zone destination server
+                value:
+                  name: DLZ destination server
+                  destinationServerType: FILE_BASED_DLZ
+                  fileBasedDlzDestination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                    useCase: dlz_destination
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Google Cloud Storage:
+                summary: Google Cloud Storage destination server
+                value:
+                  name: Google Cloud Storage Server
+                  destinationServerType: FILE_BASED_GOOGLE_CLOUD
+                  fileBasedGoogleCloudStorageDestination:
+                    bucket:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.bucket}}'
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with details of your newly created destination server configuration.
+          x-summary: Destination server configuration created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/destinationServerResponse'
+              examples:
+                Real-time (streaming):
+                  summary: Real-time (streaming) destination server response
+                  value:
+                    instanceId: 9c77000a-4559-40ae-9119-a04324a3ecd4
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Moviestar destination server
+                    destinationServerType: URL_BASED
+                    urlBasedDestination:
+                      url:
+                        templatingStrategy: PEBBLE_V1
+                        value: https://api.moviestar.com/data/{{customerData.region}}/items
+                    httpTemplate:
+                      httpMethod: POST
+                      requestBody:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+                      contentType: application/json
+                Amazon S3:
+                  summary: Amazon S3 destination server response
+                  value:
+                    instanceId: e2d82550-3e99-4a01-b8e1-f90972ae61ce
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: S3 destination
+                    destinationServerType: FILE_BASED_S3
+                    fileBasedS3Destination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                SFTP:
+                  summary: SFTP destination server response
+                  value:
+                    instanceId: a1b2c3d4-5678-90ab-cdef-1234567890ab
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: File-based SFTP destination server
+                    destinationServerType: FILE_BASED_SFTP
+                    fileBasedSFTPDestination:
+                      rootDirectory:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.rootDirectory}}'
+                      hostName:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.hostName}}'
+                      port: 22
+                      encryptionMode: PGP
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Data Lake Storage Gen2:
+                  summary: Azure Data Lake Storage Gen2 destination server response
+                  value:
+                    instanceId: b2c3d4e5-6789-01bc-defg-234567890bcd
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: ADLS destination server
+                    destinationServerType: FILE_BASED_ADLS_GEN2
+                    fileBasedAdlsGen2Destination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Blob Storage:
+                  summary: Azure Blob Storage destination server response
+                  value:
+                    instanceId: c3d4e5f6-7890-12cd-efgh-34567890cdef
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Blob destination server
+                    destinationServerType: FILE_BASED_AZURE_BLOB
+                    fileBasedAzureBlobDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                      container:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.container}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Data Landing Zone:
+                  summary: Data Landing Zone destination server response
+                  value:
+                    instanceId: d4e5f6g7-8901-23de-fghi-4567890defg1
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: DLZ destination server
+                    destinationServerType: FILE_BASED_DLZ
+                    fileBasedDlzDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Google Cloud Storage:
+                  summary: Google Cloud Storage destination server response
+                  value:
+                    instanceId: e5f6g7h8-9012-34ef-ghij-567890efgh12
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Google Cloud Storage Server
+                    destinationServerType: FILE_BASED_GOOGLE_CLOUD
+                    fileBasedGoogleCloudStorageDestination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to formatting error
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+  /destination-servers/{INSTANCE_ID}:
+    get:
+      tags:
+      - Destination servers and templates
+      summary: Retrieve a destination server configuration
+      description: You can retrieve detailed information about a specific destination server configuration by making a GET request to the `/destination-servers` endpoint and providing the ID of the destination server configuration you want to retrieve.
+      operationId: retrieveDestinationServer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the destination server configuration you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with the configuration of the destination server corresponding to the INSTANCE_ID you provided.
+          x-summary: Destination server configuration retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/destinationServerResponse'
+              examples:
+                Real-time (streaming):
+                  summary: Real-time (streaming) destination server response
+                  value:
+                    instanceId: 9c77000a-4559-40ae-9119-a04324a3ecd4
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Moviestar destination server
+                    destinationServerType: URL_BASED
+                    urlBasedDestination:
+                      url:
+                        templatingStrategy: PEBBLE_V1
+                        value: https://api.moviestar.com/data/{{customerData.region}}/items
+                    httpTemplate:
+                      httpMethod: POST
+                      requestBody:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+                      contentType: application/json
+                Amazon S3:
+                  summary: Amazon S3 destination server response
+                  value:
+                    instanceId: e2d82550-3e99-4a01-b8e1-f90972ae61ce
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: S3 destination
+                    destinationServerType: FILE_BASED_S3
+                    fileBasedS3Destination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                SFTP:
+                  summary: SFTP destination server response
+                  value:
+                    instanceId: a1b2c3d4-5678-90ab-cdef-1234567890ab
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: File-based SFTP destination server
+                    destinationServerType: FILE_BASED_SFTP
+                    fileBasedSFTPDestination:
+                      rootDirectory:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.rootDirectory}}'
+                      hostName:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.hostName}}'
+                      port: 22
+                      encryptionMode: PGP
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Data Lake Storage Gen2:
+                  summary: Azure Data Lake Storage Gen2 destination server response
+                  value:
+                    instanceId: b2c3d4e5-6789-01bc-defg-234567890bcd
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: ADLS destination server
+                    destinationServerType: FILE_BASED_ADLS_GEN2
+                    fileBasedAdlsGen2Destination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Blob Storage:
+                  summary: Azure Blob Storage destination server response
+                  value:
+                    instanceId: c3d4e5f6-7890-12cd-efgh-34567890cdef
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Blob destination server
+                    destinationServerType: FILE_BASED_AZURE_BLOB
+                    fileBasedAzureBlobDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                      container:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.container}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Data Landing Zone:
+                  summary: Data Landing Zone destination server response
+                  value:
+                    instanceId: d4e5f6g7-8901-23de-fghi-4567890defg1
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: DLZ destination server
+                    destinationServerType: FILE_BASED_DLZ
+                    fileBasedDlzDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Google Cloud Storage:
+                  summary: Google Cloud Storage destination server response
+                  value:
+                    instanceId: e5f6g7h8-9012-34ef-ghij-567890efgh12
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-28T23:01:56.925824Z'
+                    name: Google Cloud Storage Server
+                    destinationServerType: FILE_BASED_GOOGLE_CLOUD
+                    fileBasedGoogleCloudStorageDestination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to incorrect formatting
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request before trying again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request before trying again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination server configuration ID before trying again.
+          x-summary: Resource not found
+    put:
+      tags:
+      - Destination servers and templates
+      summary: Update a destination server configuration
+      description: You can update an existing destination server configuration by making a PUT request to the `/destination-servers` endpoint with the updated payload.
+      operationId: updateDestinationServer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the destination server configuration that you want to update. To obtain an existing destination server configuration and its corresponding `{INSTANCE_ID}`, see [Retrieve a destination server configuration](#operation/retrieveDestinationServer).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/Streaming_Destination_Server_Request'
+              - $ref: '#/components/schemas/Amazon_S3_Destination_Server_Request'
+              - $ref: '#/components/schemas/SFTP_Destination_Server_Request'
+              - $ref: '#/components/schemas/Azure_Blob_Destination_Server_Request'
+              - $ref: '#/components/schemas/Azure_Data_Lake_Storage_Gen2_Destination_Server_Request'
+              - $ref: '#/components/schemas/Data_Landing_Zone_Destination_Server_Request'
+              - $ref: '#/components/schemas/Google_Cloud_Storage_Destination_Server_Request'
+            examples:
+              Real-time (streaming):
+                summary: Real-time (streaming) destination server
+                value:
+                  name: Moviestar destination server
+                  destinationServerType: URL_BASED
+                  urlBasedDestination:
+                    url:
+                      templatingStrategy: PEBBLE_V1
+                      value: https://api.moviestar.com/data/{{customerData.region}}/items
+                  httpTemplate:
+                    httpMethod: POST
+                    requestBody:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+                    contentType: application/json
+              Amazon S3:
+                summary: Amazon S3 destination server
+                value:
+                  name: S3 destination
+                  destinationServerType: FILE_BASED_S3
+                  fileBasedS3Destination:
+                    bucket:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.bucket}}'
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              SFTP:
+                summary: SFTP destination server
+                value:
+                  name: File-based SFTP destination server
+                  destinationServerType: FILE_BASED_SFTP
+                  fileBasedSFTPDestination:
+                    rootDirectory:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.rootDirectory}}'
+                    hostName:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.hostName}}'
+                    port: 22
+                    encryptionMode: PGP
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Azure Data Lake Storage Gen2:
+                summary: Azure Data Lake Storage Gen2 destination server
+                value:
+                  name: ADLS destination server
+                  destinationServerType: FILE_BASED_ADLS_GEN2
+                  fileBasedAdlsGen2Destination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Azure Blob Storage:
+                summary: Azure Blob Storage destination server
+                value:
+                  name: Blob destination server
+                  destinationServerType: FILE_BASED_AZURE_BLOB
+                  fileBasedAzureBlobDestination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                    container:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.container}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Data Landing Zone:
+                summary: Data Landing Zone destination server
+                value:
+                  name: DLZ destination server
+                  destinationServerType: FILE_BASED_DLZ
+                  fileBasedDlzDestination:
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                    useCase: dlz_destination
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+              Google Cloud Storage:
+                summary: Google Cloud Storage destination server
+                value:
+                  name: Google Cloud Storage Server
+                  destinationServerType: FILE_BASED_GOOGLE_CLOUD
+                  fileBasedGoogleCloudStorageDestination:
+                    bucket:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.bucket}}'
+                    path:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.path}}'
+                  fileConfigurations:
+                    compression:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.compression}}'
+                    fileType:
+                      templatingStrategy: PEBBLE_V1
+                      value: '{{customerData.fileType}}'
+                    csvOptions:
+                      quote:
+                        templatingStrategy: NONE
+                        value: '"'
+                      quoteAll:
+                        templatingStrategy: NONE
+                        value: 'false'
+                      escape:
+                        templatingStrategy: NONE
+                        value: \
+                      escapeQuotes:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      header:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreLeadingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      ignoreTrailingWhiteSpace:
+                        templatingStrategy: NONE
+                        value: 'true'
+                      nullValue:
+                        templatingStrategy: NONE
+                        value: ''
+                      dateFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd
+                      timestampFormat:
+                        templatingStrategy: NONE
+                        value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                      charToEscapeQuoteEscaping:
+                        templatingStrategy: NONE
+                        value: \
+                      emptyValue:
+                        templatingStrategy: NONE
+                        value: ''
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 with the details of your updated destination server configuration.
+          x-summary: Destination server configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/destinationServerResponse'
+              examples:
+                Real-time (streaming):
+                  summary: Real-time (streaming) destination server response
+                  value:
+                    instanceId: 9c77000a-4559-40ae-9119-a04324a3ecd4
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: Moviestar destination server
+                    destinationServerType: URL_BASED
+                    urlBasedDestination:
+                      url:
+                        templatingStrategy: PEBBLE_V1
+                        value: https://api.moviestar.com/data/{{customerData.region}}/items
+                    httpTemplate:
+                      httpMethod: POST
+                      requestBody:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+                      contentType: application/json
+                Amazon S3:
+                  summary: Amazon S3 destination server response
+                  value:
+                    instanceId: e2d82550-3e99-4a01-b8e1-f90972ae61ce
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: S3 destination
+                    destinationServerType: FILE_BASED_S3
+                    fileBasedS3Destination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                SFTP:
+                  summary: SFTP destination server response
+                  value:
+                    instanceId: a1b2c3d4-5678-90ab-cdef-1234567890ab
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: File-based SFTP destination server
+                    destinationServerType: FILE_BASED_SFTP
+                    fileBasedSFTPDestination:
+                      rootDirectory:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.rootDirectory}}'
+                      hostName:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.hostName}}'
+                      port: 22
+                      encryptionMode: PGP
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Data Lake Storage Gen2:
+                  summary: Azure Data Lake Storage Gen2 destination server response
+                  value:
+                    instanceId: b2c3d4e5-6789-01bc-defg-234567890bcd
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: ADLS destination server
+                    destinationServerType: FILE_BASED_ADLS_GEN2
+                    fileBasedAdlsGen2Destination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Azure Blob Storage:
+                  summary: Azure Blob Storage destination server response
+                  value:
+                    instanceId: c3d4e5f6-7890-12cd-efgh-34567890cdef
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: Blob destination server
+                    destinationServerType: FILE_BASED_AZURE_BLOB
+                    fileBasedAzureBlobDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                      container:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.container}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Data Landing Zone:
+                  summary: Data Landing Zone destination server response
+                  value:
+                    instanceId: d4e5f6g7-8901-23de-fghi-4567890defg1
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: DLZ destination server
+                    destinationServerType: FILE_BASED_DLZ
+                    fileBasedDlzDestination:
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+                Google Cloud Storage:
+                  summary: Google Cloud Storage destination server response
+                  value:
+                    instanceId: e5f6g7h8-9012-34ef-ghij-567890efgh12
+                    createdDate: '2020-09-28T23:01:56.925824Z'
+                    lastModifiedDate: '2020-09-29T14:32:10.456789Z'
+                    name: Google Cloud Storage Server
+                    destinationServerType: FILE_BASED_GOOGLE_CLOUD
+                    fileBasedGoogleCloudStorageDestination:
+                      bucket:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.bucket}}'
+                      path:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.path}}'
+                    fileConfigurations:
+                      compression:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.compression}}'
+                      fileType:
+                        templatingStrategy: PEBBLE_V1
+                        value: '{{customerData.fileType}}'
+                      csvOptions:
+                        quote:
+                          templatingStrategy: NONE
+                          value: '"'
+                        quoteAll:
+                          templatingStrategy: NONE
+                          value: 'false'
+                        escape:
+                          templatingStrategy: NONE
+                          value: \
+                        escapeQuotes:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        header:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreLeadingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        ignoreTrailingWhiteSpace:
+                          templatingStrategy: NONE
+                          value: 'true'
+                        nullValue:
+                          templatingStrategy: NONE
+                          value: ''
+                        dateFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd
+                        timestampFormat:
+                          templatingStrategy: NONE
+                          value: yyyy-MM-dd'T':mm:ss[.SSS][XXX]
+                        charToEscapeQuoteEscaping:
+                          templatingStrategy: NONE
+                          value: \
+                        emptyValue:
+                          templatingStrategy: NONE
+                          value: ''
+        '400':
+          description: Bad request. The request payload was incorrectly formatted. Check your payload formatting before trying again.
+          x-summary: Bad request due to incorrect formatting
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination server configuration ID before trying again.
+          x-summary: Resource not found
+    delete:
+      tags:
+      - Destination servers and templates
+      summary: Delete a destination server configuration
+      description: You can delete an existing destination server configuration by making a DELETE request to the `/destination-servers` endpoint with the `{INSTANCE_ID}` of the destination server configuration that you want to delete. <br><br> To obtain an existing destination server configuration and its corresponding `{INSTANCE_ID}`, see [Retrieve a destination server configuration](#operation/retrieveDestinationServer).
+      operationId: deleteDestinationServer
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: INSTANCE_ID
+        in: path
+        description: The ID of the destination server configuration you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: A successful response returns HTTP status 200 along with an empty HTTP response.
+          x-summary: Resource deleted successfully
+        '401':
+          description: Unauthorized. A mandatory header might be missing from the request or you may be missing permissions to access the resource. Verify your request and try again.
+          x-summary: Unauthorized access
+        '403':
+          description: Forbidden. The requester is not authorized to access the resource or a mandatory header might be missing from the request. Verify your request and try again.
+          x-summary: Access forbidden
+        '404':
+          description: Resource not found. Verify that you are using the correct destination server configuration ID before trying again.
+          x-summary: Resource not found
+components:
+  schemas:
+    Azure_Blob_Destination_Server_Request:
+      type: object
+      title: Create Azure Blob Storage Destination Server
+      description: Configuration for Azure Blob Storage file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedAzureBlobDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_AZURE_BLOB
+        fileBasedAzureBlobDestination:
+          type: object
+          properties:
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            container:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    templateStringBody:
+      description: Define any string in HTTP message bodies as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
+          type: string
+          example: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+          title: value
+          description: ' This string is the character-escaped version that transforms the data of Platform customers to the format your service expects. <br><br> <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul> Use `PEBBLE_V1` and define the value in the respective template. If no message transformation is needed and customers can use the source XDM input schema as the final output to your destination, use `{{ input.profile | raw }}` as request body value. <br><br> '
+    templateStringQueryParameters:
+      description: Define any string in HTTP query parameters as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
+          type: string
+          example: https://api.moviestar.com/data/{{customerData.region}}/items
+          title: value
+          description: Enter any query parameters that will be appended in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
+    Data_Landing_Zone_Destination_Server_Request:
+      type: object
+      title: Create Data Landing Zone Destination Server
+      description: Configuration for Data Landing Zone file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedDlzDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_DLZ
+        fileBasedDlzDestination:
+          type: object
+          properties:
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            useCase:
+              type: string
+              enum:
+              - dlz_destination
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    Azure_Data_Lake_Storage_Gen2_Destination_Server_Request:
+      type: object
+      title: Create Azure Data Lake Storage Gen2 Destination Server
+      description: Configuration for Azure Data Lake Storage Gen2 file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedAdlsGen2Destination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_ADLS_GEN2
+        fileBasedAdlsGen2Destination:
+          type: object
+          properties:
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    header:
+      type: object
+      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
+      properties:
+        header:
+          type: string
+          example: sample-header-requested-by-your-endpoint
+        value:
+          $ref: '#/components/schemas/templateStringHeaders'
+    templatingStrategy:
+      title: Template Transformation Type
+      example: PEBBLE_V1
+      description: If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value.
+      type: string
+      enum:
+      - PEBBLE_V1
+      - NONE
+    response:
+      properties:
+        instanceId:
+          type: string
+          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
+          title: Instance ID
+          description: The unique ID of an object.
+        createdDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Created date
+          description: Created date in UTC.
+        lastModifiedDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Last modified date
+          description: Last update date in UTC.
+    templateStringUrl:
+      description: Define any string in URLs as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
+          type: string
+          example: https://api.moviestar.com/data/{{customerData.region}}/items
+          title: value
+          description: 'Fill in the address of the API endpoint that Experience Platform should connect to. <ul><li>Use `PEBBLE_V1` if Experience Platform needs to transform the URL in the value field below. Use this option if you have an endpoint like: `https://api.moviestar.com/data/{{customerData.region}}/items`, where users must select the endpoint region from the Experience Platform UI.</li><li>Use `NONE` if no transformation is needed on the Adobe side, for example if you have an endpoint like: `https://api.moviestar.com/data/items`.</li></ul>'
+    destinationServer:
+      title: Destination Server
+      properties:
+        name:
+          type: string
+          example: Your destination server
+          title: Destination Server
+          description: Represents a friendly name of your server, visible only to Adobe. This name is not visible to partners or customers. For example, `Moviestar destination server`.
+        destinationServerType:
+          type: string
+          example: URL_BASED
+          title: Destination Server type
+          description: Set this value according to your destination platform. Supported values are `URL_BASED` for streaming destinations, `FILE_BASED_SFTP` for SFTP destinations, `FILE_BASED_S3` for Amazon S3 destinations, `FILE_BASED_ADLS_GEN2` for Azure Data Lake Storage Gen2 destinations, `FILE_BASED_AZURE_BLOB` for Azure Blob Storage destinations, `FILE_BASED_DLZ` for Data Landing Zone destinations, and `FILE_BASED_GOOGLE_CLOUD` for Google Cloud Storage destinations.
+          enum:
+          - URL_BASED
+          - FILE_BASED_SFTP
+          - FILE_BASED_S3
+          - FILE_BASED_ADLS_GEN2
+          - FILE_BASED_AZURE_BLOB
+          - FILE_BASED_DLZ
+          - FILE_BASED_GOOGLE_CLOUD
+        urlBasedDestination:
+          type: object
+          title: HTTP Settings
+          description: Defines protocol details and template for an HTTP URL with port and path.
+          properties:
+            url:
+              $ref: '#/components/schemas/templateStringUrl'
+          required:
+          - url
+        fileBasedSFTPDestination:
+          type: object
+          title: SFTP Settings
+          description: Defines SFTP protocol details.
+          properties:
+            rootDirectory:
+              type: object
+              title: Root Directory
+              description: The path to the directory that will host the exported files. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"Storage/MyDirectory"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            hostName:
+              type: object
+              title: Host Name
+              description: The host name of your SFTP server. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"my.hostname.com"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            port:
+              type: integer
+              description: The SFTP file server port.
+              example: 22
+            encryptionMode:
+              type: string
+              description: 'Indicates whether to use file encryption. Supported values: `PGP`, `None`.'
+              example: PGP
+          required:
+          - rootDirectory
+          - hostName
+        fileBasedS3Destination:
+          type: object
+          title: S3 Settings
+          description: Defines S3 protocol details.
+          properties:
+            bucket:
+              type: object
+              title: Bucket
+              description: The name of the Amazon S3 bucket to be used by this destination. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"MyBucket"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            path:
+              type: object
+              title: Path
+              description: The path to the Amazon S3 bucket to be used by this destination. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"/path/to/MyBucket"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+          required:
+          - bucket
+          - path
+        fileBasedAdlsGen2Destination:
+          type: object
+          title: Azure Data Lake Storage Gen2 Settings
+          description: Defines Azure Data Lake Storage Gen2 protocol details.
+          properties:
+            path:
+              type: object
+              title: Path
+              description: The path to your Azure Data Lake Storage Gen2 storage folder. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `abfs://<file_system>@<account_name>.dfs.core.windows.net/<path>/`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+          required:
+          - path
+        fileBasedAzureBlobDestination:
+          type: object
+          title: Azure Blob Storage Settings
+          description: Defines Azure Blob Storage protocol details.
+          properties:
+            path:
+              type: object
+              title: Path
+              description: The path to your Azure Blob storage. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `https://myaccount.blob.core.windows.net/`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            container:
+              type: object
+              title: Container
+              description: The name of the Azure Blob Storage container to be used for this destination. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `myContainer`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+          required:
+          - path
+          - container
+        fileBasedDlzDestination:
+          type: object
+          title: Data Landing Zone Settings
+          description: Defines Data Landing Zone protocol details.
+          properties:
+            path:
+              type: object
+              title: Path
+              description: The path to the destination folder that will host the exported files.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            useCase:
+              type: string
+              title: Use Case
+              description: '*Required*. Set this to `dlz_destination`. This property identifies the destination as a Data Landing Zone destination. This property is only used when creating a Data Landing Zone destination.'
+              example: dlz_destination
+          required:
+          - path
+          - useCase
+        fileBasedGoogleCloudStorageDestination:
+          type: object
+          title: Google Cloud Storage Settings
+          description: Defines Google Cloud Storage protocol details.
+          properties:
+            bucket:
+              type: object
+              title: Bucket
+              description: The name of the Google Cloud Storage bucket to be used by this destination. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"my-bucket"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            path:
+              type: object
+              title: Path
+              description: The path to the Google Cloud Storage folder to be used by this destination. This can either be a templatized field which will read the value from the customer data fields filled in by the user, or a hard-coded value, such as `"/path/to/my-bucket"`.
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+          required:
+          - bucket
+          - path
+        httpTemplate:
+          type: object
+          title: Http Template
+          description: Defines fields in the HTTP template. The fields in this object build the HTTP message to your destination, requesting a new access token.
+          properties:
+            requestBody:
+              $ref: '#/components/schemas/templateStringBody'
+            httpMethod:
+              type: string
+              example: POST
+              description: 'The method that Adobe will use in calls to your server, to request a new access token. '
+              enum:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - PATCH
+              - OPTIONS
+              - HEAD
+            queryParameters:
+              $ref: '#/components/schemas/templateStringQueryParameters'
+            contentType:
+              type: string
+              description: 'Specifies the content type of the HTTP call to your access token endpoint. <br><br> For example: application/x-www-form-urlencoded or application/json.'
+              example: application/json
+            headers:
+              type: array
+              items:
+                $ref: '#/components/schemas/header'
+          required:
+          - httpMethod
+    Streaming_Destination_Server_Request:
+      type: object
+      title: Create Streaming Destination Server
+      description: Configuration for API-based streaming destinations.
+      required:
+      - name
+      - destinationServerType
+      - urlBasedDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - URL_BASED
+        urlBasedDestination:
+          type: object
+          properties:
+            url:
+              $ref: '#/components/schemas/templateStringUrl'
+        httpTemplate:
+          type: object
+          properties:
+            requestBody:
+              $ref: '#/components/schemas/templateStringBody'
+            httpMethod:
+              type: string
+              enum:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - PATCH
+              - OPTIONS
+              - HEAD
+            contentType:
+              type: string
+    Google_Cloud_Storage_Destination_Server_Request:
+      type: object
+      title: Create Google Cloud Storage Destination Server
+      description: Configuration for Google Cloud Storage file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedGoogleCloudStorageDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_GOOGLE_CLOUD
+        fileBasedGoogleCloudStorageDestination:
+          type: object
+          properties:
+            bucket:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    SFTP_Destination_Server_Request:
+      type: object
+      title: Create SFTP Destination Server
+      description: Configuration for SFTP file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedSFTPDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_SFTP
+        fileBasedSFTPDestination:
+          type: object
+          properties:
+            rootDirectory:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            hostName:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            port:
+              type: integer
+            encryptionMode:
+              type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    destinationServerResponse:
+      allOf:
+      - $ref: '#/components/schemas/response'
+      - $ref: '#/components/schemas/destinationServer'
+    Amazon_S3_Destination_Server_Request:
+      type: object
+      title: Create Amazon S3 Destination Server
+      description: Configuration for Amazon S3 file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedS3Destination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_S3
+        fileBasedS3Destination:
+          type: object
+          properties:
+            bucket:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    templateStringHeaders:
+      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
+          type: string
+          example: https://api.moviestar.com/data/{{customerData.region}}/items
+          title: value
+          description: Enter any headers that will be used in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
+  parameters:
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+      required: true
+      schema:
+        type: string
+      in: header

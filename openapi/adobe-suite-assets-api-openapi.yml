@@ -1,0 +1,2433 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Assets API
+  version: '1.0'
+  description: 'Operations tagged Assets across 2 of this provider''s published API definitions: adobe-suite-lightroom-openapi.json, adobe-suite-pdf-services-openapi.json. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://lr.adobe.io/
+- url: https://pdf-services-ue1.adobe.io
+- url: https://pdf-services-ew1.adobe.io
+tags:
+- name: Assets
+  description: Information for assets, typically images or videos.
+paths:
+  /v2/catalogs/{catalog_id}/assets/{asset_id}:
+    put:
+      tags:
+      - Assets
+      summary: Create asset
+      description: Create a new asset with initial metadata and import information.
+      operationId: createAsset
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which the asset will be created.
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Client-generated Lightroom unique identifier for the new asset.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Initial asset metadata and import information.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - captureDate
+              properties:
+                subtype:
+                  type: string
+                  enum:
+                  - image
+                  - video
+                payload:
+                  type: object
+                  properties:
+                    userCreated:
+                      $ref: '#/components/schemas/iso8601DateTime'
+                    userUpdated:
+                      $ref: '#/components/schemas/iso8601DateTime'
+                    captureDate:
+                      type: string
+                      enum:
+                      - '0000-00-00T00:00:00'
+                      - iso8601DateTime
+                      description: Capture date of the asset in ISO-8601 format. Will be populated by the server automatically from the master if set to '0000-00-00T00:00:00'
+                    importSource:
+                      type: object
+                      required:
+                      - fileName
+                      - importedOnDevice
+                      - importedBy
+                      - importTimestamp
+                      properties:
+                        fileName:
+                          type: string
+                        importedOnDevice:
+                          type: string
+                          description: Name of the device that imported the image.
+                        importedBy:
+                          type: string
+                          description: Account ID of the user who imported the asset.
+                        importTimestamp:
+                          $ref: '#/components/schemas/iso8601DateTime'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestJSON'
+                - $ref: '#/components/schemas/InvaildRequestSubtype'
+                - $ref: '#/components/schemas/InvaildRequestPayload'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+                InvaildRequestJSON:
+                  $ref: '#/components/examples/InvaildRequestJSONExample'
+                InvaildRequestSubtype:
+                  $ref: '#/components/examples/InvaildRequestSubtypeExample'
+                InvaildRequestPayload:
+                  $ref: '#/components/examples/InvaildRequestPayloadExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ForbiddenKeyError'
+                - $ref: '#/components/schemas/ResourceExistsError'
+                - $ref: '#/components/schemas/QuotaExceededError'
+              examples:
+                InvalidApiKey:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                ResourceExists:
+                  $ref: '#/components/examples/ResourceExistsErrorExample'
+                QuotaExceeded:
+                  $ref: '#/components/examples/AssetQuotaExceededErrorExample'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/AssetNotFoundExample'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    get:
+      tags:
+      - Assets
+      summary: Get a catalog asset
+      description: Retrieves information about a single asset in a catalog that the caller owns. Successful response may also return invalid flag in the rendition link for the asset. A rendition becomes invalid when an asset is edited after rendition has been generated. New renditions (only 2560 and fullsize) can be generated via Generate Renditions API. The read xmp/develop link in the response will have the invalid flag as true if asset with SHA256 has been created but external xmp/develop has not been uploaded yet.
+      operationId: getAsset
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Identifier of the asset
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/SuccessImageAsset'
+                - $ref: '#/components/schemas/SuccessVideoAsset'
+              examples:
+                SuccessImageAsset:
+                  $ref: '#/components/examples/SuccessImageAssetExample'
+                SuccessVideoAsset:
+                  $ref: '#/components/examples/SuccessVideoAssetExample'
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestAssetIds'
+                - $ref: '#/components/schemas/InvaildRequestGroup'
+                - $ref: '#/components/schemas/InvaildRequestName'
+                - $ref: '#/components/schemas/InvaildRequestFavorite'
+                - $ref: '#/components/schemas/InvaildRequestMissingSubtypeWithGroupOrName'
+                - $ref: '#/components/schemas/InvaildRequestMissingSubtypeWithFavorite'
+                - $ref: '#/components/schemas/InvaildRequestInvalidDateTime'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+                InvaildRequestAssetIds:
+                  $ref: '#/components/examples/InvaildRequestAssetIdsExample'
+                InvaildRequestGroup:
+                  $ref: '#/components/examples/InvaildRequestGroupExample'
+                InvaildRequestName:
+                  $ref: '#/components/examples/InvaildRequestNameExample'
+                InvaildRequestFavorite:
+                  $ref: '#/components/examples/InvaildRequestFavoriteExample'
+                InvaildRequestMissingSubtypeWithGroupOrName:
+                  $ref: '#/components/examples/InvaildRequestMissingSubtypeWithGroupOrNameExample'
+                InvaildRequestMissingSubtypeWithFavorite:
+                  $ref: '#/components/examples/InvaildRequestMissingSubtypeWithFavoriteExample'
+                InvaildRequestInvalidDateTime:
+                  $ref: '#/components/examples/InvaildRequestInvalidDateTimeExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ForbiddenKeyError'
+                - $ref: '#/components/schemas/ForbiddenClientError'
+              examples:
+                InvalidApiKey:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                ForbiddenClient:
+                  $ref: '#/components/examples/ForbiddenClientErrorExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /v2/catalogs/{catalog_id}/assets:
+    get:
+      tags:
+      - Assets
+      summary: Retrieve assets
+      description: Retrieve a list of existing assets that caller owns. Successful response may also return invalid flag in the rendition link for the asset. A rendition becomes invalid when an asset is edited after rendition has been generated. New renditions (only 2560 and fullsize) can be generated via Generate Renditions API. The read xmp/develop link in the response will have the invalid flag as true if asset with SHA256 has been created but external xmp/develop has not been uploaded yet.
+      operationId: getAssets
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog containing the album.
+        required: true
+        schema:
+          type: string
+      - name: updated_since
+        in: query
+        description: Starting timestamp
+        schema:
+          type: string
+      - name: captured_before
+        in: query
+        description: Used to request assets captured before a given time. captured_before will be found in the "links.next.href" link. If no links.next is included in a listing response, this is a hint from the server that there are no assets in the catalog with a date captured_before the last asset in the list (the client has reached the "bottom" of the list). captured_before may not be used in conjunction with captured_after.
+        schema:
+          type: string
+      - name: captured_after
+        in: query
+        description: 'Used to request assets captured after a given time. captured_after will be found in the "links.prev.href" link. If no links.prev is included in a listing response, this is a hint from the server that there are no assets in the catalog with a date captured_after the first asset in the list (the client has reached the "top" of the list). Note: assets imported without a captureDate payload property default to the value "0000-00-00T00:00:00". To list these assets set captured_after to "-0001-12-31T23:59:59". captured_after may not be used in conjunction with captured_before.'
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Number of assets to return. Default value is 100. Maximum is 500. Please note that the response may contain more than 'limit' number of assets returned if the assets at the 'limit' boundary has the same capture_date. For example if there are 5 assets in a catalog and the 3rd, 4th and 5th assets all have the same capture dates the response will contain all 5 assets whether 'limit' is 3, 4 or 5.
+        schema:
+          type: integer
+      - name: sha256
+        in: query
+        description: SHA256 hash value of original file. Assets with a matching SHA256 hash will be returned. May be used in conjunction with subtype.
+        schema:
+          type: string
+      - name: hide_stacked_assets
+        in: query
+        description: To show or hide assets inside stacks in the catalog. If hide_stacked_assets is passed as true, assets inside stacks won't be returned. Default value is false.
+        schema:
+          type: boolean
+      - name: subtype
+        in: query
+        description: Semi-colon separated asset subtype values.
+        schema:
+          type: string
+      - name: asset_ids
+        in: query
+        description: Set of 1 - 100 comma separated asset_id values. Other parameters can not be used in conjunction with this parameter.
+        schema:
+          type: string
+      - name: exclude
+        in: query
+        description: Used to request the list for different types of assets excluding incomplete or complete image and video assets. The valid values are "incomplete" and "complete". An image or video asset is considered to be complete if its proxy or original upload exists. An asset of subtypes profile, preset, camera_profile or lens_profile is considered complete if its original upload exists.
+        schema:
+          type: string
+      - name: group
+        in: query
+        description: Semi-colon separated group values. Subtype parameter of "preset" or "profile" is required when using this parameter.
+        schema:
+          type: string
+      - name: name
+        in: query
+        description: Semi-colon separated name values. Subtype parameter of "preset" or "profile" is required when using this parameter.
+        schema:
+          type: string
+      - name: favorite
+        in: query
+        description: Favorite status, subtype parameter of "preset" is required when using this parameter.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/Success'
+                - $ref: '#/components/schemas/SuccessAssetIdsQueryParam'
+              examples:
+                Success:
+                  $ref: '#/components/examples/SuccessExample'
+                SuccessQueryParam:
+                  $ref: '#/components/examples/SuccessQueryParamExample'
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestAssetIds'
+                - $ref: '#/components/schemas/InvaildRequestGroup'
+                - $ref: '#/components/schemas/InvaildRequestName'
+                - $ref: '#/components/schemas/InvaildRequestFavorite'
+                - $ref: '#/components/schemas/InvaildRequestMissingSubtypeWithGroupOrName'
+                - $ref: '#/components/schemas/InvaildRequestMissingSubtypeWithFavorite'
+                - $ref: '#/components/schemas/InvaildRequestInvalidDateTime'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+                InvaildRequestAssetIds:
+                  $ref: '#/components/examples/InvaildRequestAssetIdsExample'
+                InvaildRequestGroup:
+                  $ref: '#/components/examples/InvaildRequestGroupExample'
+                InvaildRequestName:
+                  $ref: '#/components/examples/InvaildRequestNameExample'
+                InvaildRequestFavorite:
+                  $ref: '#/components/examples/InvaildRequestFavoriteExample'
+                InvaildRequestMissingSubtypeWithGroupOrName:
+                  $ref: '#/components/examples/InvaildRequestMissingSubtypeWithGroupOrNameExample'
+                InvaildRequestMissingSubtypeWithFavorite:
+                  $ref: '#/components/examples/InvaildRequestMissingSubtypeWithFavoriteExample'
+                InvaildRequestInvalidDateTime:
+                  $ref: '#/components/examples/InvaildRequestInvalidDateTimeExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ForbiddenKeyError'
+                - $ref: '#/components/schemas/ForbiddenClientError'
+              examples:
+                InvalidApiKey:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                ForbiddenClient:
+                  $ref: '#/components/examples/ForbiddenClientErrorExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /v2/catalogs/{catalog_id}/assets/{asset_id}/master:
+    put:
+      tags:
+      - Assets
+      summary: Create an asset original file
+      description: Create and upload an original file for the asset. Up to 200 MB may be uploaded per invocation, and larger files may be uploaded by calling this API multiple times with Content-Range headers for each part. When all parts are received the upload will be consolidated asynchronously. All partial uploads should include optional rendition type parameters to ensure the last part received has the necessary options for request post-processing.
+      operationId: createAssetOriginal
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: Content-Length
+        in: header
+        description: Length in bytes of the content.
+        schema:
+          type: integer
+      - name: Content-Range
+        in: header
+        description: Byte range for the request, including first and last bytes and entity length as defined in RFC 2616. Should be included only when the data cannot be uploaded in a single call.
+        schema:
+          type: string
+      - name: Content-Type
+        in: header
+        description: Content type. For jpeg assets, the only allowed type is 'image/jpeg'. For camera raw assets the type is 'application/octet-stream'. For video assets, the content-type is of the format video/* where * depends upon the video type and can contain only ASCII characters. Or the content-type of video can be application/octet-stream;video
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which the asset will be created.
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Identifier of the asset to which the XMP settings are associated.
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: The request failed due to an invalid resource identifier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvaildRequestGUID'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenKey'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /v2/catalogs/{catalog_id}/assets/{asset_id}/renditions:
+    post:
+      tags:
+      - Assets
+      summary: Generate renditions for an original file
+      description: Generate renditions for an original file asynchronously. Allowed rendition types are fullsize and 2560. Generated rendition will be deleted after 1 day automatically.
+      operationId: generateRenditions
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: X-Generate-Renditions
+        in: header
+        description: 'One or multiple of the supported rendition types separated by '',''. Supported rendition types are : [''fullsize'', ''2560''].'
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: Content-Length
+        in: header
+        description: Length in bytes of the content.
+        schema:
+          type: integer
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which the asset was created.
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Identifier of the asset for which rendition gets generated.
+        required: true
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Accepted.(Client needs to poll on rendition link in response and accessing it might not immediately returns a success response.)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base:
+                    type: string
+                    description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+                  links:
+                    type: object
+                example:
+                  base: <base_url>
+                  links:
+                    /rels/rendition_type/<rendition_type>:
+                      href: assets/<asset_id>/renditions/<rendition_type>
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestSubtype'
+                - $ref: '#/components/schemas/InvaildRequestMissingParameter'
+                - $ref: '#/components/schemas/InvaildRequestRenditionType'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+                InvaildRequestSubtype:
+                  $ref: '#/components/examples/InvaildRequestSubtypeExample'
+                InvaildRequestMissingParameter:
+                  $ref: '#/components/examples/InvaildRequestMissingParameterExample'
+                InvaildRequestRenditionType:
+                  $ref: '#/components/examples/InvaildRequestRenditionTypeExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenKey'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/AssetNotFoundExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /v2/catalogs/{catalog_id}/assets/{asset_id}/renditions/{rendition_type}:
+    get:
+      tags:
+      - Assets
+      summary: Get latest asset rendition
+      description: Get latest asset rendition of specified type. It returns 404 if rendition does not exist. It returns 404 in another case when rendition is invalid (only for rendition type 2560 and fullsize)
+      operationId: getAssetRendition
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which asset exists.
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Identifier of the asset for which to fetch rendition.
+        required: true
+        schema:
+          type: string
+      - name: rendition_type
+        in: path
+        description: 'One of the supported rendition types. Supported rendition types are : [''thumbnail2x'', ''fullsize'', ''640'', ''1280'', ''2048'', ''2560''].'
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 'Asset rendition file. Response content type : image/jpeg'
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestRenditionType'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/RenditionInvaildRequestGUIDExample'
+                InvaildRequestRenditionType:
+                  $ref: '#/components/examples/InvaildRequestRenditionTypeExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/RenditionNotFoundExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /v2/catalogs/{catalog_id}/assets/{asset_id}/xmp/develop:
+    put:
+      tags:
+      - Assets
+      summary: Create asset external xmp develop setting file
+      description: This API support two workflows. The first workflow is to upload external XMP develop settings file for the asset. Content-type header for this case is application/rdf+xml. The second workflow is to create an external XMP develop settings file by copying from another asset's external xmp develop setting file. Content-type header for this case is application/json.
+      operationId: putAssetExternalXmpDevelopSetting
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which the asset will be created.
+        required: true
+        schema:
+          type: string
+      - name: Content-Length
+        in: header
+        description: Content length, in bytes. Current maximum size is 200 Mb.
+        required: true
+        schema:
+          type: integer
+      - name: Content-Type
+        in: header
+        description: For uploading a new xmp/develop file content-type='application/rdf+xml' and for copying xmp/develop file from another asset content-type='application/json'
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Client-generated Lightroom unique identifier for the new asset.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The below request body example is for copying external xmp/develop file from another asset. (For upload external xmp/develop  case the body will be a xml string. Eg. '\<xml.../xml\>')
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_href:
+                  type: string
+                  description: External xmp/develop link of source asset.
+              example:
+                file_href: /v2/catalogs/{catalog_id}/assets/{source_asset_id}/xmp/develop
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: The request failed due to an invalid input
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvaildRequestGUID'
+                - $ref: '#/components/schemas/InvaildRequestSubtype'
+                - $ref: '#/components/schemas/InvaildRequestJSON'
+                - $ref: '#/components/schemas/InvaildRequestPayload'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+                InvaildRequestSubtype:
+                  $ref: '#/components/examples/InvaildRequestSubtypeExample'
+                InvaildRequestJSON:
+                  $ref: '#/components/examples/InvaildRequestJSONExample'
+                InvaildRequestPayload:
+                  $ref: '#/components/examples/InvaildRequestPayloadExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ForbiddenKeyError'
+                - $ref: '#/components/schemas/ResourceExistsError'
+                - $ref: '#/components/schemas/QuotaExceededError'
+              examples:
+                InvalidApiKey:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                ResourceExists:
+                  $ref: '#/components/examples/ResourceExistsErrorExample'
+                QuotaExceeded:
+                  $ref: '#/components/examples/AssetQuotaExceededErrorExample'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/AssetNotFoundExample'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    get:
+      tags:
+      - Assets
+      summary: Get latest asset external xmp develop setting
+      description: Get latest asset external xmp develop setting file
+      operationId: getAssetExternalXmpDevelopSetting
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      - name: catalog_id
+        in: path
+        description: Identifier of the catalog in which asset exists.
+        required: true
+        schema:
+          type: string
+      - name: asset_id
+        in: path
+        description: Identifier of the asset for which to fetch rendition.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: External XMP Develop Setting file. Content type of the response is application/rdf+xml.
+        '400':
+          description: The request failed due to an invalid resource identifier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvaildRequestGUID'
+              examples:
+                InvaildRequestGUID:
+                  $ref: '#/components/examples/AssetInvaildRequestGUIDExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvalidAPIKeyError'
+                - $ref: '#/components/schemas/AccessForbiddenError'
+              examples:
+                ForbiddenKeyError:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                AccessForbiddenError:
+                  $ref: '#/components/examples/AccessForbiddenExample'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/AssetNotFoundExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+    servers:
+    - url: https://lr.adobe.io/
+  /assets:
+    post:
+      tags:
+      - Assets
+      summary: 'Get upload pre-signed URI. '
+      description: "Get the pre-signed URI to directly upload the content to the adobe's internal cloud provider. \n\nOutput: Response will have the asset URI of created asset and pre-signed URI for uploading the content.<div><small><b>Note:</b> The pre-signed URI provided for uploading or downloading the content has an expiry of 1 hour.</small></div>"
+      operationId: asset.uploadpresignedurl
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Params for getting upload presigned url Operation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetUploadPresignedUrlRequest'
+        required: true
+      responses:
+        '200':
+          description: The request was successful.
+          headers:
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUploadPresignedUrlAsset'
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+    servers:
+    - url: https://pdf-services-ue1.adobe.io
+    - url: https://pdf-services-ew1.adobe.io
+  /assets/{assetId}:
+    get:
+      tags:
+      - Assets
+      summary: Get download pre-signed URI.
+      description: Get the pre-signed URI to fetch the content directly from the cloud provider.<div><small><b>Note:</b> The pre-signed URI provided for uploading or downloading the content has an expiry of 1 hour.</small></div>
+      operationId: asset.get
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The request was successful.
+          headers:
+            Content-Type:
+              description: The media type of the response body, which is application/json.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique ID to identify each individual request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPresignedUrl'
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+    delete:
+      tags:
+      - Assets
+      summary: Delete the asset from storage.
+      description: Delete the stored asset from the cloud provider.
+      operationId: asset.delete
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The request was successful, but no content received.
+          headers:
+            Content-Type:
+              description: The media type of the response body, which is application/json.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique ID to identify each individual request.
+              schema:
+                type: string
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+    servers:
+    - url: https://pdf-services-ue1.adobe.io
+    - url: https://pdf-services-ew1.adobe.io
+  /assets/{assetId}/metadata:
+    get:
+      tags:
+      - Assets
+      summary: Get asset metadata.
+      description: Get the metadata of the stored temporary asset.
+      operationId: asset.metadata
+      parameters:
+      - name: Authorization
+        in: header
+        description: Bearer + Token (<a href="https://developer.adobe.com/document-services/docs/overview/pdf-services-api/gettingstarted/#step-1--getting-the-access-token">Learn more</a> about getting the access token)
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The clientId from the generated credentials
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The request was successful.
+          headers:
+            Content-Type:
+              description: The media type of the response body, which is application/json.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique ID to identify each individual request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetMetadata'
+        '400':
+          description: Bad Request. The request was invalid or cannot be otherwise served.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/400'
+        '401':
+          description: Unauthorized.
+          headers:
+            content-type:
+              description: The content type of the error JSON response.
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/401'
+        '429':
+          description: Caller doesn't have sufficient quota for this operation.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset429'
+        '500':
+          description: Internal Server Error. The server has encountered an error and is unable to process your request at this time.
+          headers:
+            content-type:
+              description: The content type of the POST API call response
+              schema:
+                type: string
+            x-request-id:
+              description: A unique value to identify this request. If x-request-id is specified in the POST request, this value will be the same as the input.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/500'
+    servers:
+    - url: https://pdf-services-ue1.adobe.io
+    - url: https://pdf-services-ew1.adobe.io
+components:
+  examples:
+    SuccessVideoAssetExample:
+      summary: SuccessVideoAsset
+      value:
+        base: <base_url>
+        id: <asset_id>
+        type: asset
+        subtype: video
+        created: <created_date>
+        updated: <updated_date>
+        links:
+          self:
+            href: assets/<asset_id>
+          /rels/master_create:
+            href: assets/<asset_id>/master
+          /rels/xmp_develop_create:
+            href: assets/<asset_id>/xmp/develop
+          /rels/rendition_type/<rendition_type>:
+            href: assets/<asset_id>/renditions/<rendition_type>
+          /rels/xmp/develop:
+            href: assets/<asset_id>/xmp/develop
+            invalid: 'true'
+            fileSize: <external_xmp_develop_setting_file_size>
+        unshareable: <unshareable>
+        payload:
+          captureDate: <image_capture_date>
+          importSource:
+            fileName: <file_name>
+            fileSize: <image_file_size>
+            originalWidth: <image_width>
+            originalHeight: <image_height>
+            sha256: <image_sha256>
+            importedOnDevice: <import_device_name>
+            importedBy: <import_account_id>
+            importTimestamp: <import_time>
+          video:
+            frameRate:
+            - <video_frame_rate_numerator>
+            - <video_frame_rate_denominator>
+            duration:
+            - <video_duration_numerator>
+            - <video_duration_denominator>
+            displayAspectRatio:
+            - <video_aspect_ratio_numerator>
+            - <video_aspect_ratio_denominator>
+            storageWidth: <video_storage_width>
+            storageHeight: <video_storage_height>
+          <key>: <value>
+          develop:
+            <dev_key>: <dev_value>
+        favorites:
+          <account_id>: <created_date>
+    ForbiddenKeyExample:
+      summary: Invalid API Key
+      value:
+        code: 403003
+        description: API Key is invalid
+    InvaildRequestSubtypeExample:
+      summary: InvalidRequestSubtype
+      value:
+        errors:
+          subtype:
+          - is invalid
+        code: 1005
+        description: Input Validation Error
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+    InvaildRequestMissingSubtypeWithFavoriteExample:
+      summary: MissingSubtypeWithFavorite
+      value:
+        errors:
+          subtype:
+          - subtype value expected with favorite
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestGroupExample:
+      summary: InvalidRequestGroup
+      value:
+        errors:
+          group:
+          - group not expected for each given subtype
+        code: 1005
+        description: Input Validation Error
+    ResourceExistsErrorExample:
+      summary: ResourceExistsError
+      value:
+        errors:
+          asset:
+          - already exists
+        code: 1002
+        description: Resource already exists
+    InvaildRequestMissingSubtypeWithGroupOrNameExample:
+      summary: MissingSubtypeWithGroupOrName
+      value:
+        errors:
+          subtype:
+          - subtype value expected with group or name
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestJSONExample:
+      summary: InvalidRequestJSON
+      value:
+        errors:
+          body:
+          - Must be a valid JSON
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestRenditionTypeExample:
+      summary: RenditionTypeNotSupported
+      value:
+        errors:
+          rendition_type:
+          - not supported
+        code: 1005
+        description: Input Validation Error
+    AssetQuotaExceededErrorExample:
+      summary: QuotaExceededError
+      value:
+        errors:
+          <asset_id>:
+          - quota exceeded
+        code: 1043
+        description: Too many assets
+    AssetInvaildRequestGUIDExample:
+      summary: InvalidRequestGUID
+      value:
+        errors:
+          asset_id:
+          - Must be a valid GUID
+        code: 1005
+        description: Input Validation Error
+    RenditionInvaildRequestGUIDExample:
+      summary: InvalidRequestGUID
+      value:
+        errors:
+          rendition_id:
+          - Must be a valid GUID
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestFavoriteExample:
+      summary: InvalidRequestFavorite
+      value:
+        errors:
+          favorite:
+          - favorite query param can only be true. favorite=false not supported
+        code: 1005
+        description: Input Validation Error
+    SuccessExample:
+      summary: Success
+      value:
+        base: <base_url>
+        resources:
+        - id: <asset_id>
+          type: asset
+          subtype: image
+          created: <created_date>
+          updated: <updated_date>
+          links:
+            self:
+              href: assets/<asset_id>
+            /rels/master_create:
+              href: assets/<asset_id>/master
+            /rels/xmp_develop_create:
+              href: assets/<asset_id>/xmp/develop
+            /rels/rendition_type/<rendition_type>:
+              href: assets/<asset_id>/renditions/<rendition_type>
+            /rels/xmp/develop:
+              href: assets/<asset_id>/xmp/develop
+              invalid: 'true'
+              fileSize: <external_xmp_develop_setting_file_size>
+          payload:
+            captureDate: <image_capture_date>
+            importSource:
+              fileName: <file_name>
+              fileSize: <image_file_size>
+              originalWidth: <image_width>
+              originalHeight: <image_height>
+              sha256: <image_sha256>
+              importedOnDevice: <import_device_name>
+              importedBy: <import_account_id>
+              importTimestamp: <import_time>
+            <key>: <value>
+            develop:
+              <dev_key>: <dev_value>
+        - id: <asset_id>
+          type: asset
+          subtype: video
+          created: <created_date>
+          updated: <updated_date>
+          links:
+            self:
+              href: assets/<asset_id>
+            /rels/master_create:
+              href: assets/<asset_id>/master
+            /rels/xmp_develop_create:
+              href: assets/<asset_id>/xmp/develop
+            /rels/rendition_type/<rendition_type>:
+              href: assets/<asset_id>/renditions/<rendition_type>
+            /rels/xmp/develop:
+              href: assets/<asset_id>/xmp/develop
+              invalid: 'true'
+              fileSize: <external_xmp_develop_setting_file_size>
+          unshareable: <unshareable>
+          payload:
+            captureDate: <image_capture_date>
+            importSource:
+              fileName: <file_name>
+              fileSize: <image_file_size>
+              originalWidth: <image_width>
+              originalHeight: <image_height>
+              sha256: <image_sha256>
+              importedOnDevice: <import_device_name>
+              importedBy: <import_account_id>
+              importTimestamp: <import_time>
+            video:
+              frameRate:
+              - <video_frame_rate_numerator>
+              - <video_frame_rate_denominator>
+              duration:
+              - <video_duration_numerator>
+              - <video_duration_denominator>
+              displayAspectRatio:
+              - <video_aspect_ratio_numerator>
+              - <video_aspect_ratio_denominator>
+              storageWidth: <video_storage_width>
+              storageHeight: <video_storage_height>
+            <key>: <value>
+            develop:
+              <dev_key>: <dev_value>
+        links:
+          prev:
+            href: albums/<album_id>/assets?captured_after=<first_captured_date>
+          next:
+            href: albums/<album_id>/assets?captured_before=<last_captured_date>
+          /rels/asset:
+            href: assets/{asset_id}
+            templated: true
+    InvaildRequestAssetIdsExample:
+      summary: ParamsWithAssetIds
+      value:
+        errors:
+          <param_name>:
+          - not allowed with asset_ids parameter
+        code: 1005
+        description: Input Validation Error
+    RenditionNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          rendition:
+          - does not exist
+        code: 1000
+        description: Resource not found
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
+    InvaildRequestPayloadExample:
+      summary: InvalidRequestPayload
+      value:
+        errors:
+          payload.importSource.importTimestamp:
+          - invalid
+        code: 1030
+        description: Payload Validation Error
+    SuccessQueryParamExample:
+      summary: Success - Asset_ids query param present
+      value:
+        base: <base_url>
+        resources:
+        - id: <asset_id>
+          type: asset
+          subtype: image
+          created: <created_date>
+          updated: <updated_date>
+          links:
+            self:
+              href: assets/<asset_id>
+            /rels/master_create:
+              href: assets/<asset_id>/master
+            /rels/xmp_develop_create:
+              href: assets/<asset_id>/xmp/develop
+            /rels/rendition_type/<rendition_type>:
+              href: assets/<asset_id>/renditions/<rendition_type>
+            /rels/xmp/develop:
+              href: assets/<asset_id>/xmp/develop
+              invalid: 'true'
+              fileSize: <external_xmp_develop_setting_file_size>
+          payload:
+            captureDate: <image_capture_date>
+            importSource:
+              fileName: <file_name>
+              fileSize: <image_file_size>
+              originalWidth: <image_width>
+              originalHeight: <image_height>
+              sha256: <image_sha256>
+              importedOnDevice: <import_device_name>
+              importedBy: <import_account_id>
+              importTimestamp: <import_time>
+            <key>: <value>
+            develop:
+              <dev_key>: <dev_value>
+        - id: <asset_id>
+          type: asset
+          subtype: video
+          created: <created_date>
+          updated: <updated_date>
+          links:
+            self:
+              href: assets/<asset_id>
+            /rels/master_create:
+              href: assets/<asset_id>/master
+            /rels/xmp_develop_create:
+              href: assets/<asset_id>/xmp/develop
+            /rels/rendition_type/<rendition_type>:
+              href: assets/<asset_id>/renditions/<rendition_type>
+            /rels/xmp/develop:
+              href: assets/<asset_id>/xmp/develop
+              invalid: 'true'
+              fileSize: <external_xmp_develop_setting_file_size>
+          unshareable: <unshareable>
+          payload:
+            captureDate: <image_capture_date>
+            importSource:
+              fileName: <file_name>
+              fileSize: <image_file_size>
+              originalWidth: <image_width>
+              originalHeight: <image_height>
+              sha256: <image_sha256>
+              importedOnDevice: <import_device_name>
+              importedBy: <import_account_id>
+              importTimestamp: <import_time>
+            video:
+              frameRate:
+              - <video_frame_rate_numerator>
+              - <video_frame_rate_denominator>
+              duration:
+              - <video_duration_numerator>
+              - <video_duration_denominator>
+              displayAspectRatio:
+              - <video_aspect_ratio_numerator>
+              - <video_aspect_ratio_denominator>
+              storageWidth: <video_storage_width>
+              storageHeight: <video_storage_height>
+            <key>: <value>
+            develop:
+              <dev_key>: <dev_value>
+        errors:
+        - id: <asset_id>
+          code: 1000
+          description: Resource not found
+        links:
+          /rels/asset:
+            href: assets/{asset_id}
+            templated: true
+    AssetNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          asset:
+          - does not exist
+        code: 1000
+        description: Resource not found
+    AccessForbiddenExample:
+      summary: Access Forbidden
+      value:
+        code: 4300
+        description: Access is forbidden
+    InvaildRequestInvalidDateTimeExample:
+      summary: InvalidDateTime
+      value:
+        errors:
+          updated_since:
+          - must be a valid XML Schema dateTime
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestNameExample:
+      summary: InvalidRequestName
+      value:
+        errors:
+          name:
+          - name not expected for each given subtype
+        code: 1005
+        description: Input Validation Error
+    InvaildRequestMissingParameterExample:
+      summary: MissingParameter
+      value:
+        errors:
+          parameter:
+          - must be specified
+        code: 1005
+        description: Input Validation Error
+    SuccessImageAssetExample:
+      summary: SuccessImageAsset
+      value:
+        base: <base_url>
+        id: <asset_id>
+        type: asset
+        subtype: image
+        created: <created_date>
+        updated: <updated_date>
+        links:
+          self:
+            href: assets/<asset_id>
+          /rels/master_create:
+            href: assets/<asset_id>/master
+          /rels/xmp_develop_create:
+            href: assets/<asset_id>/xmp/develop
+          /rels/rendition_type/<rendition_type>:
+            href: assets/<asset_id>/renditions/<rendition_type>
+          /rels/xmp/develop:
+            href: assets/<asset_id>/xmp/develop
+            invalid: 'true'
+            fileSize: <external_xmp_develop_setting_file_size>
+        payload:
+          captureDate: <image_capture_date>
+          importSource:
+            fileName: <file_name>
+            fileSize: <image_file_size>
+            originalWidth: <image_width>
+            originalHeight: <image_height>
+            sha256: <image_sha256>
+            importedOnDevice: <import_device_name>
+            importedBy: <import_account_id>
+            importTimestamp: <import_time>
+          <key>: <value>
+          develop:
+            <dev_key>: <dev_value>
+    ForbiddenClientErrorExample:
+      summary: Forbidden Client
+      value:
+        links:
+          /rels/client_app:
+            href: <app_url> (Link to the where to find a new version of the client application)
+        code: 4999
+        description: Upgrade required
+  schemas:
+    SuccessImageAsset:
+      type: object
+      properties:
+        base:
+          type: string
+          description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+        id:
+          $ref: '#/components/schemas/uuid'
+        type:
+          type: string
+          enum:
+          - asset
+        subtype:
+          type: string
+        created:
+          $ref: '#/components/schemas/utcDateTime'
+        updated:
+          $ref: '#/components/schemas/utcDateTime'
+        links:
+          type: object
+        payload:
+          type: object
+    InvalidAPIKeyError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 403003
+        description:
+          type: string
+          enum:
+          - API Key is invalid
+    InvaildRequestGUID:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <param_name>:
+              type: array
+              items:
+                type: string
+                enum:
+                - Must be a valid GUID
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    Success:
+      type: object
+      properties:
+        base:
+          type: string
+          description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/uuid'
+              type:
+                type: string
+                enum:
+                - asset
+              subtype:
+                type: string
+              created:
+                $ref: '#/components/schemas/utcDateTime'
+              updated:
+                $ref: '#/components/schemas/utcDateTime'
+              links:
+                type: object
+              payload:
+                type: object
+    QuotaExceededError:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <asset_id>:
+              type: array
+              items:
+                type: string
+                enum:
+                - quota exceeded
+        code:
+          type: integer
+          enum:
+          - 1043
+        description:
+          type: string
+          enum:
+          - Too many assets
+    InvaildRequestAssetIds:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <param_name>:
+              type: array
+              items:
+                type: string
+                enum:
+                - not allowed with asset_ids parameter
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    InvaildRequestMissingSubtypeWithFavorite:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            subtype:
+              type: array
+              items:
+                type: string
+                enum:
+                - subtype value expected with favorite
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    ResourceExistsError:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <resource_type>:
+              type: array
+              items:
+                type: string
+                enum:
+                - already exists
+        code:
+          type: integer
+          enum:
+          - 1002
+        description:
+          type: string
+          enum:
+          - Resource already exists
+    InvaildRequestInvalidDateTime:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <param_name>:
+              type: array
+              items:
+                type: string
+                enum:
+                - must be a valid XML Schema dateTime
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    SuccessAssetIdsQueryParam:
+      type: object
+      properties:
+        base:
+          type: string
+          description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/uuid'
+              type:
+                type: string
+                enum:
+                - asset
+              subtype:
+                type: string
+              created:
+                $ref: '#/components/schemas/utcDateTime'
+              updated:
+                $ref: '#/components/schemas/utcDateTime'
+              links:
+                type: object
+              payload:
+                type: object
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                $ref: '#/components/schemas/uuid'
+              code:
+                type: integer
+              description:
+                type: string
+        links:
+          type: object
+    ServiceUnavailable:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 9999
+        description:
+          type: string
+          enum:
+          - Service is temporarily unavailable
+    InvaildRequestGroup:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            group:
+              type: array
+              items:
+                type: string
+                enum:
+                - group not expected for each given subtype
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    NotFound:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <resource_type>:
+              type: array
+              items:
+                type: string
+                enum:
+                - does not exist
+        code:
+          type: integer
+          enum:
+          - 1000
+        description:
+          type: string
+          enum:
+          - Resource not found
+    SuccessVideoAsset:
+      type: object
+      properties:
+        base:
+          type: string
+          description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+        id:
+          $ref: '#/components/schemas/uuid'
+        type:
+          type: string
+          enum:
+          - asset
+        subtype:
+          type: string
+        created:
+          $ref: '#/components/schemas/utcDateTime'
+        updated:
+          $ref: '#/components/schemas/utcDateTime'
+        links:
+          type: object
+        payload:
+          type: object
+        favorites:
+          type: object
+          properties:
+            account_id:
+              $ref: '#/components/schemas/utcDateTime'
+        fingerprint:
+          type: object
+    InvaildRequestJSON:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            body:
+              type: array
+              items:
+                type: string
+                enum:
+                - Must be valid JSON
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    iso8601DateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?(((\+|-)(2[0-3]|[0-1][0-9])(:?[0-5][0-9])?)|Z)?$
+      type: string
+      description: datetime in ISO-8601 format (e.g. 2016-01-15T16:18:00-05:00) with both date and time required, including seconds, but timezone optional. Also flexible on allowing some nonstandard timezone formats like 2016-01-15T12:10:32+0000 or 2016-01-15T12:10:32-05.
+    InvaildRequestFavorite:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            favorite:
+              type: array
+              items:
+                type: string
+                enum:
+                - favorite query param can only be true. favorite=false not supported
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    InvaildRequestSubtype:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <subtype>:
+              type: array
+              items:
+                type: string
+                enum:
+                - is invalid
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    AccessForbiddenError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4300
+        description:
+          type: string
+          enum:
+          - Access is forbidden
+    InvaildRequestMissingSubtypeWithGroupOrName:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            subtype:
+              type: array
+              items:
+                type: string
+                enum:
+                - subtype value expected with group or name
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    InvaildRequestName:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            name:
+              type: array
+              items:
+                type: string
+                enum:
+                - name not expected for each given subtype
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    utcDateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
+      type: string
+      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
+    uuid:
+      pattern: ^[a-f0-9]{32}$
+      type: string
+    ForbiddenKeyError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 403003
+        description:
+          type: string
+          enum:
+          - API Key is invalid
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
+    InvaildRequestRenditionType:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            rendition_type:
+              type: array
+              items:
+                type: string
+                enum:
+                - not supported
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    ForbiddenClientError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4999
+        description:
+          type: string
+          enum:
+          - Upgrade required
+        links:
+          type: object
+          properties:
+            /rels/client_app:
+              type: object
+              properties:
+                href:
+                  type: string
+                  enum:
+                  - <app_url> (Link to the where to find a new version of the client application)
+    InvaildRequestMissingParameter:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            parameter:
+              type: array
+              items:
+                type: string
+                enum:
+                - must be specified
+        code:
+          type: integer
+          enum:
+          - 1005
+        description:
+          type: string
+          enum:
+          - Input Validation Error
+    InvaildRequestPayload:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            payload.<key>.<subkey>:
+              type: array
+              items:
+                type: string
+                enum:
+                - invalid
+                - disallowed
+                - required
+        code:
+          type: integer
+          enum:
+          - 1030
+        description:
+          type: string
+          enum:
+          - Payload Validation Error
+    Asset429:
+      properties:
+        error_code:
+          description: 'The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific. '
+          type: string
+        message:
+          description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>429001</td><td>Service usage limit reached</td></tr><tr><td>429002</td><td>Developer key usage limit reached</td></tr><tr><td>429050</td><td>Too many requests</td></tr></table>"
+          type: string
+      example:
+        error_code: '429050'
+        message: Too many requests
+    GetUploadPresignedUrlAsset:
+      type: object
+      properties:
+        assetID:
+          description: An asset ID identifying an asset that is globally unique and never reused.
+          type: string
+        uploadUri:
+          description: The URL used to upload the Resource directly to the cloud provider.
+          type: string
+      example:
+        assetID: urn:aaid:AS:UE1:23c30ee0-2c4d-46d6-87f2-087832fca718
+        uploadUri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/aa8d8790-321a-4487-92da-0e90ba931239?X-Amz-Security-Token=FwoGZXIvYXdzEP7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDDvZayrA6JI2vhkxPiLTAVI%2Fy0F2v7Us5rBDlEd53dHuO2KAe5Bkbs2AmUHtscOPbsH%2Bzh1aFDnv%2BW2nHAiENSNbV2Auq6b5%2FatImE8hUs2wTwV%2BCSB%2FJb896AF905k%2B9ljhZDty2caFGQSHY2lC2OQ4Rr9%2FdS%2FNKwWgnHr4Ld5AtweavSyfhFMfz%2Fw7zLXvHupnLhOISBqqEOTMQim4YDLGzxIt9%2F4C1MKBUSSdGYBX14rfjTSiB%2FivjjjEdNrRRnkGoIg%2Fxe5b1dFDdgukwXWEBsKtZ2qpmZl2uW1boMTHonQoxMTCmAYyLS2FEiNOvaV7rvm8oy6MtGvv2JVY%2FPz%2FFPab%2BhjsCG60vS3kHih4Zy8rUUKv%2Fw%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220901T121500Z&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Expires=3599&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20220901%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=5424c781b8671fb1d7e068267af26e9de4d9a606f343c0bb8602d2a70ab52fcd
+    '401':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>UNAUTHORIZED</td><td>Not authorised to perform the operation.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: UNAUTHORIZED
+          message: Not authorised to perform the operation.
+    '500':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error.  \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>INTERNAL_SERVER_ERROR</td><td>There was an error processing your request.</td></tr><tr><td>UNKNOWN</td><td>Unknown error.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: INTERNAL_SERVER_ERROR
+          message: There was an error processing your request.
+    '400':
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              description: The string containing the code field. code is the Mnemonic returned by service in case of any failure. The below list is extendable and going forward the error codes can become more specific.
+              type: string
+            message:
+              description: "An English language string that contains more information about the error. \n\n<table><tr><th>code</th><th>message</th></tr><tr><td>BAD_REQUEST</td><td>Bad Request.</td></tr></table>"
+              type: string
+      example:
+        error:
+          code: BAD_REQUEST
+          message: Bad Request.
+    GetUploadPresignedUrlRequest:
+      type: object
+      properties:
+        mediaType:
+          description: 'The content type of the file to be stored. For e.g: application/pdf.'
+          type: string
+      example:
+        mediaType: application/pdf
+    AssetMetadata:
+      type: object
+      properties:
+        entity:
+          description: Technical Account ID or User ID with access to blob.
+          type: string
+        size:
+          description: The size of the Resource in bytes. This value helps in making range requests.
+          type: integer
+        type:
+          description: 'The content type of the file. For e.g: application/pdf.'
+          type: string
+      example:
+        entity: 49505D56624424F00A49423A@techacct.adobe.com
+        size: 13552
+        type: application/pdf
+    GetPresignedUrl:
+      type: object
+      properties:
+        downloadUri:
+          description: The URL used to download the Resource directly from the storage provider.
+          type: string
+        size:
+          description: The size of the Resource in bytes. This value helps in making range requests.
+          type: integer
+        type:
+          description: The media type of the Resource.
+          type: string
+      example:
+        downloadUri: https://dcplatformstorageservice-dev-us-east-1.s3-accelerate.amazonaws.com/a059e98b-43bf-4e76-886b-e61a1a19c7bd?X-Amz-Security-Token=FwoGZXIvYXdzEOz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDJoRurLDIx1KmzjT9yLTAZwtCBavc2xtc6InMLLl2rS480ulHYpVTyWSAtCDj34blxS9sghuPqX%2FwTsvUOJZCvgL8kMqHm0khmO3Pnh1%2FOYU1MksBbAlZ47JExBGdzwIsnh8gMIEXBaty0nVmQjIVLUogOKTIyoBuJsnGDvjytpABIpIzbYH50aTS4yECx42ejL6Po%2F4LOroTO3bv98MuUh05hdiFeoCrTfu29%2FXL5%2FuHXo0R1TfgiNPeR6Riq4PL3v%2BSNzPflWlToGIPtWYMWKuEtIEtK0J2Ut3Bddpxevd%2BxsozM2%2BmAYyLblFR%2BVAADnVcQZDc0fW7A8g9iM9BpKQIgmBY9rJrKjj53%2BFHvDko8%2FbkUlGcA%3D%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220831T182204Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=REDACTED_AWS_ACCESS_KEY_ID%2F20220831%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=298a811048105d8093539c6fab4e8649f96af0fcbad17ee5a716e6175e6e166b
+        size: 13130
+        type: application/pdf
+  responses:
+    Unauthorized:
+      description: The request failed due to missing or invalid authentication token.
+    TooLarge:
+      description: The request failed because it is too large.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                enum:
+                - 1007
+              description:
+                type: string
+                enum:
+                - The resource is too big
+    ForbiddenKey:
+      description: The request failed because the API Key is not valid.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                enum:
+                - 403003
+              description:
+                type: string
+                enum:
+                - API Key is invalid
+    UnsupportedMediaType:
+      description: The request failed because the Content-Type did not match the request.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: object
+                properties:
+                  content_type:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - should be json
+                      - should match the subtype of the asset
+              code:
+                type: integer
+                enum:
+                - 1003
+              description:
+                type: string
+                enum:
+                - Invalid content type
+externalDocs:
+  description: Find out more about Lightroom
+  url: https://www.adobe.com/products/photoshop-lightroom.html
+x-refined-from:
+- adobe-suite-lightroom-openapi.json
+- adobe-suite-pdf-services-openapi.json
+x-original-swagger-version: '2.0'

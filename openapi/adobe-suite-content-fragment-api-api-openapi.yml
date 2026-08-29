@@ -1,0 +1,739 @@
+openapi: 3.2.0
+info:
+  description: Using this REST API, you can create and manage content templates and fragments, which are entities that allow you to easily reuse custom content across Journey Optimizer campaigns and journeys. To learn more about content templates and fragments, refer to <a href="https://experienceleague.adobe.com/docs/journey-optimizer/using/email/content-templates.html">Journey Optimizer documentation</a>.
+  version: 0.0.1
+  title: Content API. Content fragment API
+servers:
+- url: https://platform.adobe.io/ajo/content
+- url: https://platform-stage.adobe.io/ajo/content
+security:
+- imsUserToken: []
+tags:
+- name: Content fragment API
+paths:
+  /fragments:
+    parameters:
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    post:
+      operationId: createFragment
+      summary: Create New Content Fragment.
+      description: This API could be used for creating a new content fragment<br>
+      tags:
+      - Content fragment API
+      requestBody:
+        description: new fragment
+        content:
+          application/vnd.adobe.ajo.fragment.v1.0+json:
+            schema:
+              $ref: '#/components/schemas/content-fragment'
+        required: true
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+    get:
+      parameters:
+      - $ref: '#/components/parameters/orderBy'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/property'
+      operationId: getFragments
+      summary: List Content Fragments.
+      description: <ol> Content Fragment Listing API. There are few attributes which are filterable. <li> id - Supported operations are equals and not equals. </li> <li> name - Supports operations are regex and contains. </li> <li> type - Supported operations are equal and not equals, and allowed values are [ "html"] </li> <li> channels - Supported operations are equals and not equals. </li> <li> createdAt - Supported operations are less-than, less-than-equal-to, greater-than, greater-than-equal-to, equals-to. </li> <li> createdBy - Supported operations are equals, not equals and regex. </li> <li> modifiedAt - Supported operations are less-than, less-than-equal-to, greater-than, greater-than-equal-to, equals-to. </li> <li> modifiedBy - Supported operations are equals, not equals and regex. </li> <li> origin - Supported operations are equals and not equals. </li> </ol>
+      tags:
+      - Content fragment API
+      responses:
+        200:
+          description: Content Fragment Listing API response.
+          content:
+            application/vnd.adobe.ajo.fragment-list.v1.0+json:
+              schema:
+                $ref: '#/components/schemas/fragment-page-response'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+  /fragments/{fragmentId}:
+    parameters:
+    - name: fragmentId
+      in: path
+      description: Content fragment id
+      required: true
+      schema:
+        type: string
+    - name: Accept
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/vnd.adobe.ajo.fragment.v1.0+json
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    get:
+      operationId: getFragment
+      summary: Fetch Content Fragment By Id.
+      description: Fetch Content Fragment detail by Id.
+      tags:
+      - Content fragment API
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/vnd.adobe.ajo.fragment.v1.0+json:
+              schema:
+                $ref: '#/components/schemas/content-fragment-with-audit'
+          headers:
+            etag:
+              $ref: '#/components/headers/etag'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+    put:
+      operationId: putFragment
+      summary: Update Content Fragment By Id.
+      description: API to update Content Fragment By Id.
+      tags:
+      - Content fragment API
+      parameters:
+      - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        description: New/Updated Content Fragment Payload.
+        content:
+          application/vnd.adobe.ajo.fragment.v1.0+json:
+            schema:
+              $ref: '#/components/schemas/content-fragment'
+        required: true
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+    patch:
+      operationId: patchFragment
+      summary: Patch Content Fragment By Id.
+      description: 'Patch fragment with given id. Expects Patch request in JSON-patch format (RFC 6902)<br> Path supported: "/name", "/description", "/parentFolderId"'
+      tags:
+      - Content fragment API
+      parameters:
+      - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/patch-request'
+        required: true
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+  /fragments/publications:
+    parameters:
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    post:
+      operationId: publishFragment
+      summary: Publish Content Fragment.
+      description: API to publish fragment.<br> Publishing a content fragment will freeze the content of the fragment. Notably, it is a pre-requisite to publish a fragment  before activating / publishing a campaign / journey. Fragment Publication is an async process under the hood which can take a few seconds. The status of the fragment publication can be fetched by lastPublicationStatus API whereas the content of the last successful publication of a fragment can be fetched by the liveFragment API.
+      tags:
+      - Content fragment API
+      requestBody:
+        description: publish request body
+        content:
+          application/vnd.adobe.ajo.fragment.publication.request.v1.0+json:
+            schema:
+              $ref: '#/components/schemas/publish-fragment-request'
+        required: true
+      responses:
+        202:
+          $ref: '#/components/responses/202'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+  /fragments/{fragmentId}/liveFragment:
+    parameters:
+    - name: fragmentId
+      in: path
+      description: Content fragment id
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    get:
+      operationId: getLiveFragment
+      summary: Fetch content of fragment's last successful publication
+      description: Fetch content of fragment's last successful publication. A fragment can have multiple publications. A publication can either be successful, in progress or can error out. This API will be responsible for fetching the content of the last successful publication for a fragment.
+      tags:
+      - Content fragment API
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/vnd.adobe.ajo.fragment.publication.v1.0+json:
+              schema:
+                $ref: '#/components/schemas/live-fragment-content'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+  /fragments/{fragmentId}/lastPublicationStatus:
+    parameters:
+    - name: fragmentId
+      in: path
+      description: Content fragment id
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    get:
+      operationId: getLastPublicationStatus
+      summary: Fetch status of last publication
+      description: Fetch the status of last publication request for a content fragment by Id. A fragment can have multiple publications. A publication can either be successful, in progress or can error out. This API will be responsible for fetching the status of the last issued publication request for a fragment.
+      tags:
+      - Content fragment API
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/vnd.adobe.ajo.fragment.publication.v1.0+json:
+              schema:
+                $ref: '#/components/schemas/publishing-job-status'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+components:
+  schemas:
+    description:
+      type: string
+      title: Description
+      description: Description
+      example: Cyber Monday Sale - Header Banner!!
+    content-fragment-with-audit:
+      title: Content Fragment with audit fields.
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          html: '#/components/schemas/html-fragment-with-audit'
+          expression: '#/components/schemas/expression-fragment-with-audit'
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        status:
+          $ref: '#/components/schemas/fragment-status'
+        channels:
+          $ref: '#/components/schemas/fragment-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    expression-content:
+      type: string
+      title: Expression Content
+      description: Expression Content
+      example: Hi {{profile.person.name}} its a great day to shop !!
+    fragment-self-href:
+      title: Self-Href
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              example: /fragments/b6d70a45-a149-453b-85ba-809a5d40066d
+    errorResponse:
+      title: Error Response
+      type: object
+      properties:
+        path:
+          type: string
+          title: Path
+          example: /templates
+          description: API path
+        request-id:
+          type: array
+          title: Request ID
+          items:
+            type: string
+            example: 9db4dd09-455f-44eb-a0e3-aca3342745d2
+          description: Request ID
+        type:
+          type: string
+          title: Type
+          example: https://ns.adobe.com/aep/errors/CJMMAS-*
+          description: Error type
+        title:
+          type: string
+          title: Title
+          example: Error Title
+          description: Title of Error
+        status:
+          type: integer
+          title: Status
+          description: HTTP status
+        report:
+          type: object
+          title: report
+          description: Error Report
+          properties:
+            tenantInfo:
+              type: object
+              example:
+                sandboxName: cjm-team
+                sandboxId: 70f58060-5d47-11ea-bdff-a5384333ff34
+                imsOrgId: 745F37C35E4B776E0A49421B@AdobeOrg
+            additionalContext:
+              type: object
+              example:
+                detailedMessage: templates
+              description: Additional Context of Error
+        error-chain:
+          type: array
+          title: Error Chain
+          description: Error Chain
+          items:
+            type: object
+            example:
+              serviceId: contentservice
+              errorCode: CJMMAS-*
+              invokingServiceId: cjm-content-service
+              unixTimeStampMs: 1610446917396
+    olac-labels:
+      title: OLAC Label Details
+      type: array
+      items:
+        type: string
+        example: custom/sensitive-data
+    entity-audit-fields:
+      title: Entity Audit Fields.
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        createdBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+        modifiedAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        modifiedBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+    fragment-list-link:
+      title: Content Fragment List Link.
+      type: object
+      required:
+      - self
+      properties:
+        next:
+          $ref: '#/components/schemas/href-link'
+        page:
+          $ref: '#/components/schemas/href-link'
+      example:
+        next:
+          href: /fragments?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
+        page:
+          href: /fragments?orderBy={orderBy}&start={start}&limit={limit}
+    page:
+      title: Page
+      type: object
+      properties:
+        orderBy:
+          type: string
+          enum:
+          - modifiedAt
+          - createdAt
+          - name
+          example: -modifiedAt
+        start:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        next:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        count:
+          type: integer
+          example: 10
+    content-fragment-metadata:
+      title: Content Fragment metadata.
+      type: object
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        status:
+          $ref: '#/components/schemas/fragment-status'
+        channels:
+          $ref: '#/components/schemas/fragment-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    fragment-source:
+      title: Fragment Source.
+      type:
+      - object
+      - 'null'
+      required:
+      - origin
+      properties:
+        origin:
+          $ref: '#/components/schemas/fragment-origin'
+        metadata:
+          title: MetaData
+          description: Map containing custom properties(key-value pair).
+          additionalProperties: true
+    name:
+      type: string
+      title: Content Name
+      description: Content Name
+      example: Cyber Monday Sale - Header !!
+      minLength: 1
+    publishing-job-status:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - complete
+          - inProgress
+          - error
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/errorResponse'
+    fragment-type:
+      type: string
+      title: Fragment Type
+      description: Fragment Type
+      example: html
+      enum:
+      - html
+      - expression
+    patch-request:
+      title: Patch Request
+      type: array
+      items:
+        $ref: '#/components/schemas/patch-document'
+    content-fragment:
+      title: Content Fragment
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          html: '#/components/schemas/email-html-fragment'
+          expression: '#/components/schemas/expression-fragment'
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    fragment-status:
+      type: string
+      title: Fragment Status
+      description: Fragment Status
+      example: DRAFT
+      enum:
+      - DRAFT
+      - PUBLISHING
+      - PUBLISHED
+    fragment-content:
+      type: string
+      title: Html Fragment Content
+      description: Html Fragment Content
+      example: <div> Hi {{profile.person.name}} its a great day to shop !! </div>
+    published-html-fragment-content:
+      description: Published HTML Fragment content
+      title: Published HTML Fragment content.
+      type: object
+      required:
+      - content
+      properties:
+        content:
+          $ref: '#/components/schemas/fragment-content'
+    id:
+      type: string
+      title: Content Template Id.
+      description: Content Template Id.
+      example: b6d70a45-a149-453b-85ba-809a5d40066d
+    fragment-origin:
+      type: string
+      title: Origin
+      description: Content Fragment Origin/Source system.
+      enum:
+      - ajo
+      - external
+    parent-folder-id:
+      type:
+      - string
+      - 'null'
+      title: Folder Id
+      description: Id of the folder in which the content is present.
+      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+    live-fragment-content:
+      title: Published Content Fragment
+      type: object
+      required:
+      - type
+      - fragment
+      properties:
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        fragment:
+          oneOf:
+          - $ref: '#/components/schemas/published-html-fragment-content'
+          - $ref: '#/components/schemas/published-expression-fragment-content'
+    fragment-page-response:
+      title: Content Fragment Page Response
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/page'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/content-fragment-listing-response'
+        _links:
+          $ref: '#/components/schemas/fragment-list-link'
+    href-link:
+      title: Href-link
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
+    publish-fragment-request:
+      type: object
+      properties:
+        fragmentId:
+          $ref: '#/components/schemas/id'
+      required:
+      - fragmentId
+    patch-document:
+      title: Patch Document
+      description: A JSONPatch document as defined by RFC 6902
+      required:
+      - op
+      - path
+      properties:
+        op:
+          type: string
+          description: The operation to be performed
+          enum:
+          - add
+          - remove
+          - replace
+        path:
+          type: string
+          description: A JSON-Pointer
+        value:
+          type: object
+          description: The value to be used within the operations.
+        from:
+          type: string
+          description: A string containing a JSON Pointer value.
+    fragment-channel-enum:
+      type: string
+      title: channel
+      description: Supported channels for Content Fragment.
+      example: email
+      enum:
+      - email
+      - shared
+    published-expression-fragment-content:
+      description: Published Expression Fragment content
+      title: Published Expression Fragment content.
+      type: object
+      required:
+      - expression
+      properties:
+        expression:
+          $ref: '#/components/schemas/expression-content'
+    content-fragment-listing-response:
+      title: Content Fragment
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/content-fragment-metadata'
+      - $ref: '#/components/schemas/entity-audit-fields'
+      - $ref: '#/components/schemas/fragment-self-href'
+  parameters:
+    start:
+      name: start
+      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
+      in: query
+      schema:
+        type: string
+        format: byte
+      required: false
+      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+    property:
+      name: property
+      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
+      in: query
+      schema:
+        items:
+          type: string
+        type: array
+      required: false
+      example: property=name~^test
+    IfMatchParam:
+      name: If-Match
+      in: header
+      required: true
+      description: etag of resource to match before update of resource.
+      schema:
+        type: string
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key
+      required: true
+      schema:
+        type: string
+        x-example: cjm client
+    ImsOrgIdParam:
+      name: x-gw-ims-org-id
+      in: header
+      description: Your Identity Management Services (IMS) Organization id
+      required: true
+      schema:
+        type: string
+    limit:
+      name: limit
+      description: Limit response to a specified positive number of objects. Ex. limit=10
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 1000
+      required: false
+    SandboxNameParam:
+      name: x-sandbox-name
+      in: header
+      description: Filter on platform sandbox name
+      required: true
+      schema:
+        type: string
+    orderBy:
+      name: orderBy
+      description: Sort parameter and direction for sorting the response. Add the prefix as -/+ for desc/asc. If unspecified, the response will be sorted in desc order.
+      in: query
+      schema:
+        type: string
+        default: -modifiedAt
+      required: false
+      example: orderBy=%2BmodifiedAt.
+    RequestIdParam:
+      in: header
+      name: x-request-id
+      description: A unique string to identify the request, MUST be unique for each request
+      required: false
+      schema:
+        type: string
+  headers:
+    etag:
+      schema:
+        type: string
+      description: etag of resource
+  securitySchemes:
+    imsUserToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    imsServiceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

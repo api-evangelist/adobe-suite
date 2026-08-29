@@ -1,0 +1,2221 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Batches API
+  version: '1.0'
+  description: 'Operations tagged Batches across 2 of this provider''s published API definitions: adobe-suite-aep-catalog-openapi.yaml, adobe-suite-firefly-workflow-builder-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: //{environment}.adobe.io/data/foundation/catalog
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: https://run-workflow.adobe.io
+  description: Production
+tags:
+- name: Batches
+  description: Batches allow users to understand which operations and applications have been performed on objects tracked by the system.
+paths:
+  /batches:
+    get:
+      tags:
+      - Batches
+      summary: Retrieve a list of batches
+      description: This request retrieves a list of batches for operations and applications that have been performed on objects tracked by the system.
+      operationId: listBatches
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/limit'
+      - name: createdAfter
+        in: query
+        description: Exclusively filter records created after this timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: createdBefore
+        in: query
+        description: Exclusively filter records created before this timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: created
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when this object was persisted.
+        schema:
+          type: integer
+          format: int64
+      - name: createdClient
+        in: query
+        description: Filter by the ID of the IMS client that created this object.
+        schema:
+          type: string
+      - name: updated
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) for the time of last modification.
+        schema:
+          type: integer
+          format: int64
+      - name: createdUser
+        in: query
+        description: Filter by the ID of the user who created this object.
+        schema:
+          type: string
+      - name: updatedUser
+        in: query
+        description: Filter by the ID of the user who changed this object.
+        schema:
+          type: string
+      - name: version
+        in: query
+        description: Filter by Semantic version of the account. Updated when the object is modified.
+        schema:
+          type: string
+      - name: tags
+        in: query
+        description: Filter response by the specified tags.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter by the current (mutable) status of the batch.
+        schema:
+          type: string
+      - name: recordCount
+        in: query
+        description: Filter by the total number of data records (rows or documents) processed in the batch.
+        schema:
+          type: integer
+          format: int64
+      - name: failedRecordCount
+        in: query
+        description: Filter by the number of records that could **not** be processed in the batch.
+        schema:
+          type: integer
+          format: int64
+      - name: size
+        in: query
+        description: The number of bytes processed in the batch.
+        schema:
+          type: integer
+          format: int64
+      - name: started
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when the batch processing action was started. Subtracting "started" from "completed" will yield the total processing time.
+        schema:
+          type: integer
+          format: int64
+      - name: completed
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when the batch processing action was completed. Subtracting "started" from "completed" will yield the total processing time.
+        schema:
+          type: integer
+          format: int64
+      - name: startAfter
+        in: query
+        description: Filter for batches with availability dates that start after the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: startBefore
+        in: query
+        description: Filter for batches with availability dates that start before the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: endAfter
+        in: query
+        description: Filter for batches with availability dates that end after the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: endBefore
+        in: query
+        description: Filter for batches with availability dates that end before the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: batch
+        in: query
+        description: Filter on the ID of the batch.
+        schema:
+          type: string
+      - name: externalId
+        in: query
+        description: Filter on the ID of the external object.
+        schema:
+          type: string
+      - name: dataSet
+        in: query
+        description: Filter on the ID of the dataset.
+        schema:
+          type: string
+      - name: orderBy
+        in: query
+        description: Sort parameter and direction for sorting the response. Ex. orderBy=asc:created,updated. This was previously called sort.
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Specifies the offset of the pages of results. To get the first page of results, set the value to `start=0`.
+        schema:
+          type: integer
+          default: 0
+      - name: property
+        in: query
+        description: Regex used to filter objects in the response.
+        schema:
+          type: string
+      - name: properties
+        in: query
+        description: A comma separated allowlist of top-level object properties to be returned in the response. Used to cut down the number of properties and amount of data returned in the response bodies.
+        schema:
+          type: string
+      responses:
+        200:
+          description: A list of the batch responses is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/batchResponse'
+              example:
+                5911f88ae2f4bf657c5a8cb5:
+                  imsOrg: 4F3BB22C5631222A7F000101@AdobeOrg
+                  created: 1494349962314
+                  createdClient: MCDPCatalogServiceStage
+                  createdUser: MCDPCatalogServiceStage@AdobeID
+                  updatedUser: MCDPCatalogServiceStage@AdobeID
+                  updated: 1494349963467
+                  externalId: /adobe/bulkingest/5af9ee67e4045c1b4945c209
+                  status: success
+                  errors:
+                  - code: err-1494349963436
+                  version: 1.0.3
+                  availableDates:
+                    startDate: 1337
+                    endDate: 4000
+                  relatedObjects:
+                  - type: batch
+                    id: foo_batch
+                  - type: dataSet
+                    id: foo_dataSet
+                  - type: dataSetView
+                    id: foo_dataSetView
+                  - type: dataSetFile
+                    id: foo_dataSetFile
+                  - type: expressionBlock
+                    id: foo_expressionBlock
+                  - type: service
+                    id: foo_service
+                  - type: serviceDefinition
+                    id: foo_serviceDefinition
+                  metrics:
+                    foo: 1337
+                  tags:
+                    foo_bar:
+                    - stuff
+                    bar_foo:
+                    - woo
+                    - baz
+                    foo/bar/foo-bar:
+                    - weehaw
+                    - wee:haw
+                  inputFormat:
+                    format: parquet
+                    delimiter: .
+                    quote: '`'
+                    escape: \
+                    nullMarker: ''
+                    header: 'true'
+                    charset: UTF-8
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The batch responses were not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    post:
+      tags:
+      - Batches
+      summary: Create a new batch
+      description: This request creates a new batch for operations and applications that have been performed on objects tracked by the system.
+      operationId: createBatch
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: The batch that will be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/batchRequest'
+        required: true
+      responses:
+        201:
+          description: Array[ @/batches/batchId ]
+          headers:
+            Location:
+              description: The URI of the newly created batch.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: The batch is invalid.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: batch
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /batches/uniques/{FIELD}:
+    get:
+      tags:
+      - Batches
+      summary: Look up the unique values stored in a field
+      description: This endpoint retrieves the unique values stored in a field, as specified by the ID.
+      operationId: retrieveUniqueBatchValues
+      parameters:
+      - name: FIELD
+        in: path
+        description: 'Field to get unique values for. **Note:** This endpoint will be deprecated soon. '
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/limit'
+      - name: createdAfter
+        in: query
+        description: Exclusively filter records created after this timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: createdBefore
+        in: query
+        description: Exclusively filter records created before this timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: created
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when this object was persisted.
+        schema:
+          type: integer
+          format: int64
+      - name: createdClient
+        in: query
+        description: Filter by the ID of the IMS client that created this object.
+        schema:
+          type: string
+      - name: updated
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) for the time of last modification.
+        schema:
+          type: integer
+          format: int64
+      - name: createdUser
+        in: query
+        description: Filter by the ID of the user who created this object.
+        schema:
+          type: string
+      - name: updatedUser
+        in: query
+        description: Filter by the ID of the user who changed this object.
+        schema:
+          type: string
+      - name: version
+        in: query
+        description: Filter by Semantic version of the account. Updated when the object is modified.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter by the current (mutable) status of the batch.
+        schema:
+          type: string
+      - name: recordCount
+        in: query
+        description: Filter by the total number of data records (rows or documents) processed in the batch. 100 objects is the maximum that can be returned by requests.
+        schema:
+          type: integer
+          format: int64
+      - name: failedRecordCount
+        in: query
+        description: Filter by the number of records that could **not** be processed in the batch.
+        schema:
+          type: integer
+          format: int64
+      - name: size
+        in: query
+        description: The number of bytes processed in the batch.
+        schema:
+          type: integer
+          format: int64
+      - name: started
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when the batch processing action was started. Subtracting "started" from "completed" will yield the total processing time.
+        schema:
+          type: integer
+          format: int64
+      - name: completed
+        in: query
+        description: Filter by the Unix timestamp (in milliseconds) when the batch processing action was completed. Subtracting "started" from "completed" will yield the total processing time.
+        schema:
+          type: integer
+          format: int64
+      - name: startAfter
+        in: query
+        description: Filter for batches with availability dates that start after the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: startBefore
+        in: query
+        description: Filter for batches with availability dates that start before the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: endAfter
+        in: query
+        description: Filter for batches with availability dates that end after the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: endBefore
+        in: query
+        description: Filter for batches with availability dates that end before the specified timestamp.
+        schema:
+          type: integer
+          format: int64
+      - name: batch
+        in: query
+        description: Filter on the ID of the batch.
+        schema:
+          type: string
+      - name: externalId
+        in: query
+        description: Filter on the ID of the external object.
+        schema:
+          type: string
+      - name: dataSet
+        in: query
+        description: Filter on the ID of the dataset.
+        schema:
+          type: string
+      - name: transform
+        in: query
+        description: Filter on the ID of the transform.
+        schema:
+          type: string
+      - name: orderBy
+        in: query
+        description: Sort parameter and direction for sorting the response. Ex. orderBy=asc:created,updated. This was previously called sort.
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Specifies the offset of the pages of results. To get the first page of results, set the value to `start=0`.
+        schema:
+          type: integer
+          default: 0
+      - name: property
+        in: query
+        description: Regex used to filter objects in the response.
+        schema:
+          type: string
+      - name: properties
+        in: query
+        description: A comma separated allowlist of top-level object properties to be returned in the response. Used to cut down the number of properties and amount of data returned in the response bodies.
+        schema:
+          type: string
+      responses:
+        200:
+          description: A list of unique values for a batch.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+              - 5911f88ae2f4bf657c5a8cb5
+              - 5911f88ae2f4bf657c5a8cb4
+              - 5911f88ae2f4bf657c5a8cb3
+        400:
+          description: A bad request has been submitted.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The batch is not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /batches/{BATCH_ID}:
+    get:
+      tags:
+      - Batches
+      summary: Look up a batch
+      description: This request retrieves a specific batch based on the {BATCH_ID} entered.
+      operationId: retrieveBatch
+      parameters:
+      - name: BATCH_ID
+        in: path
+        description: The ID of the batch you are performing the operation on.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - name: aggregate
+        in: query
+        description: If true, then return the aggregated status, metrics, and errors in the root level status, metrics, and errors (default is false).
+        schema:
+          type: boolean
+      responses:
+        200:
+          description: The batch object for the specified batch ID is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/batchResponse'
+              example:
+                5911f88ae2f4bf657c5a8cb5:
+                  imsOrg: 5911f88ae2f4bf657c5a8cb5
+                  created: 1494349962314
+                  createdClient: MCDPCatalogServiceStage
+                  createdUser: MCDPCatalogServiceStage@AdobeID
+                  updatedUser: MCDPCatalogServiceStage@AdobeID
+                  updated: 1494349963467
+                  externalId: /adobe/bulkingest/5af9ee67e4045c1b4945c209
+                  status: success
+                  errors:
+                  - code: err-1494349963436
+                  version: 1.0.3
+                  availableDates:
+                    startDate: 1337
+                    endDate: 4000
+                  relatedObjects:
+                  - type: batch
+                    id: foo_batch
+                  - type: dataSet
+                    id: foo_dataSet
+                  - type: dataSetView
+                    id: foo_dataSetView
+                  - type: dataSetFile
+                    id: foo_dataSetFile
+                  - type: expressionBlock
+                    id: foo_expressionBlock
+                  - type: service
+                    id: foo_service
+                  - type: serviceDefinition
+                    id: foo_serviceDefinition
+                  metrics:
+                    foo: 1337
+                  tags:
+                    foo_bar:
+                    - stuff
+                    bar_foo:
+                    - woo
+                    - baz
+                    foo/bar/foo-bar:
+                    - weehaw
+                    - wee:haw
+                  inputFormat:
+                    format: parquet
+                    delimiter: .
+                    quote: '`'
+                    escape: \
+                    nullMarker: ''
+                    header: 'true'
+                    charset: UTF-8
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The specified batch was not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+    put:
+      tags:
+      - Batches
+      summary: Update a batch
+      description: This request updates a specific batch based on the {BATCH_ID} specified.
+      operationId: updateBatch
+      parameters:
+      - name: BATCH_ID
+        in: path
+        description: The ID of the batch you are performing the operation on.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/if-match'
+      - $ref: '#/components/parameters/if-none-match'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: The batch information to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/batchRequest'
+        required: true
+      responses:
+        200:
+          description: Array[ @/batches/batchId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: Not found
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: batch
+    post:
+      tags:
+      - Batches
+      summary: Create a new batch
+      description: This request creates a new batch for operations and applications that have been performed on objects tracked by the system, using the ID value of an existing dataset.
+      operationId: createBatchWithId
+      parameters:
+      - name: BATCH_ID
+        in: path
+        description: The ID of the batch you are performing the operation on.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: Batch to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/batchRequest'
+        required: true
+      responses:
+        201:
+          description: Array[ @/batches/batchId ]
+          headers:
+            Location:
+              description: The URI of the newly created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: batch
+    delete:
+      tags:
+      - Batches
+      summary: Delete a batch
+      description: '**Note:** This endpoint has been deprecated. Please use the [delete a batch endpoint](https://experienceleague.adobe.com/docs/experience-platform/ingestion/batch/api-overview.html#delete-a-batch) within the batch ingestion API.'
+      operationId: deleteBatch
+      parameters:
+      - name: BATCH_ID
+        in: path
+        description: The ID of the batch you are performing the operation on.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      responses:
+        200:
+          description: Array[ @/batches/batchId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The batch was not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      deprecated: true
+    patch:
+      tags:
+      - Batches
+      summary: Update one or more batch attributes
+      description: This request allows you to update specified attributes of an existing batch.
+      operationId: patchBatch
+      parameters:
+      - name: BATCH_ID
+        in: path
+        description: The ID of the batch you are performing the operation on.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept-encoding'
+      - $ref: '#/components/parameters/content-type'
+      - $ref: '#/components/parameters/if-none-match'
+      requestBody:
+        description: The batch that is to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/batchPatchRequest'
+        required: true
+      responses:
+        200:
+          description: Array[ @/batches/batchId ]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: A bad request.
+          content: {}
+        403:
+          description: Access is forbidden.
+          content: {}
+        404:
+          description: The specified batch was not found.
+          content: {}
+        500:
+          description: An internal server error has ocurred.
+          content: {}
+        default:
+          description: An unexpected error has ocurred.
+          content: {}
+      x-codegen-request-body-name: batch
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/catalog
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /batch/execute:
+    post:
+      tags:
+      - Batches
+      summary: Execute a batch of assets through a workflow
+      description: 'Start a new batch job to process multiple assets through a published workflow.
+
+
+        The request body supplies the workflow identifier and `inputs`: a list of runs, where each run is an array of node input mappings (`node_id` plus `content` and/or `template`).
+
+
+        Each run is processed separately through the workflow in parallel.
+
+
+        Returns a `batchId` and `links` that can be used to track progress and retrieve results.
+
+        '
+      operationId: batchExecute
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchExecuteRequest'
+            example:
+              workflow:
+                workflowId: 121dc48a-f50b-427a-8aeb-f84c12c946a8
+                inputs:
+                - - node_id: node_1775258981781_301b7cc7v_0_j5iaha
+                    content:
+                    - presignedUrl: '{presigned_url_1}'
+                      storageType: AWS
+                    - presignedUrl: '{presigned_url_2}'
+                      storageType: AWS
+                  - node_id: node_1775258983939_zoc3490s7_1_7jx86h
+                    content:
+                    - presignedUrl: '{presigned_url_1}'
+                      storageType: AWS
+                    - presignedUrl: '{presigned_url_2}'
+                      storageType: AWS
+                  - node_id: node_1775258991082_1lfvzsgqz_2_vhjjoc
+                    content: '{text}'
+                  - node_id: node_1775259058091_zzgybxfcg_5_j6g2al
+                    content: '{text}'
+                  - node_id: node-1775259002055-ztu8i4fpz
+                    template:
+                      presignedUrl: '{presignedUrl}'
+                      storageType: AWS
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            api-version:
+              $ref: '#/components/headers/ApiVersionResponse'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchExecuteAcceptedResponse'
+              example:
+                batchId: batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb
+                workflowId: run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9
+                status: pending
+                assets:
+                  total: 1
+                  pending: 1
+                  processing: 0
+                  completed: 0
+                  failed: 0
+                createdAt: '2026-04-03T23:46:39.374Z'
+                links:
+                  result:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb/status?format=preview
+                  status:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb/status
+                  cancel:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb/cancel
+                  executions:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb/executions
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    servers:
+    - url: https://run-workflow.adobe.io
+      description: Production
+  /batch/{batchId}/status:
+    get:
+      tags:
+      - Batches
+      summary: Get batch status
+      description: 'Get the current status and progress of a batch job.
+
+
+        Returns the batch identifier, workflow identifier, status, asset and execution counters (including execution IDs), timestamps, and hypermedia links to cancel or list executions.
+
+        '
+      operationId: getBatchStatus
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ApiVersion'
+      - name: batchId
+        in: path
+        required: true
+        description: Batch identifier.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          headers:
+            api-version:
+              $ref: '#/components/headers/ApiVersionResponse'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchStatusResponse'
+              example:
+                batchId: batch-run-workflow_a1b2c3d4-e5f6-7890-abcd-ef1234567890-20260415-abc12301
+                workflowId: run-workflow_a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                status: completed
+                assets:
+                  total: 1
+                  pending: 0
+                  processing: 0
+                  completed: 1
+                  failed: 0
+                executions:
+                  total: 1
+                  completed: 1
+                  failed: 0
+                  allExecutionIds:
+                  - batch-run-workflow_a1b2c3d4-e5f6-7890-abcd-ef1234567890-20260415-abc12301_exec-0
+                  failedExecutionIds: []
+                createdAt: '2026-04-15T14:22:10.120Z'
+                updatedAt: '2026-04-15T14:23:45.880Z'
+                completedAt: '2026-04-15T14:23:45.600Z'
+                links:
+                  cancel:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_a1b2c3d4-e5f6-7890-abcd-ef1234567890-20260415-abc12301/cancel
+                  executions:
+                    href: https://run-workflow.adobe.io/batch/batch-run-workflow_a1b2c3d4-e5f6-7890-abcd-ef1234567890-20260415-abc12301/executions
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    servers:
+    - url: https://run-workflow.adobe.io
+      description: Production
+  /batch/{batchId}/cancel:
+    post:
+      tags:
+      - Batches
+      summary: Cancel a batch
+      description: 'Cancel a batch job that is currently pending or running.
+
+
+        Once cancelled, no new assets will be processed. Assets currently being
+
+        processed may complete. The batch status will be updated to ''cancelled''.
+
+
+        Cannot cancel batches that are already completed, failed, or cancelled.
+
+        '
+      operationId: cancelBatch
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ApiVersion'
+      - name: batchId
+        in: path
+        required: true
+        description: Batch identifier.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          headers:
+            api-version:
+              $ref: '#/components/headers/ApiVersionResponse'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batchId:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                    - cancelled
+                  message:
+                    type: string
+                  previousStatus:
+                    type: string
+                  assets:
+                    $ref: '#/components/schemas/BatchAssetCounts'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    servers:
+    - url: https://run-workflow.adobe.io
+      description: Production
+  /batch/{batchId}/executions:
+    get:
+      tags:
+      - Batches
+      summary: List individual execution results
+      description: 'List all individual asset execution results within a batch, with optional filtering.
+
+
+        Returns detailed results for each asset including:
+
+        - Execution status (pending, running, success, failed)
+
+        - Input asset data
+
+        - Output results (if successful)
+
+        - Error messages (if failed)
+
+        - Timing information
+
+
+        The response supports pagination and filtering by execution status.
+
+        '
+      operationId: listBatchExecutions
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/ApiVersion'
+      - name: batchId
+        in: path
+        required: true
+        description: Batch identifier.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter by execution status.
+        schema:
+          type: string
+          enum:
+          - pending
+          - running
+          - success
+          - failed
+      - name: limit
+        in: query
+        description: Maximum number of results (default 100).
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+      - name: offset
+        in: query
+        description: Pagination offset (default 0).
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Success
+          headers:
+            api-version:
+              $ref: '#/components/headers/ApiVersionResponse'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batchId:
+                    type: string
+                  total:
+                    type: integer
+                    description: Total number of assets in batch.
+                  executions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BatchExecutionResult'
+                  pagination:
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      count:
+                        type: integer
+                      hasMore:
+                        type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    servers:
+    - url: https://run-workflow.adobe.io
+      description: Production
+components:
+  schemas:
+    errors:
+      type: object
+      properties:
+        code:
+          type: string
+          description: An enumerated code that details the type of error encountered. This value should be understandable by the reader and writer and eventually allow for localized error message (and solution) descriptions.
+          example: err-1494349963436
+        rows:
+          type: array
+          description: Indicates which rows exhibit this error. Could be a single number, or a hyphen-delimited range.
+          items:
+            type: string
+            description: Row or range of rows this error was encountered on.
+            example: 3-5
+        description:
+          type: string
+          description: A human-readable description of the error. This message may be transmitted to clients, but isn't meant for customer-facing UIS.
+          example: This resource is read-only and cannot be modified.
+    batchPatchRequest:
+      type: object
+      properties:
+        externalId:
+          type: string
+          description: An externally generated identifier for this batch.
+          readOnly: true
+          example: /adobe/bulkingest/5af9ee67e4045c1b4945c209
+        started:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was started.
+          format: int64
+          example: 1494349963122
+        completed:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was completed. Completed - Started should yield the total processing time.
+          format: int64
+          example: 1494349963467
+        replay:
+          type: object
+          properties:
+            predecessors:
+              type: array
+              items:
+                type: string
+                description: One or more Batch Identifiers that this replay is replacing.
+                example: 62a31e96ba86e52a2f729a8d
+            reason:
+              type: string
+              description: An optional commentary for the requester to describe the purpose for the replay (e.g. deletion of privacy data, fix, compaction, etc..).
+              example: Deletion of privacy data
+          description: Indicates that a batch was replayed or restated.
+        status:
+          type: string
+          description: The current (mutable) status of this Batch.
+          enum:
+          - processing
+          - success
+          - failure
+          - queued
+          - retrying
+          - stalled
+          - aborted
+          - abandoned
+          - inactive
+          - failed
+          - loading
+          - loaded
+          - staged
+          - active
+          - staging
+          - deleted
+          example: processing
+        recordCount:
+          type: integer
+          description: The total number of data records (rows/documents) processed in this Batch.
+          format: int64
+          example: 50
+        failedRecordCount:
+          type: integer
+          description: The number of records that could not be processed in this Batch.
+          format: int64
+          example: 2
+        errors:
+          type: array
+          description: An array of objects that include the error code, rows the error appears, and a human-readable description of the error.
+          items:
+            $ref: '#/components/schemas/errors'
+        size:
+          type: integer
+          description: Number of bytes processed in this Batch.
+          format: int64
+          example: 512
+        availableDates:
+          type: object
+          properties:
+            startDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the oldest data available in this Batch.
+              format: int64
+              example: 1337
+            endDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the most recent data available in this Batch.
+              format: int64
+              example: 4000
+          description: Describes what date range of data is available in the Batch. Null if dates aren't relevant for data related to this Batch.
+        relatedObjects:
+          type: array
+          description: List of associated objects for this batch, such as datasets or other batches.
+          items:
+            $ref: '#/components/schemas/relatedObjects'
+        metrics:
+          type: object
+          properties: {}
+          description: Contains metrics related to this Batch. Metric names are determined by the producer of the object since each Batch may want to record metrics that are relevant to the process
+          example:
+            foo: 1337
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands.  Normally tags are not used for internal Catalog business logic
+        inputFormat:
+          $ref: '#/components/schemas/inputFormat'
+    batchRequest:
+      required:
+      - status
+      type: object
+      properties:
+        externalId:
+          type: string
+          description: An externally generated identifier for this batch.
+          readOnly: true
+          example: /adobe/bulkingest/5af9ee67e4045c1b4945c209
+        started:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was started.
+          format: int64
+          example: 1494349963122
+        completed:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was completed. Completed - Started should yield the total processing time.
+          format: int64
+          example: 1494349963467
+        replay:
+          type: object
+          properties:
+            predecessors:
+              type: array
+              items:
+                type: string
+                description: One or more Batch Identifiers that this replay is replacing.
+                example: 5d01230fc78a4e4f8c0c6b387b4b8d1c
+            reason:
+              type: string
+              description: An optional commentary for the requester to describe the purpose for the replay (e.g. deletion of privacy data, fix, compaction, etc..).
+              example: Deletion of privacy data.
+          description: Indicates that a batch was replayed or restated.
+        status:
+          type: string
+          description: The current (mutable) status of this Batch.
+          enum:
+          - processing
+          - success
+          - failure
+          - queued
+          - retrying
+          - stalled
+          - aborted
+          - abandoned
+          - inactive
+          - failed
+          - loading
+          - loaded
+          - staged
+          - active
+          - staging
+          - deleted
+          example: success
+        recordCount:
+          type: integer
+          description: The total number of data records (rows/documents) processed in this Batch.
+          format: int64
+          example: 45
+        failedRecordCount:
+          type: integer
+          description: The number of records that could not be processed in this Batch.
+          format: int64
+          example: 2
+        errors:
+          type: array
+          description: An array of objects that include the error code, rows the error appears and a human-readable description of the error.
+          items:
+            $ref: '#/components/schemas/errors'
+        size:
+          type: integer
+          description: Number of bytes processed in this Batch.
+          format: int64
+          example: 512
+        availableDates:
+          type: object
+          properties:
+            startDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the oldest data available in this batch.
+              format: int64
+              example: 1337
+            endDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the most recent data available in this batch.
+              format: int64
+              example: 4000
+          description: Describes what date range of data is available in the Batch. Null if dates aren't relevant for data related to this Batch.
+        relatedObjects:
+          type: array
+          description: List of associated objects for this batch, such as datasets or other batches.
+          items:
+            $ref: '#/components/schemas/relatedObjects'
+        metrics:
+          type: object
+          properties: {}
+          description: Contains metrics related to this batch.  Metric names are determined by the producer of the object since each batch may want to record metrics that are relevant to the process
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands.  Normally, tags are not used for internal Catalog business logic.
+        inputFormat:
+          $ref: '#/components/schemas/inputFormat'
+    batchResponse:
+      type: object
+      properties:
+        imsOrg:
+          type: string
+          description: The owning organization identifier.
+          example: 4F3BB22C5631222A7F000101@AdobeOrg
+        created:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when this Batch was persisted.
+          format: int64
+          readOnly: true
+          example: 1658499154836
+        createdClient:
+          type: string
+          description: The ID of the client that created this Batch.
+          readOnly: true
+          example: platform_foundation_catalog
+        createdUser:
+          type: string
+          description: The ID of the user who created this object.
+          readOnly: true
+          example: platform_foundation_catalog@AdobeID
+        updatedUser:
+          type: string
+          description: The ID of the user who changed this object.
+          readOnly: true
+          example: platform_foundation_catalog@AdobeID
+        updated:
+          type: integer
+          description: The Unix timestamp (in milliseconds) of last modification.
+          format: int64
+          readOnly: true
+          example: 1658499238628
+        externalId:
+          type: string
+          description: An externally generated identifier for this batch.
+          readOnly: true
+          example: /adobe/bulkingest/5af9ee67e4045c1b4945c209
+        started:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was started.
+          format: int64
+          example: 1494349963122
+        completed:
+          type: integer
+          description: The Unix timestamp (in milliseconds) when the Batch processing action was completed. Completed - Started should yield the total processing time.
+          format: int64
+          example: 1494349963467
+        replay:
+          type: object
+          properties:
+            predecessors:
+              type: array
+              items:
+                type: string
+                description: One or more Batch Identifiers that this replay is replacing.
+                example: 5d01230fc78a4e4f8c0c6b387b4b8d1c
+            predecessorsByExternalId:
+              type: array
+              items:
+                type: string
+                description: One or more external identifiers that this replay is replacing.
+                example: /adobe/bulkingest/5d01230fc78a4e4f8c0c6b387b4b8d1c
+            predecessorListingType:
+              type: string
+              description: Whether the list of predecessors represent only immediate predecessors, or both immediate and indirect predecessors. The predecessor type is set to immediate by default.
+              enum:
+              - ALL
+              - IMMEDIATE
+              example: ALL
+            reason:
+              type: string
+              description: An optional commentary for the requester to describe the purpose for the replay (e.g. deletion of privacy data, fix, compaction, etc..).
+              example: Deletion of privacy data.
+          description: Indicates that a batch was replayed or restated.
+        status:
+          type: string
+          description: The current (mutable) status of this Batch.
+          enum:
+          - processing
+          - success
+          - failure
+          - queued
+          - retrying
+          - stalled
+          - aborted
+          - abandoned
+          - inactive
+          - failed
+          - loading
+          - loaded
+          - staged
+          - active
+          - staging
+          - deleted
+          example: failure
+        failedBatchLocation:
+          type: string
+          description: When a batch status is failed, the URI at which to retrieve the batch.
+          example: https://ns.adobe.com/bulkingest/5af9ee67e4045c1b4945c209
+        recordCount:
+          type: integer
+          description: The total number of data records (rows/documents) processed in this Batch.
+          format: int64
+          example: 200
+        failedRecordCount:
+          type: integer
+          description: The number of records that could not be processed in this Batch.
+          format: int64
+          example: 2
+        errors:
+          type: array
+          description: An array of objects that include the error code, rows the error appears and a human-readable description of the error.
+          items:
+            $ref: '#/components/schemas/errors'
+        size:
+          type: integer
+          description: Number of bytes processed in this Batch.
+          format: int64
+          example: 512
+        version:
+          type: string
+          description: The Semantic version of the Batch. Updated when the Batch is modified.
+          readOnly: true
+          example: 1.0.3
+        availableDates:
+          type: object
+          properties:
+            startDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the oldest data available in this Batch.
+              format: int64
+              example: 1337
+            endDate:
+              type: integer
+              description: The Unix timestamp (in seconds) for the most recent data available in this Batch.
+              format: int64
+              example: 4000
+          description: Describes what date range of data is available in the Batch. Null if dates aren't relevant for data related to this Batch.
+        relatedObjects:
+          type: array
+          description: List of associated objects for this batch, such as datasets or other batches.
+          items:
+            $ref: '#/components/schemas/relatedObjects'
+        metrics:
+          type: object
+          properties: {}
+          description: Contains metrics related to this Batch.  Metric names are determined by the producer of the object since each batch may want to record metrics that are relevant to the process.
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands.  Normally tags are not used for internal Catalog business logic.
+        inputFormat:
+          $ref: '#/components/schemas/inputFormat'
+    relatedObjects:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of object processed in this Batch.
+          enum:
+          - batch
+          - dataSet
+          - dataSetFile
+          - dataSetView
+          - transform
+          example: batch
+        id:
+          type: string
+          description: The ID for the relation the specified object had with this Batch operation.
+          example: foo-batch
+        tag:
+          type: string
+          description: 'The name for the relation the specified object had with this Batch operation. Examples: input, output, trigger, etc.'
+          example: input
+        status:
+          type: string
+          description: The current (mutable) status of this dataset.
+          enum:
+          - processing
+          - success
+          - failure
+          - queued
+          - retrying
+          - stalled
+          example: processing
+        errors:
+          type: array
+          description: An array of objects that include the error code, rows the error appears, and a human-readable description of the error.
+          items:
+            $ref: '#/components/schemas/errors'
+        metrics:
+          type: object
+          properties: {}
+          description: Contains metrics related to this dataset.
+          example:
+            foo: 1337
+    inputFormat:
+      type: object
+      properties:
+        format:
+          type: string
+          description: The file format for data being submitted in the Batch.
+          enum:
+          - csv
+          - parquet
+          - json
+          - avro
+          example: parquet
+        isMultiLineJson:
+          type: boolean
+          description: If the format is JSON and this is true then the JSON records are separated by a newline.
+          example: true
+        delimiter:
+          type: string
+          description: Character used to separate fields.
+          example: .
+        quote:
+          type: string
+          description: Character used to quote fields that contains spaces, tabs, and/or delimiter characters.
+          example: '`'
+        escape:
+          type: string
+          description: Character used to escape other meta-characters."
+          example: \
+        nullMarker:
+          type: string
+          description: Character/string used to indicate a null value. Any value matching this string will be set as nulls in Data Lake.
+          example: ''
+        header:
+          type: string
+          description: True if input files are expected to have a header row.
+          example: 'true'
+        charset:
+          type: string
+          description: The character encoding of the input files.
+          enum:
+          - US-ASCII
+          - UTF-8
+          - ISO-8859-1
+          example: UTF-8
+      description: Metadata describing the INGEST format of the data being loaded (e.g. Parquet, CSV, JSON).
+    BatchListPagination:
+      type: object
+      description: Pagination metadata for batch list results.
+      required:
+      - limit
+      - offset
+      - count
+      - hasMore
+      properties:
+        limit:
+          type: integer
+          description: Maximum number of batches returned per page.
+          example: 50
+        offset:
+          type: integer
+          description: Zero-based index of the first batch in this page.
+          example: 0
+        count:
+          type: integer
+          description: Number of batch records returned in this page.
+          example: 3
+        hasMore:
+          type: boolean
+          description: Whether additional pages exist beyond this result set.
+          example: false
+    BatchNodeInputContentText:
+      type: object
+      description: Maps a workflow node to a text input value.
+      required:
+      - node_id
+      - content
+      properties:
+        node_id:
+          type: string
+          description: Workflow canvas node identifier for this input.
+          example: node_1775258991082_1lfvzsgqz_2_vhjjoc
+        content:
+          type: string
+          description: Text content for the node.
+          example: Summer campaign headline
+    BatchWorkflowNodeInput:
+      oneOf:
+      - $ref: '#/components/schemas/BatchNodeInputContentAssets'
+      - $ref: '#/components/schemas/BatchNodeInputContentText'
+      - $ref: '#/components/schemas/BatchNodeInputTemplate'
+    BatchNodeInputContentAssets:
+      type: object
+      description: Maps a workflow node to one or more image (or binary) inputs via presigned URLs.
+      required:
+      - node_id
+      - content
+      properties:
+        node_id:
+          type: string
+          description: Workflow canvas node identifier for this input.
+          example: node_1775258981781_301b7cc7v_0_j5iaha
+        content:
+          type: array
+          description: List of presigned asset references for this node.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PresignedStorageRef'
+    BatchStatusResponse:
+      type: object
+      description: Current status and progress for a single batch job.
+      required:
+      - batchId
+      - workflowId
+      - status
+      - assets
+      - executions
+      - createdAt
+      - updatedAt
+      - links
+      properties:
+        batchId:
+          type: string
+          description: Unique batch identifier.
+        workflowId:
+          type: string
+          description: Identifier of the workflow run for this batch.
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - completed
+          - failed
+          - cancelled
+          description: Current batch status.
+        assets:
+          $ref: '#/components/schemas/BatchAssetCounts'
+        executions:
+          $ref: '#/components/schemas/BatchExecutionsSummary'
+        createdAt:
+          type: string
+          format: date-time
+          description: Batch creation timestamp.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp.
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Completion timestamp when the batch has finished, or null if still in progress.
+        links:
+          $ref: '#/components/schemas/BatchStatusDetailLinks'
+    BatchListItem:
+      type: object
+      description: Summary of a single batch as returned by the list batches endpoint.
+      required:
+      - batchId
+      - workflowId
+      - jobName
+      - status
+      - assets
+      - executions
+      - endpoint
+      - createdAt
+      - updatedAt
+      properties:
+        batchId:
+          type: string
+          description: Unique batch identifier.
+        workflowId:
+          type: string
+          description: Identifier of the workflow run for this batch.
+        jobName:
+          type: string
+          description: Display name of the workflow job.
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - completed
+          - failed
+          - cancelled
+          description: Current batch status.
+        assets:
+          $ref: '#/components/schemas/BatchAssetCounts'
+        executions:
+          $ref: '#/components/schemas/BatchExecutionsSummary'
+        endpoint:
+          type: string
+          enum:
+          - batch
+          - preview
+          - execute
+          description: API surface used to create the batch.
+        createdAt:
+          type: string
+          format: date-time
+          description: Batch creation timestamp.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp.
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Completion timestamp when the batch has finished, or null if still in progress.
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message.
+        message:
+          type: string
+          description: Additional error details.
+        status:
+          type: string
+          enum:
+          - failed
+          - error
+          description: 'Error category. Use **`error`** for contract failures such as an unsupported `api-version` value (HTTP 400). Other validation errors often use **`failed`**.
+
+            '
+    BatchExecuteLinks:
+      type: object
+      description: Hypermedia links for batch status, preview result, cancellation, and executions.
+      required:
+      - result
+      - status
+      - cancel
+      - executions
+      properties:
+        result:
+          description: Link to batch status with preview-friendly formatting (`format=preview`).
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+        status:
+          description: Link to poll batch status.
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+        cancel:
+          description: Link to cancel the batch job.
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+        executions:
+          description: Link to list per-asset executions for the batch.
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+    BatchExecuteAcceptedResponse:
+      type: object
+      description: Response returned when a batch job is accepted for processing.
+      required:
+      - batchId
+      - workflowId
+      - status
+      - assets
+      - createdAt
+      - links
+      properties:
+        batchId:
+          type: string
+          description: Unique batch identifier.
+          example: batch-run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9-20260403-750642eb
+        workflowId:
+          type: string
+          description: Identifier of the workflow associated with this batch.
+          example: run-workflow_2402b5a2-bd2b-4309-a4a4-d7983bba64e9
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - completed
+          - failed
+          - cancelled
+          description: Current batch status.
+        assets:
+          $ref: '#/components/schemas/BatchAssetCounts'
+        createdAt:
+          type: string
+          format: date-time
+          description: Batch creation timestamp.
+        links:
+          $ref: '#/components/schemas/BatchExecuteLinks'
+    BatchExecutionsSummary:
+      type: object
+      description: Execution counts and identifiers for a batch.
+      required:
+      - total
+      - completed
+      - failed
+      - allExecutionIds
+      - failedExecutionIds
+      properties:
+        total:
+          type: integer
+          description: Total number of executions in the batch.
+        completed:
+          type: integer
+          description: Number of executions that finished successfully.
+        failed:
+          type: integer
+          description: Number of executions that failed.
+        allExecutionIds:
+          type: array
+          description: Identifiers for all executions in the batch.
+          items:
+            type: string
+        failedExecutionIds:
+          type: array
+          description: Identifiers of failed executions, suitable for retry or inspection.
+          items:
+            type: string
+    ListBatchesResponse:
+      type: object
+      description: Paginated list of batches for the authenticated user within their organization.
+      required:
+      - orgId
+      - Batches
+      - pagination
+      properties:
+        orgId:
+          type: string
+          description: IMS organization ID for the authenticated caller.
+          example: A1B2C3D4567890ABCDEFFEDA51@AdobeOrg
+        batches:
+          type: array
+          description: Batch summaries, typically sorted with the most recently created first.
+          items:
+            $ref: '#/components/schemas/BatchListItem'
+        pagination:
+          $ref: '#/components/schemas/BatchListPagination'
+        filters:
+          type: object
+          description: Echo of query parameters applied to this response.
+          properties:
+            status:
+              type: string
+              description: Status filter, if provided.
+            workflowId:
+              type: string
+              description: Workflow ID filter, if provided.
+            createdAfter:
+              type: string
+              format: date-time
+              description: Created-after filter, if provided.
+            createdBefore:
+              type: string
+              format: date-time
+              description: Created-before filter, if provided.
+    BatchExecutionResult:
+      type: object
+      description: Individual execution result within a batch.
+      properties:
+        executionId:
+          type: string
+          description: Execution ID.
+        batchId:
+          type: string
+          description: Batch ID this execution belongs to.
+        assetIndex:
+          type: integer
+          description: Asset index in the batch.
+        inputAsset:
+          type: object
+          description: Input asset data.
+          properties:
+            index:
+              type: integer
+            assetId:
+              type: string
+            inputs:
+              type: array
+              items:
+                type: object
+        status:
+          type: string
+          enum:
+          - pending
+          - running
+          - success
+          - failed
+          description: Execution status.
+        error:
+          type: string
+          description: Error message if failed.
+        outputs:
+          type: array
+          description: Output results if successful.
+          items:
+            type: object
+        startedAt:
+          type: string
+          format: date-time
+          description: Execution start time.
+        completedAt:
+          type: string
+          format: date-time
+          description: Execution completion time.
+        durationMs:
+          type: integer
+          description: Duration in milliseconds.
+    BatchNodeInputTemplate:
+      type: object
+      description: Maps a workflow node to a template file via presigned URL.
+      required:
+      - node_id
+      - template
+      properties:
+        node_id:
+          type: string
+          description: Workflow canvas node identifier for this input.
+          example: node-1775259002055-ztu8i4fpz
+        template:
+          $ref: '#/components/schemas/PresignedStorageRef'
+    BatchStatusDetailLinks:
+      type: object
+      description: Hypermedia links returned when getting a single batch by ID.
+      required:
+      - cancel
+      - executions
+      properties:
+        cancel:
+          description: Link to cancel the batch job.
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+        executions:
+          description: Link to list per-asset executions for the batch.
+          allOf:
+          - $ref: '#/components/schemas/BatchHrefLink'
+    BatchExecuteWorkflow:
+      type: object
+      description: Published workflow identifier and per-run input mappings by node ID.
+      required:
+      - workflowId
+      - inputs
+      properties:
+        workflowId:
+          type: string
+          format: uuid
+          description: Identifier of the published workflow to run.
+          example: 121dc48a-f50b-427a-8aeb-f84c12c946a8
+        inputs:
+          type: array
+          description: 'Outer list: each element is one parallel batch execution. Inner list: node input mappings for that execution (images, text, templates, and so on).
+
+            '
+          items:
+            type: array
+            description: Node input mappings for a single workflow execution.
+            minItems: 1
+            items:
+              $ref: '#/components/schemas/BatchWorkflowNodeInput'
+    BatchHrefLink:
+      type: object
+      description: Hypermedia link with an absolute URL.
+      required:
+      - href
+      properties:
+        href:
+          type: string
+          format: uri
+          description: Target URL for the related resource.
+    BatchAssetCounts:
+      type: object
+      description: Asset counts for batch progress tracking.
+      properties:
+        total:
+          type: integer
+          description: Total number of assets in the batch.
+        pending:
+          type: integer
+          description: Assets waiting to be processed.
+        processing:
+          type: integer
+          description: Assets currently being processed.
+        completed:
+          type: integer
+          description: Successfully completed assets.
+        failed:
+          type: integer
+          description: Failed assets.
+    PresignedStorageRef:
+      type: object
+      description: Asset location using a presigned URL and storage kind.
+      required:
+      - presignedUrl
+      properties:
+        presignedUrl:
+          type: string
+          format: uri
+          description: Presigned GET URL for the asset.
+          example: https://storage.example.com/bucket/asset.png?X-Amz-Algorithm=AWS4-HMAC-SHA256
+        storageType:
+          type: string
+          description: Storage provider for the presigned URL.
+          example: AWS
+    BatchExecuteRequest:
+      type: object
+      description: Batch execute request payload.
+      required:
+      - workflow
+      properties:
+        workflow:
+          $ref: '#/components/schemas/BatchExecuteWorkflow'
+  parameters:
+    if-match:
+      name: if-match
+      in: header
+      description: Set to verify the valid versions of document to be modified by matching the updated date.
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      description: Limit response to a specified positive number of objects. The maximum number of objects that can be returned is 100.
+      schema:
+        type: integer
+      example: 20
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
+      schema:
+        type: string
+    if-none-match:
+      name: if-none-match
+      in: header
+      description: Set to verify the invalid versions of document to be modified by matching the updated date.
+      schema:
+        type: string
+    content-type:
+      name: content-type
+      in: header
+      description: Specifies the media type of the request body. Required for requests with a payload, such as POST, PUT, and PATCH. When sending a JSON payload, this must be set to `application/json`.
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    ApiVersion:
+      name: api-version
+      in: header
+      required: false
+      example: '1.0'
+      description: 'Public API contract version for **batch** operations (`/batch/…`, `GET /batches`). The supported value is **`1.0`**.
+
+        If omitted, the service assumes **`1.0`**. Unsupported values return **400** with `status: "error"`.
+
+        '
+      schema:
+        type: string
+        enum:
+        - '1.0'
+        default: '1.0'
+  responses:
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Internal server error
+            message: An unexpected error occurred
+            status: failed
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Unauthorized
+            message: Missing or invalid authentication
+            status: failed
+    BadRequest:
+      description: 'Bad request. May include `status: "error"` when the request violates a contract (for example an unsupported **`api-version`** on batch routes).
+
+        '
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidInput:
+              summary: Typical validation failure
+              value:
+                error: Invalid request
+                message: Request body is not valid JSON
+                status: failed
+            unsupportedApiVersion:
+              summary: Unsupported api-version (batch routes)
+              value:
+                status: error
+                error: 'The api-version value is not supported. Supported version: 1.0'
+    NotFound:
+      description: Requested Resource Was Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Not found
+            message: Workflow or batch not found
+            status: failed
+  headers:
+    ApiVersionResponse:
+      description: 'Echoes the contract version that handled the request. Matches the `api-version` request header, or **`1.0`** when the client omitted it.
+
+        '
+      schema:
+        type: string
+        example: '1.0'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token for authorization.
+x-refined-from:
+- adobe-suite-aep-catalog-openapi.yaml
+- adobe-suite-firefly-workflow-builder-openapi.yaml
+x-original-swagger-version: '2.0'

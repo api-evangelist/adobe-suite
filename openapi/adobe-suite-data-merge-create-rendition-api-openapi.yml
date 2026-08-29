@@ -1,0 +1,1368 @@
+openapi: 3.2.0
+info:
+  title: Illustrator API - Firefly Services Data Merge & Create Rendition API
+  description: Illustrator API allows you to perform various operations with an Adobe Illustrator template. The API processes requests asynchronously.
+  version: 1.0.0
+  license:
+    name: Adobe Creative API License
+    url: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+servers:
+- url: https://illustrator-api.adobe.io
+  description: Production endpoint.
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Data Merge & Create Rendition
+  description: Data merge, create rendition, and shared job status for asynchronous Illustrator API jobs.
+paths:
+  /v1/merge-data:
+    post:
+      tags:
+      - Data Merge & Create Rendition
+      operationId: dataMerge
+      summary: Data merge
+      description: This endpoint allows you to merge variable data from a CSV file with an Adobe Illustrator template. The request is processed asynchronously and the status of the job can be checked using the status URL provided in the response. The output is provided as an array of individual files, one for each row in the CSV data. If some rows succeed and others fail or require rerun, the job completes with status `partially_succeeded` when you poll the status endpoint; that status applies only to Data Merge jobs.
+      x-ffs-async-job: true
+      x-ffs-job-status-fetcher: facadeJobStatus
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataMergeRequest'
+            example:
+              data:
+                source:
+                  url: https://your-bucket.s3.amazonaws.com/your-data.csv
+              template:
+                source:
+                  url: https://your-bucket.s3.amazonaws.com/your-template.ai
+              fontFiles:
+              - source:
+                  url: https://your-bucket.s3.amazonaws.com/your-font.ttf
+                mediaType: font/ttf
+              settings:
+                fontSettings:
+                  autoReduceFontSizeToFit: false
+                  minFontSize: 8
+                  fallBackFont: Roboto-Thin
+              output:
+                fileName: your-output.pdf
+                mediaType: application/pdf
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: string
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            retry-after:
+              description: Indicates how long to wait before making a new request.
+              schema:
+                type: string
+            link:
+              description: Provides a link to related resources.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLinkResponse'
+              example:
+                jobId: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+                statusUrl: https://illustrator-api-beta.adobe.io/v1/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        '400':
+          description: Bad Request
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: string
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: invalid_json
+                message: "Unexpected token 'a', ...\"ntSize\" : a\n      }\n\"... is not valid JSON"
+        '401':
+          description: Unauthorized
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+              example:
+                title: ErrInvalidOauthToken
+                status: 401
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: Forbidden
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenError'
+              example:
+                title: ErrMissingAPIKey
+                status: 403
+                error_code: 403000
+                message: API key is missing
+        '422':
+          description: Unprocessable Entity
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: string
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: validation_error
+                validation_errors:
+                - minFontSize must be a positive number
+                - minFontSize must be a number conforming to the specified constraints
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+  /v1/create-rendition:
+    post:
+      tags:
+      - Data Merge & Create Rendition
+      operationId: createRendition
+      summary: Create rendition
+      description: This endpoint allows you to convert Adobe Illustrator files into various output formats. It supports conversion of .ai documents into multiple web- and print-ready formats. The request is processed asynchronously and the status of the job can be checked using the status URL provided in the response. The output is provided as a single converted file.
+      x-ffs-async-job: true
+      x-ffs-job-status-fetcher: facadeJobStatus
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRenditionRequest'
+            example:
+              input:
+                source:
+                  url: https://your-bucket.s3.amazonaws.com/your-document.ai
+                mediaType: application/illustrator
+              output:
+                mediaType: application/pdf
+              settings:
+                documentLevel: 0
+                artboardRange: 1-3
+                resolution: 72
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: integer
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            retry-after:
+              description: Indicates how long to wait before making a new request.
+              schema:
+                type: integer
+            link:
+              description: Provides a link to related resources.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLinkResponse'
+              example:
+                jobId: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+                statusUrl: https://illustrator-api-beta.adobe.io/v1/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        '400':
+          description: Bad Request
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: integer
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: invalid_json
+                message: Expected ',' or '}' after property value in JSON at position 276
+        '401':
+          description: Unauthorized
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: ''
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+              example:
+                title: ErrInvalidOauthToken
+                status: 401
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: Forbidden
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+              example:
+                title: ErrMissingAPIKey
+                status: 403
+                error_code: 403000
+                message: API key is missing
+        '422':
+          description: Unprocessable Entity
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: integer
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: validation_error
+                validation_errors:
+                - 'documentLevel must be one of the following values: 0, 1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: runtime_error
+                message: An unexpected error occurred while processing your request. Please retry or contact support if the issue persists.
+  /v1/status/{jobId}:
+    get:
+      tags:
+      - Data Merge & Create Rendition
+      operationId: facadeJobStatus
+      summary: Retrieve job status
+      description: Retrieve the status of a job by providing the job ID. The job ID can be obtained from the response of other APIs. For all asynchronous jobs, polling this endpoint can return `running`, `succeeded`, or `failed`. The `partially_succeeded` status is returned only for Data Merge jobs when some CSV rows produce outputs while other rows fail or must be rerun after errors (for example, missing fonts). No other job types return the `partially_succeeded` status.<br>When `status` is `succeeded`, for Data Merge jobs each item in `outputs` includes a `row` field; for Create Rendition jobs, output items contain `destination` and `mediaType` only.
+      x-ffs-status-fetcher: true
+      x-ffs-job-name: FacadeAsyncJob
+      parameters:
+      - name: jobId
+        required: true
+        in: path
+        description: The job ID to retrieve the status of.
+        schema:
+          type: string
+          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+      responses:
+        '200':
+          description: OK
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: string
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            retry-after:
+              description: Indicates how long to wait before making a new request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/DataMergeJobApiResponse'
+                - $ref: '#/components/schemas/CreateRenditionJobApiResponse'
+                - $ref: '#/components/schemas/JobStatusPollPayload'
+                - $ref: '#/components/schemas/DataMergeJobFailedResponse'
+                - $ref: '#/components/schemas/DataMergeJobPartiallySucceededResponse'
+              examples:
+                succeeded_create_rendition:
+                  summary: 'Status: Succeeded (Create Rendition)'
+                  value:
+                    jobId: 6f35a027-c578-41e6-9e53-034424c69d14
+                    status: succeeded
+                    outputs:
+                    - destination:
+                        url: https://example.com/output2.pdf
+                      mediaType: application/pdf
+                succeeded_data_merge:
+                  summary: 'Status: Succeeded (Data Merge)'
+                  value:
+                    jobId: 856745ce-816e-476b-b517-debd9fd91e3b
+                    status: succeeded
+                    outputs:
+                    - row: 1
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: image/png
+                    - row: 2
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: image/png
+                    - row: 3
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: image/png
+                running:
+                  summary: 'Status: Running'
+                  value:
+                    jobId: 48db6300-1cc5-4a31-84f6-5092fbd67484
+                    status: running
+                    Retry-After: '1'
+                failed:
+                  summary: 'Status: Failed'
+                  value:
+                    jobId: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
+                    status: failed
+                    error_code: runtime_error
+                    message: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+                partially_succeeded:
+                  summary: 'Status: Partially Succeeded (Data Merge only)'
+                  value:
+                    jobId: 1dd551c5-6023-4ff9-b736-bc27b36cbb7f
+                    status: partially_succeeded
+                    outputs:
+                    - row: 135
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: application/pdf
+                    - row: 136
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: application/pdf
+                    - row: 137
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: application/pdf
+                    - row: 138
+                      destination:
+                        url: '{your_presigned_get_url}'
+                      mediaType: application/pdf
+                    errors:
+                    - row: 47
+                      error_code: runtime_error
+                      message: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+                    - row: 113
+                      error_code: runtime_error
+                      message: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+                    - row: 211
+                      error_code: runtime_error
+                      message: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+                    - row: 427
+                      error_code: runtime_error
+                      message: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+                    needsRerun:
+                    - rowRange:
+                        start: 1
+                        end: 67
+                    - rowRange:
+                        start: 68
+                        end: 134
+                    - rowRange:
+                        start: 202
+                        end: 268
+                    - rowRange:
+                        start: 403
+                        end: 469
+        '401':
+          description: Unauthorized
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+              example:
+                title: ErrInvalidOauthToken
+                status: 401
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: Forbidden
+          headers:
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: integer
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LongJobError'
+              example:
+                title: ErrMissingAPIKey
+                status: 403
+                error_code: 403000
+                message: API key is missing
+        '404':
+          description: Not Found
+          headers:
+            access-control-allow-headers:
+              description: Indicates which headers can be used during the actual request.
+              schema:
+                type: string
+            access-control-allow-methods:
+              description: Indicates which HTTP methods are allowed when accessing the resource.
+              schema:
+                type: string
+            access-control-expose-headers:
+              description: Indicates which headers can be exposed as part of the response.
+              schema:
+                type: string
+            access-control-allow-origin:
+              description: Indicates whether the response can be shared with requesting code from the given origin.
+              schema:
+                type: string
+            access-control-max-age:
+              description: Indicates how long the results of a preflight request can be cached.
+              schema:
+                type: string
+            x-request-id:
+              description: Unique identifier for the request.
+              schema:
+                type: string
+            content-type:
+              description: Indicates the media type of the resource.
+              schema:
+                type: string
+            content-length:
+              description: Indicates the size of the response body in bytes.
+              schema:
+                type: string
+            date:
+              description: Indicates the date and time at which the message was originated.
+              schema:
+                type: string
+            server:
+              description: Indicates the software used by the origin server to handle the request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: unknown_job_id
+                message: Job ID does not exist.
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobError'
+              example:
+                error_code: runtime_error
+                message: An unexpected error occurred while processing your request. Please retry or contact support if the issue persists.
+components:
+  schemas:
+    JobError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+          example: validation_error
+        message:
+          type: string
+          description: The error message.
+          example: Invalid request payload. Check validation_errors for details.
+        validation_errors:
+          description: An array of various validation errors.
+          type: array
+          items:
+            type: string
+      required:
+      - error_code
+    DataMergeFontSettings:
+      type: object
+      properties:
+        autoReduceFontSizeToFit:
+          type: boolean
+          description: Automatically reduce font size to fit text within text boxes. Defaults to false if not specified.
+          default: false
+        minFontSize:
+          type: number
+          description: Minimum font size (in points) when `autoReduceFontSizeToFit` is enabled. Must be a positive number.
+          example: 8
+        fallBackFont:
+          type: string
+          description: A case-sensitive PostScript font name (like Roboto-Thin, Oxygen, or SourceSansPro-Bold) to use as a fallback when the fonts are missing in the template file.
+          example: Roboto-Thin
+    DataMergeOutputSpec:
+      type: object
+      properties:
+        fileName:
+          type: string
+          description: The output file name. May or may not have an extension. It is recommended to provide with extension (e.g., 'result.png', 'output.pdf').
+          example: your-output.pdf
+        mediaType:
+          $ref: '#/components/schemas/DataMergeOutputMediaType'
+      required:
+      - fileName
+      - mediaType
+    UnauthorizedError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrInvalidOauthToken
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: Oauth token is not valid
+      required:
+      - status
+      - error_code
+    CreateRenditionOutputSpec:
+      type: object
+      properties:
+        mediaType:
+          $ref: '#/components/schemas/CreateRenditionOutputMediaType'
+      required:
+      - mediaType
+    DataMergeData:
+      type: object
+      properties:
+        source:
+          description: The source containing the CSV file with variable data. The media type defaults to `text/csv`.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+      required:
+      - source
+    DataMergeJobPartiallySucceededResponse:
+      type: object
+      title: Partially Succeeded
+      description: Returned ONLY FOR DATA MERGE jobs when some rows produced outputs while others failed or require rerun. Other job types do not use this status.
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: 1dd551c5-6023-4ff9-b736-bc27b36cbb7f
+        status:
+          type: string
+          enum:
+          - partially_succeeded
+          description: The job status.
+        outputs:
+          type: array
+          description: Output files produced for successfully merged rows.
+          items:
+            $ref: '#/components/schemas/DataMergeOutputWithRow'
+        errors:
+          type: array
+          description: Per-row errors for rows that did not produce outputs.
+          items:
+            $ref: '#/components/schemas/DataMergePartialSuccessError'
+        needsRerun:
+          type: array
+          description: Row ranges that must be rerun after addressing errors (for example, missing fonts).
+          items:
+            $ref: '#/components/schemas/DataMergeNeedsRerunItem'
+      required:
+      - jobId
+      - status
+      - outputs
+      - errors
+      - needsRerun
+    DataMergeSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: 'The URL pointing to the resource. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
+          example: https://your-bucket.s3.amazonaws.com/your-file.csv
+      required:
+      - url
+    DataMergePartialSuccessError:
+      type: object
+      description: An error for a specific CSV row when the job completes with partial success.
+      properties:
+        row:
+          type: integer
+          description: The CSV row index where the error occurred.
+        error_code:
+          type: string
+          description: The error code for this row.
+          example: runtime_error
+        message:
+          type: string
+          description: The error message for this row.
+          example: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+      required:
+      - row
+      - error_code
+      - message
+    DataMergeNeedsRerunItem:
+      type: object
+      description: A row range that must be rerun after errors are resolved.
+      properties:
+        rowRange:
+          description: The inclusive range of CSV rows to reprocess.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeRowRange'
+      required:
+      - rowRange
+    DataMergeOutputWithRow:
+      type: object
+      description: A merged output file for a specific CSV row.
+      properties:
+        row:
+          type: integer
+          description: The CSV row index for this output.
+        destination:
+          description: Details of the location where the output is located.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeOutputDestination'
+        mediaType:
+          type: string
+          description: Media type of the output.
+          example: application/pdf
+      required:
+      - row
+      - destination
+      - mediaType
+      additionalProperties: false
+    LongJobError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrInvalidOauthToken
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: Oauth token is not valid
+      required:
+      - status
+      - error_code
+    JobStatusPollPayload:
+      type: object
+      title: Running
+      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
+      properties:
+        status:
+          description: The job status.
+          allOf:
+          - $ref: '#/components/schemas/JobStatus'
+          - enum:
+            - running
+        jobId:
+          type: string
+          description: The job ID.
+          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
+        Retry-After:
+          type: string
+          description: Suggested number of seconds to wait before sending another request to this endpoint.
+          example: '1'
+      required:
+      - status
+      - jobId
+      - Retry-After
+      additionalProperties: false
+    ForbiddenError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrMissingAPIKey
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: API key is missing
+      required:
+      - status
+      - error_code
+    DataMergeOutputDestination:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to the output file.
+          example: https://output-bucket.s3.amazonaws.com/merge-results/row-1.pdf
+      required:
+      - url
+    JobLinkResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        statusUrl:
+          type: string
+          description: The status URL.
+          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+      required:
+      - jobId
+      - statusUrl
+    CreateRenditionJobApiResponse:
+      type: object
+      title: Succeeded (Create Rendition)
+      description: Returned when a Create Rendition job completes successfully. Output items do not include a CSV row index.
+      properties:
+        status:
+          type: string
+          description: The job status.
+          enum:
+          - succeeded
+        jobId:
+          type: string
+          description: The job ID.
+          example: 6f35a027-c578-41e6-9e53-034424c69d14
+        outputs:
+          type: array
+          description: Array of converted output files (one for each artboard).
+          items:
+            $ref: '#/components/schemas/CreateRenditionOutput'
+      required:
+      - status
+      - jobId
+      - outputs
+    CreateRenditionOutputMediaType:
+      type: string
+      description: The desired output media type for the converted file.
+      enum:
+      - image/png
+      - image/jpeg
+      - image/webp
+      - image/svg+xml
+      - application/pdf
+      - application/eps
+    DataMergeJobApiResponse:
+      type: object
+      title: Succeeded (Data Merge)
+      description: Returned when a Data Merge job completes successfully. Each output includes the CSV row index.
+      properties:
+        status:
+          type: string
+          description: The job status.
+          enum:
+          - succeeded
+        jobId:
+          type: string
+          description: The job ID.
+          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
+        outputs:
+          description: Array of output files from the data merge operation, one per CSV row.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataMergeOutputWithRow'
+      required:
+      - status
+      - jobId
+      - outputs
+    DataMergeRequest:
+      type: object
+      properties:
+        data:
+          description: The data source containing variable data. Must be a CSV file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeData'
+        template:
+          description: The template source (Adobe Illustrator file).
+          allOf:
+          - $ref: '#/components/schemas/DataMergeTemplate'
+        fontFiles:
+          description: Optional array of font files to be used in the template. Supports .ttf and .otf font formats.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataMergeFontFile'
+        settings:
+          description: Settings for the data merge operation.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSettings'
+        output:
+          description: Output specification for the merge operation with file name and media type.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeOutputSpec'
+      required:
+      - data
+      - template
+      - output
+    DataMergeFontFile:
+      type: object
+      properties:
+        source:
+          description: The source containing the font file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+        mediaType:
+          $ref: '#/components/schemas/DataMergeFontFileMediaType'
+      required:
+      - source
+      - mediaType
+    DataMergeTemplate:
+      type: object
+      properties:
+        source:
+          description: The source containing the Adobe Illustrator template file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+      required:
+      - source
+    CreateRenditionSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: 'The URL pointing to the Adobe Illustrator file. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
+          example: https://your-bucket.s3.amazonaws.com/your-document.ai
+      required:
+      - url
+    CreateRenditionOutputDestination:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to the output file.
+          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
+      required:
+      - url
+    DataMergeOutputMediaType:
+      type: string
+      description: The desired output media type for the merged documents.
+      enum:
+      - image/png
+      - image/jpeg
+      - application/pdf
+      - image/svg+xml
+      - application/illustrator
+      - application/eps
+    DataMergeFontFileMediaType:
+      type: string
+      description: The media type of the font file. Supports font/ttf and font/otf.
+      enum:
+      - font/ttf
+      - font/otf
+    DataMergeRowRange:
+      type: object
+      description: An inclusive range of CSV row indices.
+      properties:
+        start:
+          type: integer
+          description: The start row index for the range.
+        end:
+          type: integer
+          description: The end row index for the range.
+      required:
+      - start
+      - end
+    CreateRenditionInput:
+      type: object
+      properties:
+        source:
+          description: The source containing the Adobe Illustrator file.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionSourceUrl'
+        mediaType:
+          description: The media type of the source file. Optional, defaults to application/illustrator.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionSourceMediaType'
+      required:
+      - source
+    DataMergeSettings:
+      type: object
+      properties:
+        fontSettings:
+          description: Settings for font handling during the merge operation.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeFontSettings'
+    CreateRenditionOutput:
+      type: object
+      properties:
+        destination:
+          description: Details of the location where the output is located.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
+        mediaType:
+          type: string
+          description: Media type of the output.
+          example: application/pdf
+      required:
+      - destination
+      - mediaType
+      additionalProperties: false
+    CreateRenditionSettings:
+      type: object
+      properties:
+        documentLevel:
+          type: number
+          description: Document level - 0 for artboard level, 1 for document level
+          enum:
+          - 0
+          - 1
+        artboardRange:
+          type: string
+          description: Artboard range to export (e.g., '1-3', '1,2,5'). Required when documentLevel is 0.
+          example: 1-3
+        resolution:
+          type: number
+          description: Resolution in DPI (dots per inch) for the output. Must be an integer between 4 and 2400 for PNG and JPEG formats. Defaults to 72. Not applicable for other formats (PDF, EPS, SVG, or WEBP).
+          minimum: 4
+          maximum: 2400
+          default: 72
+      required:
+      - documentLevel
+    DataMergeJobFailedResponse:
+      type: object
+      title: Failed
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
+        status:
+          type: string
+          enum:
+          - failed
+          description: The job status.
+        error_code:
+          type: string
+          description: The error code.
+          example: runtime_error
+        message:
+          type: string
+          description: The error message.
+          example: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+      required:
+      - jobId
+      - status
+      - error_code
+      - message
+    CreateRenditionRequest:
+      type: object
+      properties:
+        input:
+          description: The input object containing source and media type.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionInput'
+        output:
+          description: Output specification for the rendition operation with desired media type.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionOutputSpec'
+        settings:
+          description: Settings for controlling the rendition process.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionSettings'
+      required:
+      - input
+      - output
+      - settings
+    CreateRenditionSourceMediaType:
+      type: string
+      description: The media type of the source file.
+      enum:
+      - application/illustrator
+    JobStatus:
+      type: string
+      description: The job status.
+      enum:
+      - running
+      - failed
+      - succeeded
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

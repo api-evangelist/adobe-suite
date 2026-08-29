@@ -1,0 +1,320 @@
+openapi: 3.2.0
+info:
+  description: REST API for Adobe Substance 3D - Firefly Services.
+  title: Adobe Substance 3D API - Firefly Services Spaces API
+  version: 1.0.0
+servers:
+- url: https://s3d.adobe.io
+security:
+- bearerAuth: []
+  ApiKeyAuth: []
+tags:
+- name: Spaces
+paths:
+  /v1/spaces:
+    post:
+      operationId: createSpace_v1
+      summary: Create Space
+      description: Create a Space from 3D files.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filename:
+                  description: Filename of the file being uploaded.
+                  type: string
+                  format: binary
+                  contentMediaType: application/octet-stream
+                name:
+                  description: General purpose name for multipart form value.
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest_base.Space'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                empty_input_body:
+                  value:
+                    error_code: empty_input_body
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                access_error:
+                  value:
+                    error_code: access_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              examples:
+                timeout_error:
+                  value:
+                    error_code: timeout_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              examples:
+                entity_too_large:
+                  value:
+                    error_code: entity_too_large
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                validation_error:
+                  value:
+                    error_code: validation_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              examples:
+                rate_limited:
+                  value:
+                    error_code: rate_limited
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                runtime_error:
+                  value:
+                    error_code: runtime_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+      tags:
+      - Spaces
+      x-s3d-public: true
+  /v2/spaces:
+    post:
+      operationId: createSpace_v2
+      summary: Create Space API
+      description: "## Overview\n\nThe **Substance 3D API** provides a way to upload and temporarily store files.\nUploading files requires a **multipart/form-data** request to send data.\n\nThe request requires a **files** field containing a list of files. Each file's **filename** field can contain a filepath to specify where the file will be stored in the space.\n\nExample for this files tree:\n\n```\n├── textures\n│   ├── diffuse.png\n│   └── normal.png\n└── lighthouse.fbx\n```\n\nHTTP data relative to the previous files tree:\n\n```HTTP\nPOST /spaces HTTP/1.1\nHost: localhost:8080\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\n\n------WebKitFormBoundary7MA4YWxkTrZu0gW\nContent-Disposition: form-data; name=\"files\"; filename=\"lighthouse.fbx\"\nContent-Type: model/vnd.autodesk.fbx\n\n(data)\n------WebKitFormBoundary7MA4YWxkTrZu0gW\nContent-Disposition: form-data; name=\"files\"; filename=\"textures/diffuse.png\"\nContent-Type: image/png\n\n(data)\n\n------WebKitFormBoundary7MA4YWxkTrZu0gW\nContent-Disposition: form-data; name=\"files\"; filename=\"textures/normal.png\"\nContent-Type: image/png\n\n(data)\n------WebKitFormBoundary7MA4YWxkTrZu0gW--\n```\n\nCurl command to create this file tree:\n\n```\ncurl -X POST https://s3d.adobe.io/v2/spaces \\\n  -F \"files=@Local/Path/To/The/Local/File/lighthouse.fbx;filename=lighthouse.fbx\" \\\n  -F \"files=@Local/Path/To/The/Local/File/diffuse.png;filename=textures/diffuse.png\" \\\n  -F \"files=@Local/Path/To/The/Local/File/normal.png;filename=textures/normal.png\"\n```\n\nThe result of the post is a **JSON** which contained the **id** of the space created.\nSpace **id** can be used into a space source to use space content as a source for API operations.\n\nExample of a space source:\n\n```json\n{\n  \"space\": {\n    \"id\": \"<space_id>\"\n  }\n}\n```\n"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    contentMediaType: application/octet-stream
+                    format: binary
+                    type: string
+                  minItems: 1
+              required:
+              - files
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest_base.Space'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                empty_input_body:
+                  value:
+                    error_code: empty_input_body
+                    message: ''
+                invalid_multipart:
+                  value:
+                    error_code: invalid_multipart
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                access_error:
+                  value:
+                    error_code: access_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              examples:
+                timeout_error:
+                  value:
+                    error_code: timeout_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              examples:
+                entity_too_large:
+                  value:
+                    error_code: entity_too_large
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                validation_error:
+                  value:
+                    error_code: validation_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              examples:
+                rate_limited:
+                  value:
+                    error_code: rate_limited
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                runtime_error:
+                  value:
+                    error_code: runtime_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+      tags:
+      - Spaces
+      x-s3d-public: true
+components:
+  schemas:
+    ffapierrors.FFAPIError:
+      description: The error within the error response.
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
+          readOnly: true
+        error_code:
+          description: Associated error code.
+          type: string
+        error_details:
+          description: Optional list of individual error details.
+          type: array
+          items:
+            type: object
+        message:
+          description: Error message.
+          type: string
+      additionalProperties: false
+      required:
+      - error_code
+    rest_base.Space:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.Space.json
+          readOnly: true
+        expiry:
+          description: time at which the space will be deleted
+          type: string
+          format: date-time
+        files:
+          description: List of all files contained in Space, ordered by name.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/rest_base.SpaceFile'
+        id:
+          description: Unique identifier of this Space.
+          type: string
+        url:
+          description: URL to the full description of this Space.
+          type: string
+        archiveUrl:
+          description: URL to fetch the whole space as an archive (usually a ZIP file).
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - expiry
+      - files
+    rest_base.SpaceFile:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - name
+      - size
+  securitySchemes:
+    bearerAuth:
+      description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'
+      scheme: bearer
+      type: http
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: 'Your client ID, which acts as the API key. Pass `x-api-key: <API_KEY>` using `<API_KEY>` as the placeholder in examples.'

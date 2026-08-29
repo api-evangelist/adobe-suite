@@ -1,0 +1,352 @@
+openapi: 3.2.0
+info:
+  title: Retrieve & filter Action Campaigns Metadata Resource API
+  description: Retrieve & filter Action Campaigns
+  version: v1.79
+servers:
+- url: https://platform-int.adobe.io/journey/campaigns
+  description: QA
+- url: https://platform-stage.adobe.io/journey/campaigns
+  description: Stage
+- url: https://platform.adobe.io/journey/campaigns
+  description: Prod
+security:
+- {}
+- x-api-key:
+  - read
+  - write
+tags:
+- name: Metadata Resource
+  description: Metadata collection
+paths:
+  /service/metadata/surfaces:
+    get:
+      tags:
+      - Metadata Resource
+      summary: Get Surfaces
+      operationId: getSurfaces
+      parameters:
+      - name: count
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+        example: 50
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: orderby
+        in: query
+        required: false
+        schema:
+          type: string
+          default: surfaceName
+        example: surfaceName
+      - name: channel
+        in: query
+        required: false
+        schema:
+          type: string
+          default: inapp
+        example: channel=inapp
+      - name: property
+        in: query
+        required: false
+        schema:
+          type: string
+        example: surfaceName==ajo;created_at>2021-09-28
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - appConfigurationId
+          - channelConfigurationId
+          - surfaceId
+          - brandingPresetId
+        example: type=surfaceId
+      - name: x-gw-ims-org-id
+        in: header
+        required: true
+        schema:
+          type: string
+          description: IMS Org ID
+      - name: x-sandbox-name
+        in: header
+        required: true
+        schema:
+          type: string
+          description: Sandbox Name
+      responses:
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+        '500':
+          description: Any error encountered while retrieving details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+        '200':
+          description: Request successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Multi_Response_Model'
+      security:
+      - x-api-key: []
+      - AdobeUserToken: []
+  /service/metadata/surfaces/{channel}/{surfaceId}:
+    get:
+      tags:
+      - Metadata Resource
+      summary: Get surface details
+      operationId: getSurface
+      parameters:
+      - name: channel
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: surfaceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: type
+        in: query
+        required: false
+        schema:
+          type: string
+        example: type=surfaceId
+      - name: x-gw-ims-org-id
+        in: header
+        required: true
+        schema:
+          type: string
+          description: IMS Org ID
+      - name: x-sandbox-name
+        in: header
+        required: true
+        schema:
+          type: string
+          description: Sandbox Name
+      responses:
+        '404':
+          description: Requested object not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+        '200':
+          description: Request successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Surface'
+        '500':
+          description: Any error encountered while retrieving details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+      security:
+      - x-api-key: []
+      - AdobeUserToken: []
+components:
+  schemas:
+    Link_details:
+      type: object
+      properties:
+        href:
+          type: string
+        type:
+          type: string
+        templated:
+          type: boolean
+        method:
+          type: string
+        title:
+          type: string
+        hrefLang:
+          type: string
+    Campaign_Notification_Model:
+      type: object
+      properties:
+        type:
+          type: string
+          description: sortable
+          readOnly: true
+        title:
+          type: string
+          description: sortable
+          readOnly: true
+        message:
+          type: string
+          description: sortable
+          readOnly: true
+        status:
+          type: integer
+          description: sortable
+          format: int32
+          readOnly: true
+        report:
+          $ref: '#/components/schemas/Campaign_Report_Model'
+        error-chain:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Campaign_Error_Chain'
+        error:
+          $ref: '#/components/schemas/Error_Details'
+    Multi_Response_Model:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        _page:
+          $ref: '#/components/schemas/Page_details'
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Link_details'
+    Campaign_Notification_Additional_Context:
+      type: object
+      properties:
+        source:
+          type: string
+        sourceId:
+          type: string
+        errorLevel:
+          type: string
+        variantId:
+          type: string
+        channel:
+          type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: object
+    Campaign_Error_Chain:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        errorCode:
+          type: string
+        invokingServiceId:
+          type: string
+        unixTimeStampMs:
+          type: integer
+          format: int64
+      readOnly: true
+    Campaign_Report_Model:
+      type: object
+      properties:
+        tenantInfo:
+          type: object
+          additionalProperties:
+            type: string
+        additionalContext:
+          $ref: '#/components/schemas/Campaign_Notification_Additional_Context'
+      readOnly: true
+    Page_details:
+      type: object
+      properties:
+        orderby:
+          type: string
+        count:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        type:
+          type: string
+        totalPages:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int64
+        property:
+          type: string
+        start:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+    Error_Details:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        detail:
+          type: object
+          additionalProperties:
+            type: object
+      readOnly: true
+      deprecated: true
+    Surface:
+      required:
+      - attributes
+      type: object
+      properties:
+        id:
+          type: string
+          description: sortable, filterable
+        type:
+          type: string
+          readOnly: true
+        surfaceName:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        surfaceChannel:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        surfaceStatus:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+            readOnly: true
+          readOnly: true
+        createdAt:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        modifiedAt:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        appId:
+          type: string
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Link_details'
+          readOnly: true
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header

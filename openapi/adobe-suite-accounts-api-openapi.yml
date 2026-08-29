@@ -1,0 +1,259 @@
+openapi: 3.2.0
+info:
+  description: Lightroom API Documentation, made available through [adobe.io](https://developer.adobe.com). API Change Logs are available [here](https://developer.adobe.com/lightroom/lightroom-api-docs/release-notes/).
+  version: 1.0.0
+  title: Lightroom API Documentation Accounts API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: https://lr.adobe.io/
+tags:
+- name: Accounts
+  description: Account information for the authenticated user.
+paths:
+  /v2/account:
+    get:
+      tags:
+      - Accounts
+      summary: Retrieve the user account metadata
+      description: An account is associated with each Adobe customer and contains the personal information and subscription status. This information can be obtained through the authentication APIs and is provided by Lightroom as a convenience.
+      operationId: getAccount
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base:
+                    type: string
+                    description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+                  id:
+                    $ref: '#/components/schemas/uuid'
+                  created:
+                    $ref: '#/components/schemas/utcDateTime'
+                  updated:
+                    $ref: '#/components/schemas/utcDateTime'
+                  type:
+                    type: string
+                    enum:
+                    - account
+                  email:
+                    type: string
+                  full_name:
+                    type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+                  wcd_guid:
+                    type: string
+                  country:
+                    type: string
+                  config:
+                    type: object
+                  entitlement:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - created
+                        - trial
+                        - trial_expired
+                        - subscriber
+                        - subscriber_expired
+                        description: The status can take on one of five values from created, trial, trial_expired, subscriber, and subscriber_expired. The created status indicates the user has not yet stepped into any Creative Cloud offering, whether trial or subscription. It is a minimally-entitled Adobe ID.
+                      trial:
+                        type: object
+                      current_subs:
+                        type: object
+                      storage:
+                        type: object
+                        properties:
+                          used:
+                            type: integer
+                            description: The size in bytes of content this account that count against the storage limit.
+                          warn:
+                            type: integer
+                            description: Value of used at which the client applications should start warning the user. Absence indicates no warning should be given.
+                          limit:
+                            type: integer
+                            description: Specifies the storage limit in bytes that should be enforced for this account. It will always be greater than or equal to the display_limit.
+                          display_limit:
+                            type: integer
+                            description: Specifies the storage limit in bytes that is displayed to the user for this account.
+                      deletion_date:
+                        type: string
+                example:
+                  base: https://lr.adobe.io/
+                  id: 96e656e3812b4c2fb670fa74b6a7ad74
+                  type: account
+                  created: '2017-09-12T17:22:41.751746Z'
+                  updated: '2019-02-02T17:17:39.663862Z'
+                  email: customer@domain.com
+                  full_name: Adobe Customer
+                  first_name: Adobe
+                  last_name: Customer
+                  wcd_guid: 6CEE5CFE464CC743992017B8
+                  country: US
+                  config:
+                    nimbus_show_different_ui: true
+                    search_index: true
+                    purge_assets_after: 5184000
+                  entitlement:
+                    status: subscriber
+                    trial:
+                      start: '2017-09-12T17:22:41.751746Z'
+                      end: '2018-02-16T10:35:24.593005Z'
+                    current_subs:
+                      product_id: lightroom
+                      store: adobe
+                      purchase_date: '2019-02-04T07:25:59.121277Z'
+                      sao:
+                        inpkg_CCLE: '0'
+                        inpkg_CCSN: '0'
+                        inpkg_LRMP: '1'
+                        inpkg_PHLT: '0'
+                    storage:
+                      used: 11998409416
+                      warn: 85899345920
+                      limit: 112742891520
+                      display_limit: 107374182400
+                    deletion_date: '2020-05-06T15:17:51.216255Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenKey'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/AccountNotFoundExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+components:
+  schemas:
+    ServiceUnavailable:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 9999
+        description:
+          type: string
+          enum:
+          - Service is temporarily unavailable
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
+    NotFound:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <resource_type>:
+              type: array
+              items:
+                type: string
+                enum:
+                - does not exist
+        code:
+          type: integer
+          enum:
+          - 1000
+        description:
+          type: string
+          enum:
+          - Resource not found
+    uuid:
+      pattern: ^[a-f0-9]{32}$
+      type: string
+    utcDateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
+      type: string
+      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
+  examples:
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+    AccountNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          account:
+          - does not exist
+        code: 1000
+        description: Resource not found
+  responses:
+    Unauthorized:
+      description: The request failed due to missing or invalid authentication token.
+    ForbiddenKey:
+      description: The request failed because the API Key is not valid.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                enum:
+                - 403003
+              description:
+                type: string
+                enum:
+                - API Key is invalid
+externalDocs:
+  description: Find out more about Lightroom
+  url: https://www.adobe.com/products/photoshop-lightroom.html

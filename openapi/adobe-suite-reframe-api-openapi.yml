@@ -1,0 +1,1240 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Firefly Services Audio and Video Reframe API
+  description: This RESTful API provides resources to use Firefly Services AI for audio and video generation and processing.
+  termsOfService: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+servers:
+- url: https://audio-video-api.adobe.io
+  description: Production server.
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Reframe
+  description: Endpoints for video reframing.
+paths:
+  /v1/reframe:
+    post:
+      tags:
+      - Reframe
+      summary: Reframe video
+      description: "This endpoint enables you to reframe video using AI. Provide video input with a pre-signed URL to generate reframed video output. \n\nThis API has more limited capabilities than the v2 endpoint, and may be deprecated soon. **It's recommended to use the v2 endpoint instead.**"
+      operationId: generate-reframed-video
+      requestBody:
+        description: The reframe request body.
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                video:
+                  type: object
+                  properties:
+                    source:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          format: uri
+                          description: The pre-signed URL pointing to the input source.
+                      required:
+                      - url
+                      description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+                    mediaType:
+                      type: string
+                      enum:
+                      - video/mp4
+                      - video/quicktime
+                      description: Supported video media types.
+                  required:
+                  - source
+                  - mediaType
+                  description: Video input details.
+                sceneEditDetection:
+                  type: boolean
+                  description: Apply Scene Edit Detection before reframing.
+                  default: true
+                overlays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Overlay'
+                  description: Configuration details for video overlays.
+                outputConfig:
+                  type: object
+                  properties:
+                    aspectRatios:
+                      type: array
+                      items:
+                        type: string
+                        format: numerator:denominator
+                      description: A list of aspect ratios for the output video.
+                  required:
+                  - aspectRatios
+                  description: Configuration details for the generated reframed video.
+              required:
+              - video
+              - outputConfig
+              type: object
+            examples:
+              ReframedVideoInputRequestPayload:
+                summary: Video input to generate Reframed video output
+                value:
+                  video:
+                    source:
+                      url: <pre-signed URL for downloading the video input>
+                    mediaType: video/mp4
+                  sceneEditDetection: true
+                  overlays:
+                  - mediaType: image/gif
+                    source:
+                      url: <pre-signed URL for downloading the overlay input>
+                    startTime: 00:00:05:00
+                    duration: 00:00:05:00
+                    scale:
+                      width: 500
+                      height: 500
+                    position:
+                      anchorPoint: top_left
+                      offsetX: 500
+                      offsetY: 500
+                    repeat: loop
+                  outputConfig:
+                    aspectRatios:
+                    - '1:1'
+                    - '9:16'
+                    - '4:5'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                GenerateReframedVideoResponse:
+                  summary: Response for successful job submission
+                  value:
+                    jobId: <jobId>
+                    statusUrl: https://<baseUrl>/v1/status/<jobId>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyBadRequest:
+                  $ref: '#/components/examples/ErrorBodyBadRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyUnauthorized:
+                  $ref: '#/components/examples/ErrorBodyUnauthorized'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyForbidden:
+                  $ref: '#/components/examples/ErrorBodyForbidden'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyResourceNotFound:
+                  $ref: '#/components/examples/ErrorBodyResourceNotFound'
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyMethodNotAllowed:
+                  $ref: '#/components/examples/ErrorBodyMethodNotAllowed'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyTooManyRequests:
+                  $ref: '#/components/examples/ErrorBodyTooManyRequests'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateReframedVideoJobErrorBody'
+              examples:
+                ErrorBodyInternalServerError:
+                  $ref: '#/components/examples/ErrorBodyInternalServerError'
+  /v2/reframe:
+    post:
+      tags:
+      - Reframe
+      summary: Reframe video v2
+      description: This endpoint enables you to reframe the input media. You can provide a video input via a pre-signed URL to generate reframed output video.
+      operationId: generate-reframed-video-v2
+      requestBody:
+        description: Generate reframed video request body.
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                video:
+                  $ref: '#/components/schemas/VideoInputV2'
+                analysis:
+                  $ref: '#/components/schemas/AnalysisV2'
+                composition:
+                  $ref: '#/components/schemas/CompositionV2'
+                output:
+                  type: object
+                  properties:
+                    format:
+                      $ref: '#/components/schemas/OutputFormatV2'
+                    renditions:
+                      type: array
+                      uniqueItems: true
+                      description: Array of output rendition specifications.
+                      items:
+                        oneOf:
+                        - title: Aspect Ratio Rendition
+                          type: object
+                          properties:
+                            aspectRatio:
+                              $ref: '#/components/schemas/AspectRatioV2'
+                            mediaDestination:
+                              $ref: '#/components/schemas/Destination'
+                            sidecarDestination:
+                              $ref: '#/components/schemas/Destination'
+                          required:
+                          - aspectRatio
+                        - title: Resolution Rendition
+                          type: object
+                          properties:
+                            resolution:
+                              type: object
+                              properties:
+                                width:
+                                  type: integer
+                                  description: Resolution width of the output in pixels.
+                                height:
+                                  type: integer
+                                  description: Resolution height of the output in pixels.
+                              required:
+                              - width
+                              - height
+                            mediaDestination:
+                              $ref: '#/components/schemas/Destination'
+                            sidecarDestination:
+                              $ref: '#/components/schemas/Destination'
+                          required:
+                          - resolution
+                  required:
+                  - renditions
+                  description: Output configuration details for generating the reframed video.
+              required:
+              - video
+              - output
+              type: object
+            examples:
+              ReframedVideoInputRequestPayload:
+                summary: Video input to generate reframed video output
+                value:
+                  video:
+                    source:
+                      url: <pre-signed_URL_to_download_the_video_input>
+                  analysis:
+                    sceneEditDetection: true
+                    focalPoints: []
+                  composition:
+                    overlays:
+                    - source:
+                        url: <pre-signed_URL_to_download_the_overlay_input>
+                      startTime: 00:00:05:00
+                      duration: 00:00:05:00
+                      scale:
+                        width: 500
+                        height: 500
+                      position:
+                        anchorPoint: top_left
+                        offsetX: 500
+                        offsetY: 500
+                      repeat: loop
+                  output:
+                    format:
+                      media: mp4
+                    renditions:
+                    - aspectRatio:
+                        x: 1
+                        y: 1
+                      mediaDestination:
+                        url: <pre-signed_PUT_URL_to_upload_the_output_video_to_user_bucket>
+                    - aspectRatio:
+                        x: 16
+                        y: 9
+                    layout:
+                      applyLetterboxing: false
+              ObjectDetectionExample:
+                summary: Example with object detection for focal points
+                value:
+                  video:
+                    source:
+                      url: <pre-signed_URL_to_download_the_video_input>
+                  analysis:
+                    sceneEditDetection: true
+                    focalPoints:
+                    - car
+                    - people
+                  output:
+                    format:
+                      media: mp4
+                    renditions:
+                    - aspectRatio:
+                        x: 16
+                        y: 9
+                    layout:
+                      applyLetterboxing: false
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                GenerateReframedVideoResponse:
+                  summary: Response for successful job submission
+                  value:
+                    jobId: <jobId>
+                    statusUrl: https://<base_URL>/v1/status/<job_ID>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyBadRequest:
+                  summary: Error Body Bad Request
+                  value:
+                    error_code: '400001'
+                    message: Invalid request. Please check the input data.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyUnauthorized:
+                  summary: Error Body Unauthorized
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid.
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyForbidden:
+                  summary: Error Body Forbidden
+                  value:
+                    error_code: '403220'
+                    message: Token not allowed in the current context.
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyResourceNotFound:
+                  summary: Resource Not Found
+                  value:
+                    error_code: '404001'
+                    message: The requested resource was not found.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyMethodNotAllowed:
+                  summary: Method Not Allowed
+                  value:
+                    error_code: '405001'
+                    message: The requested method is not allowed on this endpoint.
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyTooManyRequests:
+                  summary: Too Many Requests
+                  value:
+                    message: Too Many Requests
+                    error_code: '429011'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                description: Error response for the reframed video job.
+                properties:
+                  error_code:
+                    type: string
+                    description: A code representing the specific error type.
+                  message:
+                    type: string
+                    description: A description of the error that occurred.
+                required:
+                - message
+                - error_code
+                type: object
+              examples:
+                ErrorBodyInternalServerError:
+                  summary: Internal Server Error
+                  value:
+                    error_code: '500001'
+                    message: An internal server error occurred. Please try again later.
+  /v2/status/{jobId}:
+    get:
+      tags:
+      - Reframe
+      summary: Get job result
+      description: This endpoint retrieves the result of an asynchronous reframed job initiated using the job ID.
+      operationId: job-result-v2
+      parameters:
+      - name: jobId
+        in: path
+        description: The job ID to get status for an asynchronous generate reframed video job.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Job response on status API.
+                oneOf:
+                - title: Job In Progress
+                  type: object
+                  description: Response indicating that the reframed video job is in progress.
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                      - not_started
+                      - running
+                      - failed
+                      - succeeded
+                      - partially_succeeded
+                      description: The status of the reframed video job.
+                    jobId:
+                      type: string
+                      description: The unique identifier for the job.
+                  required:
+                  - status
+                  - jobId
+                - title: Job Success
+                  type: object
+                  description: Success response for the reframed video job.
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                      - not_started
+                      - running
+                      - failed
+                      - succeeded
+                      - partially_succeeded
+                      description: The status of the reframed video job.
+                    jobId:
+                      type: string
+                      description: The unique identifier for the job.
+                    outputs:
+                      type: array
+                      uniqueItems: true
+                      description: Array of output rendition results.
+                      items:
+                        oneOf:
+                        - title: Successful Rendition
+                          type: object
+                          properties:
+                            destination:
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  format: uri
+                                  description: The pre-signed URL pointing to the output.
+                              required:
+                              - url
+                              description: Details of the output destination, including a pre-signed URL.
+                          required:
+                          - destination
+                        - title: Failed Rendition
+                          type: object
+                          description: Error response for the generate reframed video job.
+                          properties:
+                            error:
+                              type: object
+                              properties:
+                                error_code:
+                                  type: string
+                                  description: A code representing the specific error type.
+                                message:
+                                  type: string
+                                  description: A description of the error that occurred.
+                              required:
+                              - message
+                              - error_code
+                              description: Details of the error encountered during the reframing process.
+                          required:
+                          - error
+                  required:
+                  - status
+                  - jobId
+                  - outputs
+                - title: Job Partial Success
+                  type: object
+                  description: Response for a reframed video job that partially succeeded.
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                      - not_started
+                      - running
+                      - failed
+                      - succeeded
+                      - partially_succeeded
+                      description: The status of the reframed video job.
+                    jobId:
+                      type: string
+                      description: The unique identifier for the job.
+                    outputs:
+                      type: array
+                      items:
+                        oneOf:
+                        - title: Successful Rendition
+                          type: object
+                          description: Success response for the generate reframed video job.
+                          properties:
+                            destination:
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  format: uri
+                                  description: The pre-signed URL pointing to the output.
+                              required:
+                              - url
+                              description: Details of the output destination, including a pre-signed URL.
+                          required:
+                          - destination
+                        - title: Failed Rendition
+                          type: object
+                          description: Error response for the generate reframed video job.
+                          properties:
+                            error:
+                              type: object
+                              properties:
+                                error_code:
+                                  type: string
+                                  description: A code representing the specific error type.
+                                message:
+                                  type: string
+                                  description: A description of the error that occurred.
+                              required:
+                              - message
+                              - error_code
+                              description: Details of the error encountered during the reframing process.
+                          required:
+                          - error
+                      description: Details of the job's partial success, including successful outputs and any errors encountered.
+                  required:
+                  - status
+                  - jobId
+                  - outputs
+                - title: Job Failure
+                  type: object
+                  description: Error response for a reframed video job that failed.
+                  properties:
+                    status:
+                      type: string
+                      enum:
+                      - not_started
+                      - running
+                      - failed
+                      - succeeded
+                      - partially_succeeded
+                      description: The status of the reframed video job, indicating a failure.
+                    jobId:
+                      type: string
+                      description: The unique identifier for the job.
+                    outputs:
+                      type: object
+                      properties:
+                        renditions:
+                          type: array
+                          uniqueItems: true
+                          description: Array of failed rendition outputs.
+                          items:
+                            title: Failed Rendition
+                            type: object
+                            description: Error response for the generate reframed video job.
+                            properties:
+                              error:
+                                type: object
+                                properties:
+                                  error_code:
+                                    type: string
+                                    description: A code representing the specific error type.
+                                  message:
+                                    type: string
+                                    description: A description of the error that occurred.
+                                required:
+                                - message
+                                - error_code
+                                description: Details of the error encountered during the reframing process.
+                            required:
+                            - error
+                      required:
+                      - renditions
+                      description: Details of the errors encountered during the job.
+                  required:
+                  - status
+                  - jobId
+                  - outputs
+              examples:
+                GenerateReframedVideoJobPendingResponse:
+                  summary: Job is pending
+                  value:
+                    status: pending
+                    jobId: 123e4567-e89b-12d3-a456-426614174002
+                GenerateReframedVideoJobInProgressResponse:
+                  summary: Job is in progress
+                  value:
+                    status: running
+                    jobId: 123e4567-e89b-12d3-a456-426614174002
+                GenerateReframedVideoJobSuccessResponse:
+                  summary: Job succeeded
+                  value:
+                    status: succeeded
+                    jobId: 123e4567-e89b-12d3-a456-426614174002
+                    outputs:
+                    - destination:
+                        url: <<<presigned download URL for reframed video file>>>
+                GenerateReframedVideoJobPartialSuccessResponse:
+                  summary: Job partially succeeded
+                  value:
+                    status: partially_succeeded
+                    jobId: 123e4567-e89b-12d3-a456-426614174002
+                    outputs:
+                    - destination:
+                        url: <<<presigned download URL for reframed video file>>>
+                    - error:
+                        error_code: <<error code from the list of defined error code in API Style>>
+                        message: <<error message return by downstream service>>
+                GenerateReframedVideoJobFailureResponse:
+                  summary: Job failed
+                  value:
+                    status: failed
+                    jobId: 123e4567-e89b-12d3-a456-426614174002
+                    outputs:
+                    - error:
+                        error_code: <<error code from the list of defined error code in API Style>>
+                        message: <<error message return by downstream service>>
+                    - error:
+                        error_code: <<error code from the list of defined error code in API Style>>
+                        message: <<error message return by downstream service>>
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyBadRequest:
+                  summary: Bad Request
+                  value:
+                    error_code: '400001'
+                    message: Invalid request. Please check the input data.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyUnauthorized:
+                  summary: Unauthorized
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyForbidden:
+                  summary: Forbidden
+                  value:
+                    error_code: '401013'
+                    message: OAuth token is not valid
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyResourceNotFound:
+                  summary: Resource Not Found
+                  value:
+                    error_code: '404001'
+                    message: The requested resource was not found.
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyMethodNotAllowed:
+                  summary: Method Not Allowed
+                  value:
+                    error_code: '405001'
+                    message: The requested method is not allowed on this endpoint.
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyTooManyRequests:
+                  summary: Too Many Requests
+                  value:
+                    message: Too Many Requests
+                    error_code: '429011'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                description: Response indicating that the reframed video job has been successfully submitted.
+                properties:
+                  jobId:
+                    type: string
+                    description: The unique identifier for the job.
+                  statusUrl:
+                    type: string
+                    description: The URL to monitor the status of the job.
+                required:
+                - jobId
+                - statusUrl
+                type: object
+              examples:
+                ErrorBodyInternalServerError:
+                  summary: Internal Server Error
+                  value:
+                    error_code: '500001'
+                    message: An internal server error occurred. Please try again later.
+components:
+  examples:
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    ErrorBodyInternalServerError:
+      summary: Internal Server Error
+      value:
+        error_code: internal_server_error
+        message: An unexpected error occurred while processing the request.
+    ErrorBodyBadRequest:
+      summary: Bad Request
+      value:
+        error_code: bad_request
+        message: The request was invalid or cannot be served.
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
+    ErrorBodyMethodNotAllowed:
+      summary: Method Not Allowed
+      value:
+        error_code: method_not_allowed
+        message: The HTTP method is not supported for this endpoint.
+    ErrorBodyResourceNotFound:
+      summary: Not Found
+      value:
+        error_code: unknown_job_id
+        message: The requested resource was not found.
+  schemas:
+    RepeatV2:
+      type: string
+      enum:
+      - stop_on_last_frame
+      - loop
+      - time_stretch
+      description: Defines the repeat behavior of the overlay.
+    Destination:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The pre-signed URL pointing to the output destination.
+      required:
+      - url
+      description: Destination details including a pre-signed URL for the output media.
+    Overlay:
+      type: object
+      properties:
+        mediaType:
+          type: string
+          enum:
+          - image/gif
+          - image/png
+          - image/jpeg
+          description: The media type of the overlay.
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: The pre-signed URL pointing to the overlay source.
+          required:
+          - url
+          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+        startTime:
+          type: string
+          format: timecode
+          description: The start time of the overlay in the video.
+        duration:
+          type: string
+          format: timecode
+          description: The duration of the overlay in the video.
+        scale:
+          type: object
+          properties:
+            width:
+              type: integer
+              description: The width of the overlay.
+            height:
+              type: integer
+              description: The height of the overlay.
+          required:
+          - width
+          - height
+          description: The scale of the overlay.
+        position:
+          type: object
+          properties:
+            anchorPoint:
+              type: string
+              enum:
+              - top_left
+              - top_right
+              - bottom_left
+              - bottom_right
+              - center
+              description: The anchor point of the overlay.
+            offsetX:
+              type: integer
+              description: The X offset of the overlay from the anchor point.
+            offsetY:
+              type: integer
+              description: The Y offset of the overlay from the anchor point.
+          required:
+          - anchorPoint
+          - offsetX
+          - offsetY
+          description: The position of the overlay.
+        repeat:
+          type: string
+          enum:
+          - loop
+          - once
+          description: The repeat behavior of the overlay.
+      required:
+      - mediaType
+      - source
+      - startTime
+      - duration
+      - scale
+      - position
+      description: Configuration for an overlay in the reframed video.
+    AspectRatioV2:
+      type: object
+      description: Aspect ratio specification for video output.
+      properties:
+        x:
+          type: integer
+          description: AspectRatio x ratio.
+        y:
+          type: integer
+          description: AspectRatio y ratio.
+      required:
+      - x
+      - y
+    OverlayV2:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+        startTime:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Start time for the overlay in the format HH:MM:SS:FF.
+        duration:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Duration of the overlay in the format HH:MM:SS:FF.
+        scale:
+          $ref: '#/components/schemas/ScaleV2'
+        position:
+          $ref: '#/components/schemas/PositionV2'
+        repeat:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/RepeatV2'
+          description: Repeat behavior for GIF overlay (optional).
+    OutputFormatV2:
+      type: object
+      default: source
+      properties:
+        media:
+          type: string
+          enum:
+          - none
+          - mp4
+          - mov
+          - source
+          description: Media format for the output video. If only the OTIO file is needed, set this as `none`.
+        sidecar:
+          type: string
+          enum:
+          - json
+          - otio
+          description: Sidecar format for additional metadata.
+      description: Output format configuration. A media property is mandatory when this format object is specified.
+      required:
+      - media
+      - sidecar
+    Source:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The pre-signed URL pointing to the input source.
+      required:
+      - url
+      description: Source details including a pre-signed URL for accessing the input media. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+    AnalysisV2:
+      type: object
+      properties:
+        sceneEditDetection:
+          type: boolean
+          default: true
+          description: Applies scene edit detection before reframing.
+        focalPoints:
+          type: array
+          items:
+            type: string
+            maxLength: 1000
+            pattern: ^[a-zA-Z0-9\s\-_]+$
+            description: Focal point keyword to utilize Semantic Subject Lock. Must be alphanumeric characters, spaces, hyphens, or underscores only. Maximum 1000 characters per keyword.
+          maxItems: 10
+          description: Array of focal point keyword identifiers for reframing. Up to 10 keywords are allowed. Keywords must be alphanumeric characters, spaces, hyphens, or underscores only, with a maximum of 1000 characters per keyword.
+          default: []
+          externalDocs:
+            description: See documentation for Semantic Subject Lock.
+            url: https://developer.adobe.com/reframev2/getting-started/semantic-search/
+      description: Analysis configuration for the video processing.
+    PositionV2:
+      type: object
+      description: Position configuration for overlay placement.
+      properties:
+        anchorPoint:
+          type: string
+          enum:
+          - top_left
+          - top_right
+          - bottom_left
+          - bottom_right
+          - center
+          description: Anchor point for taking the position reference.
+        offsetX:
+          type:
+          - integer
+          - 'null'
+          description: Horizontal offset for the anchor point.
+        offsetY:
+          type:
+          - integer
+          - 'null'
+          description: Vertical offset for the anchor point.
+    VideoInputV2:
+      type: object
+      properties:
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: The pre-signed URL pointing to the input source.
+          required:
+          - url
+          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+      required:
+      - source
+      description: Video input details for generate reframed video request.
+    GenerateReframedVideoJobErrorBody:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: A code representing the specific error type.
+        message:
+          type: string
+          description: A description of the error that occurred.
+      required:
+      - error_code
+      - message
+      description: Error response for the reframed video job.
+    ScaleV2:
+      type: object
+      description: Scale configuration for overlay dimensions.
+      properties:
+        width:
+          type: integer
+          description: The width of the scaled overlay.
+        height:
+          type: integer
+          description: The height of the scaled overlay.
+    CompositionV2:
+      type: object
+      properties:
+        overlays:
+          type: array
+          items:
+            $ref: '#/components/schemas/OverlayV2'
+          description: List of overlays to be composed on the video.
+      description: Configuration for composing elements on the video.
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.

@@ -1,0 +1,159 @@
+openapi: 3.2.0
+info:
+  version: '1.0'
+  title: Schema Registry Audit log API
+  description: "Use the Schema Registry API to access the Schema Library within Adobe Experience Platform. The registry provides a user interface and RESTful API from which all available library resources are accessible.  Programmatically manage all schemas and related Experience Data Model (XDM) resources available to you within Platform. This includes those defined by Adobe, Experience Platform partners, and vendors whose applications you use.\n* **Related documentation**:\n  * [XDM documentation](http://www.adobe.com/go/xdm-home-en)\n\n* **Visualize API calls with Postman (a free, third-party software)**:\n  * [Schema Registry API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Schema%20Registry%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n* **API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io\n  * Base path for this API: /data/foundation/schemaregistry\n  * Example of a complete path for making a call to \"/stats\": https://<span>platform.adobe.io/data/foundation/schemaregistry/stats\n\n* **Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All GET requests to the Schema Registry require an `Accept` header to determine what data is returned by the system. See the [section on `Accept` headers](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/getting-started.html?lang=en#accept) in the Schema Registry developer guide for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+servers:
+- url: https://platform.adobe.io/data/foundation/schemaregistry
+tags:
+- name: Audit log
+  description: The Schema Registry maintains a log of all the changes that have occurred to a resource (class, field group, data type, or schema) between different updates.
+paths:
+  /rpc/auditlog/{RESOURCE_ID}:
+    get:
+      tags:
+      - Audit log
+      summary: Retrieve a resource's audit log
+      description: 'This endpoint retrieves a resource''s audit log, which shows a list of all the changes made to the resource.
+
+
+        >**NOTE**: For more information on using this operation, see the [audit log endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/audit-log.html) on Experience League.'
+      operationId: retrieveAuditLog
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: RESOURCE_ID
+        description: The `meta:altId` or URL-encoded `$id` value of the resource whose changes you wish to view.
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns an array of change logs for the specified resource. Each change object provides details on what action was performed to which field(s), the user that made the change, and a timestamp for when the change was committed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: The `$id` of the resource that was changed. This value will typically represent the resource specified in the request path, but may represent a dependent resource if that is the source of the change.
+                    updatedUser:
+                      type: string
+                      description: The ID of the user that updated the resource.
+                    imsOrg:
+                      type: string
+                      description: The ID of the IMS Org that owns the resource.
+                    updatedTime:
+                      type: string
+                      description: A timestamp of when the resource was updated.
+                    requestId:
+                      type: string
+                      description: A unique ID for the request that retrieved the audit log data.
+                    clientId:
+                      type: string
+                      description: The ID of the client that updated the resource.
+                    sandboxId:
+                      type: string
+                      description: The ID of the sandbox that owns the resource.
+                    updates:
+                      type: array
+                      description: A list of changes made to the specified resource or one of its dependent resources.
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            description: The `$id` of the resource that was changed. This value will typically represent the resource specified in the request path, but may represent a dependent resource if that is the source of the change.
+                          xdmType:
+                            type: string
+                            description: The type of XDM resource that was changed.
+                          action:
+                            type: string
+                            description: The type of change that was made.
+                          path:
+                            type: string
+                            description: A [JSON Pointer](https://experienceleague.adobe.com/docs/experience-platform/landing/platform-apis/api-fundamentals.html?lang=en#json-pointer) string indicating the path to the specific field that was changed or added.
+                          value:
+                            type: string
+                            description: The value that was assigned to the new or updated field.
+                example:
+                - id: https://ns.adobe.com/{TENANT_ID}/schemas/50649eb1b040bf042d6400a0335901cd2a97d31a4eac4330
+                  updatedUser: '{USER_ID}'
+                  imsOrg: '{IMS_ORG}'
+                  updatedTime: 02-19-2021 05:43:56
+                  requestId: a14NMF0jd6BIfyXaHdTDl4bC4R0r9rht
+                  clientId: '{CLIENT_ID}'
+                  sandBoxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+                  updates:
+                  - id: https://ns.adobe.com/{TENANT_ID}/schemas/50649eb1b040bf042d6400a0335901cd2a97d31a4eac4330
+                    xdmType: schemas
+                    action: remove
+                    path: /meta:usageCount
+                    value: 0
+                - id: https://ns.adobe.com/{TENANT_ID}/schemas/50649eb1b040bf042d6400a0335901cd2a97d31a4eac4330
+                  updatedUser: '{USER_ID}'
+                  imsOrg: '{IMS_ORG}'
+                  updatedTime: 02-19-2021 05:43:56
+                  requestId: pFQbgmWrdbJrNB9GdxTSGECpXYWspu68
+                  clientId: '{CLIENT_ID}'
+                  sandBoxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+                  updates:
+                  - id: https://ns.adobe.com/{TENANT_ID}/classes/11052164b588f0c29584bf6ae1a6663a59aa65426c82389f
+                    xdmType: classes
+                    action: remove
+                    path: /definitions/customFields/properties/_{TENANT_ID}/properties/loyaltySunday_ABC
+                    value:
+                      title: LoyaltySundayABC
+                      description: ''
+                      type: string
+                      isRequired: false
+                      required: []
+                      meta:xdmType: string
+                  - id: https://ns.adobe.com/{TENANT_ID}/classes/11052164b588f0c29584bf6ae1a6663a59aa65426c82389f
+                    xdmType: classes
+                    action: remove
+                    path: /definitions/customFields/properties/_{TENANT_ID}/properties/loyaltyMoxee_XYZ
+                    value:
+                      title: LoyaltyMoxeeXYZ
+                      description: ''
+                      type: string
+                      isRequired: false
+                      required: []
+                      meta:xdmType: string
+components:
+  parameters:
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string

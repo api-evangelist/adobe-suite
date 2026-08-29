@@ -1,0 +1,768 @@
+openapi: 3.2.0
+info:
+  title: Identity Service Cluster API
+  description: "Delivering relevant digital experiences requires having a complete\nunderstanding of your customer. This is made more difficult when your\ncustomer data is fragmented across disparate systems, causing each\nindividual customer to appear to have multiple \"identities\". Adobe\nExperience Platform Identity Service provides a RESTful API to help you to\ngain a better view of your customers and their behavior. By bridging\nidentities across devices and systems, you are better able to deliver\nimpactful, personal digital experiences in real-time. <br><br>\n\nUse the Identity Service API to manage identities, namespaces, and clusters\nlinked to the Identity Graph. <br><br>\n\n**Related documentation**:\n  * [Identity Service documentation](https://www.adobe.com/go/identity-overview-en)\n\n**Visualize API calls with Postman (a free, third-party software)**:\n  * [Identity Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Identity%20Service.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n**API paths**:\n  * PLATFORM Gateway URL: https://<span>platform-{REGION}.adobe.io\n    * Information on <code>{REGION}</code> values can be found in the [Identity Service developer guide](https://experienceleague.adobe.com/docs/experience-platform/identity/api/getting-started.html).\n  * Base path for this API: /data/core/\n  * Example of a complete path: https://<span>platform-va7.adobe.io/data/core/identity/cluster/members\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).\n"
+  version: 1.0.0
+servers:
+- url: https://{environment}.adobe.io/data/core
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Cluster
+  description: "Cluster services provide access to groupings of identities as linked in\nthe identity graph. These endpoints have been deprecated. \nUse Graph API to access groupings of identities as linked in the identity graph.\n"
+paths:
+  /identity/cluster/members:
+    get:
+      deprecated: true
+      tags:
+      - Cluster
+      summary: List linked identities for a given identity
+      description: 'This endpoint has been deprecated. Use /identity/v2/graph to retrieve the related XIDs for a given XID.<br><br>
+
+
+        Given an XID return all XIDs, in the same or other namespaces, that are
+
+        linked to it by the device graph type. The related XIDs are considered
+
+        to be part of the same cluster. It is required to pass either xid or
+
+        (namespace/nsid & id) pair to get cluster members.
+
+        '
+      operationId: listClusterMembers
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/x-uis-cst-ctx'
+      - $ref: '#/components/parameters/x-request-id'
+      - $ref: '#/components/parameters/accept'
+      - name: xid
+        in: query
+        description: Identity string as returned by /identity GET api
+        schema:
+          type: string
+          example: '2521328045094711779817'
+      - name: nsid
+        in: query
+        description: namespace id
+        schema:
+          type: integer
+          example: 411
+      - name: namespace
+        in: query
+        description: namespace code
+        schema:
+          type: string
+          example: adcloud
+      - name: id
+        in: query
+        description: Id in given namespace
+        schema:
+          type: string
+          example: '2521328045094711779817'
+      - name: graph-type
+        in: query
+        description: Graph type (output type) you want to get the cluster from
+        schema:
+          type: string
+          enum:
+          - pdg
+          - coop
+          - psr
+          example: pdg
+      responses:
+        '200':
+          description: OK
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              x-summary: Success - Cluster Member Data Retrieved
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterMembers'
+              examples:
+                xid:
+                  summary: using xid
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - xid: HHDAHDKYYD
+                      members:
+                      - HHDAHDKYYD
+                      - HHDAHDKABD
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+                nsid:
+                  summary: using nsid and id
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - compositeXid:
+                        nsid: 411
+                        id: '2521328045094711779817'
+                      members:
+                      - nsid: 6
+                        id: johnDoe@adobe.com
+                      - nsid: 411
+                        id: '2521328045094711779817'
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+                namespace:
+                  summary: using namespace and id
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - compositeXid:
+                        namespace: adcloud
+                        id: '2521328045094711779817'
+                      members:
+                      - namespace: adcloud
+                        id: '2521328045094711779817'
+                      - namespace: Email
+                        id: johnDoe@adobe.com
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+        '400':
+          description: Bad Request from the client
+          x-summary: Bad Request - Invalid Input Provided
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: InvalidInput
+                  status:
+                    type: integer
+                    example: 400
+                  description:
+                    type: string
+                    example: 'The IMS Org ABC123@AdobeOrg is not provisioned for private
+
+                      device graph.
+
+                      '
+        '401':
+          description: IMS token is missing required scope.
+          x-summary: Unauthorized - required scope missing
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: UnauthorizedAccessInvalidScope
+                  status:
+                    type: integer
+                    example: 401
+                  description:
+                    type: string
+                    example: 'Token does not have valid scope. Either
+
+                      ''acp_core_identity'' scope or ''acp_foundation'' scope is
+
+                      required
+
+                      '
+        '403':
+          description: Insufficient permissions
+          x-summary: Unauthorized - Missing Permissions
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                type: https://ns.adobe.com/aep/errors/UIS-4064-403
+                status: 403
+                title: Insufficient permissions
+                detail: 'The authorization token provided in the request does not have the permissions to access: READ IdentityGraph. Please contact your system administrator to fix this issue.
+
+                  '
+                report:
+                  tenantInfo:
+                    imsOrgId: 09A55EBC5639E6017F000101@AdobeOrg,
+                    sandboxId: 8129954a-fa83-43ba-a995-4bfa8373ba2b,
+                    sandboxName: Prod
+                  additionalContext: null
+                  errorChain: []
+        '429':
+          description: Request rate is large
+          x-summary: Too Many Requests - Rate Limit Exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: RequestRateTooLarge
+                  status:
+                    type: integer
+                    example: 429
+                  description:
+                    type: string
+                    example: Request rate is large. Please try again later.
+        '500':
+          description: Unexpected Internal application error
+          x-summary: Server Error - Unexpected Internal Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: InternalServerError
+                  status:
+                    type: integer
+                    example: 500
+                  description:
+                    type: string
+                    example: 'An unexpected internal error occurred in the server. This
+
+                      might indicate a problem with the request, or might
+
+                      indicate a problem in the server side code.
+
+                      '
+  /identity/clusters/members:
+    post:
+      deprecated: true
+      tags:
+      - Cluster
+      summary: List linked identities for a list of identities
+      description: 'This endpoint has been deprecated. Use /identity/v2/graph to retrieve the related XIDs for a given list of XIDs.<br><br>
+
+
+        Given set of identities, returns all linked identities in cluster
+
+        corresponding to each identity
+
+        '
+      operationId: getListOfClusterMembers
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/x-uis-cst-ctx'
+      - $ref: '#/components/parameters/x-request-id'
+      - $ref: '#/components/parameters/accept'
+      - $ref: '#/components/parameters/content-type'
+      requestBody:
+        description: List of ID's for which we need to find related IDs
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ListOfIdentity'
+            examples:
+              xids:
+                summary: using xids
+                value:
+                  xids:
+                  - HHDAHDKYYD
+                  - WTCpVgAAAFq14FMF
+              compositeXids:
+                summary: using compositeXids
+                value:
+                  compositeXids:
+                  - nsid: 411
+                    id: '2521328045094711779817'
+              compositeXidsWithNamespace:
+                summary: using compositeXidsWithNamespace
+                value:
+                  compositeXidsWithNamespace:
+                  - namespace: adcloud
+                    id: '2521328045094711779817'
+        required: true
+      responses:
+        '200':
+          description: OK
+          x-summary: Successful response
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterMembers'
+              examples:
+                xids:
+                  summary: using xids
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - xid: HHDAHDKYYD
+                      members:
+                      - HHDAHDKYYD
+                      - HHDAHDKABD
+                    - xid: WTCpVgAAAFq14FMF
+                      members: []
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+                compositeXids:
+                  summary: using compositeXids
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - compositeXid:
+                        nsid: 411
+                        id: '2521328045094711779817'
+                      members:
+                      - nsid: 6
+                        id: johnDoe@adobe.com
+                      - nsid: 411
+                        id: '2521328045094711779817'
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+                compositeXidsWithNamespace:
+                  summary: using compositeXidsWithNamespace
+                  value:
+                    version: 1.1.0
+                    clusters:
+                    - compositeXid:
+                        namespace: adcloud
+                        id: '2521328045094711779817'
+                      members:
+                      - namespace: adcloud
+                        id: '2521328045094711779817'
+                      - namespace: Email
+                        id: johnDoe@adobe.com
+                    unprocessedRecords: []
+                    algo_type: STITCH_ALL
+        '400':
+          description: Bad Request from the client
+          x-summary: Bad request
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: InvalidInput
+                  status:
+                    type: integer
+                    example: 400
+                  description:
+                    type: string
+                    example: 'The IMS Org ABC123@AdobeOrg is not provisioned for private
+
+                      device graph.
+
+                      '
+        '401':
+          description: IMS token is missing required scope.
+          x-summary: Unauthorized access
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json;charset=utf-8
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: UnauthorizedAccessInvalidScope
+                  status:
+                    type: integer
+                    example: 401
+                  description:
+                    type: string
+                    example: 'Token does not have valid scope. Either
+
+                      ''acp_core_identity'' scope or ''acp_foundation'' scope is
+
+                      required
+
+                      '
+        '403':
+          description: Insufficient permissions
+          x-summary: Unauthorized - Missing Permissions
+          headers:
+            content-type:
+              description: Response is a JSON document with UTF-8 encoding
+              schema:
+                type: string
+                default: application/json
+            cache-control:
+              description: caching policy for response
+              schema:
+                type: string
+                default: no-cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceErrorStatus'
+              example:
+                type: https://ns.adobe.com/aep/errors/UIS-4064-403
+                status: 403
+                title: Insufficient permissions
+                detail: 'The authorization token provided in the request does not have the permissions to access: READ IdentityGraph. Please contact your system administrator to fix this issue.
+
+                  '
+                report:
+                  tenantInfo:
+                    imsOrgId: 09A55EBC5639E6017F000101@AdobeOrg,
+                    sandboxId: 8129954a-fa83-43ba-a995-4bfa8373ba2b,
+                    sandboxName: Prod
+                  additionalContext: null
+                  errorChain: []
+        '429':
+          description: Request rate is large
+          x-summary: Too many requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: RequestRateTooLarge
+                  status:
+                    type: integer
+                    example: 429
+                  description:
+                    type: string
+                    example: Request rate is large. Please try again later.
+        '500':
+          description: Unexpected Internal application error
+          x-summary: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: InternalServerError
+                  status:
+                    type: integer
+                    example: 500
+                  description:
+                    type: string
+                    example: 'An unexpected internal error occurred in the server. This
+
+                      might indicate a problem with the request, or might
+
+                      indicate a problem in the server side code.
+
+                      '
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    ClusterMembers:
+      type: object
+      properties:
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cluster'
+        unprocessedRecords:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/Id'
+            - $ref: '#/components/schemas/CompositeXid'
+        version:
+          type: string
+    ServiceErrorStatus:
+      type: object
+      properties:
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+        status:
+          type: integer
+          description: HTTP error code describing the problem
+        detail:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        type:
+          type: string
+          description: Link to error type
+        reason:
+          type: string
+          description: A short, human-readable summary of the problem type
+        message:
+          type: string
+          description: 'A human-readable explanation specific to this occurrence of the
+
+            problem
+
+            '
+        report:
+          type: object
+          properties:
+            tenantInfo:
+              description: Sandbox details
+              type: object
+              properties:
+                imsOrgId:
+                  type: string
+                sandboxId:
+                  type: string
+                sandboxName:
+                  type: string
+            additionalContext:
+              description: Additional details relevant to the error.
+              type: object
+              properties:
+                userId:
+                  type: string
+            errorChain:
+              description: Where multiple errors occurred leading up to the returned response, additional errors are included in this field.
+              type: array
+              items:
+                type: object
+                properties:
+                  serviceId:
+                    type: string
+                  errorCode:
+                    type: string
+                  invokingServiceId:
+                    type: string
+                  errorMessage:
+                    type: string
+                  unixTimeStampMs:
+                    type: integer
+    CompositeXid:
+      type: object
+      properties:
+        nsid:
+          type: string
+          description: namespace id. present in the response if the request did not contain xid
+        namespace:
+          type: string
+          description: namespace code. present in the response if the request did not contain xid or nsid
+        id:
+          type: string
+          description: Id in given namespace
+    Id:
+      type: string
+      description: Identity string as returned by /identity/identity GET api.
+    Cluster:
+      type: object
+      properties:
+        xid:
+          $ref: '#/components/schemas/Id'
+        compositeXid:
+          $ref: '#/components/schemas/CompositeXid'
+        members:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/Id'
+            - $ref: '#/components/schemas/CompositeXid'
+    ListOfIdentity:
+      type: object
+      properties:
+        xids:
+          type: array
+          description: Primary parameter for the list of IDs to query.
+          items:
+            $ref: '#/components/schemas/Id'
+        compositeXids:
+          type: array
+          description: 'Secondary parameter for the list of IDs to query. Is ignored if xids is also present in the request.
+
+            '
+          items:
+            type: object
+            properties:
+              nsid:
+                type: string
+                description: namespace id
+                example: 411
+              id:
+                type: string
+                description: Id in given namespace
+                example: '2521328045094711779817'
+        compositeXidsWithNamespace:
+          type: array
+          description: 'Tertiary parameter for the list of IDs to query. Is ignored if either xids or compositeXids are also present in the request.
+
+            '
+          items:
+            type: object
+            properties:
+              namespace:
+                type: string
+                description: namespace code
+                example: adcloud
+              id:
+                type: string
+                description: Id in given namespace
+                example: '2521328045094711779817'
+        graph-type:
+          type: string
+        version:
+          type: string
+  parameters:
+    accept:
+      name: Accept
+      in: header
+      description: The version of the resource's representation.
+      schema:
+        type: string
+        default: application/json
+    authorization:
+      name: Authorization
+      in: header
+      description: 'The access token which can be copied from your Experience Platform
+
+        integration, prefixed with "Bearer ". For more information on how to
+
+        obtain this value, visit the [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the request. Use 'application/json'.
+      required: true
+      schema:
+        type: string
+        default: application/json
+    x-uis-cst-ctx:
+      name: x-uis-cst-ctx
+      in: header
+      description: Customer context to be used for stub response.
+      schema:
+        type: string
+        example: stub
+    x-request-id:
+      name: x-request-id
+      in: header
+      description: Request id to be used for tracing this request.
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: 'The API key which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: 'The Organization ID which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+
+        '
+      schema:
+        type: string
+        example: prod
+x-original-swagger-version: '2.0'

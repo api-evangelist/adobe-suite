@@ -1,0 +1,222 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Cloud Manager Repositories API
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+servers:
+- url: https://cloudmanager.adobe.io
+tags:
+- name: Repositories
+paths:
+  /api/program/{programId}/repositories:
+    get:
+      tags:
+      - Repositories
+      summary: Lists Repositories
+      description: Lists all Repositories in an program
+      operationId: getRepositories
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: start
+        in: query
+        description: Pagination start parameter
+        required: false
+        schema:
+          type: string
+          default: '0'
+      - name: limit
+        in: query
+        description: Pagination limit parameter
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryList'
+  /api/program/{programId}/repository/{repositoryId}:
+    get:
+      tags:
+      - Repositories
+      summary: Get Repository
+      description: Returns an repository by its id
+      operationId: getRepository
+      parameters:
+      - name: programId
+        in: path
+        description: Identifier of the program
+        required: true
+        schema:
+          type: string
+      - name: repositoryId
+        in: path
+        description: Identifier of the repository
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: IMS organization ID that the request is being made under.
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - An access token for the technical account created through integration with Adobe IO
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: IMS Client ID (API Key) which is subscribed to consume services on console.adobe.io
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+components:
+  schemas:
+    Repository:
+      type: object
+      properties:
+        repo:
+          type: string
+          example: Adobe-Marketing-Cloud
+          description: Repository name. Once set it cannot be updated
+        description:
+          type: string
+          example: Description
+          description: description
+        repositoryUrl:
+          type: string
+          example: https://git.cloudmanager.adobe.com/weretailprod/we-retail-global
+          description: Repository Url.
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Program the repository belongs to
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/branches:
+              description: List of branches in this repository
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A sourcecode repository
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    RepositoryList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            repositories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Repository'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+    RequestedPageDetails:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
+          type: string
+        property:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+      description: Filtering and sorting page details

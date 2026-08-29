@@ -1,0 +1,579 @@
+openapi: 3.2.0
+info:
+  description: Using this REST API, you can create and manage content templates and fragments, which are entities that allow you to easily reuse custom content across Journey Optimizer campaigns and journeys. To learn more about content templates and fragments, refer to <a href="https://experienceleague.adobe.com/docs/journey-optimizer/using/email/content-templates.html">Journey Optimizer documentation</a>.
+  version: 0.0.1
+  title: Content API. Content template API
+servers:
+- url: https://platform.adobe.io/ajo/content
+- url: https://platform-stage.adobe.io/ajo/content
+security:
+- imsUserToken: []
+tags:
+- name: Content template API
+paths:
+  /templates:
+    parameters:
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    post:
+      operationId: createTemplate
+      summary: Create New Content Template.
+      description: This API could be used for creating a new content template<br> <b>subType</b> field is only supported for content template with code channel
+      tags:
+      - Content template API
+      requestBody:
+        description: API to create a new Content Template.
+        content:
+          application/vnd.adobe.ajo.template.v1+json:
+            schema:
+              $ref: '#/components/schemas/content-template'
+        required: true
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+    get:
+      parameters:
+      - $ref: '#/components/parameters/orderBy'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/property'
+      operationId: getTemplates
+      summary: List Content Templates.
+      description: "<ol> Content Templates Listing API. There are few attributes which are filterable. <li>\n  id - Supported operations are equals and not equals.\n</li> <li>\n  name - Supports operations are regex and contains.  \n</li> <li>\n  templateType - Supported operations are equal and not equals, and allowed values are [ \"html\", \"html_primary_page\", \"html_sub_page\", \"content\"]\n</li> <li>\n  channels - Supported operations are equals and not equals.\n</li> <li>\n  createdAt - Supported operations are less-than, less-than-equal-to, greater-than, greater-than-equal-to, equals-to.\n</li> <li>\n  createdBy - Supported operations are equals, not equals and regex.\n</li> <li>\n  modifiedAt - Supported operations are less-than, less-than-equal-to, greater-than, greater-than-equal-to, equals-to.\n</li> <li>\n  modifiedBy - Supported operations are equals, not equals and regex.\n</li> <li>\n  origin - Supported operations are equals and not equals.\n</li> </ol>"
+      tags:
+      - Content template API
+      responses:
+        200:
+          description: Content Template Listing API response.
+          content:
+            application/vnd.adobe.ajo.template-list.v1+json:
+              schema:
+                $ref: '#/components/schemas/template-page-response'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+  /templates/{templateId}:
+    parameters:
+    - name: templateId
+      in: path
+      description: Content Template id
+      required: true
+      schema:
+        type: string
+    - name: Accept
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/vnd.adobe.ajo.template.v1+json
+    - $ref: '#/components/parameters/APIKeyParam'
+    - $ref: '#/components/parameters/ImsOrgIdParam'
+    - $ref: '#/components/parameters/SandboxNameParam'
+    - $ref: '#/components/parameters/RequestIdParam'
+    get:
+      operationId: getTemplate
+      summary: Fetch Content Template By Id.
+      description: Fetch Content template detail with given id.
+      tags:
+      - Content template API
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/vnd.adobe.ajo.template.v1+json:
+              schema:
+                $ref: '#/components/schemas/content-template-with-audit'
+          headers:
+            etag:
+              $ref: '#/components/headers/etag'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+    put:
+      operationId: putTemplate
+      summary: Update Content Template By Id.
+      description: API to update Content Template By Id.<br> <b>subType</b> field is only supported for content template with code channel
+      tags:
+      - Content template API
+      parameters:
+      - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        description: New/Updated Content Template Payload.
+        content:
+          application/vnd.adobe.ajo.template.v1+json:
+            schema:
+              $ref: '#/components/schemas/content-template'
+        required: true
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+    delete:
+      operationId: deleteTemplate
+      summary: Delete Content Template By Id.
+      description: Delete Content Template by Id.
+      tags:
+      - Content template API
+      responses:
+        204:
+          $ref: '#/components/responses/204DELETE'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+    patch:
+      operationId: patchTemplate
+      summary: Patch Content Template By Id.
+      description: Patch Content Template with given id. Expects Patch request in JSON-patch format (RFC 6902)<br> <a href="https://jsonpatch.com/">JSON Patch guidelines</a> Supported paths are ["/name", "/description", "/parentFolderId" ]
+      tags:
+      - Content template API
+      parameters:
+      - $ref: '#/components/parameters/IfMatchParam'
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/patch-request'
+        required: true
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/content-template-with-audit'
+          headers:
+            etag:
+              $ref: '#/components/headers/etag'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+components:
+  schemas:
+    description:
+      type: string
+      title: Description
+      description: Description
+      example: Cyber Monday Sale - Header Banner!!
+    self-href:
+      title: Self-Href
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              example: /templates/b6d70a45-a149-453b-85ba-809a5d40066d
+    content-template-metadata:
+      title: Content Template metadata.
+      type: object
+      required:
+      - name
+      - templateType
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        templateType:
+          $ref: '#/components/schemas/template-type'
+        channels:
+          $ref: '#/components/schemas/template-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/template-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    template-list-link:
+      title: Content Template List Link.
+      type: object
+      required:
+      - self
+      properties:
+        next:
+          $ref: '#/components/schemas/href-link'
+        page:
+          $ref: '#/components/schemas/href-link'
+      example:
+        next:
+          href: /templates?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
+        page:
+          href: /templates?orderBy={orderBy}&start={start}&limit={limit}
+    olac-labels:
+      title: OLAC Label Details
+      type: array
+      items:
+        type: string
+        example: custom/sensitive-data
+    entity-audit-fields:
+      title: Entity Audit Fields.
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        createdBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+        modifiedAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        modifiedBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+    page:
+      title: Page
+      type: object
+      properties:
+        orderBy:
+          type: string
+          enum:
+          - modifiedAt
+          - createdAt
+          - name
+          example: -modifiedAt
+        start:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        next:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        count:
+          type: integer
+          example: 10
+    template-sub-type-enum:
+      title: Template sub type
+      description: Sub type. This is only enabled for Content templates with code channel.
+      type: string
+      enum:
+      - HTML
+      - JSON
+      example: HTML
+    content-template-listing-response:
+      title: Content Template
+      type: object
+      properties:
+        subType:
+          $ref: '#/components/schemas/template-sub-type-enum'
+      allOf:
+      - $ref: '#/components/schemas/content-template-metadata'
+      - $ref: '#/components/schemas/entity-audit-fields'
+      - $ref: '#/components/schemas/self-href'
+    content-template-with-audit:
+      title: Content Template with audit fields.
+      type: object
+      discriminator:
+        propertyName: templateType
+        mapping:
+          html: '#/components/schemas/email-html-template-with-audit'
+          html_primary_page: '#/components/schemas/primary-page-email-html-template-with-audit'
+          html_sub_page: '#/components/schemas/sub-page-email-html-template-with-audit'
+          content: '#/components/schemas/channel-template-with-audit'
+      required:
+      - name
+      - templateType
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        templateType:
+          $ref: '#/components/schemas/template-type'
+        channels:
+          $ref: '#/components/schemas/template-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/template-source'
+        subType:
+          $ref: '#/components/schemas/template-sub-type-enum'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    name:
+      type: string
+      title: Content Name
+      description: Content Name
+      example: Cyber Monday Sale - Header !!
+      minLength: 1
+    template-channel-enum:
+      type: string
+      title: channel
+      description: Supported channels for Content Template.
+      example: email
+      enum:
+      - email
+      - push
+      - inapp
+      - sms
+      - code
+      - directMail
+      - landingpage
+      - shared
+    patch-request:
+      title: Patch Request
+      type: array
+      items:
+        $ref: '#/components/schemas/patch-document'
+    template-source:
+      title: Template Source.
+      type:
+      - object
+      - 'null'
+      required:
+      - origin
+      properties:
+        origin:
+          $ref: '#/components/schemas/template-origin'
+        metadata:
+          title: MetaData
+          description: List containing custom properties(key-value pair).
+          additionalProperties: true
+    template-origin:
+      type: string
+      title: Origin
+      description: Content Template Origin/Source system.
+      enum:
+      - ajo
+      - aem
+      - external
+    template-type:
+      type: string
+      title: Template Type
+      description: Template Type
+      example: html
+      enum:
+      - html
+      - html_primary_page
+      - html_sub_page
+      - content
+    id:
+      type: string
+      title: Content Template Id.
+      description: Content Template Id.
+      example: b6d70a45-a149-453b-85ba-809a5d40066d
+    content-template:
+      description: Content templates allow us to easily reuse custom content, facilitating accelerated and improved design process.<br> <b>subType</b> field is only supported for content template with code channel
+      title: Content Template
+      type: object
+      discriminator:
+        propertyName: templateType
+        mapping:
+          html: '#/components/schemas/email-html-template'
+          html_primary_page: '#/components/schemas/primary-page-email-html-template'
+          html_sub_page: '#/components/schemas/sub-page-email-html-template'
+          content: '#/components/schemas/channel-template'
+      required:
+      - name
+      - templateType
+      - channels
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        templateType:
+          $ref: '#/components/schemas/template-type'
+        channels:
+          type: array
+          title: Channels
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/template-channel-enum'
+        source:
+          $ref: '#/components/schemas/template-source'
+        subType:
+          $ref: '#/components/schemas/template-sub-type-enum'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    parent-folder-id:
+      type:
+      - string
+      - 'null'
+      title: Folder Id
+      description: Id of the folder in which the content is present.
+      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+    href-link:
+      title: Href-link
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
+    template-page-response:
+      title: Content Template Page Response
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/page'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/content-template-listing-response'
+        _links:
+          $ref: '#/components/schemas/template-list-link'
+    patch-document:
+      title: Patch Document
+      description: A JSONPatch document as defined by RFC 6902
+      required:
+      - op
+      - path
+      properties:
+        op:
+          type: string
+          description: The operation to be performed
+          enum:
+          - add
+          - remove
+          - replace
+        path:
+          type: string
+          description: A JSON-Pointer
+        value:
+          type: object
+          description: The value to be used within the operations.
+        from:
+          type: string
+          description: A string containing a JSON Pointer value.
+  parameters:
+    start:
+      name: start
+      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
+      in: query
+      schema:
+        type: string
+        format: byte
+      required: false
+      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+    property:
+      name: property
+      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
+      in: query
+      schema:
+        items:
+          type: string
+        type: array
+      required: false
+      example: property=name~^test
+    IfMatchParam:
+      name: If-Match
+      in: header
+      required: true
+      description: etag of resource to match before update of resource.
+      schema:
+        type: string
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key
+      required: true
+      schema:
+        type: string
+        x-example: cjm client
+    limit:
+      name: limit
+      description: Limit response to a specified positive number of objects. Ex. limit=10
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 1000
+      required: false
+    ImsOrgIdParam:
+      name: x-gw-ims-org-id
+      in: header
+      description: Your Identity Management Services (IMS) Organization id
+      required: true
+      schema:
+        type: string
+    SandboxNameParam:
+      name: x-sandbox-name
+      in: header
+      description: Filter on platform sandbox name
+      required: true
+      schema:
+        type: string
+    orderBy:
+      name: orderBy
+      description: Sort parameter and direction for sorting the response. Add the prefix as -/+ for desc/asc. If unspecified, the response will be sorted in desc order.
+      in: query
+      schema:
+        type: string
+        default: -modifiedAt
+      required: false
+      example: orderBy=%2BmodifiedAt.
+    RequestIdParam:
+      in: header
+      name: x-request-id
+      description: A unique string to identify the request, MUST be unique for each request
+      required: false
+      schema:
+        type: string
+  responses:
+    204DELETE:
+      description: No content
+  headers:
+    etag:
+      schema:
+        type: string
+      description: etag of resource
+  securitySchemes:
+    imsUserToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    imsServiceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

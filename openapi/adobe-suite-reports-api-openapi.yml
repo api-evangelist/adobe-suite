@@ -1,0 +1,702 @@
+openapi: 3.2.0
+info:
+  description: "The endpoints described here are routed through analytics.adobe.io. In order to use these endpoints you must create an oAuth client that is subscribed to access the Adobe Analytics Reporting API. \n\n To view the API References for non-core Analytics 2.0 APIs, select the **API Reference** drop-down menu at the top of the page. \n\n Note: Adobe may add optional request and response members (name/value pairs) to existing API objects at any time and without notice or changes in versioning. Adobe recommends that you refer to the API documentation of any third-party tool you integrate with our APIs so that such additions are ignored in processing if not understood. If implemented properly, such additions are non-breaking changes for your implementation. Adobe will not remove parameters or add required parameters without first providing standard notification through release notes."
+  title: Adobe Analytics Reports API
+  version: '2.0'
+servers:
+- url: https://analytics.adobe.io/api
+tags:
+- name: Reports
+paths:
+  /{globalCompanyId}/reports:
+    post:
+      tags:
+      - Reports
+      summary: Create a report
+      description: For more information, see the [Reporting API guide](https://developer.adobe.com/analytics-apis/docs/2.0/guides/endpoints/reports/).
+      operationId: runReport
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankedReportData'
+        '206':
+          description: Partially successful operation.  Some response columns contain errors.  See the [Partial Responses](https://github.com/AdobeDocs/analytics-2.0-apis/blob/master/reporting-guide.md#partial-responses-206-status-code) for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankedReportData'
+        '400':
+          description: Invalid input; name, rsid, and definition are all required. Definition must be formatted as a JSON Object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportErrorStatus'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RankedRequest'
+  /{globalCompanyId}/reports/realtime:
+    post:
+      tags:
+      - Reports
+      summary: Create a realtime report
+      description: For more information, see the [Reporting API guide](https://developer.adobe.com/analytics-apis/docs/2.0/guides/endpoints/reports/).
+      operationId: runRealtimeReport
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankedReportData'
+        '206':
+          description: Partially successful operation.  Some response columns contain errors.  See the [Partial Responses](https://github.com/AdobeDocs/analytics-2.0-apis/blob/master/reporting-guide.md#partial-responses-206-status-code) for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankedReportData'
+        '400':
+          description: Invalid input; name, rsid, and definition are all required. Definition must be formatted as a JSON Object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportErrorStatus'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RankedRequest'
+  /{globalCompanyId}/reports/topItems:
+    get:
+      tags:
+      - Reports
+      summary: Retrieve top items report
+      description: Get the top X items (based on paging restriction) for the specified dimension and rsid. Defaults to last 90 days.
+      operationId: runTopItemReport
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: rsid
+        in: query
+        description: ID of desired report suite ie. myrsid
+        required: true
+        schema:
+          type: string
+      - name: dimension
+        in: query
+        description: 'Dimension to run the report against. Example: ''variables/page'''
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale that system named metrics should be returned in
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: dateRange
+        in: query
+        description: 'Format: YYYY-MM-DD/YYYY-MM-DD'
+        required: false
+        schema:
+          type: string
+      - name: search-clause
+        in: query
+        description: 'General search string; wrap with single quotes. Example: ''PageABC'''
+        required: false
+        schema:
+          type: string
+      - name: startDate
+        in: query
+        description: 'Format: YYYY-MM-DD'
+        required: false
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        description: 'Format: YYYY-MM-DD'
+        required: false
+        schema:
+          type: string
+      - name: searchAnd
+        in: query
+        description: Search terms that will be AND-ed together. Space delimited.
+        required: false
+        schema:
+          type: string
+      - name: searchOr
+        in: query
+        description: Search terms that will be OR-ed together. Space delimited.
+        required: false
+        schema:
+          type: string
+      - name: searchNot
+        in: query
+        description: Search terms that will be treated as NOT including. Space delimited.
+        required: false
+        schema:
+          type: string
+      - name: searchPhrase
+        in: query
+        description: A full search phrase that will be searched for.
+        required: false
+        schema:
+          type: string
+      - name: lookupNoneValues
+        in: query
+        description: Controls None values to be included
+        required: false
+        schema:
+          type: boolean
+          default: true
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnhashReportData'
+        '206':
+          description: Partially successful operation.  Some response columns contain errors.  See the [Partial Responses](https://github.com/AdobeDocs/analytics-2.0-apis/blob/master/reporting-guide.md#partial-responses-206-status-code) for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnhashReportData'
+        '400':
+          description: Invalid input; name, rsid, and definition are all required. Definition must be formatted as a JSON Object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportErrorStatus'
+components:
+  schemas:
+    RankedRequest:
+      type: object
+      properties:
+        rsid:
+          type: string
+        dimension:
+          type: string
+        locale:
+          $ref: '#/components/schemas/Locale'
+        globalFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportFilter'
+        search:
+          $ref: '#/components/schemas/ReportSearch'
+        settings:
+          $ref: '#/components/schemas/RankedSettings'
+        statistics:
+          $ref: '#/components/schemas/RankedStatistics'
+        metricContainer:
+          $ref: '#/components/schemas/ReportMetrics'
+        rowContainer:
+          $ref: '#/components/schemas/ReportRows'
+        anchorDate:
+          type: string
+    RankedReportData:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        firstPage:
+          type: boolean
+        lastPage:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int32
+        message:
+          type: string
+        request:
+          $ref: '#/components/schemas/RankedRequest'
+        reportId:
+          type: string
+        columns:
+          $ref: '#/components/schemas/RankedColumnMetaData'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+        summaryData:
+          $ref: '#/components/schemas/RankedSummaryData'
+    Row:
+      type: object
+      properties:
+        itemId:
+          type: string
+        value:
+          type: string
+        rowId:
+          type: string
+        data:
+          type: array
+          items:
+            type: number
+            format: double
+        dataExpected:
+          type: array
+          items:
+            type: number
+            format: double
+        dataUpperBound:
+          type: array
+          items:
+            type: number
+            format: double
+        dataLowerBound:
+          type: array
+          items:
+            type: number
+            format: double
+        dataAnomalyDetected:
+          type: array
+          items:
+            type: boolean
+        percentChange:
+          type: array
+          items:
+            type: number
+            format: double
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        dataForecasted:
+          type: array
+          items:
+            type: number
+            format: double
+        dataForecastedUpperBound:
+          type: array
+          items:
+            type: number
+            format: double
+        dataForecastedLowerBound:
+          type: array
+          items:
+            type: number
+            format: double
+    ReportMetric:
+      type: object
+      properties:
+        id:
+          type: string
+        columnId:
+          type: string
+        filters:
+          type: array
+          items:
+            type: string
+        sort:
+          type: string
+        metricDefinition:
+          type: object
+          additionalProperties:
+            type: object
+        predictive:
+          $ref: '#/components/schemas/ReportMetricPredictiveSettings'
+    ReportErrorStatus:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          enum:
+          - invalid_segment_ids_found
+          - invalid_metric_access
+          - method_not_allowed
+          - resource_conflict
+          - invalid_access
+          - resource_temporarily_unavailable
+          - external_api_failure
+          - aam_failure
+          - resource_already_exists
+          - invalid_state
+          - invalid_json_input
+          - invalid_parameters
+          - invalid_dimension_access
+          - unsupported_data_type
+          - resource_not_found
+          - insufficient_access
+          - health_check_error
+          - invalid_data
+          - unexpected_error
+          - external_api_error
+          - unsupported_resource
+          - io_error
+          - invalid_request
+          - invalid_client_id
+          - unauthorized
+          - authorization_error
+          - invalid_token
+          - insufficient_scope
+          - bluecoat_unauthorized
+        errorDescription:
+          type: string
+        errorId:
+          type: string
+        errorDetails:
+          type: object
+          additionalProperties:
+            type: object
+        rootCauseService:
+          type: string
+    Locale:
+      type: object
+      properties:
+        language:
+          type: string
+        script:
+          type: string
+        country:
+          type: string
+        variant:
+          type: string
+        extensionKeys:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        unicodeLocaleAttributes:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        unicodeLocaleKeys:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        iso3Language:
+          type: string
+        iso3Country:
+          type: string
+        displayLanguage:
+          type: string
+        displayScript:
+          type: string
+        displayCountry:
+          type: string
+        displayVariant:
+          type: string
+        displayName:
+          type: string
+    ReportRow:
+      type: object
+      properties:
+        rowId:
+          type: string
+        filters:
+          type: array
+          items:
+            type: string
+    UnhashReportData:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        firstPage:
+          type: boolean
+        lastPage:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int32
+        message:
+          type: string
+        reportId:
+          type: string
+        searchAnd:
+          type: string
+        searchOr:
+          type: string
+        searchNot:
+          type: string
+        searchPhrase:
+          type: string
+        oberonRequestXML:
+          type: string
+        oberonResponseXML:
+          type: string
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowItem'
+    ReportMetricPredictiveSettings:
+      type: object
+      properties:
+        anomalyConfidence:
+          type: number
+          format: double
+    RankedStatistics:
+      type: object
+      properties:
+        functions:
+          type: array
+          items:
+            type: string
+        ignoreZeroes:
+          type: boolean
+    ReportMetrics:
+      type: object
+      properties:
+        metricFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportFilter'
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportMetric'
+    RankedSettings:
+      type: object
+      properties:
+        limit:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        dimensionSort:
+          type: string
+        countRepeatInstances:
+          type: boolean
+        reflectRequest:
+          type: boolean
+        includeAnomalyDetection:
+          type: boolean
+        includeForecasting:
+          type: boolean
+        includePercentChange:
+          type: boolean
+        includeLatLong:
+          type: boolean
+        nonesBehavior:
+          type: string
+    RowItem:
+      type: object
+      properties:
+        itemId:
+          type: string
+        value:
+          type: string
+    ReportSearch:
+      type: object
+      properties:
+        clause:
+          type: string
+        excludeItemIds:
+          type: array
+          items:
+            type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        includeSearchTotal:
+          type: boolean
+        empty:
+          type: boolean
+    ReportFilter:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - dateRange
+          - breakdown
+          - segment
+          - excludeItemIds
+        dimension:
+          type: string
+        itemId:
+          type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        segmentId:
+          type: string
+        segmentDefinition:
+          type: object
+          $ref: '#/components/schemas/AnalyticsSegmentDefinition'
+        dateRange:
+          type: string
+        dateRangeRelative:
+          type: string
+        excludeItemIds:
+          type: array
+          items:
+            type: string
+    RankedColumnMetaData:
+      type: object
+      properties:
+        dimension:
+          $ref: '#/components/schemas/ReportDimension'
+        columnIds:
+          type: array
+          items:
+            type: string
+        columnErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankedColumnError'
+    RankedSummaryData:
+      type: object
+    RankedColumnError:
+      type: object
+      properties:
+        columnId:
+          type: string
+        errorCode:
+          type: string
+          enum:
+          - unauthorized_metric
+          - unauthorized_dimension
+          - unauthorized_dimension_global
+          - anomaly_detection_failure_unexpected_item_count
+          - anomaly_detection_failure_tsa_service
+          - not_enabled_metric
+          - not_enabled_dimension
+          - not_enabled_dimension_global
+        errorId:
+          type: string
+        errorDescription:
+          type: string
+    ReportDimension:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - STRING
+          - INT
+          - DECIMAL
+          - CURRENCY
+          - PERCENT
+          - TIME
+          - ENUM
+          - ORDERED_ENUM
+    ReportRows:
+      type: object
+      properties:
+        rowFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportFilter'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportRow'
+    AnalyticsSegmentDefinition:
+      type: object
+      properties:
+        container:
+          type: object
+          properties:
+            context:
+              type: string
+            func:
+              type: string
+            pred:
+              type: object
+              properties:
+                val:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                    name:
+                      type: string
+                    func:
+                      type: string
+                str:
+                  type: string
+                func:
+                  type: string
+        func:
+          type: string
+        version:
+          type: array
+          items:
+            type: integer
+            format: int32
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
+      required: true
+      schema:
+        type: string

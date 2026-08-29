@@ -1,0 +1,1079 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Events API
+  version: '1.0'
+  description: 'Operations tagged Events across 2 of this provider''s published API definitions: adobe-suite-analytics-bulk-data-insertion-openapi.json, adobe-suite-status-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://analytics.adobe.io/api
+- url: https://status.adobe.io/
+tags:
+- name: Events
+paths:
+  /{globalCompanyId}/bulk_data_insertion/events:
+    post:
+      tags:
+      - Events
+      summary: Upload file for processing
+      description: "Upload a batch file to Analytics for processing. Uploaded files must:\n * Be 100 MB or less compressed (using gzip)\n* Follow the CSV formatting rules and include the required fields as specified in the documentation"
+      operationId: filePost
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: x-adobe-vgid
+        in: header
+        description: Visitor Group ID. A visitor group represents a bucketed group of visitor IDs that are separate from any other visitor group set. The Group ID is a string of any valid value, but must be consistent across files. See [Vistior groups] (https://developer.adobe.com/analytics-apis/docs/2.0/guides/endpoints/bulk-data-insertion/visitor-groups/) for more information.
+        required: true
+        schema:
+          type: string
+      - name: debug
+        in: query
+        description: Store debug information for the first 10 hits of the file
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadedFileInfo'
+        '400':
+          description: Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized Access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiUnauthorizedError'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: Gzip compressed CSV file sent with request
+                  format: binary
+              required:
+              - file
+    servers:
+    - url: https://analytics.adobe.io/api
+  /{globalCompanyId}/bulk_data_insertion/events/validate:
+    post:
+      tags:
+      - Events
+      summary: Upload file for validation
+      description: Upload batch file for Analytics validation. This file is not stored on the server or processed into Analytics. Validation is only for testing file format.
+      operationId: fileValidatePut
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadedFileInfo'
+        '400':
+          description: Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized Access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiUnauthorizedError'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  description: Gzip compressed CSV file sent with request
+                  format: binary
+              required:
+              - file
+    servers:
+    - url: https://analytics.adobe.io/api
+  /api/v1/events:
+    get:
+      tags:
+      - Events
+      summary: All Events
+      description: List all ongoing issues and maintenances that are impacting Adobe Products and Services.
+      operationId: eventsUsingGET
+      parameters:
+      - name: cloudIds
+        in: query
+        description: List of cloud ids for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: environmentIds
+        in: query
+        description: List of environmentIds for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: from
+        in: query
+        description: Retrieve the events starting from Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      - name: offeringIds
+        in: query
+        description: List of offeringIds for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productIds
+        in: query
+        description: List of product ids for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: regionIds
+        in: query
+        description: List of regionIds for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: search
+        in: query
+        description: Product name search
+        schema:
+          type: string
+      - name: serviceIds
+        in: query
+        description: List of serviceIds for which you want to retrieve the events.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: to
+        in: query
+        description: Retrieve the events till Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/events?api_key=<key>&cloudIds=<string>&environmentIds=<string>&from=<date>&offeringIds=<string>&productIds=<string>&regionIds=<string>&search=<string>&serviceIds=<string>&to=<date>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/event.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/event.js
+      security:
+      - Authorization: []
+        api_key: []
+    servers:
+    - url: https://status.adobe.io/
+  /api/v1/events/incidents:
+    get:
+      tags:
+      - Events
+      summary: All Issues
+      description: List all ongoing issues that are impacting Adobe Products and Services.
+      operationId: incidentsUsingGET
+      parameters:
+      - name: cloudIds
+        in: query
+        description: List of cloud ids for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: environmentIds
+        in: query
+        description: List of environmentIds for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: from
+        in: query
+        description: Retrieve the events starting from Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      - name: offeringIds
+        in: query
+        description: List of offeringIds for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productIds
+        in: query
+        description: List of product ids for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: regionIds
+        in: query
+        description: List of regionIds for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: search
+        in: query
+        description: Product name search
+        schema:
+          type: string
+      - name: serviceIds
+        in: query
+        description: List of serviceIds for which you want to retrieve the incidents.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: to
+        in: query
+        description: Retrieve the events till Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncidentDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/events/incidents?api_key=<key>&cloudIds=<string>&environmentIds=<string>&from=<date>&offeringIds=<string>&productIds=<string>&regionIds=<string>&search=<string>&serviceIds=<string>&to=<date>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/incident.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/incident.js
+      security:
+      - Authorization: []
+        api_key: []
+    servers:
+    - url: https://status.adobe.io/
+  /api/v1/events/maintenance:
+    get:
+      tags:
+      - Events
+      summary: All Maintenances
+      description: List all ongoing maintenances that are impacting Adobe Products and Services.
+      operationId: maintenanceUsingGET
+      parameters:
+      - name: cloudIds
+        in: query
+        description: List of cloud ids for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: environmentIds
+        in: query
+        description: List of environmentIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: from
+        in: query
+        description: Retrieve the events starting from Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      - name: offeringIds
+        in: query
+        description: List of offeringIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productIds
+        in: query
+        description: List of product ids for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: regionIds
+        in: query
+        description: List of regionIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: search
+        in: query
+        description: Product name search
+        schema:
+          type: string
+      - name: serviceIds
+        in: query
+        description: List of serviceIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: to
+        in: query
+        description: Retrieve the events till Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/events/maintenance?api_key=<key>&cloudIds=<string>&environmentIds=<string>&from=<date>&offeringIds=<string>&productIds=<string>&regionIds=<string>&search=<string>&serviceIds=<string>&to=<date>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/maintenance.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/maintenance.js
+      security:
+      - Authorization: []
+        api_key: []
+    servers:
+    - url: https://status.adobe.io/
+  /api/v1/events/scheduled:
+    get:
+      tags:
+      - Events
+      summary: All Scheduled Maintenances
+      description: View all upcoming scheduled maintenances that are impacting Adobe Products and Services.
+      operationId: scheduledUsingGET
+      parameters:
+      - name: cloudIds
+        in: query
+        description: List of cloud ids for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: environmentIds
+        in: query
+        description: List of environmentIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: from
+        in: query
+        description: Retrieve the events starting from Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      - name: offeringIds
+        in: query
+        description: List of offeringIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: productIds
+        in: query
+        description: List of product ids for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: regionIds
+        in: query
+        description: List of regionIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: search
+        in: query
+        description: Product name search
+        schema:
+          type: string
+      - name: serviceIds
+        in: query
+        description: List of serviceIds for which you want to retrieve the Maintenance.
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+      - name: to
+        in: query
+        description: Retrieve the events till Date (yyyy-MM-dd format).
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceDto'
+        '400':
+          description: Bad Request
+          content: {}
+        '401':
+          description: Unauthorized
+          content: {}
+        '403':
+          description: Forbidden
+          content: {}
+        '404':
+          description: Not Found
+          content: {}
+        '429':
+          description: Too Many Requests
+          content: {}
+        '500':
+          description: Internal Server Error
+          content: {}
+      x-codeSamples:
+      - lang: cURL
+        label: CLI
+        source: 'curl --location --request GET ''https://status.adobe.io/api/v1/events/scheduled?api_key=<key>&cloudIds=<string>&environmentIds=<string>&from=<date>&offeringIds=<string>&productIds=<string>&regionIds=<string>&search=<string>&serviceIds=<string>&to=<date>'' \ --header ''Authorization: Bearer <token>'''
+      - lang: JavaScript
+        label: JavaScript
+        source:
+          $ref: code/JS/scheduled.js
+      - lang: JavaScript
+        label: NodeJS
+        source:
+          $ref: code/Node/scheduled.js
+      security:
+      - Authorization: []
+        api_key: []
+    servers:
+    - url: https://status.adobe.io/
+components:
+  schemas:
+    ApiUnauthorizedError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid token (1)
+          description: Error during authentication
+    UploadedFileInfo:
+      type: object
+      properties:
+        file_id:
+          type: string
+          example: 9c99f999-fca9-999c-9c99-b99aaec99e99
+          description: The file ID as a GUID
+        visitor_group_id:
+          type: string
+          example: myvisitorgroup1
+          description: The visitor group of the file
+        size:
+          type: integer
+          format: int64
+          example: 355600
+          description: The size of the compressed file in bytes
+        received_date:
+          type: integer
+          format: int64
+          example: 1506999999
+          description: The date the file was uploaded in unix epoch time.
+        processing_start_date:
+          type: integer
+          format: int64
+          example: 1506999999
+          description: The starting date for processing, in unix epoch time.
+        processing_end_date:
+          type: integer
+          format: int64
+          example: 1506999999
+          description: The date all hits were submitted for Analytics, in unix epoch time.
+        file_reader_complete_date:
+          type: integer
+          format: int64
+          example: 1506999999
+          description: The date the file was completely read, but the hits not yet submitted, in unix epoch time.
+        rows:
+          type: integer
+          format: int64
+          example: 10000
+          description: The number of rows in the file
+        invalid_rows:
+          type: integer
+          format: int64
+          example: 42
+          description: The number of rows not submitted to analytics for being invalid
+        upload_name:
+          type: string
+          example: myfile1.gz
+          description: The file name as it was uploaded
+        status:
+          type: string
+          description: The status of the file
+        status_code:
+          type: string
+          example: UPLOADED
+          description: The status of the file as a short name
+          enum:
+          - REJECTED
+          - UPLOADED
+          - PROCESSING
+          - COMPLETE
+          - ERROR
+        processing_log:
+          type: string
+          description: A log of errors produced while processing the file
+        error:
+          type: string
+          example: File not in GZIP format
+          description: An error message for unsuccessful requests
+        success:
+          type: string
+          example: File is valid
+          description: A success message for validation requests
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Request is missing required header 'x-adobe-vgid'
+          description: General request error is encountered
+    MaintenanceDto:
+      title: MaintenanceDto
+      type: object
+      properties:
+        clouds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventCloud'
+        completedOn:
+          type: string
+        environment:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEnvironment'
+        id:
+          type: string
+        maintenanceType:
+          type: string
+          enum:
+          - Empty
+          - Normal
+          - Scheduled
+          - Urgent
+        offering:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventOfferingDto'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceProductDto'
+        region:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegion'
+        reminderDate:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        scheduledDate:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventServices'
+        startedOn:
+          type: string
+        status:
+          type: string
+          enum:
+          - Canceled
+          - Completed
+          - Empty
+          - Scheduled
+          - Started
+    EventCloud:
+      title: EventCloud
+      type: object
+      properties:
+        cloudProducts:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        name:
+          type: string
+    EventEnvironment:
+      title: EventEnvironment
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    LocationImpact:
+      title: LocationImpact
+      type: object
+      properties:
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    MaintenanceProductDto:
+      title: MaintenanceProductDto
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceHistoryEvent'
+        id:
+          type: string
+        name:
+          type: string
+    IncidentDto:
+      title: IncidentDto
+      type: object
+      properties:
+        clouds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventCloud'
+        environment:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEnvironment'
+        id:
+          type: string
+        offering:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventOfferingDto'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentProductDto'
+        region:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegion'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventServices'
+    IncidentHistoryEventDto:
+      title: IncidentHistoryEventDto
+      type: object
+      properties:
+        cfsId:
+          type: string
+        cfsSource:
+          type: string
+        cfsURL:
+          type: string
+        customerImpact:
+          type: string
+          enum:
+          - Most
+          - None
+          - Some
+          - Unknown
+        id:
+          type: string
+        locationImpact:
+          $ref: '#/components/schemas/LocationImpact'
+        messageTime:
+          type: string
+        messageToken:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - CFS
+          - Canned
+          - Custom
+          - None
+        operationsImpact:
+          type: string
+          enum:
+          - Availability
+          - None
+          - Performance
+          - Unknown
+        serviceImpact:
+          $ref: '#/components/schemas/ImpactedServices'
+        severity:
+          type: string
+          enum:
+          - Major
+          - Minor
+          - None
+          - Potential
+          - Trivial
+        showEnvironment:
+          type: boolean
+        status:
+          type: string
+          enum:
+          - Closed
+          - Discovery
+          - Dismissed
+          - None
+          - Opened
+        titleToken:
+          type: string
+    MaintenanceHistoryEvent:
+      title: MaintenanceHistoryEvent
+      required:
+      - customerImpact
+      - messageType
+      - operationsImpact
+      - showEnvironment
+      - status
+      type: object
+      properties:
+        customerImpact:
+          type: string
+          enum:
+          - Most
+          - None
+          - Some
+          - Unknown
+        id:
+          type: string
+        locationImpact:
+          $ref: '#/components/schemas/LocationImpact'
+        messageTime:
+          minimum: 1
+          type: integer
+          format: int64
+        messageToken:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - Canned
+          - Custom
+        operationsImpact:
+          type: string
+          enum:
+          - Availability
+          - None
+          - Performance
+          - Unknown
+        serviceImpact:
+          $ref: '#/components/schemas/ImpactedServices'
+        showEnvironment:
+          type: boolean
+        status:
+          type: string
+          enum:
+          - Cancelled
+          - Completed
+          - Empty
+          - Scheduled
+          - Started
+          - Updated
+        titleToken:
+          type: string
+    EventServices:
+      title: EventServices
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    ImpactedServices:
+      title: ImpactedServices
+      type: object
+      properties:
+        productCapabilities:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productOfferings:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    EventOfferingDto:
+      title: EventOfferingDto
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    Event:
+      title: Event
+      type: object
+      properties:
+        incidents:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentDto'
+        maintenances:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceDto'
+    IncidentProductDto:
+      title: IncidentProductDto
+      type: object
+      properties:
+        endedOn:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentHistoryEventDto'
+        id:
+          type: string
+        name:
+          type: string
+        severity:
+          type: string
+          enum:
+          - Major
+          - Minor
+          - None
+          - Potential
+          - Trivial
+        startedOn:
+          type: string
+        status:
+          type: string
+          enum:
+          - Closed
+          - Empty
+          - Opened
+    EventRegion:
+      title: EventRegion
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    Authorization:
+      description: '[To generate OAuth Authorization token](https://developer.adobe.com/developer-console/docs/guides/authentication/ServerToServerAuthentication/implementation/)'
+      type: http
+      scheme: bearer
+    api_key:
+      type: apiKey
+      description: Use the api key `StatusAdobeIOClient`
+      name: api_key
+      in: query
+x-refined-from:
+- adobe-suite-analytics-bulk-data-insertion-openapi.json
+- adobe-suite-status-openapi.yaml
+x-original-swagger-version: '2.0'

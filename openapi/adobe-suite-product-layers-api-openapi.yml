@@ -1,0 +1,549 @@
+openapi: 3.2.0
+info:
+  title: Catalog Data Ingestion Product Layers API
+  description: 'The Catalog Data Ingestion API allows you to create and manage products and price books and directly integrate catalog data with the Commerce catalog service.
+
+
+    This API provides the following resource collections to create and update catalog data:
+
+
+    - <strong>[Product Metadata](#tag/ProductMetadata)</strong>—define and manage product attribute metadata including display settings, search characteristics, filtering options, and sorting rules.
+
+    - <strong>[Category Metadata](#tag/CategoryMetadata)</strong>—define and manage category attribute metadata.
+
+    - <strong>[Categories](#tag/Categories)</strong>—Define and manage categories with hierarchical structure to build navigation menu.
+
+    - <strong>[Products](#tag/Products)</strong>—Define and manage catalog items with their attributes (name, description, SKU, images, and variants).
+
+    - <strong>[Price books](#tag/Price-Books)</strong>—Define and manage pricing scopes for different customer tiers and markets.
+
+    - <strong>[Prices](#tag/Prices)</strong>—Define and manage product SKU prices and their associated price books.
+
+    - <strong>[Product Layers](#tag/Product-Layers)</strong>—Define and manage product layers to customize and override base product data for specific contexts, locales, or business requirements.
+
+    '
+  version: 1.0.0
+servers:
+- url: https://na1-sandbox.api.commerce.adobe.com/{tenantId}
+  variables:
+    tenantId:
+      default: string
+tags:
+- name: Product Layers
+paths:
+  /v1/catalog/products/layers:
+    post:
+      tags:
+      - Product Layers
+      summary: Create or replace product layers
+      description: "Create product layers to customize and override base product data for specific contexts, locales, or business requirements.\n\nProduct layers enable you to:\n- Override product attributes for specific markets or channels\n- Provide locale-specific content while maintaining a global base product\n- Create seasonal or promotional variations without duplicating entire product records\n- Implement A/B testing scenarios with different product presentations\n\nFor details on how to use layers with Adobe Commerce Optimizer, see\n[Catalog Layers](https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-layer) in the\nAdobe Commerce Optimizer documentation.\n\n## Layer behavior and requirements\n\n**Required fields:**\n- `sku`: Must match an existing base product SKU\n- `source.layer`: Identifies the layer name for organization and retrieval\n\n**Optional Fields:**\n- `source.locale`: When specified, layer applies only to that locale. When omitted, layer applies globally across all locales\n- All product fields (name, description, images, and so on): Override corresponding base product values\n\n## Merging logic\n\nProduct layers use intelligent merging:\n- **Simple fields** (name, description, and so on): Complete replacement of base values\n- **Array fields** (attributes, images, etc.): First-level arrays are merged with base arrays\n- **Nested arrays** (attribute.values, etc.): Complete replacement of nested arrays\n\n**Example:** Adding a color variant while preserving existing attributes:\n```json\n{\n  \"sku\": \"red-pants\",\n  \"source\": {\n    \"locale\": \"en-US\",\n    \"layer\": \"seasonal-colors\"\n  },\n  \"attributes\": [\n    {\n      \"code\": \"color\",\n      \"values\": [\"Crimson Red\", \"Deep Red\"],\n      \"variantReferenceId\": \"pants-color-crimson\"\n    }\n  ]\n}\n```\n"
+      operationId: createProductLayers
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedProductLayer'
+            examples:
+              ProductLayerWithImages:
+                summary: Create a seasonal product layer
+                description: 'Create a product layer that overrides the base product with seasonal branding,  localized content, and updated imagery for the US market.
+
+                  '
+                value:
+                - sku: red-pants
+                  source:
+                    locale: en-US
+                    layer: seasonal-winter-2024
+                  name: Premium Red Winter Pants - Limited Edition
+                  description: Stay warm and stylish with our premium red winter pants. Features thermal lining and water-resistant fabric perfect for cold weather adventures.
+                  shortDescription: Premium thermal-lined winter pants in warm, classic red
+                  images:
+                  - url: https://cdn.example.com/products/red-pants-winter-2024.jpg
+                    label: Premium Red Winter Pants - Front View
+                    roles:
+                    - BASE
+                    - THUMBNAIL
+                    customRoles:
+                    - hero
+                    - seasonal-banner
+  /v1/catalog/products/layers/delete:
+    post:
+      tags:
+      - Product Layers
+      summary: Delete product layers
+      description: 'Remove specific product layers by SKU and source identifiers. This operation permanently deletes
+
+        the layer data while preserving the base product.
+
+
+        **Use Cases:**
+
+        - Remove expired seasonal or promotional layers
+
+        - Clean up test layers after A/B testing completion
+
+        - Delete locale-specific layers when discontinuing market support
+
+        - Remove outdated customizations
+
+
+        **Important Notes:**
+
+        - Only the specified layer is deleted; base product and other layers remain intact
+
+        - Both `sku` and `source` (locale + layer) must match exactly for successful deletion
+
+        '
+      operationId: deleteProductLayers
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/ContentType'
+      - $ref: '#/components/parameters/ContentEncoding'
+      responses:
+        '200':
+          $ref: '#/components/responses/AcceptedResponse'
+        '400':
+          $ref: '#/components/responses/InvalidItemsResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeedProductLayerDelete'
+            examples:
+              DeleteSeasonalLayer:
+                summary: Delete seasonal product layer
+                description: 'Delete a seasonal product layer after the promotion period ends,  reverting the product to its base configuration.
+
+                  '
+                value:
+                - sku: red-pants
+                  source:
+                    locale: en-US
+                    layer: seasonal-winter-2024
+components:
+  schemas:
+    FeedProductLayerDelete:
+      title: Catalog Product Layer delete payload
+      type: object
+      required:
+      - sku
+      - source
+      properties:
+        sku:
+          type: string
+          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
+          example: red-pants
+        source:
+          $ref: '#/components/schemas/SourceLayer'
+    ProductExternalId:
+      title: External Ids
+      type: object
+      required:
+      - id
+      - origin
+      properties:
+        id:
+          type: string
+          description: External ID of the product.
+        origin:
+          type: string
+          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
+    ProductAttribute:
+      title: Product Attribute
+      type: object
+      required:
+      - code
+      - values
+      properties:
+        code:
+          type: string
+          description: Product Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
+        variantReferenceId:
+          type:
+          - string
+          - 'null'
+          description: 'The variant reference ID establishes a link between a product variant and the corresponding
+
+            [Option Value ID](#operation/createProducts!path=options/values/id&t=request) in a configurable product.
+
+
+            A variant reference ID can be specified only for a product that represents a variant of a configurable product.
+
+            '
+    ProductLink:
+      title: Links
+      required:
+      - type
+      - sku
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'Product link type. Merchants can define custom types in addition to the predefined values.
+
+            - `VARIANT_OF` link type must be specified to establish a connection to the configurable product SKU.
+
+            - `IN_BUNDLE` link type must be specified to establish a connection to the bundle product SKU.
+
+            '
+        sku:
+          type: string
+          description: Product SKU
+      description: Product association
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    ProductMetaAttribute:
+      title: Meta Attributes
+      description: Meta attributes that are specified in <meta> tags.
+      type: object
+      properties:
+        title:
+          type: string
+          description: A meta title
+        keywords:
+          type: array
+          description: A meta keywords
+          items:
+            type: string
+        description:
+          type: string
+          description: A meta description
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    400ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: FAILED
+        message:
+          type: string
+          description: Error summary.
+        errors:
+          type: array
+          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
+          items:
+            $ref: '#/components/schemas/FeedItemFailedValidationResult'
+      example:
+        status: FAILED
+        message: Items validation failed for 2 items
+        errors:
+        - itemIndex: 0
+          code: status
+          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
+          value: active
+        - itemIndex: 1
+          code: source
+          message: required property 'source' not found
+          value: ''
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    FeedProductLayer:
+      title: Catalog Product Layer payload
+      type: object
+      required:
+      - sku
+      - source
+      properties:
+        sku:
+          type: string
+          description: SKU (Stock Keeping Unit) that uniquely identifies the base product this layer will modify. Must match an existing product SKU in the catalog.
+          example: red-pants
+        source:
+          $ref: '#/components/schemas/SourceLayer'
+        name:
+          type: string
+          description: Product display name that will override the base product name. Use for localized names, seasonal branding, or promotional titles.
+          example: Premium Red Winter Pants - Limited Edition
+        description:
+          type:
+          - string
+          - 'null'
+          description: Detailed product description that replaces the base product description. Use for localized content, seasonal messaging, or enhanced marketing copy.
+          example: Stay warm and stylish with our premium red winter pants. Features thermal lining and water-resistant fabric perfect for cold weather adventures.
+        shortDescription:
+          type:
+          - string
+          - 'null'
+          description: Brief product summary that appears in product listings and search results. Override for concise, layer-specific messaging.
+          example: Premium thermal-lined winter pants in classic red
+        metaTags:
+          $ref: '#/components/schemas/ProductMetaAttribute'
+        attributes:
+          type: array
+          description: Product attributes that will be merged with base product attributes. Use to add layer-specific variants, localized values, or seasonal properties.
+          items:
+            $ref: '#/components/schemas/ProductAttribute'
+        images:
+          type: array
+          description: Product images that will be merged with base product images. Use to add seasonal imagery, locale-specific photos, or promotional visuals.
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        links:
+          type: array
+          description: Related product SKUs that will be merged with base product links. Use to add seasonal recommendations, locale-specific cross-sells, or promotional bundles.
+          items:
+            $ref: '#/components/schemas/ProductLink'
+        externalIds:
+          type: array
+          description: External system identifiers that will be merged with base product external IDs. Use to add layer-specific tracking codes, campaign IDs, or integration references.
+          items:
+            $ref: '#/components/schemas/ProductExternalId'
+    ProductImage:
+      title: Product Image
+      type: object
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          description: Media resource URL
+        label:
+          type: string
+          description: Media resource label
+        roles:
+          type: array
+          description: 'Roles associated with this image that determine how the image is used on the storefront.
+
+            - `BASE`: Product image is visible as a main image on the Product Detail Page.
+
+            - `SMALL`: Product image is visible as a main image on the Category or search result page or other product listing pages.
+
+            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
+
+            - `SWATCH`: A swatch can be used to illustrate the color, pattern, or texture.
+
+            '
+          items:
+            enum:
+            - BASE
+            - SMALL
+            - THUMBNAIL
+            - SWATCH
+        customRoles:
+          type: array
+          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
+
+            '
+          items:
+            type: string
+    SourceLayer:
+      title: Catalog layer source
+      description: "Identifies the source context for a product layer, combining locale and layer name to create \na unique layer identifier. This allows for precise targeting of content overrides.\n"
+      type: object
+      required:
+      - layer
+      properties:
+        locale:
+          type: string
+          description: "ISO locale code (for example, \"en-US\", \"fr-FR\", \"de-DE\") that specifies the target market or language. \nWhen omitted, the layer applies globally across all locales. Use for market-specific customizations.\n"
+          example: en-US
+        layer:
+          type: string
+          description: "Unique identifier for the layer within the product's layer hierarchy. Use descriptive names \nthat indicate the layer's purpose (for example, \"seasonal-winter-2024\", \"promotional-black-friday\", \"a-b-test-variant\").\n"
+          example: seasonal-winter-2024
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+  responses:
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
+    InvalidItemsResponse:
+      x-summary: Request rejected
+      description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
+
+
+        Common causes of validation errors include:
+
+
+        * **Invalid SKU**: SKU does not exist in the catalog
+
+        * **Invalid Price Book**: Price book ID does not exist
+
+        * **Invalid Discount Code**: Duplicate or invalid discount codes
+
+        * **Invalid Tier Quantities**: Quantities not in ascending order or less than 2
+
+        * **Configurable Product Price**: Attempting to set price for configurable product SKU
+
+        * **Invalid Price Format**: Non-numeric or negative price values
+
+        * **Incorrect Category Slug**: Invalid category slug format
+
+        * **Incorrect hierarchy configuration**: Misconfiguration of price book parent-child relationship
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/400ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+externalDocs:
+  url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
+  description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

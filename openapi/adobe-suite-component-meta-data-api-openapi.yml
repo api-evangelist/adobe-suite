@@ -1,0 +1,834 @@
+openapi: 3.2.0
+info:
+  description: "The endpoints described here are routed through analytics.adobe.io. In order to use these endpoints you must create an oAuth client that is subscribed to access the Adobe Analytics Reporting API. \n\n To view the API References for non-core Analytics 2.0 APIs, select the **API Reference** drop-down menu at the top of the page. \n\n Note: Adobe may add optional request and response members (name/value pairs) to existing API objects at any time and without notice or changes in versioning. Adobe recommends that you refer to the API documentation of any third-party tool you integrate with our APIs so that such additions are ignored in processing if not understood. If implemented properly, such additions are non-breaking changes for your implementation. Adobe will not remove parameters or add required parameters without first providing standard notification through release notes."
+  title: Adobe Analytics Component Meta Data API
+  version: '2.0'
+servers:
+- url: https://analytics.adobe.io/api
+tags:
+- name: Component Meta Data
+paths:
+  /{globalCompanyId}/componentmetadata/shares:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve components shared by user
+      description: ''
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: includeType
+        in: query
+        description: Include additional shares not owned by the user
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - sharedTo
+      - name: userid
+        in: query
+        description: The user ID to return details for. Only admins may use this option.
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Share'
+        '500':
+          description: Unable to retrieve list of components.
+    post:
+      tags:
+      - Component Meta Data
+      summary: Share component with user
+      description: 'Note that only the following component types are currently supported: "segment", "project"<br>There are three valid values for "shareToType":<br><b>"all"</b>: Shares the component to all users in the organization. For this operation, "shareToId" is not required (ignored if sent)<br><b>"user"</b>: Shares the component with a specific user. For this operation, "shareToId" (the loginId of the user to share to) is required.<br><b>"group"</b>: Shares the component with an entire custom user group as defined in the Admin Console. For this operation, "shareToId" (the groupId of the group to share to) is required.'
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: locale
+        in: query
+        description: Locale
+        required: false
+        schema:
+          type: string
+          default: en_US
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '500':
+          description: Unable to share component
+        '403':
+          description: Permission error; user does not have access share the component
+        '400':
+          description: Invalid component type
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Share'
+        description: JSON-formatted Share object containing key-value pairs that conform to the Share schema
+    put:
+      tags:
+      - Component Meta Data
+      summary: Update shared components with users
+      description: 'Warning: Deletes and overwrites all pre-existing shares for given components. Create one/many shares for one/many components at once. For each component object in the passed list, the given shares will replace the current set of shares for each component. For example, if one of the components was previously shared with additional users, and that share is not passed in here, it will no longer be shared with them.<br>'
+      operationId: modifyShares
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: locale
+        in: query
+        description: Locale
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: useCache
+        in: query
+        description: Use caching for faster requests
+        required: false
+        schema:
+          type: boolean
+          default: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedComponent'
+        '500':
+          description: Unable to save list of component shares
+        '403':
+          description: Permission error; user does not have access for the requested operation
+        '400':
+          description: Invalid component type, or mixed component types on request (only one type per request)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/SharedComponent'
+        description: JSON-formatted ARRAY of objects containing key-value pairs that conform to the schema
+  /{globalCompanyId}/componentmetadata/shares/component/search:
+    post:
+      tags:
+      - Component Meta Data
+      summary: Create search for shared components
+      description: ''
+      operationId: searchComponentTags
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: locale
+        in: query
+        description: Locale
+        required: false
+        schema:
+          type: string
+          default: en_US
+      - name: expansion
+        in: query
+        description: Comma-delimited list of additional project metadata fields to include on response.
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - sharesFullName
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSharedComponent'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComponentSearch'
+        description: items to search for
+  /{globalCompanyId}/componentmetadata/shares/{id}:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve details of share by ID
+      description: ''
+      operationId: getShare
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The share ID to return details for
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '500':
+          description: Unable to retrieve share
+        '403':
+          description: Permission error; user does not have access to the share
+        '400':
+          description: Invalid component type
+    delete:
+      tags:
+      - Component Meta Data
+      summary: Delete share by ID
+      description: Delete by shareId and remove that share from all associated components.
+      operationId: deleteShare_1
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The shareId to be deleted
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: query
+        description: Locale
+        required: false
+        schema:
+          type: string
+          default: en_US
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+        '500':
+          description: Unable to delete share
+        '403':
+          description: Permission error; user does not have access to delete the component
+  /{globalCompanyId}/componentmetadata/shares/sharedto/me:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve component IDs shared with user
+      description: ''
+      operationId: findAllSharesToCurrentUser
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: componentType
+        in: query
+        description: ComponentType to return
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                uniqueItems: true
+  /{globalCompanyId}/componentmetadata/tags/component/search:
+    post:
+      tags:
+      - Component Meta Data
+      summary: Create search for component tags
+      description: ''
+      operationId: searchComponentTags_2
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaggedComponent'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComponentSearch'
+        description: items to search for
+  /{globalCompanyId}/componentmetadata/tags:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve tags for current user company
+      description: ''
+      operationId: findAllForCompany
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: limit
+        in: query
+        description: Number of results per page
+        required: false
+        schema:
+          type: integer
+          default: 10
+      - name: page
+        in: query
+        description: Page number (base 0 - first page is "0")
+        required: false
+        schema:
+          type: integer
+          default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '500':
+          description: Unable to retrieve list of tags for user.
+    post:
+      tags:
+      - Component Meta Data
+      summary: Create tags for current user company
+      description: Allows creation of a new tag and applies that new tag to the passed component
+      operationId: saveTagList
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '500':
+          description: Unable to save list of tags.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Tag'
+        description: JSON-formatted array of Tag objects containing key-value pairs
+    delete:
+      tags:
+      - Component Meta Data
+      summary: Delete tags from components
+      description: Removes all tags from the passed componentIds. Note that currently this is done in a single DB query, so there is a single combined response for the entire operation.
+      operationId: deleteTagItems
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: componentIds
+        in: query
+        description: Comma-separated list of componentIds to operate on.
+        required: true
+        schema:
+          type: string
+      - name: componentType
+        in: query
+        description: The component type to operate on.
+        required: true
+        schema:
+          type: string
+          enum:
+          - segment
+          - dashboard
+          - bookmark
+          - calculatedMetric
+          - project
+          - dateRange
+          - metric
+          - dimension
+          - virtualReportSuite
+          - scheduledJob
+          - alert
+          - classificationSet
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    type: object
+        '500':
+          description: Unable to remove tags for given components.
+        '400':
+          description: Invalid component type.
+  /{globalCompanyId}/componentmetadata/tags/search:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve component tags by component ID and component type
+      description: Given a componentId, return all tags associated with that component
+      operationId: getTagListByComponentIdAndComponentType
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: componentId
+        in: query
+        description: The componentId to operate on. Currently this is just the segmentId.
+        required: true
+        schema:
+          type: string
+      - name: componentType
+        in: query
+        description: The component type to operate on.
+        required: true
+        schema:
+          type: string
+          enum:
+          - segment
+          - dashboard
+          - bookmark
+          - calculatedMetric
+          - project
+          - dateRange
+          - metric
+          - dimension
+          - virtualReportSuite
+          - scheduledJob
+          - alert
+          - classificationSet
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '500':
+          description: Unable to retrieve tags for given component.
+        '400':
+          description: Invalid component type.
+  /{globalCompanyId}/componentmetadata/tags/tagitems:
+    put:
+      tags:
+      - Component Meta Data
+      summary: Update tags for component
+      description: 'Warning: Deletes and overwrites all pre-existing associations. This endpoint allows many tags at once to be created/deleted. Any tags passed to this endpoint will become the *only* tags for that componentId (all other tags will be removed).'
+      operationId: saveTagComponentList
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaggedComponent'
+        '500':
+          description: Unable to save tag list.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaggedComponent'
+        description: JSON-formatted object containing key-value pairs that conform to the schema
+  /{globalCompanyId}/componentmetadata/tags/{id}:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve tag by ID
+      description: ''
+      operationId: getTagById
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: Tag ID to be retrieved
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '500':
+          description: Unexpected server error while trying to retrieve tag
+        '404':
+          description: Unable to find a tag with the given ID
+    delete:
+      tags:
+      - Component Meta Data
+      summary: Delete tag from component
+      description: Deletes by tag ID. This removes the tag from any or all components associated with the specified tag ID.
+      operationId: deleteTag
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: id
+        in: path
+        description: The tagId to be deleted
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties:
+                    type: object
+        '500':
+          description: Unable to delete the given tagId.
+        '404':
+          description: The given tagId does not exist
+  /{globalCompanyId}/componentmetadata/tags/tagnames:
+    get:
+      tags:
+      - Component Meta Data
+      summary: Retrieve component IDs associated with tag names
+      description: Given a comma separated list of tag names, return component ids associated with them.
+      operationId: getComponentsByTagName
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: tagNames
+        in: query
+        description: Comma separated list of tag names.
+        required: true
+        schema:
+          type: string
+      - name: componentType
+        in: query
+        description: The component type to operate on.
+        required: true
+        schema:
+          type: string
+          enum:
+          - segment
+          - dashboard
+          - bookmark
+          - calculatedMetric
+          - project
+          - dateRange
+          - metric
+          - dimension
+          - virtualReportSuite
+          - scheduledJob
+          - alert
+          - classificationSet
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '500':
+          description: Unable to retrieve tags for given component.
+        '400':
+          description: Invalid component type.
+components:
+  schemas:
+    SavedSharedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/Share'
+    TaggedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    SharedToEntity:
+      type: object
+      properties:
+        shareToId:
+          type: integer
+          format: int32
+        shareToImsId:
+          type: string
+        shareToType:
+          type: string
+        accessLevel:
+          type: string
+    Share:
+      type: object
+      properties:
+        shareId:
+          type: string
+        imsOrgId:
+          type: string
+        shareToId:
+          type: integer
+          format: int32
+        shareToImsId:
+          type: string
+        shareToType:
+          type: string
+        shareFromImsId:
+          type: string
+        componentType:
+          type: string
+        componentId:
+          type: string
+        shareToDisplayName:
+          type: string
+        shareToLogin:
+          type: string
+        accessLevel:
+          type: string
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: the tag id
+        name:
+          type: string
+          description: 'the tag name '
+        description:
+          type: string
+          description: the tag description
+        components:
+          type: array
+          description: the list of components that have been tagged with this tag
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/TaggedComponent'
+      description: Tag Model
+    ComponentSearch:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    SharedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/SharedToEntity'
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
+      required: true
+      schema:
+        type: string

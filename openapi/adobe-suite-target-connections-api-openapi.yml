@@ -1,0 +1,1604 @@
+openapi: 3.2.0
+info:
+  title: Adobe Suite Target connections API
+  version: '1.0'
+  description: 'Operations tagged Target connections across 2 of this provider''s published API definitions: adobe-suite-aep-destinations-openapi.yaml, adobe-suite-aep-flow-service-openapi.yaml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://{environment}.adobe.io/data/foundation/flowservice
+  description: Adobe IO gateway endpoint
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Target connections
+  description: Target connections create and manage a destination connection to any location where exported data will land. Target connections contain information regarding data destination, data format, and the target connection ID needed to create a destination dataflow. A target connection instance is specific to a tenant and organization. <br><br> Before you create a target connection, you <i>must</i> create a base connection.
+paths:
+  /targetConnections:
+    get:
+      tags:
+      - Target connections
+      summary: Retrieve a list of destination target connections
+      description: 'You can retrieve a list of all destination target connections for your organization by making a GET request to the `/targetConnections` endpoint.
+
+
+        You can use query parameters to return only the target connections for a specific destination type. To do this, pass in the `connectionSpec.id` of the desired destination by using the `property` query parameter, as shown further below.
+
+        >**NOTE**: This operation allows you to retrieve a maximum of 100 entities. The most recently created or updated entities are returned first. Use filters to return the target connections that are most relevant to you.
+
+        '
+      operationId: getTargetConnections
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      - in: query
+        name: property
+        description: 'A comma-separated list of top-level object properties to be returned in the response. Used to cut down the amount of data returned in the response body. For example, `property=id==f2d1a98b-6b8c-420b-80a1-696c3f192eb2,b6730e09-7da6-40e2-b5cf-289545056dc3,49d17eff-9fa7-4e92-b84e-ab65fcb4730a`.
+
+          '
+        required: false
+        schema:
+          type: string
+        examples:
+          filterS3Connection:
+            summary: Filter connection for Amazon S3 destination
+            value: connectionSpec.id==4fce964d-3f37-408f-9778-e597338a21ee
+          filterSftpConnection:
+            summary: Filter connection for SFTP destination
+            value: connectionSpec.id==36965a81-b1c6-401b-99f8-22508f1e6a26
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/orderby'
+      - $ref: '#/components/parameters/count'
+      - $ref: '#/components/parameters/continuationToken'
+      responses:
+        '200':
+          description: The specified target connection was successfully retrieved.
+          x-summary: Target Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetConnectionItem'
+              examples:
+                Amazon_S3_Target_Connection:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection'
+                SFTP_Target_Connection:
+                  $ref: '#/components/examples/SFTP_Target_Connection'
+                Amazon_S3_Target_Connection_Segment_V2:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection_Segment_V2'
+                Amazon_S3_Target_Connection_Dataset_V2:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection_Dataset_V2'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified target connection ID was not found. The resource may have been deleted, or the requested path was entered incorrectly.
+          x-summary: Not Found - Target Connection ID Missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: targetConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+                errorDetails: targetConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Target connections
+      summary: Create a target connection
+      description: 'Create a target connection to manage a destination connection to any location where exported data will land.  In the request payload, specify information regarding the data destination and data format. The HTTP response returns the target connection ID, which you''ll later need to create a destination dataflow.
+
+        '
+      operationId: postTargetConnection
+      parameters:
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/Content-type'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/Create_S3_Target_Connection_Request'
+              - $ref: '#/components/schemas/Create_SFTP_Target_Connection_Request'
+              - $ref: '#/components/schemas/Create_S3_Target_Connection_Request_V2'
+              - $ref: '#/components/schemas/Create_SFTP_Target_Connection_Request_V2'
+            examples:
+              Create_SFTP_Target_Connection:
+                $ref: '#/components/examples/Create_SFTP_Target_Connection'
+              Create_S3_Target_Connection_Dataset:
+                $ref: '#/components/examples/Create_S3_Target_Connection_Dataset'
+              Create_S3_Target_Connection_Segment:
+                $ref: '#/components/examples/Create_S3_Target_Connection_Segment'
+      responses:
+        '201':
+          description: A new target connection was successfully created. The response contains the unique identifier (ID) and the etag value of the target connection.
+          x-summary: Target Connection Created Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Create_Base_Connection_Response'
+              examples:
+                Create_Base_Connection_Response:
+                  $ref: '#/components/examples/Create_Base_Connection_Response'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: connectionSpec.version 'version' is required for spec info. Make sure to include the version parameter alongside the connectionSpec. version is usually "1.0".
+          x-summary: Unprocessable Entity - Version Parameter Missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    servers:
+    - url: https://{environment}.adobe.io/data/foundation/flowservice
+      description: Adobe IO gateway endpoint
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /targetConnections/{id}:
+    get:
+      tags:
+      - Target connections
+      summary: Retrieve the details of a target connection
+      description: 'You can retrieve detailed information about a specific target connection by making a GET request to the `/targetConnections` endpoint and providing the ID of the target connection you want to inspect.
+
+        '
+      operationId: getTargetConnectionById
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the target connection you are looking to retrieve.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      responses:
+        '200':
+          description: The specified target connection was successfully retrieved.
+          x-summary: Target Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetConnectionItem'
+              examples:
+                Amazon_S3_Target_Connection:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection'
+                SFTP_Target_Connection:
+                  $ref: '#/components/examples/SFTP_Target_Connection'
+                Amazon_S3_Target_Connection_Segment_V2:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection_Segment_V2'
+                Amazon_S3_Target_Connection_Dataset_V2:
+                  $ref: '#/components/examples/Amazon_S3_Target_Connection_Dataset_V2'
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified target connection ID was not found. The resource may have been deleted, or the requested path was entered incorrectly.
+          x-summary: Not Found - Target Connection ID Missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: targetConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+                errorDetails: targetConnections not found with id = [4890fc95-5a1f-4983-94bb-e060c08e3f]
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Target connections
+      summary: Delete a target connection
+      description: 'You can delete the specified source connection by making a DELETE request to the `/targetConnections` endpoint and providing the ID of the target connection that you wish to delete in the request path.
+
+        '
+      operationId: deleteTargetConnectionById
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the target connection you are looking to delete.
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/Authorization'
+      - $ref: '#/components/parameters/XApiKey'
+      - $ref: '#/components/parameters/XImsOrgId'
+      - $ref: '#/components/parameters/XSandboxId'
+      - $ref: '#/components/parameters/Accept'
+      responses:
+        '202':
+          description: A successful response returns HTTP status 202 (No Content) and a blank body. You can confirm the deletion by attempting a lookup (GET) request to the target connection. The API will return an HTTP 404 (Not Found) error, indicating that the target connection has been deleted.
+          x-summary: Deletion Accepted - Target Connection Marked for Deletion
+        '401':
+          description: The token provided in the Authorization header is invalid.
+          x-summary: Invalid Authorization Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: 401013
+                message: Oauth token is not valid
+        '403':
+          description: You are not authorized to perform this operation
+          x-summary: Authorization Error - Access Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The specified target connection ID was not found. The resource may have been deleted, or the requested path was entered incorrectly.
+          x-summary: Not Found - Target Connection ID Missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                errorMessage: targetConnections not found with id = [ca5c6e9a-8559-4a08-97a5-f15b756da600-]
+                errorDetails: targetConnections not found with id = [ca5c6e9a-8559-4a08-97a5-f15b756da600-]
+        '500':
+          description: An Internal error occurred.
+          x-summary: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    servers:
+    - url: https://{environment}.adobe.io/data/foundation/flowservice
+      description: Adobe IO gateway endpoint
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /targetConnections/{TARGET_CONNECTION_ID}/action:
+    post:
+      tags:
+      - Target connections
+      summary: Performs a state transition action on an existing target connection.
+      description: Use this endpoint to perform a state transition action on an existing target connection.
+      operationId: performAction_2
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: TARGET_CONNECTION_ID
+        in: path
+        description: The ID of the queried target connection.
+        required: true
+        schema:
+          type: string
+      - name: op
+        in: query
+        description: The operative action to perform against the queried target connection.
+        required: true
+        schema:
+          type: string
+          enum:
+          - PUBLISH
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the target connection with an updated state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTargetConnectionResponse'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+  /targetConnections/{TARGET_CONNECTION_ID}:
+    get:
+      tags:
+      - Target connections
+      summary: Retrieve a target connection
+      description: Retrieve a single target connection by making a GET request to the `/targetConnections/{TARGET_CONNECTION_ID}` endpoint while providing the ID of the target connection you want to retrieve.
+      operationId: retrieveTargetConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: TARGET_CONNECTION_ID
+        in: path
+        description: The ID of the target connection you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified target connection in JSON format.
+          x-summary: Target Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetConnectionsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    delete:
+      tags:
+      - Target connections
+      summary: Delete a target connection
+      description: Use this endpoint to delete an instance of a target connection.
+      operationId: deleteTargetConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: TARGET_CONNECTION_ID
+        in: path
+        description: The ID of the target connection you want to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The target connection was successfully deleted (No content).
+          x-summary: Target Connection Deleted
+          content: {}
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    patch:
+      tags:
+      - Target connections
+      summary: Update a target connection
+      description: Use this endpoint to update a target connection.
+      operationId: patchTargetConnection
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: if-match
+        in: header
+        description: A parameter required when updating a connection or a dataflow. When making a PUT or PATCH request, you must add an `if-match` header parameter and include the current version/etag of the resource that you want to update to complete the update.
+        required: true
+        schema:
+          type: string
+      - name: TARGET_CONNECTION_ID
+        in: path
+        description: The ID of the target connection you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: '- **op** - **(Required)** The operation call used to define the action needed to update the connection. Operations include `add`, `replace`, and `remove`.
+
+          - **path** - (Optional) The path of the parameter to be updated.
+
+          - **value** - **(Required)** The new value you want to update your parameter with.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatchInstruction'
+        required: true
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified target connection in JSON format.
+          x-summary: Target Connection Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetConnectionsListResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+      x-codegen-request-body-name: body
+    servers:
+    - url: //{environment}.adobe.io/data/foundation/flowservice
+      variables:
+        environment:
+          default: platform
+          enum:
+          - platform
+          - platform-stage
+components:
+  parameters:
+    XApiKey:
+      in: header
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    orderby:
+      in: query
+      name: orderby
+      description: Sort response by specified fields separated by `,` and/or prefix field with `-` for descending order.
+      required: false
+      schema:
+        type: string
+    Accept:
+      in: header
+      name: Accept
+      description: An optional content negotiation header which allows you to use a specific version of the API. If you don't use it, the HTTP responses fall back to the latest version of the API.
+      schema:
+        type: string
+        default: application/json; version=1
+      required: false
+    continuationToken:
+      in: query
+      name: continuationToken
+      description: A token for fetching records for next page. This is a system-generated token.
+      required: false
+      schema:
+        type: string
+    count:
+      in: query
+      name: count
+      description: A boolean value specifying if the count of resources should be returned. By default the count is not returned (`count=false`).
+      required: false
+      schema:
+        type: boolean
+    Content-type:
+      in: header
+      name: Content-type
+      description: The type of content being sent in the body of the request. Should be 'application/json'.
+      schema:
+        type: string
+        default: application/json
+      required: true
+    XSandboxId:
+      in: header
+      name: x-sandbox-name
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+      schema:
+        type: string
+      required: true
+    Authorization:
+      in: header
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    limit:
+      in: query
+      name: limit
+      description: Limit response to a specific number of objects. Must be a positive number. For example, `limit=10`.
+      required: false
+      schema:
+        type: integer
+        maximum: 100
+    XImsOrgId:
+      in: header
+      name: x-gw-ims-org-id
+      description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+  schemas:
+    SFTPTargetConnectionRequest_V2:
+      type: object
+      title: (Beta) Amazon Target Connection Request
+      description: 'The parameters in the target connection payload which are required to export data to an Amazon S3 instance.
+
+        '
+      required:
+      - params
+      - connectionSpec
+      properties:
+        params:
+          $ref: '#/components/schemas/SFTPTargetConnectionParams_V2'
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+              enum:
+              - 36965a81-b1c6-401b-99f8-22508f1e6a26
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    AmazonS3TargetConnectionRequest_V2:
+      type: object
+      title: (Beta) Amazon Target Connection Request
+      description: 'The parameters in the target connection payload which are required to export data to an Amazon S3 instance.
+
+        '
+      required:
+      - params
+      - connectionSpec
+      properties:
+        params:
+          $ref: '#/components/schemas/AmazonS3TargetConnectionParams_V2'
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+              enum:
+              - 4fce964d-3f37-408f-9778-e597338a21ee
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    BaseSFTPTargetConnectionParams_V2:
+      type: object
+      title: (Beta) SFTP Base Target Connection Parameters
+      required:
+      - remotePath
+      properties:
+        remotePath:
+          type: string
+          title: Folder Path
+          description: The path to the folder location in your SFTP server where the exported files will be deposited.
+    Create_S3_Target_Connection_Request_V2:
+      type: object
+      title: (Beta) Amazon S3 Target Connection Request
+      description: 'API request to create a target connection to an Amazon S3 instance, specifying data export format and storage location details for activating either segments or datasets.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/GenericTargetConnectionRequest'
+      - $ref: '#/components/schemas/AmazonS3TargetConnectionRequest_V2'
+    TargetConnectionItem:
+      type: object
+      title: Target Connection Item
+      description: Parameters specific to target connection.
+      required:
+      - id
+      - createdAt
+      - updatedAt
+      - createdBy
+      - updatedBy
+      - createdClient
+      - updatedClient
+      - sandboxId
+      - sandboxName
+      - imsOrgId
+      - name
+      - baseConnectionId
+      - connectionSpec
+      - state
+      - params
+      - version
+      - etag
+      - inheritedAttributes
+      properties:
+        id:
+          type: string
+          title: Target Connection ID
+          description: The ID of the target connection.
+        createdAt:
+          type: integer
+          title: Connection creation time
+          description: The epoch time in milliseconds when the target connection was created.
+        updatedAt:
+          type: integer
+          title: Connection update time
+          description: The epoch time in milliseconds when the target connection was last updated.
+        createdBy:
+          type: string
+          title: Created User
+          description: The Adobe ID of the Identity Management System (IMS) user who created the target connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        updatedBy:
+          type: string
+          title: Updated User
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the target connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        createdClient:
+          type: string
+          title: Created client
+          description: The Adobe Identity Management System (IMS) client who created the target connection. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+        updatedClient:
+          type: string
+          title: Updated client
+          description: The Adobe Identity Management System (IMS) client who last updated the target connection. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+        imsOrgId:
+          type: string
+          title: IMS org ID
+          description: The organization ID to which the target connection belongs.
+        sandboxId:
+          type: string
+          title: Sandbox ID
+          description: The ID of the sandbox in which the target connection was created.
+        sandboxName:
+          type: string
+          title: Sandbox name
+          description: The name of the sandbox in which the target connection was created.
+        name:
+          type: string
+          title: Connection name
+          description: The name of the target connection.
+        baseConnectionId:
+          type: string
+          title: Base connection ID
+          description: The ID of the base connection used to create the target connection.
+        etag:
+          type: string
+          title: eTag
+          description: The updated, unique eTag returned by the HTTP response. The eTag value updates with every successful update of a target connection.
+        state:
+          type: string
+          title: Connection state
+          description: 'Represents the current state of the target connection. A target connection can be `enabled` or `disabled`.
+
+            '
+          enum:
+          - enabled
+          - disabled
+        params:
+          description: Parameters specific to the destination type.
+          oneOf:
+          - $ref: '#/components/schemas/AmazonS3TargetConnectionParams'
+          - $ref: '#/components/schemas/SFTPTargetConnectionParams'
+          - $ref: '#/components/schemas/AmazonS3TargetConnectionParams_V2'
+          - $ref: '#/components/schemas/SFTPTargetConnectionParams_V2'
+        inheritedAttributes:
+          type: object
+          title: Inherited attributes
+          description: Attributes inherited from the base connection used when creating this connection.
+          properties:
+            baseConnection:
+              type: string
+              title: Inherited base connection ID
+              description: ID of the base connection used when creating this target connection.
+            connectionSpec:
+              type: string
+              title: Type
+              description: The connection spec used for the base connection.
+              properties:
+                id:
+                  type: string
+                  title: Id
+                  description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+                version:
+                  type: string
+                  title: Version
+                  description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    SFTPTargetConnectionRequest:
+      type: object
+      title: SFTP target connection parameters
+      description: 'The parameters in the base connection payload which are required to authorize a connection to an SFTP instance.
+
+        '
+      required:
+      - params
+      - connectionSpec
+      properties:
+        params:
+          type: object
+          required:
+          - remotePath
+          title: Target connection parameters
+          description: Request model to capture target connection details for SFTP destination connections.
+          properties:
+            remotePath:
+              type: string
+              title: Remote Path
+              description: The path in your SFTP location where the data will be exported.
+        connectionSpec:
+          type: object
+          title: Connection Spec
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+              enum:
+              - 64ef4b8b-a6e0-41b5-9677-3805d1ee5dd0
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    SFTPTargetConnectionParams:
+      type: object
+      title: SFTP target connection parameters
+      description: Specific parameters to establish a target connection to an SFTP instance.
+      properties:
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. For SFTP destinations, use the connection spec ID `64ef4b8b-a6e0-41b5-9677-3805d1ee5dd0`.
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+        params:
+          type: object
+          description: Specific parameters to establish a target connection to an SFTP instance
+          required:
+          - remotePath
+          properties:
+            remotePath:
+              type: string
+              title: Remote Path
+              description: The path in your SFTP location where the data will be exported.
+    Create_Base_Connection_Response:
+      title: Create Base Connection Response
+      description: API response for a successful create base connection operation.
+      allOf:
+      - $ref: '#/components/schemas/GenericEntityCreationResponse'
+    ErrorResponse:
+      type: object
+    AmazonS3TargetConnectionParams:
+      type: object
+      title: Amazon S3 target connection parameters
+      description: Specific parameters to establish a target connection to an Amazon S3 instance.
+      properties:
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. For Amazon S3 destinations, use the connection spec ID `4890fc95-5a1f-4983-94bb-e060c08e3f81`.
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+        params:
+          type: object
+          description: Specific parameters to establish a target connection to an Amazon S3 instance
+          required:
+          - bucketName
+          - path
+          properties:
+            bucketName:
+              type: string
+              title: Amazon S3 bucket name
+              description: The name of your Amazon S3 bucket, where the data will be exported.
+              pattern: (?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)
+            path:
+              type: string
+              title: Path
+              description: The path to the folder location in your Amazon S3 storage where the exported files will be deposited.
+    AmazonS3TargetConnectionRequest:
+      type: object
+      title: Amazon S3 target connection parameters
+      description: 'The parameters in the base connection payload which are required to authorize a connection to an Amazon S3 instance.
+
+        '
+      required:
+      - params
+      - connectionSpec
+      properties:
+        params:
+          type: object
+          required:
+          - bucketName
+          - path
+          title: Target connection parameters
+          description: Request model to capture target connection details for Amazon S3.
+          properties:
+            bucketName:
+              type: string
+              title: Amazon S3 bucket name
+              description: The name of your Amazon S3 bucket, where the data will be exported.
+              pattern: (?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)
+            path:
+              type: string
+              title: Path
+              description: The path to the folder location in your Amazon S3 storage where the exported files will be deposited.
+        connectionSpec:
+          type: object
+          title: Connection Spec.
+          description: Request model for connection spec information.
+          required:
+          - id
+          - version
+          properties:
+            id:
+              type: string
+              title: Id
+              description: Connection spec ID. Each destination connector has a unique connection spec ID, which must be used when establishing base, source, or target connections for that specific destination.
+              enum:
+              - 4890fc95-5a1f-4983-94bb-e060c08e3f81
+            version:
+              type: string
+              title: Version
+              description: Connection spec version. This value is `1.0` unless clearly specified otherwise.
+    Create_S3_Target_Connection_Request:
+      type: object
+      title: Amazon S3 Target Connection Request
+      description: 'API request to create a target connection to an Amazon S3 instance, specifying data export format and storage location details.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/GenericTargetConnectionRequest'
+      - $ref: '#/components/schemas/AmazonS3TargetConnectionRequest'
+    SegmentTargetConnectionParams_V2:
+      title: (Beta) Segment specific target connection parameters
+      type: object
+      required:
+      - fileType
+      properties:
+        fileType:
+          type: string
+          title: File Type
+          description: File format to export profiles.
+          enum:
+          - CSV
+          - JSON
+          - PARQUET
+        csvOptions:
+          title: CSV Options
+          description: 'Configurations for CSV files (applicable only if `fileType = CSV`). For more details about these options, please refer to documentation: https://experienceleague.adobe.com/docs/experience-platform/destinations/ui/batch-destinations-file-formatting-options.html
+
+            '
+          type: object
+          properties:
+            delimiter:
+              title: Delimiter
+              description: CSV file delimiter
+              type: string
+              enum:
+              - ','
+              - "\t"
+              - '|'
+              - ;
+              - ':'
+              default: ','
+            quote:
+              title: Quote Character
+              description: Quote character. Use a JSON empty string(`""`) to specify Null character(`\u0000`) as the quote character.
+              type: string
+              enum:
+              - '"'
+              - ''
+              default: '"'
+            escape:
+              title: Escape Character
+              description: Escape character
+              type: string
+              enum:
+              - \
+              - ''''
+              default: \
+            nullValue:
+              title: Null Value
+              description: The output value of `null` fields.
+              type: string
+              enum:
+              - 'null'
+              - '""'
+              - ''
+              default: 'null'
+            emptyValue:
+              title: Empty Value
+              description: The output value of blank fields.
+              type: string
+              enum:
+              - 'null'
+              - '""'
+              - ''
+              default: ''
+    GenericEntityCreationResponse:
+      type: object
+      title: Flow Creation Response
+      description: API response for a successful create operation.
+      properties:
+        id:
+          type: string
+          title: Flow ID
+          description: The dataflow ID for which the API request was made.
+        etag:
+          type: string
+          title: E-Tag
+          description: An updated etag for the dataflow ID.
+    SFTPTargetConnectionParams_V2:
+      type: object
+      title: (Beta) SFTP Target Connection Parameters
+      oneOf:
+      - title: (Beta) SFTP Target Connection Parameters for Datasets
+        allOf:
+        - $ref: '#/components/schemas/BaseTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/DatasetTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/BaseSFTPTargetConnectionParams_V2'
+      - title: (Beta) SFTP Target Connection Parameters for Segments
+        allOf:
+        - $ref: '#/components/schemas/BaseTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/SegmentTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/BaseSFTPTargetConnectionParams_V2'
+    Create_SFTP_Target_Connection_Request:
+      type: object
+      title: SFTP Target Connection Request
+      description: 'API request to create a target connection to an SFTP instance, specifying data export format and storage location details.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/GenericTargetConnectionRequest'
+      - $ref: '#/components/schemas/SFTPTargetConnectionRequest'
+    Create_SFTP_Target_Connection_Request_V2:
+      type: object
+      title: (Beta) SFTP Target Connection Request
+      description: 'API request to create a target connection to an SFTP instance, specifying data export format and storage location details.
+
+        '
+      allOf:
+      - $ref: '#/components/schemas/GenericTargetConnectionRequest'
+      - $ref: '#/components/schemas/SFTPTargetConnectionRequest_V2'
+    DatasetTargetConnectionParams_V2:
+      title: Dataset specific target connection parameters
+      type: object
+      required:
+      - datasetFileType
+      properties:
+        datasetFileType:
+          type: string
+          title: Dataset File Type
+          description: File format to export datasets.
+          enum:
+          - JSON
+          - PARQUET
+    GenericTargetConnectionRequest:
+      type: object
+      title: Target Connection Request
+      description: 'A base model that outlines the common request properties across all target connection requests.
+
+        '
+      required:
+      - name
+      - baseConnectionId
+      properties:
+        name:
+          type: string
+          title: Name
+          description: The name of the target connection.
+        description:
+          type: string
+          title: Description
+          description: An optional description for the target connection.
+        baseConnectionId:
+          type: string
+          title: Base Connection ID
+          description: The ID of the base connection that specifies authentication details for the destination. Each target connection *must* have an associated base connection.
+    AmazonS3TargetConnectionParams_V2:
+      type: object
+      title: (Beta) Amazon S3 Target Connection Parameters
+      oneOf:
+      - title: (Beta) Amazon S3 Target Connection Parameters for Datasets
+        allOf:
+        - $ref: '#/components/schemas/BaseAmazonS3TargetConnectionParams_V2'
+        - $ref: '#/components/schemas/BaseTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/DatasetTargetConnectionParams_V2'
+      - title: (Beta) Amazon S3 Target Connection Parameters for Segments
+        allOf:
+        - $ref: '#/components/schemas/BaseAmazonS3TargetConnectionParams_V2'
+        - $ref: '#/components/schemas/BaseTargetConnectionParams_V2'
+        - $ref: '#/components/schemas/SegmentTargetConnectionParams_V2'
+    BaseTargetConnectionParams_V2:
+      type: object
+      title: (Beta) Base Target Connection Parameters
+      required:
+      - compression
+      properties:
+        compression:
+          type: string
+          title: Compression format
+          description: Apply compression on the file before exporting to your destination.
+          enum:
+          - NONE
+          - GZIP
+    BaseAmazonS3TargetConnectionParams_V2:
+      type: object
+      title: (Beta) Amazon S3 Base Target Connection Parameters
+      required:
+      - bucketName
+      - path
+      properties:
+        bucketName:
+          type: string
+          title: Amazon S3 bucket name
+          description: The name of your Amazon S3 bucket, where the data will be exported.
+          pattern: (?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)
+        path:
+          type: string
+          title: Path
+          description: The path to the folder location in your Amazon S3 storage where the exported files will be deposited.
+    TargetConnectionsListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetConnectionItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          description: '42'
+          format: int64
+    TargetConnectionMetaInfoDTO:
+      type: object
+      properties:
+        baseConnection:
+          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    CreateTargetConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
+        etag:
+          type: string
+          example: '"29070e1a-0000-0200-0000-638e700a0000"'
+      description: The ID and the corresponding etag of the new target connection instance.
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    TargetConnectionDataDTO:
+      type: object
+      properties:
+        format:
+          type: string
+          description: The format of the data being ingested. Data from a tabular source is formated as `tabular`. Data from a file-based source can be formatted as `parquet`, `json`, or `delimited`.
+          example: delimited
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the target XDM schema.
+              example: https://ns.adobe.com/{TENANT}/schemas/8e5fd1adf94007b936d0f8ea9e270c48dba26b7dcdad80d0
+            version:
+              type: string
+              description: The version of the XDM schema.
+              example: application/vnd.adobe.xed-full+json;version=1.0
+    CreateTargetConnectionRequest:
+      required:
+      - connectionSpec
+      - data
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the target connection.
+          example: Google Cloud Storage target connection
+        description:
+          type: string
+          example: A Google Cloud Storage Target Connection for ACME customer data
+        data:
+          $ref: '#/components/schemas/TargetConnectionDataDTO'
+        params:
+          type: object
+          properties:
+            dataSetId:
+              type: string
+              description: The ID of the target dataset required to create a target connection.
+              example: 638e6c7b5679741b63ff5c24
+        connectionSpec:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The connection specification ID that corresponds with data lake. This ID value is fixed.
+              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
+            version:
+              type: string
+              description: The version ID of the connection specification. This ID is updated every time the connection specification ID is updated.
+              example: '1.0'
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    ConnectionMetaInfoDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    TargetConnectionItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the target connection.
+          example: 1642748e-7cbc-4f3d-8274-8e7cbcaf3d97
+        createdAt:
+          type: integer
+          description: The epoch time in milliseconds when the target connection was created.
+          format: int64
+          example: 1670279178771
+        updatedAt:
+          type: integer
+          description: The epoch time in milliseconds when the target connection was created.
+          format: int64
+          example: 1670279178771
+        createdBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who created the target connection. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        updatedBy:
+          type: string
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the target connection. In the case of service tokens, the value for `updatedBy` is the same as `updatedClient`.
+          example: 28AF22BA5DE6B0B40A494036@AdobeID
+        createdClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who created the target connection. This can be an application or a user. For example, the value `exc_app` represents target connections created in the Experience Platform UI.
+          example: exc_app
+        updatedClient:
+          type: string
+          description: The Adobe Identity Management System (IMS) client who last updated the target connection. This can be an application or a user. For example, the value `exc_app` represents target connections created in the Experience Platform UI.
+          example: exc_app
+        sandboxId:
+          type: string
+          description: The unique identifier of the sandbox in which the operation will take place.
+          example: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        sandboxName:
+          type: string
+          description: The name of the sandbox in which the operation will take place. If a sandbox name is not provided then the default sandbox for the org will be used.
+          example: prod
+        imsOrgId:
+          type: string
+          description: The organization ID to which the source connection belongs to.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        name:
+          type: string
+          description: The name of the target connection.
+          example: Google Cloud Storage Target Connection
+        description:
+          type: string
+          description: An optional description that can be applied to provide further information on the target connection.
+          example: A Google Cloud Storage Target Connection for ACME customer data
+        state:
+          type: string
+          description: The state of the target connection. Possible state values include inProgress, updating, enabling, disabling, enabled, and disabled. "For example, state=`enabled`."
+          example: enabled
+        data:
+          $ref: '#/components/schemas/TargetConnectionDataDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        params:
+          type: object
+          properties:
+            dataSetId:
+              type: string
+              description: The ID of the dataset required to create a target connection.
+              example: 5ed18e0f4f90b719196f44a9
+        version:
+          type: string
+          description: The version of the target connection
+          example: '"6f00d1ea-0000-0200-0000-5ea6713e0000"'
+        etag:
+          type: string
+          description: The etag value generated and assigned to a target connection ID after a new target connection is created.
+          example: '"6f00d1ea-0000-0200-0000-5ea6713e0000"'
+        providerRefId:
+          type: string
+        inheritedAttributes:
+          $ref: '#/components/schemas/TargetConnectionMetaInfoDTO'
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
+  examples:
+    Create_SFTP_Target_Connection:
+      summary: Specify data format and storage location information to export files to an SFTP instance
+      value:
+        name: SFTP Target Connection
+        baseConnectionId: be3e2d03-6134-4566-9865-c40e0df8b718
+        params:
+          remotePath: path-to-storage-location
+        connectionSpec:
+          id: 64ef4b8b-a6e0-41b5-9677-3805d1ee5dd0
+          version: '1.0'
+    Create_Base_Connection_Response:
+      summary: Base Connection Response
+      value:
+        id: 77eeb629-f08a-48e2-8c7b-e345e246ff45
+        etag: '"ac00c7db-0000-0200-0000-62eabd5c0000"'
+    Amazon_S3_Target_Connection_Segment_V2:
+      summary: (Beta) Amazon S3 Segment Target Connection
+      value:
+        items:
+        - id: e8ebfb80-5387-454d-812d-34202541f17f
+          createdAt: 1660922583694
+          updatedAt: 1660922584231
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: (Beta) Amazon S3 Segment Target Connection
+          baseConnectionId: e95b83b3-ddf7-4b7d-9e21-e02e75d85036
+          state: enabled
+          connectionSpec:
+            id: 4fce964d-3f37-408f-9778-e597338a21ee
+            version: '1.0'
+          params:
+            mode: Server-to-server
+            csvOptions:
+              nullValue: 'null'
+              emptyValue: ''
+              escape: \
+              quote: ''
+              delimiter: ','
+            compression: NONE
+            fileType: CSV
+            path: dataexports
+            bucketName: dataexportsbucket
+          version: '"20087c1d-0000-0200-0000-6374086d0000"'
+          etag: '"20087c1d-0000-0200-0000-6374086d0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: e95b83b3-ddf7-4b7d-9e21-e02e75d85036
+              connectionSpec:
+                id: 4fce964d-3f37-408f-9778-e597338a21ee
+                version: '1.0'
+    SFTP_Target_Connection:
+      summary: SFTP target connection example
+      value:
+        items:
+        - id: 94c6fb2e-9431-42fd-aeee-c83e67c43578
+          createdAt: 1660922583694
+          updatedAt: 1660922584231
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: SFTP Target Connection
+          baseConnectionId: be3e2d03-6134-4566-9865-c40e0df8b718
+          state: enabled
+          connectionSpec:
+            id: 64ef4b8b-a6e0-41b5-9677-3805d1ee5dd0
+            version: '1.0'
+          params:
+            remotePath: path-to-storage-location
+            format: CSV
+          version: '"29020953-0000-0200-0000-62ffaad80000"'
+          etag: '"29020953-0000-0200-0000-62ffaad80000"'
+          inheritedAttributes:
+            baseConnection:
+              id: be3e2d03-6134-4566-9865-c40e0df8b718
+              connectionSpec:
+                id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+                version: '1.0'
+    Amazon_S3_Target_Connection_Dataset_V2:
+      summary: (Beta) Amazon S3 Dataset Target Connection
+      value:
+        items:
+        - id: 7f7c4442-4a06-48e2-96d7-eefcda766762
+          createdAt: 1660922583694
+          updatedAt: 1660922584231
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: (Beta) Amazon S3 Dataset Target Connection
+          baseConnectionId: 7d354d3a-fd93-48c8-821e-c7c2d7e929da
+          state: enabled
+          connectionSpec:
+            id: 4fce964d-3f37-408f-9778-e597338a21ee
+            version: '1.0'
+          params:
+            mode: Server-to-server
+            compression: GZIP
+            datasetFileType: JSON
+            path: dataexports
+            bucketName: dataexportsbucket
+          version: '"5501abd7-4394-4930-b549-6aafbfd1aa77"'
+          etag: '"5501abd7-4394-4930-b549-6aafbfd1aa77"'
+          inheritedAttributes:
+            baseConnection:
+              id: 7d354d3a-fd93-48c8-821e-c7c2d7e929da
+              connectionSpec:
+                id: 4fce964d-3f37-408f-9778-e597338a21ee
+                version: '1.0'
+    Create_S3_Target_Connection_Dataset:
+      summary: Datasets - Specify data format and storage location information to export files to an Amazon S3 instance
+      value:
+        name: Amazon S3 Beta Target Connection
+        baseConnectionId: be3e2d03-6134-4566-9865-c40e0df8b718
+        params:
+          mode: Server-to-server
+          bucketName: your-bucket-name
+          path: folder/subfolder
+          compression: GZIP
+          datasetFileType: JSON
+        connectionSpec:
+          id: 4fce964d-3f37-408f-9778-e597338a21ee
+          version: '1.0'
+    Amazon_S3_Target_Connection:
+      summary: Amazon S3 target connection example
+      value:
+        items:
+        - id: 05672d6b-3cf5-47cd-9d8b-cff0ca9541c3
+          createdAt: 1660921644496
+          updatedAt: 1660921644729
+          createdBy: example@AdobeID
+          updatedBy: example@AdobeID
+          createdClient: example_client
+          updatedClient: example_updated client
+          sandboxId: '{SANDBOX_ID}'
+          sandboxName: '{SANDBOX_NAME}'
+          imsOrgId: destinationapi@AdobeOrg
+          name: Amazon S3 Target Connection++
+          baseConnectionId: be3e2d03-6134-4566-9865-c40e0df8b718
+          state: enabled
+          connectionSpec:
+            id: 4890fc95-5a1f-4983-94bb-e060c08e3f81
+            version: '1.0'
+          params:
+            bucketName: your-bucket-name
+            path: folder/subfolder
+          version: '"28029f1b-0000-0200-0000-62ffa72c0000"'
+          etag: '"28029f1b-0000-0200-0000-62ffa72c0000"'
+          inheritedAttributes:
+            baseConnection:
+              id: be3e2d03-6134-4566-9865-c40e0df8b718
+              connectionSpec:
+                id: 8a9c3494-9708-43d7-ae3f-cda01e5030e1
+                version: '1.0'
+    Create_S3_Target_Connection_Segment:
+      summary: Specify advanced data format and storage location information to export profile files to an Amazon S3 instance
+      value:
+        name: Amazon S3 Beta Target Connection
+        baseConnectionId: be3e2d03-6134-4566-9865-c40e0df8b718
+        params:
+          mode: Server-to-server
+          bucketName: your-bucket-name
+          path: folder/subfolder
+          compression: GZIP
+          fileType: CSV
+          csvOptions:
+            nullValue: 'null'
+            emptyValue: ''
+            escape: \
+            quote: ''
+            delimiter: ','
+        connectionSpec:
+          id: 4fce964d-3f37-408f-9778-e597338a21ee
+          version: '1.0'
+x-refined-from:
+- adobe-suite-aep-destinations-openapi.yaml
+- adobe-suite-aep-flow-service-openapi.yaml
+x-original-swagger-version: '2.0'

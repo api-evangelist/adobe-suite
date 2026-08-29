@@ -1,0 +1,237 @@
+openapi: 3.2.0
+info:
+  title: Media Edge States API
+  description: The OpenAPI specification for Media Edge API
+  version: 0.1.0
+servers:
+- url: https://edge.adobedc.net/ee/va/v1
+tags:
+- name: States
+paths:
+  /statesUpdate:
+    post:
+      summary: States update
+      description: Signals the change of one or multiple states
+      tags:
+      - States
+      operationId: statesUpdate
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  description: ''
+                  items:
+                    type: object
+                    properties:
+                      xdm:
+                        type: object
+                        description: ''
+                        properties:
+                          mediaCollection:
+                            type: object
+                            description: ''
+                            properties:
+                              playhead:
+                                type: integer
+                                description: The Playhead represents the current playback position within the media content
+                              sessionID:
+                                type: string
+                                description: The Media Session ID uniquely identifies an instance of a content stream during an individual playback session
+                              statesStart:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    name:
+                                      type: string
+                                      pattern: ^[a-zA-Z0-9_.]{1,64}$
+                                      description: The name of the state
+                                  required:
+                                  - name
+                              statesEnd:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    name:
+                                      type: string
+                                      pattern: ^[a-zA-Z0-9_.]{1,64}$
+                                      description: The name of the state
+                                  required:
+                                  - name
+                              qoeDataDetails:
+                                type: object
+                                description: QoE (Quality of Experience) Data Details capture performance-related metrics and user experience data
+                                properties:
+                                  bitrate:
+                                    type: integer
+                                    format: int32
+                                    description: The bitrate value (in kbps)
+                                  droppedFrames:
+                                    type: integer
+                                    format: int32
+                                    description: The total count of frames dropped during playback
+                                  framesPerSecond:
+                                    type: integer
+                                    format: int32
+                                    description: The current stream frame-rate (in frames per second)
+                                  timeToStart:
+                                    type: integer
+                                    format: int32
+                                    description: Duration (in seconds) between video load and start
+                            required:
+                            - playhead
+                            - sessionID
+                          eventType:
+                            type: string
+                            default: media.statesUpdate
+                            description: The media event type
+                          timestamp:
+                            type: string
+                            format: date-time
+                            description: The time when a media event occurred
+                        required:
+                        - mediaCollection
+                        - timestamp
+                        - eventType
+                    required:
+                    - xdm
+            examples:
+              '0':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.statesUpdate
+                      mediaCollection:
+                        sessionID: bfba9a5f2986d69a9a9424f6a99702562512eb244f2b65c4f1c1553e7fe9997f
+                        playhead: 60
+                        statesStart:
+                        - name: mute
+                        - name: pictureInPicture
+                        statesEnd:
+                        - name: fullScreen
+                      timestamp: '2022-03-04T13:40:40+00:00'
+              '1':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.statesUpdate
+                      mediaCollection:
+                        sessionID: bfba9a5f2986d69a9a9424f6a99702562512eb244f2b65c4f1c1553e7fe9997f
+                        playhead: 65
+                        statesStart:
+                        - name: mute
+                      timestamp: '2022-03-04T13:40:40+00:00'
+              '2':
+                value:
+                  events:
+                  - xdm:
+                      eventType: media.statesUpdate
+                      mediaCollection:
+                        sessionID: bfba9a5f2986d69a9a9424f6a99702562512eb244f2b65c4f1c1553e7fe9997f
+                        playhead: 55
+                        statesEnd:
+                        - name: subtitles
+                      timestamp: '2022-03-04T13:40:40+00:00'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 400
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: array
+                        description: ''
+                        items:
+                          type: object
+                          description: ''
+                          properties:
+                            name:
+                              type: string
+                              description: The path to the invalid property
+                            reason:
+                              type: string
+                              description: The reason why the property is invalid
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0400-400
+                    status: 400
+                    title: Bad Request
+                    detail: Invalid request. Please check your input and try again.
+                    report:
+                      details:
+                      - name: $.events[0].xdm.mediaCollection
+                        reason: 'Unexpected error. Hint: Empty statesUpdate event. At least one of statesStart or statesEnd list should be non-empty'
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: ''
+                properties:
+                  type:
+                    type: string
+                    description: Link containing a more detailed description of the error
+                  status:
+                    type: integer
+                    default: 404
+                    description: The status code
+                  title:
+                    type: string
+                    description: The category of the error
+                  detail:
+                    type: string
+                    description: The error details
+                  report:
+                    type: object
+                    description: ''
+                    properties:
+                      requestId:
+                        type: string
+                        description: Id that uniquely identifies a request
+                      details:
+                        type: string
+                        description: The error details
+              examples:
+                '0':
+                  value:
+                    type: https://ns.adobe.com/aep/errors/va-edge-0404-404
+                    status: 404
+                    title: Not Found
+                    detail: The requested resource could not be found but may be available again in the future.
+                    report:
+                      details: Error processing request. If the session is longer than 24h, please start a new one. Returning Not Found
+                      requestId: e3d87437-5054-4bc2-8953-be4be8d0b900

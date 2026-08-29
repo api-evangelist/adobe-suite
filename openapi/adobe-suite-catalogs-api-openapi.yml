@@ -1,0 +1,426 @@
+openapi: 3.2.0
+info:
+  description: Lightroom API Documentation, made available through [adobe.io](https://developer.adobe.com). API Change Logs are available [here](https://developer.adobe.com/lightroom/lightroom-api-docs/release-notes/).
+  version: 1.0.0
+  title: Lightroom API Documentation Catalogs API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: https://lr.adobe.io/
+tags:
+- name: Catalogs
+  description: Catalog information for the authenticated user.
+paths:
+  /v2/catalog:
+    get:
+      tags:
+      - Catalogs
+      summary: Retrieve the user catalog metadata
+      description: A catalog is the topmost container of resources for a user. Each catalog contains zero or more assets, albums, or other resources.
+      operationId: getCatalog
+      parameters:
+      - name: X-API-Key
+        in: header
+        description: Client ID (API Key) which is subscribed to the Lightroom APIs through console.adobe.io
+        required: true
+        schema:
+          type: string
+      - name: Authorization
+        in: header
+        description: Bearer [token] - User access token of an authenticated Lightroom customer
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base:
+                    type: string
+                    description: Base URL that can be prepended to the 'href' values in the 'links' to produce fully qualified URLs for future queries.
+                  id:
+                    $ref: '#/components/schemas/uuid'
+                  created:
+                    $ref: '#/components/schemas/utcDateTime'
+                  updated:
+                    $ref: '#/components/schemas/utcDateTime'
+                  type:
+                    type: string
+                    enum:
+                    - catalog
+                  subtype:
+                    type: string
+                    enum:
+                    - lightroom
+                  payload:
+                    title: Catalog Payload Schema
+                    type: object
+                    properties:
+                      userCreated:
+                        $ref: '#/components/schemas/utcDateTime'
+                      userUpdated:
+                        $ref: '#/components/schemas/utcDateTime'
+                      name:
+                        $ref: '#/components/schemas/max1024CharacterString'
+                      assetSortOrder:
+                        type: string
+                        enum:
+                        - captureDateAsc
+                        - captureDateDesc
+                        - importTimestampAsc
+                        - importTimestampDesc
+                        - fileNameAsc
+                        - fileNameDesc
+                        - ratingAsc
+                        - ratingDesc
+                        - userUpdatedAsc
+                        - userUpdatedDesc
+                      presets:
+                        type: object
+                        properties:
+                          favorites:
+                            type: object
+                            additionalProperties: false
+                            minProperties: 1
+                        additionalProperties: false
+                        minProperties: 1
+                      profiles:
+                        type: object
+                        properties:
+                          favorites:
+                            type: object
+                            additionalProperties: false
+                            minProperties: 1
+                        additionalProperties: false
+                        minProperties: 1
+                      settings:
+                        type: object
+                        properties:
+                          universal:
+                            type: object
+                            properties:
+                              connections:
+                                type: object
+                                additionalProperties: false
+                                minProperties: 1
+                            additionalProperties: false
+                            minProperties: 1
+                          desktop:
+                            type: object
+                            additionalProperties: true
+                            minProperties: 1
+                          web:
+                            type: object
+                            additionalProperties: true
+                            minProperties: 1
+                          mobile:
+                            type: object
+                            additionalProperties: true
+                            minProperties: 1
+                          photosdk:
+                            type: object
+                            additionalProperties: true
+                            minProperties: 1
+                        additionalProperties: false
+                        minProperties: 1
+                    additionalProperties: false
+                    required:
+                    - name
+                  links:
+                    type: object
+                example:
+                  created: '2019-07-02T15:16:13.556610Z'
+                  updated: '2019-07-02T15:26:42.838366Z'
+                  base: https://lr.adobe.io/v2/
+                  id: bf7337d9355c41b7875c9392f918362a
+                  type: catalog
+                  subtype: lightroom
+                  payload:
+                    userCreated: '2019-07-02T15:38:14Z'
+                    userUpdated: '2019-08-16T16:05:13Z'
+                    name: Lightroom Classic Catalog Name
+                    presets:
+                      favorites:
+                        09E4A533BEFC4AC582FCF1EF953EB150: true
+                        30E266DB24AE09B97DC3DD687AC298B1: false
+                        5C9AF6F007B96EF1E0DED43E77BE87C3: true
+                    profiles:
+                      favorites:
+                        53A4A533BAFB4AB582FBF1AF353AB155: true
+                        35A266DB24AA53B37DB3DD687AB238B1: true
+                        5B3AF6F557B36AF1A5DAD43A77BA87B3: false
+                    settings:
+                      universal:
+                        connections:
+                          connection_api_key:
+                            created: '2019-07-02T15:26:42.838366Z'
+                      desktop:
+                        desktop_key: desktop_setting
+                      web:
+                        web_key: web_setting
+                      mobile:
+                        mobile_key: mobile_setting
+                      photosdk:
+                        sdk_key: sdk_setting
+                  links:
+                    self:
+                      href: catalogs/bf7337d9355c41b7875c9392f918362a
+                    /rels/subtyped_albums:
+                      href: catalogs/bf7337d9355c41b7875c9392f918362a/albums?subtype={subtype}
+                      templated: true
+                    /rels/subtyped_assets:
+                      href: catalogs/bf7337d9355c41b7875c9392f918362a/assets?subtype={subtype}
+                      templated: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The request failed due to insufficient permissions.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/InvalidAPIKeyError'
+                - $ref: '#/components/schemas/AccessForbiddenError'
+                - $ref: '#/components/schemas/AccessForbiddenAccountStateError'
+                - $ref: '#/components/schemas/UnexpectedEntitlementError'
+                - $ref: '#/components/schemas/EntitlementExpiredError'
+              examples:
+                ForbiddenKeyError:
+                  $ref: '#/components/examples/ForbiddenKeyExample'
+                AccessForbiddenError:
+                  $ref: '#/components/examples/AccessForbiddenExample'
+                AccessForbiddenAccountStateError:
+                  $ref: '#/components/examples/AccessForbiddenAccountStateExample'
+                UnexpectedEntitlementError:
+                  $ref: '#/components/examples/UnexpectedEntitlementExample'
+                EntitlementExpiredError:
+                  $ref: '#/components/examples/EntitlementExpiredExample'
+        '404':
+          description: The request failed because the resource being requested does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+              examples:
+                ResourceNotFound:
+                  $ref: '#/components/examples/CatalogNotFoundExample'
+        '503':
+          description: The request failed because the service is temporarily unavailable. Try again later.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ServiceUnavailable'
+                - $ref: '#/components/schemas/MaintenanceError'
+              examples:
+                ServiceUnavailable:
+                  $ref: '#/components/examples/ServiceUnavailableExample'
+                MaintenanceError:
+                  $ref: '#/components/examples/MaintenanceErrorExample'
+components:
+  examples:
+    CatalogNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          catalog:
+          - does not exist
+        code: 1000
+        description: Resource not found
+    ForbiddenKeyExample:
+      summary: Invalid API Key
+      value:
+        code: 403003
+        description: API Key is invalid
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+    AccessForbiddenAccountStateExample:
+      summary: Access Forbidden Account State
+      value:
+        code: 4301
+        description: Access forbidden due to account state of resource owner
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
+    UnexpectedEntitlementExample:
+      summary: Unexpected Entitlement (string code)
+      value:
+        code: UnexpectedEntitlementError
+        description: Account is in an unexpected status
+        errors:
+          catalog:
+          - not allowed
+        subtype: UnexpectedEntitlementError
+    AccessForbiddenExample:
+      summary: Access Forbidden
+      value:
+        code: 4300
+        description: Access is forbidden
+    EntitlementExpiredExample:
+      summary: Entitlement Expired (string code)
+      value:
+        code: EntitlementExpiredError
+        description: Resources unavailable because owner account entitlement has expired
+        errors:
+          catalog:
+          - not allowed
+        subtype: EntitlementExpiredError
+  schemas:
+    InvalidAPIKeyError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 403003
+        description:
+          type: string
+          enum:
+          - API Key is invalid
+    ServiceUnavailable:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 9999
+        description:
+          type: string
+          enum:
+          - Service is temporarily unavailable
+    NotFound:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <resource_type>:
+              type: array
+              items:
+                type: string
+                enum:
+                - does not exist
+        code:
+          type: integer
+          enum:
+          - 1000
+        description:
+          type: string
+          enum:
+          - Resource not found
+    AccessForbiddenError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4300
+        description:
+          type: string
+          enum:
+          - Access is forbidden
+    utcDateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
+      type: string
+      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
+    uuid:
+      pattern: ^[a-f0-9]{32}$
+      type: string
+    max1024CharacterString:
+      maxLength: 1024
+      minLength: 1
+      type: string
+    UnexpectedEntitlementError:
+      type: object
+      description: Returned when the resource owner's account is in an unexpected entitlement state for the requested operation (for example, a partner request on behalf of an account that is not an active subscriber).
+      properties:
+        code:
+          type: string
+          enum:
+          - UnexpectedEntitlementError
+          description: For this error the code is returned as a string. Note that an error code may be either an integer or a string, so clients should not assume it is always an integer.
+        subtype:
+          type: string
+          enum:
+          - UnexpectedEntitlementError
+        description:
+          type: string
+          enum:
+          - Account is in an unexpected status
+        errors:
+          type: object
+          properties:
+            catalog:
+              type: array
+              items:
+                type: string
+                enum:
+                - not allowed
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
+    AccessForbiddenAccountStateError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4301
+        description:
+          type: string
+          enum:
+          - Access forbidden due to account state of resource owner
+    EntitlementExpiredError:
+      type: object
+      description: Returned when the resource owner's account entitlement has expired (for example, an account whose subscription has lapsed).
+      properties:
+        code:
+          type: string
+          enum:
+          - EntitlementExpiredError
+          description: For this error the code is returned as a string. Note that an error code may be either an integer or a string, so clients should not assume it is always an integer.
+        subtype:
+          type: string
+          enum:
+          - EntitlementExpiredError
+        description:
+          type: string
+          enum:
+          - Resources unavailable because owner account entitlement has expired
+        errors:
+          type: object
+          properties:
+            catalog:
+              type: array
+              items:
+                type: string
+                enum:
+                - not allowed
+  responses:
+    Unauthorized:
+      description: The request failed due to missing or invalid authentication token.
+externalDocs:
+  description: Find out more about Lightroom
+  url: https://www.adobe.com/products/photoshop-lightroom.html

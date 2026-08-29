@@ -1,0 +1,681 @@
+openapi: 3.2.0
+info:
+  version: '1.0'
+  title: Schema Registry Unions API
+  description: "Use the Schema Registry API to access the Schema Library within Adobe Experience Platform. The registry provides a user interface and RESTful API from which all available library resources are accessible.  Programmatically manage all schemas and related Experience Data Model (XDM) resources available to you within Platform. This includes those defined by Adobe, Experience Platform partners, and vendors whose applications you use.\n* **Related documentation**:\n  * [XDM documentation](http://www.adobe.com/go/xdm-home-en)\n\n* **Visualize API calls with Postman (a free, third-party software)**:\n  * [Schema Registry API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Schema%20Registry%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n* **API paths**:\n  * PLATFORM Gateway URL: https://<span>platform.adobe.io\n  * Base path for this API: /data/foundation/schemaregistry\n  * Example of a complete path for making a call to \"/stats\": https://<span>platform.adobe.io/data/foundation/schemaregistry/stats\n\n* **Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All GET requests to the Schema Registry require an `Accept` header to determine what data is returned by the system. See the [section on `Accept` headers](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/getting-started.html?lang=en#accept) in the Schema Registry developer guide for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  * Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+servers:
+- url: https://platform.adobe.io/data/foundation/schemaregistry
+tags:
+- name: Unions
+  description: Union schemas aggregate the fields of all schemas that implement the same class (such as ExperienceEvent or Profile) into a single schema. They are used by Real-time Customer Profile to merge data together to form a "single source of truth" for an individual.
+paths:
+  /tenant/unions:
+    get:
+      tags:
+      - Unions
+      summary: List union schemas
+      description: '>**NOTE**: For more information on using this operation, see the [unions endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/unions.html) on Experience League.'
+      operationId: listUnionSchemas
+      parameters:
+      - $ref: '#/components/parameters/acceptListing'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/property'
+      - $ref: '#/components/parameters/orderBy'
+      - $ref: '#/components/parameters/start'
+      - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns a list of all union schemas with format dependent on the `Accept` header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listUnionsResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The `Accept` header is invalid or missing. Ensure that you are providing a valid `Accept` header for a listing call with no version supplied (e.g. `application/vnd.adobe.xed-id+json`) before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/acceptErrorList'
+  /tenant/unions/{UNION_ID}:
+    get:
+      tags:
+      - Unions
+      parameters:
+      - $ref: '#/components/parameters/UNION_ID'
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - $ref: '#/components/parameters/accept'
+      summary: Retrieve a union schema
+      description: '>**NOTE**: For more information on using this operation, see the [unions endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/xdm/api/unions.html) on Experience League.'
+      operationId: retrieveUnionSchema
+      responses:
+        200:
+          x-summary: Success
+          description: A successful response returns the details of the union.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/lookupUnionResponse'
+        '400':
+          x-summary: Bad formatting
+          description: The `Accept` header is invalid or missing. Ensure that you are providing a valid accept header for a lookup call including a version number (e.g. `application/vnd.adobe.xed+json;version=1`) before trying again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/acceptErrorLookup'
+components:
+  schemas:
+    acceptErrorLookup:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1007-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
+          timestamp: 11-02-2021 07:42:43
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+    acceptErrorList:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1006-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: d2550d48-95f5-43ee-adb7-1035bf9d3258
+          timestamp: 11-25-2020 07:56:25
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
+    errorBasic:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The XDM error code.
+        title:
+          type: string
+          description: The error code title.
+        status:
+          type: integer
+          description: The HTTP status code for the error.
+        report:
+          type: object
+          description: Contains registry information about the error.
+          properties:
+            registryRequestId:
+              type: string
+              description: A unique ID for the report.
+            timestamp:
+              type: string
+              description: A timestamp of when the error occurred.
+            detailed-message:
+              type: string
+              description: A detailed message about what caused the error.
+            sub-errors:
+              type: array
+              description: Contains details about other errors that this error is a parent of.
+              items:
+                $ref: '#/components/schemas/errorBasic'
+        detail:
+          type: string
+          description: A detailed message about what caused the error.
+    lookupResourceCore:
+      type: object
+      properties:
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:resourceType:
+          type: string
+          description: The type of XDM resource.
+          example: schemas
+        version:
+          type: string
+          description: The current version of the resource.
+          example: 1.4
+        title:
+          type: string
+          description: The title of the resource.
+          example: Hotels
+        type:
+          type: string
+          description: The JSON Schema element type that represents the XDM resource (typically `object`).
+          example: object
+        description:
+          type: string
+          description: A description for the resource.
+    unionBasic:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceCore'
+      - properties:
+          allOf:
+            type: array
+            description: Lists the class and/or field groups that comprise the union schema.
+            items:
+              properties:
+                $ref:
+                  type: string
+                  description: The `$id` of the class or field group whose fields are included in the union.
+          imsOrg:
+            type: string
+            description: The ID for the IMS Organization that owns the union schema.
+          meta:extends:
+            type: array
+            description: A list of `$id` strings for the schemas, field groups, and other resources that participate in the union.
+            items:
+              type: string
+          meta:xdmType:
+            type: string
+            description: The JSON Schema data type for the resource, typically `object`.
+          meta:registryMetadata:
+            type: object
+            description: Contains various metadata about the union schema.
+            properties:
+              etag:
+                type: string
+                description: An HTTP entity tag (ETag) for the union schema.
+              meta:globalLibVersion:
+                type: string
+                description: The current global library version of the union schema.
+          meta:class:
+            type: string
+            description: The `$id` of the class this union schema is based on.
+          meta:containerId:
+            type: string
+            description: The container that the union is located in.
+      example:
+        $id: https://ns.adobe.com/xdm/context/profile__union
+        meta:altId: _xdm.context.profile__union
+        meta:resourceType: unions
+        version: '1.0'
+        title: XDM Individual Profile
+        type: object
+        description: An XDM Individual Profile forms a singular representation of the attributes and interests of both identified and partially-identified individuals. Less-identified profiles may contain only anonymous behavioral signals, such as browser cookies, while highly-identified profiles may contain detailed personal information such as name, date of birth, location, and email address. As a profile grows, it becomes a robust repository of personal information, identification information, contact details, and communication preferences for an individual.
+        allOf:
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/50ac8a9b7bcc18ef87e58d5bda3150f9
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/26625cc93fbf2312f8751d4a7240bb57
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/f267eca0b424da08ae39cdf669310654
+        - '$ref ': https://ns.adobe.com/xdm/mixins/profile-consents
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/cceb0516bbef095b0c52c939e108e06c
+        - '$ref ': https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/7259a2cf4a35350010a9869e633e548ee261bb9161e43db2
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/43b552826481ed09e5b51c622bcd1f56d41f9f89f099bbb8
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-person-details
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-privacy
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-personal-details
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/86794f1df304cd33c2acf6fa214a4ff0
+        - '$ref ': https://ns.adobe.com/experience/profile-edgeregion
+        - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/d103d3a18576767ab070ac0c87e8366576269c7e0846fbbb
+        - '$ref ': https://ns.adobe.com/experience/profile/profile-all
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-work-details
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-test-profile
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/3bf207b597df895b0cf224410d03c10f
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/f8619816e425a2b804fc32225dddbe51
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/fc99a187af7a14831e8efd57a4fe3ae345fd909214abf7d9
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/cfb414f970e50975469ffd7066c2d56099ddab875bb10fb1
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/2204efd97f4b45bc0a5deb59d46084d7
+        - '$ref ': https://ns.adobe.com/xdm/context/profile
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-segmentation
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-preferences-details
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/9cc2d107ab9af10c2688083ae0fb3c2d
+        - '$ref ': https://ns.adobe.com/techmarketingdemos/mixins/b3729e80580bce82f08be698deeae0a657893be573288b82
+        imsOrg: 7ABB3E6A5A7491460A495D61@AdobeOrg
+        meta:extends:
+        - https://ns.adobe.com/techmarketingdemos/mixins/26625cc93fbf2312f8751d4a7240bb57
+        - https://ns.adobe.com/techmarketingdemos/mixins/f267eca0b424da08ae39cdf669310654
+        - https://ns.adobe.com/xdm/common/extensible
+        - https://ns.adobe.com/techmarketingdemos/schemas/cdabd86a307eecdae9e01ad3638b24d5
+        - https://ns.adobe.com/techmarketingdemos/schemas/3797a5be100381c705b3d51c1712f86da4796ccc10833242
+        - https://ns.adobe.com/techmarketingdemos/schemas/19b938a17c9847719d5807a3bcd8837f0fcaafb32d37308a
+        - https://ns.adobe.com/xdm/mixins/profile-consents
+        - https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - https://ns.adobe.com/techmarketingdemos/schemas/60f8e4e482e80c4b9245e68fbcfcfd2d2baac5140b5de852
+        - https://ns.adobe.com/techmarketingdemos/schemas/ad73b6f080026ba659b4da4d0416fe69
+        - https://ns.adobe.com/techmarketingdemos/schemas/dc94ab81c30c1f97a8f4c38d5bd492cd
+        - https://ns.adobe.com/techmarketingdemos/mixins/86794f1df304cd33c2acf6fa214a4ff0
+        - https://ns.adobe.com/techmarketingdemos/schemas/5983109319062ca5effcd13857cbcc0d
+        - https://ns.adobe.com/experience/profile/profile-all
+        - https://ns.adobe.com/xdm/context/profile-work-details
+        - https://ns.adobe.com/techmarketingdemos/schemas/56ae613751991cb72707cea9168e1cb8e5635bb008c75c74
+        - https://ns.adobe.com/techmarketingdemos/schemas/43e451554794cf3b2ae685708d46f5d118e63d1d53154070
+        - https://ns.adobe.com/techmarketingdemos/mixins/3bf207b597df895b0cf224410d03c10f
+        - https://ns.adobe.com/techmarketingdemos/schemas/b52f98d5027c54e3df56f5c9fbd78d2b67917542ce74736e
+        - https://ns.adobe.com/techmarketingdemos/mixins/fc99a187af7a14831e8efd57a4fe3ae345fd909214abf7d9
+        - https://ns.adobe.com/techmarketingdemos/mixins/cfb414f970e50975469ffd7066c2d56099ddab875bb10fb1
+        - https://ns.adobe.com/techmarketingdemos/schemas/cf6802dd86d2b9386933beacda58196d098e833eca673004
+        - https://ns.adobe.com/techmarketingdemos/mixins/2204efd97f4b45bc0a5deb59d46084d7
+        - https://ns.adobe.com/xdm/context/profile
+        - https://ns.adobe.com/xdm/context/profile-segmentation
+        - https://ns.adobe.com/xdm/context/profile-preferences-details
+        - https://ns.adobe.com/techmarketingdemos/mixins/9cc2d107ab9af10c2688083ae0fb3c2d
+        - https://ns.adobe.com/techmarketingdemos/mixins/b3729e80580bce82f08be698deeae0a657893be573288b82
+        - https://ns.adobe.com/techmarketingdemos/schemas/8d3a0342fecad26daebcb50098d9ab04
+        - https://ns.adobe.com/techmarketingdemos/mixins/50ac8a9b7bcc18ef87e58d5bda3150f9
+        - https://ns.adobe.com/xdm/common/auditable
+        - https://ns.adobe.com/techmarketingdemos/mixins/cceb0516bbef095b0c52c939e108e06c
+        - https://ns.adobe.com/techmarketingdemos/mixins/7259a2cf4a35350010a9869e633e548ee261bb9161e43db2
+        - https://ns.adobe.com/techmarketingdemos/mixins/43b552826481ed09e5b51c622bcd1f56d41f9f89f099bbb8
+        - https://ns.adobe.com/xdm/context/profile-person-details
+        - https://ns.adobe.com/xdm/context/profile-privacy
+        - https://ns.adobe.com/xdm/context/profile-personal-details
+        - https://ns.adobe.com/xdm/data/record
+        - https://ns.adobe.com/experience/profile-edgeregion
+        - https://ns.adobe.com/xdm/context/identitymap
+        - https://ns.adobe.com/techmarketingdemos/mixins/d103d3a18576767ab070ac0c87e8366576269c7e0846fbbb
+        - https://ns.adobe.com/techmarketingdemos/schemas/f9170cdc7d567ed74b7496397eb68231
+        - https://ns.adobe.com/techmarketingdemos/schemas/1ea97dacccd0432ce5654bed2a9a8f50
+        - https://ns.adobe.com/techmarketingdemos/schemas/470abbed5b45342e8eea05c8e06a0ebea865acd41a96b449
+        - https://ns.adobe.com/techmarketingdemos/schemas/947e45a31c1069cda73dbcb20cd63d18
+        - https://ns.adobe.com/xdm/context/profile-test-profile
+        - https://ns.adobe.com/techmarketingdemos/mixins/f8619816e425a2b804fc32225dddbe51
+        - https://ns.adobe.com/techmarketingdemos/schemas/141b1401469729d30ac38118f15c3883
+        - https://ns.adobe.com/techmarketingdemos/schemas/40e562df11a3ffa102ee6f92a88cf0b0
+        - https://ns.adobe.com/techmarketingdemos/schemas/83e86b0229788486f65ae9395aeae24bf1961404356532eb
+        - https://ns.adobe.com/techmarketingdemos/schemas/5dd02ef879a85ad105c44a0e939ce09f
+        - https://ns.adobe.com/techmarketingdemos/schemas/5b8d40b434bec502955d3e0144c4ce14d096897c6b0ca11f
+        meta:xdmType: object
+        meta:registryMetadata:
+          eTag: c6948ab68937fd879b9ff6ec0f8f6f892e3932b257903e7b7213716b50ad8ca4
+          meta:globalLibVersion: 1.27.4
+        meta:class: https://ns.adobe.com/xdm/context/profile
+        meta:containerId: tenant
+    listUnionsResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          description: Lists the returned union schemas.
+          items:
+            $ref: '#/components/schemas/unionBasic'
+      example:
+        results:
+        - $id: https://ns.adobe.com/xdm/context/profile__union
+          meta:altId: _xdm.context.profile__union
+          meta:resourceType: unions
+          version: '1.0'
+          title: XDM Individual Profile
+          type: object
+          description: An XDM Individual Profile forms a singular representation of the attributes and interests of both identified and partially-identified individuals. Less-identified profiles may contain only anonymous behavioral signals, such as browser cookies, while highly-identified profiles may contain detailed personal information such as name, date of birth, location, and email address. As a profile grows, it becomes a robust repository of personal information, identification information, contact details, and communication preferences for an individual.
+          allOf:
+          - {}
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-test-profile
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+          - '$ref ': https://ns.adobe.com/xdm/mixins/profile-consents
+          - '$ref ': https://ns.adobe.com/xdm/common/external-source-system-audit-details
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-person-details
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-privacy
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+          - '$ref ': https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+          - '$ref ': https://ns.adobe.com/experience/campaign/profile-all
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-personal-details
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+          - '$ref ': https://ns.adobe.com/experience/profile-edgeregion
+          - '$ref ': https://ns.adobe.com/xdm/context/profile
+          - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+          - '$ref ': https://ns.adobe.com/experience/profile/profile-all
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-segmentation
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-preferences-details
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+          - '$ref ': https://ns.adobe.com/xdm/context/profile-work-details
+          imsOrg: '{IMS_ORG}'
+          meta:extends:
+          - https://ns.adobe.com/{TENANT_ID}/schemas/7c92ae0a47db946ba5d7d47b1cfbca4b
+          - https://ns.adobe.com/xdm/common/extensible
+          - https://ns.adobe.com/{TENANT_ID}/schemas/5d70026f5522fc60b3c81f6523b83c86
+          - https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+          - https://ns.adobe.com/xdm/mixins/profile-consents
+          - https://ns.adobe.com/{TENANT_ID}/schemas/c447e8716f1d4598be9e36dcd64cd55a
+          - https://ns.adobe.com/xdm/common/external-source-system-audit-details
+          - https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+          - https://ns.adobe.com/{TENANT_ID}/schemas/653e53eb04341d09453c9b6a5fb43d1b4ca9526ec274856d
+          - https://ns.adobe.com/{TENANT_ID}/schemas/c65ddf08cf2d4a2fe94bd06113bf4bc4c855e12a936410d5
+          - https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+          - https://ns.adobe.com/{TENANT_ID}/schemas/ea2208ffef6dc12851f938e54bc723f2b6aa1a7bcb9b9535
+          - https://ns.adobe.com/experience/profile/profile-all
+          - https://ns.adobe.com/xdm/context/profile-work-details
+          - https://ns.adobe.com/{TENANT_ID}/schemas/a938858fbe085db9cc0d7b17ca7da28d
+          - https://ns.adobe.com/{TENANT_ID}/schemas/e5c13b941fc87d3614f742528e8c30693baae7c41af01fc2
+          - https://ns.adobe.com/{TENANT_ID}/schemas/b67de72ed55dcafec654ec9818eb55a4
+          - https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
+          - https://ns.adobe.com/{TENANT_ID}/schemas/afb2da1c042e4413de24f4096157c9f6a72cc43b57ee1a
+          - https://ns.adobe.com/experience/campaign/profile-all
+          - https://ns.adobe.com/xdm/context/profile
+          - https://ns.adobe.com/xdm/context/profile-segmentation
+          - https://ns.adobe.com/xdm/context/profile-preferences-details
+          - https://ns.adobe.com/{TENANT_ID}/schemas/36966a17ce64bcee6544df170f7299759d3dce41c8cbee6
+          - https://ns.adobe.com/{TENANT_ID}/schemas/b29ba32d98a8b1f00388c6c6eceff4db6917fd174eab4c55
+          - https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+          - https://ns.adobe.com/{TENANT_ID}/schemas/456bdc7d1216fb96fa42495a449f39c2
+          - https://ns.adobe.com/{TENANT_ID}/schemas/579a2817c2342751afb9241015da9741
+          - https://ns.adobe.com/{TENANT_ID}/schemas/be9f753fc193a23baa8893bbe7679afe
+          - https://ns.adobe.com/xdm/common/auditable
+          - https://ns.adobe.com/{TENANT_ID}/schemas/f09963a76904b524f6419a50c19dd4318061d82d8b04638
+          - https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+          - https://ns.adobe.com/{TENANT_ID}/schemas/b1e6dd903c29dc7aea408ecd1ed040f0c161df7961fc50b2
+          - https://ns.adobe.com/{TENANT_ID}/schemas/d29a200b5deb6cfb55d3b865ef627f33
+          - https://ns.adobe.com/xdm/context/profile-person-details
+          - https://ns.adobe.com/xdm/context/profile-privacy
+          - https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+          - https://ns.adobe.com/{TENANT_ID}/schemas/e348088f36cb2dc90d14737de6832aa35c7a7f1a116e1dbe
+          - https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+          - https://ns.adobe.com/xdm/context/profile-personal-details
+          - https://ns.adobe.com/xdm/data/record
+          - https://ns.adobe.com/experience/profile-edgeregion
+          - https://ns.adobe.com/xdm/context/identitymap
+          - https://ns.adobe.com/{TENANT_ID}/schemas/ebbbb87cb534798841d760ea2c5d861d
+          - https://ns.adobe.com/{TENANT_ID}/schemas/3494225dfbfb0d9ac346b00a1142c3a1c0751aff9dbbf5ef
+          - https://ns.adobe.com/{TENANT_ID}/schemas/6fd18629565e429e5379c77c2755618b
+          - https://ns.adobe.com/xdm/context/profile-test-profile
+          - https://ns.adobe.com/{TENANT_ID}/schemas/4fcf5778706905d53c138b1ed4d94c6c
+          - https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+          - https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+          - https://ns.adobe.com/{TENANT_ID}/schemas/ac95d88f11b47688ef2f24f55fe5f3a9a607bb2c4325e68d
+          - https://ns.adobe.com/{TENANT_ID}/schemas/70e3226d662a19800837b7dd7cfc3ef6
+          - https://ns.adobe.com/{TENANT_ID}/schemas/5df4f4cc39462136cbbead3481f878a878420025282a53b8
+          - https://ns.adobe.com/{TENANT_ID}/schemas/3a1859ec31ba93153050f92d981aec5d97b350d22cf960d5
+          - https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+          - https://ns.adobe.com/{TENANT_ID}/schemas/3d569c62921ac9371ad148afbaec3891547aca2a49575cef
+          meta:xdmType: object
+          meta:registryMetadata:
+            eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
+            meta:globalLibVersion: 1.28.1
+          meta:class: https://ns.adobe.com/xdm/context/profile
+          meta:containerId: tenant
+        - $id: https://ns.adobe.com/xdm/context/experienceevent__union
+          meta:altId: _xdm.context.experienceevent__union
+          meta:resourceType: unions
+          version: '1.0'
+          title: XDM ExperienceEvent
+          type: object
+          description: An ExperienceEvent is a fact record of what occurred, including the point in time and identity of the individual involved. ExperienceEvents can be either explicit (directly observable human actions) or implicit (raised without a direct human action) and are recorded without aggregation or interpretation. They are critical for time-domain analytics as they allow for observation and analysis of changes that occur in a given window of time and the comparison between multiple windows of time to track trends.
+          allOf:
+          - '$ref ': https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventDataFetchFields
+          - '$ref ': https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventCommonFields
+          - '$ref ': https://ns.adobe.com/xdm/context/experienceevent-commerce
+          - '$ref ': https://ns.adobe.com/xdm/context/experienceevent-web
+          - '$ref ': https://ns.adobe.com/xdm/context/experienceevent-marketing
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/ae0c9aadd004dbd2c438077f500df26781c414e60bbf4a54
+          - '$ref ': https://ns.adobe.com/xdm/context/experienceevent-environment-details
+          - '$ref ': https://ns.adobe.com/xdm/context/experienceevent
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/1a7a5de2a84c6aacbf86c8d282a891a0
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/7b5217dec3313f1a2a067ff5a29066c0
+          - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+          - '$ref ': https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventActionExecutionFields
+          - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/90e1950ab23ab1e71273c2aab0bbf5e978d5d9a6a1cc5bab
+          - '$ref ': https://ns.adobe.com/experience/campaign/orchestration/eventid
+          imsOrg: '{IMS_ORG}'
+          meta:extends:
+          - https://ns.adobe.com/xdm/data/time-series
+          - https://ns.adobe.com/{TENANT_ID}/schemas/cece2f127694fc27e9233480018790b3ceb4f3e50a55cf80
+          - https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventDataFetchFields
+          - https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventCommonFields
+          - https://ns.adobe.com/{TENANT_ID}/schemas/3423b2c60609e0418ded3962fcc47ed8
+          - https://ns.adobe.com/xdm/context/experienceevent-commerce
+          - https://ns.adobe.com/xdm/common/extensible
+          - https://ns.adobe.com/{TENANT_ID}/schemas/f8fe82b4e8bd1ee85db5ad0172664957ef8c9931245cb7e6
+          - https://ns.adobe.com/xdm/context/experienceevent-web
+          - https://ns.adobe.com/xdm/context/experienceevent-marketing
+          - https://ns.adobe.com/{TENANT_ID}/mixins/ae0c9aadd004dbd2c438077f500df26781c414e60bbf4a54
+          - https://ns.adobe.com/xdm/context/experienceevent-environment-details
+          - https://ns.adobe.com/xdm/context/experienceevent
+          - https://ns.adobe.com/{TENANT_ID}/mixins/1a7a5de2a84c6aacbf86c8d282a891a0
+          - https://ns.adobe.com/{TENANT_ID}/schemas/4425853159dc7e494b8971a4de80daf97571bd5c30d743cf
+          - https://ns.adobe.com/{TENANT_ID}/mixins/7b5217dec3313f1a2a067ff5a29066c0
+          - https://ns.adobe.com/xdm/context/identitymap
+          - https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journeyStepEventActionExecutionFields
+          - https://ns.adobe.com/{TENANT_ID}/mixins/90e1950ab23ab1e71273c2aab0bbf5e978d5d9a6a1cc5bab
+          - https://ns.adobe.com/{TENANT_ID}/schemas/5d4a826626bbff36134b24b92dd61f83
+          - https://ns.adobe.com/{TENANT_ID}/schemas/bacec2361d131bf03211cf3c2372673f
+          - https://ns.adobe.com/{TENANT_ID}/schemas/43f12f6de7d667db7f11f35e6af43802
+          - https://ns.adobe.com/experience/campaign/orchestration/eventid
+          meta:xdmType: object
+          meta:registryMetadata:
+            eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
+            meta:globalLibVersion: 1.28.1
+          meta:class: https://ns.adobe.com/xdm/context/experienceevent
+          meta:containerId: tenant
+        - $id: https://ns.adobe.com/xdm/context/segmentdefinition__union
+          meta:altId: _xdm.context.segmentdefinition__union
+          meta:resourceType: unions
+          version: '1.0'
+          title: Segment definition
+          type: object
+          description: This is the base class for a segment definition which includes required fields like identity of a segment and name of segment. Segment definitions coming from various system can use this class to build Segment Definition XDM schema.
+          allOf:
+          - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+          - '$ref ': https://ns.adobe.com/xdm/context/segmentdefinition
+          imsOrg: '{IMS_ORG}'
+          meta:extends:
+          - https://ns.adobe.com/{TENANT_ID}/schemas/23255099a00826c31bbad8fa9519d3d513d5171bf2b787a2
+          - https://ns.adobe.com/xdm/common/auditable
+          - https://ns.adobe.com/xdm/data/record
+          - https://ns.adobe.com/xdm/context/identitymap
+          - https://ns.adobe.com/xdm/context/segmentdefinition
+          meta:xdmType: object
+          meta:registryMetadata:
+            eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
+            meta:globalLibVersion: 1.28.1
+          meta:class: https://ns.adobe.com/xdm/context/segmentdefinition
+          meta:containerId: tenant
+    lookupUnionResponse:
+      allOf:
+      - $ref: '#/components/schemas/unionBasic'
+      - properties:
+          meta:sandboxId:
+            type: string
+            description: The ID of the sandbox this union is contained in.
+          meta:sandboxType:
+            type: string
+            description: The type of sandbox this union is contained in, either `production` or `development`.
+      example:
+        $id: https://ns.adobe.com/xdm/context/profile__union
+        meta:altId: _xdm.context.profile__union
+        meta:resourceType: unions
+        version: '1.0'
+        title: XDM Individual Profile
+        type: object
+        description: An XDM Individual Profile forms a singular representation of the attributes and interests of both identified and partially-identified individuals. Less-identified profiles may contain only anonymous behavioral signals, such as browser cookies, while highly-identified profiles may contain detailed personal information such as name, date of birth, location, and email address. As a profile grows, it becomes a robust repository of personal information, identification information, contact details, and communication preferences for an individual.
+        allOf:
+        - {}
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-test-profile
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+        - '$ref ': https://ns.adobe.com/xdm/mixins/profile-consents
+        - '$ref ': https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-person-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-privacy
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+        - '$ref ': https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+        - '$ref ': https://ns.adobe.com/experience/campaign/profile-all
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-personal-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+        - '$ref ': https://ns.adobe.com/experience/profile-edgeregion
+        - '$ref ': https://ns.adobe.com/xdm/context/profile
+        - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+        - '$ref ': https://ns.adobe.com/experience/profile/profile-all
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-segmentation
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-preferences-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-work-details
+        imsOrg: '{IMS_ORG}'
+        meta:extends:
+        - https://ns.adobe.com/{TENANT_ID}/schemas/7c92ae0a47db946ba5d7d47b1cfbca4b
+        - https://ns.adobe.com/xdm/common/extensible
+        - https://ns.adobe.com/{TENANT_ID}/schemas/5d70026f5522fc60b3c81f6523b83c86
+        - https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+        - https://ns.adobe.com/xdm/mixins/profile-consents
+        - https://ns.adobe.com/{TENANT_ID}/schemas/c447e8716f1d4598be9e36dcd64cd55a
+        - https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+        - https://ns.adobe.com/{TENANT_ID}/schemas/653e53eb04341d09453c9b6a5fb43d1b4ca9526ec274856d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/c65ddf08cf2d4a2fe94bd06113bf4bc4c855e12a936410d5
+        - https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ea2208ffef6dc12851f938e54bc723f2b6aa1a7bcb9b9535
+        - https://ns.adobe.com/experience/profile/profile-all
+        - https://ns.adobe.com/xdm/context/profile-work-details
+        - https://ns.adobe.com/{TENANT_ID}/schemas/a938858fbe085db9cc0d7b17ca7da28d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e5c13b941fc87d3614f742528e8c30693baae7c41af01fc2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b67de72ed55dcafec654ec9818eb55a4
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
+        - https://ns.adobe.com/{TENANT_ID}/schemas/afb2da1c042e4413de24f4096157c9f6a72cc43b57ee1a
+        - https://ns.adobe.com/experience/campaign/profile-all
+        - https://ns.adobe.com/xdm/context/profile
+        - https://ns.adobe.com/xdm/context/profile-segmentation
+        - https://ns.adobe.com/xdm/context/profile-preferences-details
+        - https://ns.adobe.com/{TENANT_ID}/schemas/36966a17ce64bcee6544df170f7299759d3dce41c8cbee6
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b29ba32d98a8b1f00388c6c6eceff4db6917fd174eab4c55
+        - https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+        - https://ns.adobe.com/{TENANT_ID}/schemas/456bdc7d1216fb96fa42495a449f39c2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/579a2817c2342751afb9241015da9741
+        - https://ns.adobe.com/{TENANT_ID}/schemas/be9f753fc193a23baa8893bbe7679afe
+        - https://ns.adobe.com/xdm/common/auditable
+        - https://ns.adobe.com/{TENANT_ID}/schemas/f09963a76904b524f6419a50c19dd4318061d82d8b04638
+        - https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b1e6dd903c29dc7aea408ecd1ed040f0c161df7961fc50b2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/d29a200b5deb6cfb55d3b865ef627f33
+        - https://ns.adobe.com/xdm/context/profile-person-details
+        - https://ns.adobe.com/xdm/context/profile-privacy
+        - https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e348088f36cb2dc90d14737de6832aa35c7a7f1a116e1dbe
+        - https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+        - https://ns.adobe.com/xdm/context/profile-personal-details
+        - https://ns.adobe.com/xdm/data/record
+        - https://ns.adobe.com/experience/profile-edgeregion
+        - https://ns.adobe.com/xdm/context/identitymap
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ebbbb87cb534798841d760ea2c5d861d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3494225dfbfb0d9ac346b00a1142c3a1c0751aff9dbbf5ef
+        - https://ns.adobe.com/{TENANT_ID}/schemas/6fd18629565e429e5379c77c2755618b
+        - https://ns.adobe.com/xdm/context/profile-test-profile
+        - https://ns.adobe.com/{TENANT_ID}/schemas/4fcf5778706905d53c138b1ed4d94c6c
+        - https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+        - https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ac95d88f11b47688ef2f24f55fe5f3a9a607bb2c4325e68d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/70e3226d662a19800837b7dd7cfc3ef6
+        - https://ns.adobe.com/{TENANT_ID}/schemas/5df4f4cc39462136cbbead3481f878a878420025282a53b8
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3a1859ec31ba93153050f92d981aec5d97b350d22cf960d5
+        - https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3d569c62921ac9371ad148afbaec3891547aca2a49575cef
+        meta:xdmType: object
+        meta:registryMetadata:
+          eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
+          meta:globalLibVersion: 1.28.1
+        meta:class: https://ns.adobe.com/xdm/context/profile
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+  parameters:
+    property:
+      name: property
+      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
+      in: query
+      required: false
+      schema:
+        type: string
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    limit:
+      name: limit
+      description: 'When used in conjunction with an `orderby` parameter, `limit` restricts the maximum number of items that should be returned for a given request. This parameter cannot be used without an `orderby` parameter present.
+
+
+        The `limit` parameter specifies a positive integer (between `0` and `500`) as a *hint* as to the maximum number of items that should be returned. For example, `limit=5` returns only five resources in the list. However, this value is not strictly honored. The actual response size may be smaller or larger as constrained by the need to provide the reliable operation of the `start` parameter, if one is provided.'
+      required: false
+      in: query
+      schema:
+        type: number
+    acceptListing:
+      name: Accept
+      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
+      required: true
+      in: header
+      schema:
+        type: string
+    start:
+      name: start
+      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
+
+
+        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
+
+
+        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
+      required: false
+      in: query
+      schema:
+        type: string
+    UNION_ID:
+      name: UNION_ID
+      description: The `meta:altId` or URL-encoded `$id` of the union schema in question.
+      required: true
+      in: path
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    orderBy:
+      name: orderby
+      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
+      required: false
+      in: query
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string

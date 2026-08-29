@@ -1,0 +1,686 @@
+openapi: 3.2.0
+info:
+  title: Unified Approvals API (Deprecated) Public API
+  version: '1.0'
+  description: 'The Unified Approvals public API endpoints allow you to create and manage approval records along with making decisions on those records.
+
+
+    Authentication is done through credentials obtained through the Adobe Developer Console. Currently, there is no ability to act on behalf of another user. This means if you are authenticating with a technical account, you will only be able to act as that technical account. For example, if you try to have the technical account make a decision on an approval that they are not a participant on, the API call will fail with a 404 saying they are not a participant. A user token for the actual participant on the approval would have to be used to authenticate to the API endpoint instead.
+
+
+    These endpoints only support single-stage approvals. They will not work with multi-stage approvals.
+
+
+    ### API Paths
+
+    - **Gateway URL**: `https://workfront.adobe.io`
+
+    - **Base Path**: `/unified-approvals`
+
+    - **Example URL**: `https://workfront.adobe.io/unified-approvals/public/api/v1/approvals/test/123`'
+  contact:
+    name: ''
+    email: ''
+    url: ''
+servers:
+- url: https://workfront.adobe.io/unified-approvals/
+  description: ''
+tags:
+- name: Public
+paths:
+  /public/api/v1/approvals/{assetType}/{assetId}:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    get:
+      summary: Get an approval
+      description: Gets the approval required for the given assetType and assetId.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      tags:
+      - Public
+  /public/api/v1/approvals/{assetType}/{assetId}/stages:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    put:
+      summary: Create or update an approval
+      description: Creates a new approval with a single stage. If the approval already exists, it will be updated.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stages:
+                  type: array
+                  minItems: 1
+                  maxItems: 1
+                  items:
+                    title: AddStageBody
+                    type: object
+                    description: Model for adding a new stage to an approval
+                    properties:
+                      name:
+                        type:
+                        - string
+                        - 'null'
+                        example: Marketing stage
+                      stageMetadata:
+                        type: object
+                        additionalProperties:
+                          oneOf:
+                          - type: string
+                          - type: number
+                          - type: boolean
+                          - type: array
+                          - type: object
+                      deadlineDate:
+                        type:
+                        - string
+                        - 'null'
+                        description: date object
+                        example: '2024-11-25T22:48:13.598Z'
+                      participants:
+                        type: array
+                        minItems: 1
+                        items:
+                          title: AddParticipantBody
+                          type: object
+                          description: Participant details
+                          properties:
+                            participantId:
+                              type:
+                              - string
+                              - 'null'
+                              example: 59281F01631245820A49421E@0000000000000000000000.e
+                            participantType:
+                              type: string
+                              enum:
+                              - USER
+                              - TEAMOB
+                              example: USER
+                            participantRole:
+                              type: string
+                              enum:
+                              - approver
+                              - reviewer
+                              example: approver
+                            participantMetadata:
+                              type: object
+                              additionalProperties:
+                                oneOf:
+                                - type: string
+                                - type: number
+                                - type: boolean
+                                - type: array
+                                - type: object
+                          required:
+                          - participantId
+                          - participantType
+                          - participantRole
+                      config:
+                        type: object
+                        properties:
+                          autoLockEnabled:
+                            type: boolean
+                            default: true
+                    required:
+                    - participants
+      tags:
+      - Public
+  /public/api/v1/approvals/{assetType}/{assetId}/decisions:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    put:
+      summary: Make a decision on an approval
+      description: Make a decision on a stage. If the decision is already made, it will be updated. Overall stage and approval status will be updated based on the decision and other participants. Throws an error if the approval is not found or if participant is not allowed.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: DecisionBody
+              type: object
+              properties:
+                decision:
+                  type: string
+                  enum:
+                  - needs work
+                  - approved with changes
+                  - approved
+                  - reviewed
+              required:
+              - decision
+      tags:
+      - Public
+  /public/api/v1/approvals/{assetType}/{assetId}/participants:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    put:
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                title: MultiStagesParticipantsBody
+                type: object
+                properties:
+                  stageId:
+                    type:
+                    - string
+                    - 'null'
+                    pattern: ^[\w-:]+$
+                    minLength: 24
+                    example: design-review
+                  participants:
+                    type: array
+                    minItems: 1
+                    items:
+                      title: AddParticipantBody
+                      type: object
+                      description: Participant details
+                      properties:
+                        participantId:
+                          type:
+                          - string
+                          - 'null'
+                          example: 59281F01631245820A49421E@0000000000000000000000.e
+                        participantType:
+                          type: string
+                          enum:
+                          - USER
+                          - TEAMOB
+                          example: USER
+                        participantRole:
+                          type: string
+                          enum:
+                          - approver
+                          - reviewer
+                          example: approver
+                        participantMetadata:
+                          type: object
+                          additionalProperties:
+                            oneOf:
+                            - type: string
+                            - type: number
+                            - type: boolean
+                            - type: array
+                            - type: object
+                      required:
+                      - participantId
+                      - participantType
+                      - participantRole
+                required:
+                - stageId
+                - participants
+      summary: Add or update approval participants
+      description: Adds new participants to an approval. You can also update an existing participants role by passing in the same participantId again but with their new role.
+      tags:
+      - Public
+    delete:
+      summary: Delete approval participants
+      description: Removes requested participants from an approval. Removing the last participant on an approval will result in the approval being deleted.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stageId:
+                  type: string
+                participants:
+                  type: array
+                  minItems: 1
+                  items:
+                    title: AddParticipantBody
+                    type: object
+                    description: Participant details
+                    properties:
+                      participantId:
+                        type:
+                        - string
+                        - 'null'
+                        example: 59281F01631245820A49421E@0000000000000000000000.e
+                      participantType:
+                        type: string
+                        enum:
+                        - USER
+                        - TEAMOB
+                        example: USER
+                      participantRole:
+                        type: string
+                        enum:
+                        - approver
+                        - reviewer
+                        example: approver
+                        description: Required but ignored.
+                      participantMetadata:
+                        type: object
+                        additionalProperties:
+                          oneOf:
+                          - type: string
+                          - type: number
+                          - type: boolean
+                          - type: array
+                          - type: object
+                    required:
+                    - participantId
+                    - participantType
+                    - participantRole
+      tags:
+      - Public
+  /public/api/v1/approvals/{assetType}/{assetId}/stages/{stageId}/lock:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/StageId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    put:
+      summary: Lock a stage
+      description: Locks the requested stage of the approval. When a stage is locked, participants cannot make a decision on it. Participants cannot be added or removed.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      tags:
+      - Public
+  /public/api/v1/approvals/{assetType}/{assetId}/stages/{stageId}/unlock:
+    parameters:
+    - $ref: '#/components/parameters/AssetType'
+    - $ref: '#/components/parameters/AssetId'
+    - $ref: '#/components/parameters/StageId'
+    - $ref: '#/components/parameters/Subdomain'
+    - $ref: '#/components/parameters/ApiKey'
+    - $ref: '#/components/parameters/RequestId'
+    put:
+      summary: Unlock a stage
+      description: Unlocks the requested stage of the approval. Participants will be able to make a decision on the stage again. Participants can be added or removed from the approval.
+      security:
+      - developer-console-auth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/ApprovalResponse'
+      tags:
+      - Public
+components:
+  responses:
+    ApprovalResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssetApproval'
+  parameters:
+    AssetId:
+      description: The id of the asset being approved
+      schema:
+        type: string
+        pattern: ^[\w-:|~]+$
+        example: 673fc29b0006af515e33732d1ebdc39a
+      name: assetId
+      in: path
+      required: true
+    AssetType:
+      name: AssetType
+      in: path
+      required: true
+      schema:
+        type: string
+        description: The type of the entity
+        enum:
+        - DOCV
+        example: test
+    Subdomain:
+      in: header
+      name: x-gw-subdomain
+      description: Customer's Workfront subdomain
+      required: true
+      schema:
+        type: string
+        example: your-workfront-subdomain
+    RequestId:
+      in: header
+      name: x-request-id
+      description: A unique identifier for the request
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StageId:
+      schema:
+        type: string
+        pattern: ^[\w-:]+$
+        example: design-review
+      name: stageId
+      in: path
+      required: true
+    ApiKey:
+      in: header
+      name: x-api-key
+      description: Generated API key from Adobe Developer Console
+      required: true
+      schema:
+        type: string
+  schemas:
+    AssetApproval:
+      type: object
+      description: The approval response object
+      title: Approval response
+      properties:
+        approvalGuid:
+          type: string
+          description: Unique identifier for the approval
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        assetId:
+          type: string
+          description: The id of the asset being approved
+          example: 673fc29b0006af515e33732d1ebdc39a
+        assetType:
+          type: string
+          description: The type of the entity
+          enum:
+          - DOCV
+          example: DOCV
+        creatorId:
+          type: string
+          description: User ID of the approval creator
+          example: 59281F01631245820A49421E@0000000000000000000000.e
+        customerDomain:
+          type: string
+          description: Customer domain
+          example: example.workfront.com
+        templateId:
+          type: string
+          description: Template ID if approval was created from a template
+          example: 65a86af23f71808d4583be0a
+        productId:
+          type: string
+          description: Product identifier
+          example: workfront
+        imsOrgId:
+          type: string
+          description: IMS Organization ID
+          example: 1269195F66C8C84F0A494025@AdobeOrg
+        status:
+          type: string
+          description: Overall approval status
+          enum:
+          - not started
+          - notified
+          - pending review
+          - in review
+          - needs work
+          - reviewed
+          - approved
+          - approved with changes
+          - withdrawn
+          example: pending review
+        isLocked:
+          type: boolean
+          description: Rollup of the stages isLocked field. If all stages are locked, this will be true, otherwise this will be false
+        decisionDate:
+          type: string
+          format: date-time
+          description: Date when final decision was made
+          example: '2024-01-15T10:30:00.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: '2024-01-10T08:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: '2024-01-15T10:30:00.000Z'
+        stages:
+          type: array
+          description: Array of approval stages
+          items:
+            type: object
+            properties:
+              stageId:
+                type: string
+                description: Unique identifier for the stage
+                example: 6744feadafbbfb97a7c1c325
+              name:
+                type: string
+                description: Name of the stage
+                example: Design Review
+              stageMetadata:
+                type: object
+                description: Additional metadata for the stage
+                additionalProperties: true
+              status:
+                type: string
+                description: Stage status
+                enum:
+                - not started
+                - notified
+                - pending review
+                - in review
+                - needs work
+                - reviewed
+                - approved
+                - approved with changes
+                - withdrawn
+                example: pending review
+              deadlineDate:
+                type: string
+                format: date-time
+                description: Deadline for this stage
+                example: '2024-01-20T17:00:00.000Z'
+              decisionDate:
+                type: string
+                format: date-time
+                description: Date when stage decision was made
+                example: '2024-01-18T14:30:00.000Z'
+              isLocked:
+                type: boolean
+                description: Whether the stage is locked
+              isActive:
+                type: boolean
+                description: Whether the stage is currently active
+              isLockOverridden:
+                type: boolean
+                description: Whether the lock has been overridden
+              participants:
+                type: array
+                description: Participants in this stage
+                items:
+                  type: object
+                  required:
+                  - participantId
+                  - participantType
+                  - participantRole
+                  properties:
+                    participantId:
+                      type: string
+                      description: User or team ID
+                      example: 59281F01631245820A49421E@0000000000000000000000.e
+                    participantType:
+                      type: string
+                      description: Type of participant
+                      enum:
+                      - USER
+                      - TEAMOB
+                      example: USER
+                    participantRole:
+                      type: string
+                      description: Role of the participant
+                      enum:
+                      - reviewer
+                      - approver
+                      example: approver
+                    participantMetadata:
+                      type: object
+                      description: Additional metadata for the participant
+                      additionalProperties: true
+                    requesterId:
+                      type: string
+                      description: ID of user who requested this participant
+                    realRequesterId:
+                      type: string
+                      description: Real requester ID if done on behalf of someone
+                    status:
+                      type: string
+                      description: Participant status
+                      enum:
+                      - notified
+                      - not started
+                      - opened
+                      - not required
+                      - approved
+                      - approved with changes
+                      - needs work
+                      - reviewed
+                      example: notified
+                    activities:
+                      type: array
+                      description: Activity history for this participant
+                      items:
+                        type: object
+                        required:
+                        - userId
+                        properties:
+                          userId:
+                            type: string
+                            description: User who performed the activity
+                          realUserId:
+                            type:
+                            - string
+                            - 'null'
+                            description: Real user ID if done on behalf of someone
+                          decision:
+                            type: string
+                            enum:
+                            - approved
+                            - approved with changes
+                            - needs work
+                            - reviewed
+                            description: Decision made
+                          decisionDate:
+                            type: string
+                            format: date-time
+                            description: When decision was made
+                          openedAt:
+                            type: string
+                            format: date-time
+                            description: When participant opened the approval
+                          notifiedAt:
+                            type: string
+                            format: date-time
+                            description: When participant was notified
+                    firstDecisionAt:
+                      type: string
+                      format: date-time
+                      description: Timestamp of first decision
+                    decisionDate:
+                      type: string
+                      format: date-time
+                      description: Timestamp of decision
+                    createdAt:
+                      type: string
+                      format: date-time
+                      description: When participant was added
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      description: When participant was last updated
+              createdAt:
+                type: string
+                format: date-time
+                description: When stage was created
+              updatedAt:
+                type: string
+                format: date-time
+                description: When stage was last updated
+        structure:
+          type:
+          - array
+          - 'null'
+          description: Stage structure and dependencies
+          items:
+            type: object
+            properties:
+              stageId:
+                type: string
+                description: Stage identifier
+              parentIds:
+                type: array
+                description: Parent stage IDs
+                items:
+                  type: string
+        paths:
+          type: array
+          description: Parallel approval paths on this approval. Always empty for these endpoints since they only support single-stage approvals.
+          items:
+            type: object
+            properties:
+              pathId:
+                type: string
+                description: Path identifier
+              name:
+                type: string
+                description: Display name for the path
+              status:
+                type: string
+                description: Rollup status of the path
+              stages:
+                type: array
+                description: Stages on this path
+                items:
+                  type: object
+              structure:
+                type: array
+                description: Stage structure and dependencies for this path
+                items:
+                  type: object
+  securitySchemes:
+    developer-console-auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token from the Adobe Developer Console project

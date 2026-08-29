@@ -1,0 +1,528 @@
+openapi: 3.2.0
+info:
+  title: Segmentation Service Export jobs API
+  description: "\nAdobe Experience Platform Segmentation Service provides a user interface and RESTful API that allows you to create audiences through segment definitions or other sources from your Real-Time Customer Profile data. These audiences are centrally configured and maintained on Platform, and are readily accessible by any Adobe solution. Use the Segmentation Service API to programmatically integrate the service's various functionalities into your experience application, providing RESTful endpoints for managing audiences, segment definitions, segment jobs, exports, schedules, and more.\n- **Related documentation**:\n    - [Segmentation Service documentation](https://www.adobe.com/go/segmentation-overview-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Segmentation Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Segmentation%20Service%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**: \n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/core/ups\n  - Example of a complete path: https://<span>platform.adobe.io/data/core/ups/segment/definitions\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](https://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \\\"prod\\\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en)for more information.    \n  - All requests with a payload in the request body(such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/core/ups
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Export jobs
+  description: Export jobs are asynchronous processes that are used to persist audience members to datasets. More information about using this set of endpoints can be found in the [export jobs endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/segmentation/api/export-jobs.html).
+paths:
+  /export/jobs:
+    get:
+      tags:
+      - Export jobs
+      summary: List export jobs
+      operationId: listExportJobs
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: limit
+        in: query
+        description: Limit the number of export jobs returned in the list.
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        description: Offset the page of results returned, ordered by created time of resource.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter the export jobs returned by job status.
+        schema:
+          type: string
+          enum:
+          - NEW
+          - SUCCEEDED
+          - FAILED
+      responses:
+        200:
+          x-summary: Success
+          description: A list of the export jobs returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetExportJobsResponse'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+    post:
+      tags:
+      - Export jobs
+      summary: Create an export job
+      operationId: createExportJob
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/content-type'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: x-profile-instance-id
+        in: header
+        description: 'The ID of the profile instance. **Example**: `ups`'
+        schema:
+          type: string
+      requestBody:
+        description: "- **fields** - [Optional] Column filters (comma-separated list of columns in dot notation). Limits the data fields to be included in the export to only those provided in this parameter. The same parameter is also available when creating a segment definition, therefore the fields in the segment definition may have already been filtered. Omitting this value will result in all fields being included in the exported data.\n- **mergePolicy** - [Optional] Specifies the merge policy to govern the exported data. Include this parameter when there are multiple segment definitions being exported. Omitting this value will cause the Export Service to use the merge policy provided by the segmentId or snapshotName.\n    - **id** - The ID of the merge policy.\n    - **version** - The specific version of the merge policy to use. Omitting this value will default to the most recent version.\n- **filter** - [Optional] Specifies one or more of the following filters to apply to the segment definition before export.\n    - **segments** - [Optional] Specifies the segment definitions to export. Omitting this value will result in all data from all profiles being exported. Accepts an array of segment definitions, each containing the following fields:\n        - **segmentId** - **[Required if specifying segment definitions]** Segment definition ID for profiles to be exported.\n        - **segmentNs** - [Optional] The namespace of the segment definition for the given segmentId.\n        - **status** - [Optional] An array of strings providing a status filter for the `segmentID`. By default, `status` will have the value `[\"realized\", \"existing\"]` which represents all profiles that fall into the segment definition at the current time. Possible values include: `\"realized\"`, `\"existing\"`, and `\"exited\"`.\n    - **segmentQualificationTime** - [Optional] Filter based on segment qualification time. The start time and/or end time can be provided.\n        - **startTime** - [Optional] Segment qualification start time for a segment definition ID for a given status. It not provided, there will be no filter on the start time for a segment definition ID qualification. The timestamp must be provided in [RFC 3339](https://tools.ietf.org/html/rfc3339) format.\n        - **endTime** - [Optional] Segment qualification end time for a segment definition ID for a given status. It not provided, there will be no filter on the end time for a segment definition ID qualification. The timestamp must be provided in [RFC 3339](https://tools.ietf.org/html/rfc3339) format.\n    - **fromIngestTimestamp** - [Optional] Filters the resulting profiles to those that have been updated after the provided timestamp. Value is provided in RFC 3339 format. Supports `greater_than` operand.\n    - **emptyProfiles** - [Optional] Boolean. Profiles can contain Profile records, ExperienceEvent records, or both. Profiles with no Profile records and only ExperienceEvent records are referred to as \"emptyProfiles\". To export all profiles in the Profile store, including the \"emptyProfiles\", set the value of \"emptyProfiles\" to `true`. If \"emptyProfiles\" is set to `false`, only profiles with Profile records in the store are exported. By default, if \"emptyProfiles\" attribute is not included, only profiles containing Profile records are exported.\n- **additionalFields** - [Optional] Additional profile fields that need to be exported.\n    - **eventList** - Used if ExperienceEvents need to be exported with profiles.\n        - **fields** - Comma-separated list of ExperienceEvent fields to be included in the export. If not provided, all ExperienceEvent fields are exported.\n        - **filter** - Filters ExperienceEvents based on the parameters below. If not provided, all events corresponding to the resulting profiles will be exported.\n            - **fromIngestTimestamp** - Filters ExperienceEvents to those that have been updated after the provided timestamp. This is not the event time itself but the ingestion time for the events. Value is provided in RFC 3339 format.\n- **destination** - **[Required]** Destination information for the exported data.\n    - **datasetId** - **[Required]** The ID of the dataset where data is to be exported.\n    - **segmentPerBatch** [Optional] A Boolean value that, if not provided, defaults to false. A value of false exports all segment definition IDs into a single batch ID. A value of true exports one segment definition ID into one batch ID.\n- **schema.name** - **[Required]** The name of the schema associated with the dataset where data is to be exported."
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExportJobRequest'
+        required: true
+      responses:
+        200:
+          x-summary: Success
+          description: The export job has been successfully created.
+          headers:
+            X-Location:
+              description: The HREF of the export job.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobResponse'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+      x-codegen-request-body-name: body
+  /export/jobs/{EXPORT_JOB_ID}:
+    get:
+      tags:
+      - Export jobs
+      summary: Retrieve an export job
+      operationId: retrieveExportJob
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: EXPORT_JOB_ID
+        in: path
+        description: The ID of the export job you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: The export job successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobResponse'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The export job was not found.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+    delete:
+      tags:
+      - Export jobs
+      summary: Cancel or delete an export job
+      operationId: cancelExportJob
+      parameters:
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - $ref: '#/components/parameters/x-gw-ims-org-id'
+      - $ref: '#/components/parameters/x-sandbox-name'
+      - name: EXPORT_JOB_ID
+        in: path
+        description: The ID of the export job you want to cancel or delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          x-summary: Success
+          description: The export job was successfully cancelled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CancelExportJobResponse'
+        403:
+          x-summary: Missing access permissions
+          description: Access is forbidden.
+          content: {}
+        404:
+          x-summary: Not found
+          description: The export job was not found.
+          content: {}
+        503:
+          x-summary: Service unavailable
+          description: The service is unavailable.
+          content: {}
+components:
+  parameters:
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. Should be 'application/json'.
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+  schemas:
+    CancelExportJobResponse:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: The status of the request.
+          example: true
+        message:
+          type: string
+          description: The message that will be sent when cancelling an export job.
+          example: Export job has been marked for cancelling
+      description: The response for cancelling an export job.
+    ExportJobResponse:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The ID of the export job.
+          example: 100.0
+        jobType:
+          type: string
+          description: The type for the export job. It can be either batch or streaming.
+          example: BATCH
+          enum:
+          - BATCH
+          - STREAMING
+        destination:
+          type: object
+          properties:
+            datasetId:
+              type: string
+              description: The dataset ID of the destination.
+              example: 5b7c86968f7b6501e21ba9df
+            segmentPerBatch:
+              type: boolean
+              description: Determines if segment definition IDs will be all batched into a single batch ID. If true, each segment definition ID will get its own batch ID. If false, all segment definition IDs will be batched into a single batch ID.
+              example: false
+            batchId:
+              type: string
+              description: The batch ID of the destination.
+              example: da5cfb4de32c4b93a09f7e37fa53ad52
+            batches:
+              type: object
+              properties:
+                segmentId:
+                  type: string
+                  description: The segment definition ID provided in the export job request.
+                  example: 52c26d0d-45f2-47a2-ab30-ed06abc981ff
+                segmentNs:
+                  type: string
+                  description: The namespace of the segment definition.
+                  example: ups
+                status:
+                  type: array
+                  description: The status filter for segmentIds, default- ["realized","existing"].
+                  items:
+                    type: string
+                    example: realized
+                batchId:
+                  type: string
+                  description: The batch ID for a particular segment definition ID export.
+                  example: da5cfb4de32c4b93a09f7e37fa53ad52
+              description: The object for multi-segment definition export feature and will only be returned when segmentPerBatch is marked as true. If segmentPerBatch is marked as false, batchId is returned in first level "batchId" field under "destination" object.
+          description: The destination for the export job results.
+        fields:
+          type: string
+          description: Column filters.
+          example: identities.id,personalEmail.address
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the schema.
+              example: _xdm.context.profile
+          description: The schema name for the export job.
+        imsOrgId:
+          type: string
+          description: The organization ID that was provided.
+          example: 1BD6382559DF0C130A49422D@AdobeOrg
+        status:
+          type: string
+          description: The status of the export job.
+          example: SUCCEEDED
+          enum:
+          - NEW
+          - PROCESSING
+          - SUCCEEDED
+          - FAILED
+        filter:
+          $ref: '#/components/schemas/Filter'
+        additionalFields:
+          $ref: '#/components/schemas/AdditionalFields'
+        mergePolicy:
+          $ref: '#/components/schemas/MergePolicyObject'
+        profileInstanceId:
+          type: string
+          description: The ID of the profile instance provided.
+          example: ups
+        errors:
+          type: array
+          description: The errors returned, in case of failure.
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: '0100000003'
+              msg:
+                type: string
+                example: Error in Export Job
+              callStack:
+                type: string
+                example: com.adobe.aep.unifiedprofile.common.logging.Logger
+        metrics:
+          type: object
+          properties:
+            totalTime:
+              $ref: '#/components/schemas/FeedbackMetrics'
+            profileExportTime:
+              $ref: '#/components/schemas/FeedbackMetrics'
+            aCPDatasetWriteTime:
+              $ref: '#/components/schemas/FeedbackMetrics'
+          description: The metrics for the export job.
+        computeGatewayJobId:
+          type: object
+          properties:
+            exportJob:
+              type: string
+              description: The compute gateway job ID for an export job.
+              example: f3058161-7349-4ca9-807d-212cee2c2e94
+            pushJob:
+              type: string
+              description: The compute gateway job ID for a push job.
+              example: feaeca05-d137-4605-aa4e-21d19d801fc6
+          description: The compute gateway job ID.
+        creationTime:
+          type: integer
+          description: The timestamp, as unix time in seconds, for when the export job was created.
+          format: int64
+          example: 1538615973895
+        updateTime:
+          type: integer
+          description: The timestamp, as unix time in seconds, for when the export job was last updated.
+          format: int64
+          example: 1538616233239
+        requestId:
+          type: string
+          description: An optional ID that can be used for debugging purposes to identify the request.
+          example: d995479c-8a08-4240-903b-af469c67be1f
+      description: The information after submitting a export job.
+    Filter:
+      type: object
+      properties:
+        segments:
+          type: array
+          description: An array of filter values for the export job.
+          items:
+            type: object
+            properties:
+              segmentId:
+                type: string
+                description: The ID of the segment definition.
+                example: 52c26d0d-45f2-47a2-ab30-ed06abc981ff
+              segmentNs:
+                type: string
+                description: The segment definition namespace. By default, the value is "ups".
+                example: ups
+              status:
+                type: array
+                description: Status filter for segmentIds, default- ["realized","existing"].
+                items:
+                  type: string
+                  example: realized
+            description: Segment definition values for filter.
+        segmentQualificationTime:
+          type: object
+          properties:
+            startTime:
+              type: string
+              description: The start time for the segment qualification.
+              example: 2018-01-01 00:00:00+00:00
+            endTime:
+              type: string
+              description: The end time for the segment qualification.
+              example: 2018-02-01 00:00:00+00:00
+          description: The timestamp for exporting when profiles entered or exited a segment definition. The timestamp should be written in RFC 3339 format.
+        fromIngestTimestamp:
+          type: string
+          description: Filters profiles and experience events updated after the given timestamp. The timestamp should be written in RFC 3339 format.
+          example: 2018-01-01 00:00:00+00:00
+        emptyProfiles:
+          type: boolean
+          description: Boolean. Profiles can contain profile fragments, ExperienceEvent fragments, or both. Profiles with no profile fragments and only ExperienceEvent fragments are referred to as "emptyProfiles". To export all profiles in the profile store, including the "emptyProfiles", set the value of "emptyProfiles" to true. If "emptyProfiles" is set to false, only profiles with profile fragments in the store are exported. By default, "if "emptyProfiles" attribute is not included, only profiles containing profile fragments are exported.
+          example: true
+      description: Array of filter values for Export Job to export Profiles.
+    GetExportJobsResponse:
+      type: object
+      properties:
+        records:
+          type: array
+          description: The list of export job records.
+          items:
+            $ref: '#/components/schemas/ExportJobResponse'
+        page:
+          type: object
+          properties:
+            sortField:
+              type: string
+              description: The field in which records are sorted by. By default, records are sorted by creation time.
+              example: createdTime
+            sort:
+              type: string
+              description: The order in which records are sorted. By default, records are sorted in descending order.
+              example: desc
+            pageOffset:
+              type: string
+              description: The offset of the page. By default, the offset is the creation time and job id for the last record on the page.
+              example: 154097470130296
+            pageSize:
+              type: integer
+              description: The total number of records of the page.
+              format: int32
+              example: 10
+          description: The page information of the current response entity.
+        link:
+          type: object
+          properties:
+            next:
+              type: string
+              description: The href link to the next page of the records. If there are no more records, this value is empty.
+          description: The href links.
+    FeedbackMetrics:
+      type: object
+      properties:
+        startTimeInMs:
+          type: number
+          description: The start time, in milliseconds.
+          example: 123456789000.0
+        endTimeInMs:
+          type: number
+          description: The end time, in milliseconds.
+          example: 123456799000.0
+        totalTimeInMs:
+          type: number
+          description: The total time the export job takes, in milliseconds. This is calculated by subtracting the start time from the end time.
+          example: 10000.0
+      description: The metrics for the export job.
+    CreateExportJobRequest:
+      type: object
+      properties:
+        fields:
+          type: string
+          description: The columns in which you can filter by. They are written as comma separated dot notation of the requested columns.
+          example: identities.id,personalEmail.address
+        mergePolicy:
+          $ref: '#/components/schemas/MergePolicyObject'
+        filter:
+          $ref: '#/components/schemas/Filter'
+        additionalFields:
+          $ref: '#/components/schemas/AdditionalFields'
+        destination:
+          type: object
+          properties:
+            datasetId:
+              type: string
+              description: The dataset ID of the destination.
+              example: 5b7c86968f7b6501e21ba9df
+          description: The location where the exported data will be stored.
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the schema.
+              example: _xdm.context.profile
+          description: The schema name for the data.
+      description: The request for creating an export job.
+    MergePolicyObject:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the merge policy.
+          example: timestampOrdered-none-mp
+        version:
+          type: number
+          description: The version of the given merge policy. By default the value will be "Latest".
+          example: 1.0
+      description: An object that describes the items within a merge policy.
+    AdditionalFields:
+      type: object
+      properties:
+        eventList:
+          type: object
+          properties:
+            fields:
+              type: string
+              description: The fields filter for the event list.
+            filter:
+              type: object
+              properties:
+                fromIngestTimestamp:
+                  type: string
+                  description: Filters experience events ingested after the given timestamp. The timestamp should be written in the RFC 3339 format.
+                  example: 2018-01-01 00:00:00+00:00
+              description: The filter values for exporting the event list.
+          description: The name of the additional field to be exported.
+      description: Additional fields that need to be exported.

@@ -1,0 +1,405 @@
+openapi: 3.2.0
+info:
+  title: Retrieve & filter Action Campaigns Workflow Resource API
+  description: Retrieve & filter Action Campaigns
+  version: v1.79
+servers:
+- url: https://platform-int.adobe.io/journey/campaigns
+  description: QA
+- url: https://platform-stage.adobe.io/journey/campaigns
+  description: Stage
+- url: https://platform.adobe.io/journey/campaigns
+  description: Prod
+security:
+- {}
+- x-api-key:
+  - read
+  - write
+tags:
+- name: Workflow Resource
+  description: Workflow collection
+paths:
+  /service/workflows/{workflowId}:
+    get:
+      tags:
+      - Workflow Resource
+      summary: Get workflow
+      operationId: getWorkflow
+      parameters:
+      - name: workflowId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        required: true
+        schema:
+          type: string
+          description: IMS Org ID
+      - name: x-sandbox-name
+        in: header
+        required: true
+        schema:
+          type: string
+          description: Sandbox Name
+      responses:
+        '200':
+          description: Request successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workflow_Model'
+        '404':
+          description: Requested object not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+        '500':
+          description: Any error encountered while retrieving details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Campaign_Notification_Model'
+      security:
+      - x-api-key: []
+      - AdobeUserToken: []
+components:
+  schemas:
+    Campaign_Report_Model:
+      type: object
+      properties:
+        tenantInfo:
+          type: object
+          additionalProperties:
+            type: string
+        additionalContext:
+          $ref: '#/components/schemas/Campaign_Notification_Additional_Context'
+      readOnly: true
+    Link_details:
+      type: object
+      properties:
+        href:
+          type: string
+        type:
+          type: string
+        templated:
+          type: boolean
+        method:
+          type: string
+        title:
+          type: string
+        hrefLang:
+          type: string
+    Result_Model:
+      type: object
+      properties:
+        type:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        id:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        ref:
+          type: string
+          readOnly: true
+      readOnly: true
+    Pes_Details_Model:
+      required:
+      - empty
+      type: object
+      properties:
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pes_option'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pes_parent'
+        enforcementRefs:
+          type: array
+          items:
+            type: string
+        empty:
+          type: boolean
+    Campaign_Notification_Model:
+      type: object
+      properties:
+        type:
+          type: string
+          description: sortable
+          readOnly: true
+        title:
+          type: string
+          description: sortable
+          readOnly: true
+        message:
+          type: string
+          description: sortable
+          readOnly: true
+        status:
+          type: integer
+          description: sortable
+          format: int32
+          readOnly: true
+        report:
+          $ref: '#/components/schemas/Campaign_Report_Model'
+        error-chain:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Campaign_Error_Chain'
+        error:
+          $ref: '#/components/schemas/Error_Details'
+    Pes_parent:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        namespace:
+          type: string
+    Campaign_Notification_Additional_Context:
+      type: object
+      properties:
+        source:
+          type: string
+        sourceId:
+          type: string
+        errorLevel:
+          type: string
+        variantId:
+          type: string
+        channel:
+          type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: object
+    Validation_Model:
+      type: object
+      properties:
+        errorLevel:
+          type: string
+          enum:
+          - ERROR
+          - WARNING
+        errorMessage:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Campaign_Notifications'
+      description: filterable
+      readOnly: true
+    Campaign_Error_Chain:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        errorCode:
+          type: string
+        invokingServiceId:
+          type: string
+        unixTimeStampMs:
+          type: integer
+          format: int64
+      readOnly: true
+    Campaign_Notifications:
+      type: object
+      properties:
+        id:
+          type: string
+        errorSource:
+          type: string
+          enum:
+          - PACKAGE
+          - VERSION
+          - MESSAGE
+          - UPSTREAM
+          - SOURCE
+          - SANDBOX
+          - ACTION
+          - CAMPAIGN
+          - MIGRATION_ERROR_SOURCE
+          - SURFACE
+          - GOVERNANCE
+          - EXPERIMENTATION
+          - ADMIN
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/Campaign_Notification_Model'
+        pesLinks:
+          $ref: '#/components/schemas/Pes_Details_Model'
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Link_details'
+          readOnly: true
+    Activity_Invocation:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        klass:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        outcome:
+          type: string
+          readOnly: true
+          enum:
+          - success
+          - client_error
+          - service_error
+          - upstream_error
+          - unknown
+        exceptionName:
+          type: string
+          readOnly: true
+        exceptionMessage:
+          type: string
+          readOnly: true
+        duration:
+          type: integer
+          format: int64
+          readOnly: true
+      readOnly: true
+    Pes_option:
+      type: object
+      properties:
+        id:
+          type: string
+        contentType:
+          type: string
+        schemaPath:
+          type: string
+    Error_Details:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        detail:
+          type: object
+          additionalProperties:
+            type: object
+      readOnly: true
+      deprecated: true
+    Workflow_Model:
+      type: object
+      properties:
+        type:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        workflowId:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        runId:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        state:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+          enum:
+          - CREATED
+          - PROCESSING
+          - PROCESSED
+          - FAILED
+        domain:
+          type: string
+          description: filterable
+          readOnly: true
+        status:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+          enum:
+          - COMPLETED
+          - FAILED
+          - CANCELED
+          - TERMINATED
+          - CONTINUED_AS_NEW
+          - TIMED_OUT
+        createdBy:
+          type: string
+          description: filterable
+          readOnly: true
+        createdAt:
+          type: string
+          description: ISO_INSTANT with 6 fractional digits, sortable, filterable
+          readOnly: true
+        modifiedAt:
+          type: string
+          description: ISO_INSTANT with 6 fractional digits, sortable, filterable
+          readOnly: true
+        startTime:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        executionTime:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        closeTime:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        duration:
+          type: integer
+          description: sortable, filterable
+          format: int64
+          readOnly: true
+        errorMessage:
+          type: string
+          description: sortable, filterable
+          readOnly: true
+        notifications:
+          $ref: '#/components/schemas/Validation_Model'
+        _result:
+          $ref: '#/components/schemas/Result_Model'
+        bulkResult:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Result_Model'
+        activities:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Activity_Invocation'
+        sourceType:
+          type: string
+          description: sortable, filterable
+          enum:
+          - campaign
+          - journey
+          - ipWarmup
+          - journeyFragment
+          - orchestratedCampaign
+          - b2bAccountJourneys
+          - smbCampaign
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Link_details'
+          readOnly: true
+  securitySchemes:
+    x-api-key:
+      type: apiKey
+      name: x-api-key
+      in: header

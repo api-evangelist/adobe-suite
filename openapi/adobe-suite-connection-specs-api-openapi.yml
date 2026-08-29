@@ -1,0 +1,1175 @@
+openapi: 3.2.0
+info:
+  title: Flow Service API - Sources Connection specs API
+  description: "Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services. You can ingest data from a variety of sources such as Adobe applications, cloud-based storages, databases, and many others. The service provides a RESTful API from which all supported sources are connectable.\n>**NOTE**: Refer to [Flow Service API - Destinations](https://developer.adobe.com/experience-platform-apis/references/destinations/) if you are looking for API documentation to perform operations on *destinations* in Experience Platform.\n- **Related documentation**:\n  - [Sources documentation](https://www.adobe.com/go/sources-overview-en)\n\n- **Visualize API calls with Postman** (a free, third-party software):\n  - [Flow Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Flow%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/connections\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html?lang=en)."
+  version: '1.0'
+servers:
+- url: //{environment}.adobe.io/data/foundation/flowservice
+  variables:
+    environment:
+      default: platform
+      enum:
+      - platform
+      - platform-stage
+tags:
+- name: Connection specs
+  description: Connection specifications retain the connector properties of a given source. A connection spec can be divided into three distinct sections, authentication specifications (authSpec), source specifications (sourceSpec), and explore specifications (exploreSpec). The authSpec defines the authentication type(s) that you can use to connect your source to Experience Platform. The sourceSpec consists of source connection parameters that a given source requires from a user. For example, the sourceSpec of a cloud storage source can require a user to provide values for path or recursive parameter. The sourceSpec also includes properties that are used when the source is displayed in the Platform UI catalog. The exploreSpec defines the structure of returned data when a source is queried against. Connection specs include a connection spec ID. This ID is fixed and each source on Experience Platform has its own fixed connection spec ID. This ID is required to create a base connection and a source connection. Connection specs are organization agnostic.
+paths:
+  /connectionSpecs:
+    get:
+      tags:
+      - Connection specs
+      summary: List connection specs
+      description: Use this endpoint to list all connection specs in your organization.
+      operationId: listConnectionSpecs
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: property
+        in: query
+        description: A comma-separated list of top-level object properties to be returned in the response. This parameter is used to filter the response data based on the properties provided. For example, `property=lastRunDetails.startedAtUTC>=1670880253121` returns only the flows whos last run iterations were started during or after the specified epoch time in milliseconds. This parameter is also used to cut down the amount of data returned in the response body. For example, `property=state==enabled&orderby=createdAt` returns only base connections that have a status of `enabled` in the order of their creation, in ascending order.
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns a list of connection specs that match the request parameters in JSON format.
+          x-summary: Connection Specifications Listed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionSpecResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    post:
+      tags:
+      - Connection specs
+      summary: Creates a new connection spec.
+      description: Use this endpoint to create a new connection spec for your source.
+      operationId: createConnectionSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      requestBody:
+        description: The following request creates a new connection spec for a new source.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionSpecRequest'
+      responses:
+        '201':
+          description: Connection Spec Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionSpecItemDTO'
+              examples:
+                success:
+                  value:
+                    id: 44c6e8ec-54e8-4813-a472-93c6cf29c3d7
+                    createdAt: 1624299037286
+                    updatedAt: 1624299037286
+                    createdBy: acp_foundation_connectors@AdobeID
+                    updatedBy: acp_foundation_connectors@AdobeID
+                    createdClient: acp_foundation_connectors
+                    updatedClient: acp_foundation_connectors
+                    sandboxId: 6b36e130-c5d7-11e9-949c-0da8d50fcac1
+                    sandboxName: prod
+                    imsOrgId: 7DC732555AECDB4C0A494036@AdobeOrg
+                    name: test1
+                    providerId: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+                    version: '1.0'
+                    authSpec:
+                    - name: Basic Authentication for Dynamics-Online
+                      type: BasicAuthentication
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: defines auth params required for connecting to dynamics-online
+                        properties:
+                          serviceUri:
+                            type: string
+                            description: The service URL of your Dynamics instance
+                          username:
+                            type: string
+                            description: User name for the user account
+                          password:
+                            type: string
+                            description: Password for the user account
+                            format: password
+                        required:
+                        - username
+                        - password
+                        - serviceUri
+                    sourceSpec:
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: Defines params required when dynamics-online connection is used as a source in flow.
+                        properties:
+                          tableName:
+                            type: string
+                            description: The input table from dynamics-online to pull data from.
+                          columns:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                type:
+                                  type: string
+                                meta:
+                                  type: object
+                                  description: Defines meta information for each column.
+                                  originalType:
+                                    type: string
+                              required:
+                              - name
+                              - type
+                              - meta
+                        required:
+                        - tableName
+                        - columns
+                      attributes:
+                        uiAttributes:
+                          documentationLink: http://www.adobe.com/go/sources-dynamics-en
+                          isSource: true
+                          category:
+                            key: crm
+                          icon:
+                            key: msDynamics
+                          description:
+                            key: microsoftDynamicsDescription
+                          label:
+                            key: microsoftDynamicsLabel
+                    attributes:
+                      category: CRM
+                      isSource: true
+                      documentationLink: http://www.adobe.com/go/data-connector-Microsoft-Dynamics-en
+                      uiAttributes:
+                        apiFeatures:
+                          explorePaginationSupported: false
+                    permissionsInfo:
+                      manage:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - write
+                      view:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - read
+          headers:
+            Location:
+              description: Location of the newly created Connection Spec instance
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/ConnectionSpecItemDTO'
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /connectionSpecs/{CONNECTION_SPEC_ID}:
+    get:
+      tags:
+      - Connection specs
+      summary: Retrieve a connection spec
+      description: Use this endpoint to retrieve a single instance of a connection spec.
+      operationId: retrieveConnectionSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: CONNECTION_SPEC_ID
+        in: path
+        description: The ID of the connection specification that you want to retrieve.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation. A successful response returns details of specified connection specification that match the request parameters in JSON format.
+          x-summary: Connection Specification Details Retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionSpecResponse'
+        '403':
+          description: The OAuth token is missing.
+          x-summary: Authorization Error - Missing OAuth Token
+          content: {}
+        '503':
+          description: The service is unavailable.
+          x-summary: Server Error - Service Unavailable
+          content: {}
+    put:
+      tags:
+      - Connection specs
+      summary: Updates an existing connection spec.
+      description: Use this endpoint to update an existing connection spec.
+      operationId: updateConnectionSpec
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: CONNECTION_SPEC_ID
+        in: path
+        description: The ID of the connection spec that you want to update.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The following request updates the information of the queried connection spec ID.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConnectionSpecRequest'
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the updated connection spec.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionSpecItemDTO'
+              examples:
+                success:
+                  value:
+                    id: 44c6e8ec-54e8-4813-a472-93c6cf29c3d7
+                    createdAt: 1624299037286
+                    updatedAt: 1624299037286
+                    createdBy: acp_foundation_connectors@AdobeID
+                    updatedBy: acp_foundation_connectors@AdobeID
+                    createdClient: acp_foundation_connectors
+                    updatedClient: acp_foundation_connectors
+                    sandboxId: 6b36e130-c5d7-11e9-949c-0da8d50fcac1
+                    sandboxName: prod
+                    imsOrgId: 7BA732555AECDB4C0A494036@AdobeOrg
+                    name: test1
+                    providerId: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+                    version: '1.0'
+                    authSpec:
+                    - name: Basic Authentication for Dynamics-Online
+                      type: BasicAuthentication
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: Defines auth params required for connecting to dynamics-online.
+                        properties:
+                          serviceUri:
+                            type: string
+                            description: The service URL of your Dynamics instance
+                          username:
+                            type: string
+                            description: User name for the user account
+                          password:
+                            type: string
+                            description: Password for the user account
+                            format: password
+                        required:
+                        - username
+                        - password
+                        - serviceUri
+                    sourceSpec:
+                      spec:
+                        $schema: http://json-schema.org/draft-07/schema#
+                        type: object
+                        description: Defines params required when dynamics-online connection is used as a source in flow.
+                        properties:
+                          tableName:
+                            type: string
+                            description: The input table from dynamics-online to pull data from
+                          columns:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                type:
+                                  type: string
+                                meta:
+                                  type: object
+                                  description: Defines meta information for each column.
+                                  originalType:
+                                    type: string
+                              required:
+                              - name
+                              - type
+                              - meta
+                        required:
+                        - tableName
+                        - columns
+                      attributes:
+                        uiAttributes:
+                          documentationLink: http://www.adobe.com/go/sources-dynamics-en
+                          isSource: true
+                          category:
+                            key: crm
+                          icon:
+                            key: msDynamics
+                          description:
+                            key: microsoftDynamicsDescription
+                          label:
+                            key: microsoftDynamicsLabel
+                    attributes:
+                      category: CRM
+                      isSource: true
+                      documentationLink: http://www.adobe.com/go/data-connector-Microsoft-Dynamics-en
+                      uiAttributes:
+                        apiFeatures:
+                          explorePaginationSupported: false
+                    permissionsInfo:
+                      manage:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - write
+                      view:
+                        '@type': lowLevel
+                        name: EnterpriseSource
+                        permissions:
+                        - read
+        '400':
+          description: The request is invalid.
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /connectionSpecs/{CONNECTION_SPEC_ID}/explore:
+    get:
+      tags:
+      - Connection specs
+      summary: Explore objects of a connection spec.
+      description: Use this endpoint to explore the objects of a given connection spec.
+      operationId: exploreByConnectionSpecId
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: CONNECTION_SPEC_ID
+        in: path
+        description: The ID of the queried connection spec.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the connection spec entity that corresponds to the queried ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploreConnectionResponse'
+              examples:
+                success:
+                  value:
+                    items:
+                    - columnName: name
+                      columnType: string
+                    - columnName: address
+                      columnType: string
+                    - columnName: dob
+                      columnType: date
+                    - columnName: phone
+                      columnType: string
+        '400':
+          description: The request is invalid.
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+  /connectionSpecs/{CONNECTION_SPEC_ID}/configs:
+    get:
+      tags:
+      - Connection specs
+      summary: Retrieve config options for a connection spec.
+      description: Use this endpoint to retrieve the available config options for a given connection spec.
+      operationId: configByConnectionSpecId
+      parameters:
+      - name: Authorization
+        in: header
+        description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-api-key
+        in: header
+        description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-gw-ims-org-id
+        in: header
+        description: The organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        required: true
+        schema:
+          type: string
+      - name: x-sandbox-name
+        in: header
+        description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
+        schema:
+          type: string
+      - name: CONNECTION_SPEC_ID
+        in: path
+        description: The ID of the queried connection spec.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          x-summary: Success
+          description: Successful operation. A successful response returns the config options for the field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExploreConnectionResponse'
+              examples:
+                success:
+                  value:
+                    items:
+                    - columnName: name
+                      columnType: string
+                    - columnName: address
+                      columnType: string
+                    - columnName: dob
+                      columnType: date
+                    - columnName: phone
+                      columnType: string
+        '400':
+          description: The request is invalid.
+        '401':
+          description: The user is unauthorized. Contact your administrator to resolve permissions and access the resource.
+        '500':
+          description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
+components:
+  schemas:
+    TargetSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the type of the target.
+          example: CloudStorage
+        type:
+          type: string
+          description: The type of the target. This value is the same as the category assigned to the target.
+          example: CloudStorage
+        spec:
+          type: object
+          properties:
+            schema:
+              type: string
+              example: http://json-schema.org/draft-07/schema#
+            type:
+              type: string
+              example: object
+            dataSetId:
+              type: string
+        attributes:
+          type: object
+          properties:
+            uiAttributes:
+              type: object
+              properties:
+                isDestination:
+                  type: boolean
+                  description: A boolean value that defines if the queried item is a destination.
+                  example: true
+                documentationLink:
+                  type: string
+                  description: A link to the documentation about a given destination.
+                  example: http://www.adobe.com/go/sources-google-cloud-storage-en
+                category:
+                  type: string
+                  description: The category that corresponds with the destination. Example categories include `social`, `cloudStorage`, `emailMarketing`.
+                  example: cloudStorage
+                icon:
+                  type: string
+                  description: The image that corresponds with a given destination when displayed on the destination catalog in the Experience Platform UI.
+                  example: google
+                description:
+                  type: string
+                  description: A brief description used to provide high-level information on a given destination.
+                label:
+                  type: string
+                  description: The label or name of a destination displayed on the destination catalog in the Experience Platform UI.
+    SourceSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the type of the source.
+          example: CloudStorage
+        type:
+          type: string
+          description: The type of the source. This value is the same as the category assigned to the source.
+          example: CloudStorage
+        spec:
+          type: object
+          properties:
+            schema:
+              type: string
+              example: http://json-schema.org/draft-07/schema#
+            type:
+              type: string
+              example: object
+            description:
+              type: string
+              example: Defines params required when this connection is used as a source in flow.
+            path:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: string
+                description:
+                  type: string
+                  example: The input path for copying files. This can be a folder path, a file path or a wildcard pattern.
+            recursive:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: boolean
+                default:
+                  type: string
+                  example: 'false'
+                description:
+                  type: string
+                  example: The recursive property indicates recursive copy in case of folder or wild card path. The default value is false.
+          description: An array that contains information specific to a source, including attributes pertaining to a source’s category, beta status, and catalog icon. They also contain useful information such as URL parameters, content, header, and schedule. Source specifications also describe the schema of the parameters required to create a source connection from a base connection.
+        attributes:
+          type: object
+          properties:
+            uiAttributes:
+              type: object
+              properties:
+                isSource:
+                  type: boolean
+                  description: A boolean value that defines if the queried item is a source.
+                  example: true
+                documentationLink:
+                  type: string
+                  description: A link to the documentation about a given source.
+                  example: http://www.adobe.com/go/sources-google-cloud-storage-en
+                category:
+                  type: string
+                  description: The category that corresponds with the source. Available source categories include `advertising`, `cloudStorage`, `crm`, `customerSuccess`, `database`, `ecommerce`, `marketingAutomation`, `payments`, `protocols`, and `streaming`.
+                  example: cloudStorage
+                icon:
+                  type: string
+                  description: The image that corresponds with a given source when displayed on the sources catalog in the Experience Platform UI.
+                  example: google
+                description:
+                  type: string
+                  description: A brief description used to provide high-level information on a given source.
+                  example: Create a live inbound connection to your Google Cloud Storage account to periodically ingest delimited data file into Experience Platform.
+                label:
+                  type: string
+                  description: The label or name of a source displayed on the sources catalog in the Experience Platform UI.
+                  example: Google Cloud Storage
+              description: Contains information to display in the sources catalog of Experience Platform UI for a given source.
+    ExploreSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the source file type. File type can either be `FileSystem` or `Tabular`.
+          example: FileSystem
+        type:
+          type: string
+          description: Defines the type of file structure a source content follows. File type can either be `FileSystem` or `Tabular`.
+          example: FileSystem
+        requestSpec:
+          type: object
+          properties:
+            schema:
+              type: string
+              example: http://json-schema.org/draft-07/schema#
+            type:
+              type: string
+              example: object
+        responseSpec:
+          type: object
+          properties:
+            root:
+              type: object
+              properties:
+                $schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    properties:
+                      type: object
+                      properties:
+                        type:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              description: The structure type of the data at the root level.
+                              example: folder
+                        name:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: The file name of the data being ingested at the root level.
+                              example: acme-customers
+                        path:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              description: The file path to the data being ingested at the root level.
+                              example: sales
+                        canPreview:
+                          type: object
+                          properties:
+                            canPreview:
+                              type: boolean
+                              description: Defines if the data can be previewed.
+                              example: false
+                        canFetchSchema:
+                          type: object
+                          properties:
+                            canFetchSchema:
+                              type: boolean
+                              description: Defines if the schema of the fields of the data can be fetched.
+                              example: false
+            folder:
+              type: object
+              properties:
+                $schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    properties:
+                      type: object
+                      properties:
+                        type:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              description: The structure type of the data at the folder level.
+                              example: folder
+                        name:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: The file name of the data being ingested at the folder level.
+                              example: acme-customers
+                        path:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              description: The file path to the data being ingested at the folder level.
+                              example: sales
+                        canPreview:
+                          type: object
+                          properties:
+                            canPreview:
+                              type: boolean
+                              description: Defines if the data can be previewed.
+                              example: false
+                        canFetchSchema:
+                          type: object
+                          properties:
+                            canFetchSchema:
+                              type: boolean
+                              description: Defines if the schema of the fields of the data can be fetched.
+                              example: false
+            file:
+              type: object
+              properties:
+                $schema:
+                  type: string
+                  example: http://json-schema.org/draft-07/schema#
+                type:
+                  type: string
+                  example: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    properties:
+                      type: object
+                      properties:
+                        type:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              description: The structure type of the data at the file level.
+                              example: folder
+                        name:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: The file name of the data being ingested at the file level.
+                              example: acme-customers
+                        path:
+                          type: object
+                          properties:
+                            path:
+                              type: string
+                              description: The file path to the data being ingested at the file level.
+                              example: sales
+                        canPreview:
+                          type: object
+                          properties:
+                            canPreview:
+                              type: boolean
+                              description: Defines if the data can be previewed.
+                              example: false
+                        canFetchSchema:
+                          type: object
+                          properties:
+                            canFetchSchema:
+                              type: boolean
+                              description: Defines if the schema of the fields of the data can be fetched.
+                              example: false
+    PermissionDTO:
+      type: object
+      properties:
+        manage:
+          type: array
+          description: Defines the type of access available to the `manage` permission.
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - write
+        view:
+          type: array
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - read
+            description: Defines the type of access available to the `view` permission.
+      description: Contains information regarding the permissions applied to the queried source.
+    CreateConnectionSpecRequest:
+      type: object
+      required:
+      - name
+      - providerId
+      properties:
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        settings:
+          type: object
+          additionalProperties:
+            type: object
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        authSpec:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthenticationSpecDTO'
+        encryptionSpecs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EncryptionSpecDTO'
+        sourceSpec:
+          $ref: '#/components/schemas/SourceSpecDTO'
+        targetSpec:
+          $ref: '#/components/schemas/TargetSpecDTO'
+        exploreSpec:
+          $ref: '#/components/schemas/ExploreSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
+    AuthenticationSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the authentication type used to authenticate a source against Experience Platform.
+          example: Basic Authentication for google-cloud
+        type:
+          type: string
+          description: The type of authentication used to connect a source.
+          example: KeyBased
+        spec:
+          type: object
+          properties:
+            accessKeyId:
+              type: string
+              description: The access key ID assigned to the user account.
+              example: GOOGMG1234ABCDEFGHIJKLMN
+            secretAccessKey:
+              type: string
+              description: The secret access key assigned to the user account.
+              example: xxxx
+    ExploreConnectionResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            description: The type of file that corresponds with the queried data. Data directories can either be `folder` or `table`.
+            example: folder
+          name:
+            type: string
+            description: The name of the folder.
+            example: acme-customers
+          path:
+            type: string
+            description: The path to the folder.
+            example: /acme-customers/
+          canPreview:
+            type: boolean
+            description: A boolean value indicating whether the file can be previewed.
+            example: false
+          canFetchSchema:
+            type: boolean
+            description: A boolean value indicating whether the schema can be fetched.
+            example: false
+    PolicyItemDTO:
+      type: object
+      properties:
+        duleLabels:
+          type: array
+          items:
+            type: string
+        enforcementRefs:
+          type: array
+          items:
+            type: string
+    ConnectionSpecItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID of a given source.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        name:
+          type: string
+          description: The name of the source.
+          example: Google Cloud Storage
+        providerId:
+          type: string
+          description: A reference ID that links a connection with a specific source provider.
+          example: 0ed90a81-07f4-4586-8190-b40eccef1c5a
+        version:
+          type: string
+          description: The version of the specified connection specification ID.
+          example: '1.0'
+        authSpec:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthenticationSpecDTO'
+        sourceSpec:
+          $ref: '#/components/schemas/SourceSpecDTO'
+        exploreSpec:
+          $ref: '#/components/schemas/ExploreSpecDTO'
+        attributes:
+          type: object
+          properties:
+            category:
+              type: string
+              description: The category of the source.
+              example: Cloud Storage
+            connectorName:
+              type: string
+              description: The name of the source. This is the name that is displayed in the sources catalog in the Platform UI.
+              example: Google Cloud Storage
+            isSource:
+              type: boolean
+              description: A boolean value that indicates if the source is available in the sources catalog.
+              example: true
+            uiAttributes:
+              type: object
+              properties:
+                apiFeatures:
+                  type: object
+                  properties:
+                    explorePaginationSupported:
+                      type: boolean
+                      description: Describes the pagination type that is supported in the UI.
+                      example: false
+                  description: Contains information on the API features of a source.
+              description: Contains information pertaining to the UI attributes of the queried source.
+          description: Contains high-level information regarding the queried source, including information on its category and name to be displayed in Platform UI.
+        permissionsInfo:
+          $ref: '#/components/schemas/PermissionDTO'
+    EncryptionSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the type of the encryption supported.
+        type:
+          type: string
+          description: The type of the encryption.
+        spec:
+          type: object
+          properties:
+            encryptionAlgo:
+              type: object
+              properties:
+                type:
+                  type: string
+                description:
+                  type: string
+            publicKey:
+              type: object
+              properties:
+                type:
+                  type: string
+                contentEncoding:
+                  type: string
+                description:
+                  type: string
+    ConnectionSpecResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionSpecItemDTO'
+    EntitlementSpecDTO:
+      type: object
+      properties:
+        operation:
+          type: string
+          description: The type of checks to be applied on entitlements array.
+          example: anyOf
+        entitlements:
+          type: array
+          items:
+            type: string
+            description: The name of the entitlement supported.
+    UpdateConnectionSpecRequest:
+      type: object
+      required:
+      - name
+      - providerId
+      properties:
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        settings:
+          type: object
+          additionalProperties:
+            type: object
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        authSpec:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthenticationSpecDTO'
+        encryptionSpecs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EncryptionSpecDTO'
+        sourceSpec:
+          $ref: '#/components/schemas/SourceSpecDTO'
+        targetSpec:
+          $ref: '#/components/schemas/TargetSpecDTO'
+        exploreSpec:
+          $ref: '#/components/schemas/ExploreSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
+x-original-swagger-version: '2.0'

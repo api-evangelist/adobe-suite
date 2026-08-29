@@ -1,0 +1,350 @@
+openapi: 3.2.0
+info:
+  title: Adobe Analytics Classification Classification Dataset API
+  description: "Adobe Analytics Classification API 2.0 \n\n Note: Adobe may add optional request and response members (name/value pairs) to existing API objects at any time and without notice or changes in versioning. Adobe recommends that you refer to the API documentation of any third-party tool you integrate with our APIs so that such additions are ignored in processing if not understood. If implemented properly, such additions are non-breaking changes for your implementation. Adobe will not remove parameters or add required parameters without first providing standard notification through release notes."
+  version: v1
+servers:
+- url: https://analytics.adobe.io/api
+tags:
+- name: Classification Dataset
+paths:
+  /{globalCompanyId}/classification/datasets/{dataset_id}:
+    get:
+      tags:
+      - Classification Dataset
+      summary: Get one classification dataset
+      description: Get one classification dataset by dataset id
+      operationId: getOneDataset
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: dataset_id
+        in: path
+        description: Classification Dataset ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Get one classification dataset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiClassificationSet'
+        '403':
+          description: User does not have classification permission to perform this action
+        '404':
+          description: The dataset doesn't exist in the IMS ORG
+    put:
+      tags:
+      - Classification Dataset
+      summary: Save change on one classification dataset
+      description: Save change on one classification dataset by dataset id
+      operationId: updateOneDataset
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: dataset_id
+        in: path
+        description: Classification Dataset ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiClassificationSet'
+      responses:
+        '200':
+          description: Update one classification dataset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiClassificationSet'
+        '403':
+          description: User does not have classification permission to perform this action
+        '404':
+          description: The dataset doesn't exist in the IMS ORG
+    delete:
+      tags:
+      - Classification Dataset
+      summary: Delete one classification dataset
+      description: Delete one classification dataset by dataset id, all classification data will be deleted as well
+      operationId: deleteDataset
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: dataset_id
+        in: path
+        description: Classification Dataset ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Delete one classification dataset successfully
+        '403':
+          description: User does not have classification permission to perform this action
+        '404':
+          description: The dataset doesn't exist in the IMS ORG
+        '500':
+          description: Delete classification dataset failed due to internal error
+  /{globalCompanyId}/classification/datasets/compatibilityMetrics/{rsid}:
+    get:
+      tags:
+      - Classification Dataset
+      summary: Get compatibility metrics for a given report suite
+      description: Get compatibility metrics and the dataset id that associated with the metrics for a given report suite
+      operationId: getCompatibilityMetrics
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: rsid
+        in: path
+        description: Adobe Analytics report suite ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Get compatibility metrics and the dataset id successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSuiteCompatibilityMetric'
+        '403':
+          description: User does not have classification permission to perform this action
+        '404':
+          description: The report suite doesn't exist in IMS ORG
+  /{globalCompanyId}/classification/datasets/template/{dataset_id}:
+    get:
+      tags:
+      - Classification Dataset
+      summary: Retrieve dataset template
+      description: Retrieve dataset template for a given dataset id
+      operationId: getDatasetTemplate
+      parameters:
+      - name: globalCompanyId
+        in: path
+        description: The Global Company ID for the Adobe Analytics organization
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/authorization'
+      - $ref: '#/components/parameters/x-api-key'
+      - name: dataset_id
+        in: path
+        description: Classification Dataset ID
+        required: true
+        schema:
+          type: string
+      - name: format
+        in: query
+        description: Template format
+        schema:
+          type: string
+          default: tsv
+          enum:
+          - tsv
+          - csv
+      responses:
+        '200':
+          description: Dataset template downloaded successfully
+        '400':
+          description: Not a valid template format, must be csv or tsv
+        '403':
+          description: User does not have classification permission to perform this action
+        '404':
+          description: The dataset doesn't exist in the IMS ORG
+components:
+  schemas:
+    ApiClassificationSet:
+      properties:
+        owner:
+          $ref: '#/components/schemas/ClassificationOwner'
+        subscriptions:
+          type: array
+          description: A list of classification subscriptions. Subscriptions are not required at the time of creation but no data will be classified until at least one subscription exists.
+          items:
+            $ref: '#/components/schemas/ClassificationSubscription'
+        default_encoding:
+          type: string
+          description: Default encoding for jobs. Defaults to UTF-8.
+          enum:
+          - utf8
+          - latin1
+        columns:
+          type: array
+          description: A list of classification column definitions. Column definitions are not required at the time of creation but no data will be classified until at least one column definition exists.
+          items:
+            $ref: '#/components/schemas/ApiAnalyticsClassificationColumn'
+        dataset_id:
+          type: string
+          description: This value will be auto generated by the system on creation. This value will be a id in the form of an ObjectId.
+          readOnly: true
+        name:
+          type: string
+          description: A human readable display name for users to be able to easily identify this classification definition.
+        description:
+          type: string
+          description: A long description for the purpose of this classification set.
+        last_modified_date:
+          type: string
+          description: Last modified date/time of the classification set.
+          readOnly: true
+        last_modified_by:
+          type: string
+          description: Email address of the last person that modified the classification set.
+          readOnly: true
+        ims_org_id:
+          type: string
+          description: This value will be looked up based on the analytics company of the user.
+          readOnly: true
+        default_list_delimiter:
+          type: string
+          description: Default delimiter for list column types. Defaults to "," (comma). If you have no list columns this field does not apply.
+        notifications:
+          type: array
+          description: List of notifications to be sent for all imports and exports that occur.
+          items:
+            $ref: '#/components/schemas/Notification'
+    ReportSuiteCompatibilityMetric:
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompatibilityMetric'
+        report_suite_id:
+          type: string
+    ApiAnalyticsClassificationColumn:
+      required:
+      - display_name
+      - name
+      type: object
+      properties:
+        column_id:
+          type: string
+          description: A UUID that will be generated when a column is created.
+          readOnly: true
+        name:
+          type: string
+          description: The name for this given data column. Immutable after column creation. Can be any valid UTF-8 string.
+        display_name:
+          type: string
+          description: The display name for this given data column. Mutable. Can be any valid UTF-8 string.
+        type:
+          type: string
+          description: Defaults to 'text'. Immutable after column creation.
+          enum:
+          - text
+          - integer
+          - float
+          - list[string]
+        classified_by:
+          type: string
+          description: An optional classification dataset id, whose dataset classifies this column's data.
+      description: A list of classification column definitions. Column definitions are not required at the time of creation but no data will be classified until at least one column definition exists.
+    Notification:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+          - email
+          - rabbit
+        state:
+          type: string
+          enum:
+          - created
+          - queued
+          - validated
+          - failed_validation
+          - processing
+          - done_processing
+          - failed_processing
+          - completed
+        recipients:
+          type: array
+          items:
+            type: string
+      description: List of notifications to be sent for all imports and exports that occur.
+    CompatibilityMetric:
+      type: object
+      properties:
+        id:
+          type: array
+          items:
+            type: string
+        datasets:
+          type: array
+          items:
+            type: string
+    ClassificationSubscription:
+      required:
+      - dimension
+      - rsid
+      - unique
+      type: object
+      properties:
+        rsid:
+          type: string
+          description: The report suite id for which you would like to subscribe to a classification set.
+        dimension:
+          type: string
+          description: The dimension identity you would like to be classified. Should be prefixed with variables/ i.e. variables/page
+        unique:
+          type: boolean
+          description: Force update of unique_hash to avoid duplicate subscriptions
+        editable:
+          type: boolean
+          description: Flag to indicate if the subscription is editable by the current user based on report suite permissions.
+          readOnly: true
+      description: A list of classification subscriptions. Subscriptions are not required at the time of creation but no data will be classified until at least one subscription exists.
+    ClassificationOwner:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+      description: Contact information for a person responsible for the classification definition and/or data.
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string

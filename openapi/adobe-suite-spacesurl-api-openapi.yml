@@ -1,0 +1,205 @@
+openapi: 3.2.0
+info:
+  description: REST API for Adobe Substance 3D - Firefly Services.
+  title: Adobe Substance 3D API - Firefly Services Spaces URL API
+  version: 1.0.0
+servers:
+- url: https://s3d.adobe.io
+security:
+- bearerAuth: []
+  ApiKeyAuth: []
+tags:
+- name: SpacesURL
+paths:
+  /v2/spacesURL:
+    post:
+      operationId: createSpaceURL_v2
+      summary: Create Space from URL API
+      description: "## Overview\n\nThe **Substance 3D API** provides a way to upload and temporary store files.\nYou can upload one or more files from one or more URLs.\nFor each URL, there is an optional **filepath** parameter that allows you to specify the file name and its path.\nBy combining multiple URLs with different **filepath** paths, you can compose a complete file tree structure.\n\nExample for this files tree:\n\n```\n├── textures\n│   ├── diffuse.png\n│   └── normal.png\n└── lighthouse.fbx\n```\n\nCurl request:\n\n```\ncurl --request POST \\\n  --url https://s3d.adobe.io/v2/spacesURL \\\n  --header 'Accept: application/json' \\\n  --header 'Authorization: Bearer 123' \\\n  --header 'Content-Type: application/json' \\\n  --data '[\n  {\n    \"filepath\": \"lighthouse.fbx\",\n    \"url\": \"https://url/to/lighthouse.fbx\"\n  },\n  {\n    \"filepath\": \"textures/diffuse.png\",\n    \"url\": \"https://url/to/diffuse.png\"\n  },\n  {\n    \"filepath\": \"textures/normal.png\",\n    \"url\": \"https://url/to/normal.png\"\n  }\n]'\n```\n\nThe result of the post is a **JSON** which contained the **id** of the space created.\nSpace **id** can be used into a space source to use space content as a source for API operations.\n\nExample of a space source:\n\n```json\n{\n  \"space\": {\n    \"id\": \"<space_id>\"\n  }\n}\n```\n"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type:
+              - array
+              - 'null'
+              items:
+                $ref: '#/components/schemas/rest_base.FileURL'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rest_base.Space'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              examples:
+                access_error:
+                  value:
+                    error_code: access_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              examples:
+                timeout_error:
+                  value:
+                    error_code: timeout_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '413':
+          description: Request Entity Too Large
+          content:
+            application/json:
+              examples:
+                entity_too_large:
+                  value:
+                    error_code: entity_too_large
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              examples:
+                validation_error:
+                  value:
+                    error_code: validation_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              examples:
+                rate_limited:
+                  value:
+                    error_code: rate_limited
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                runtime_error:
+                  value:
+                    error_code: runtime_error
+                    message: ''
+              schema:
+                $ref: '#/components/schemas/ffapierrors.FFAPIError'
+      tags:
+      - SpacesURL
+      x-s3d-public: true
+components:
+  schemas:
+    ffapierrors.FFAPIError:
+      description: The error within the error response.
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
+          readOnly: true
+        error_code:
+          description: Associated error code.
+          type: string
+        error_details:
+          description: Optional list of individual error details.
+          type: array
+          items:
+            type: object
+        message:
+          description: Error message.
+          type: string
+      additionalProperties: false
+      required:
+      - error_code
+    rest_base.FileURL:
+      type: object
+      properties:
+        filepath:
+          description: The filename in the filepath overrides filename. If filepath is unset, will try to detect filename from content disposition header, then url itself. If a path is specified before the filename in the filepath, the file will be mounted at that location in the space.
+          type: string
+        url:
+          type: string
+          examples:
+          - https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb
+      additionalProperties: false
+      required:
+      - url
+    rest_base.Space:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.Space.json
+          readOnly: true
+        expiry:
+          description: time at which the space will be deleted
+          type: string
+          format: date-time
+        files:
+          description: List of all files contained in Space, ordered by name.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/rest_base.SpaceFile'
+        id:
+          description: Unique identifier of this Space.
+          type: string
+        url:
+          description: URL to the full description of this Space.
+          type: string
+        archiveUrl:
+          description: URL to fetch the whole space as an archive (usually a ZIP file).
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - expiry
+      - files
+    rest_base.SpaceFile:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - name
+      - size
+  securitySchemes:
+    bearerAuth:
+      description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'
+      scheme: bearer
+      type: http
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: 'Your client ID, which acts as the API key. Pass `x-api-key: <API_KEY>` using `<API_KEY>` as the placeholder in examples.'

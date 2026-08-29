@@ -1,0 +1,656 @@
+openapi: 3.2.0
+info:
+  version: 1.0.0
+  title: Firefly Services Audio and Video Text To Speech API
+  description: This RESTful API provides resources to use Firefly Services AI for audio and video generation and processing.
+  termsOfService: https://www.adobe.com/content/dam/cc/en/legal/terms/enterprise/pdfs/PSLT-AdobeCreativeAPI-WW-2024v2.pdf
+servers:
+- url: https://audio-video-api.adobe.io
+  description: Production server.
+security:
+- AccessToken: []
+  X-Api-Key: []
+tags:
+- name: Text-to-speech
+  description: Endpoints for text-to-speech operations.
+paths:
+  /v1/voices:
+    get:
+      tags:
+      - Text-to-speech
+      summary: Get available voices
+      description: This endpoint provides the list of all available voices for the user's enterprise.
+      operationId: voices
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulVoicesResponse'
+              examples:
+                Success:
+                  $ref: '#/components/examples/SuccessfulVoicesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyUnauthorized:
+                  $ref: '#/components/examples/ErrorBodyUnauthorized'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyForbidden:
+                  $ref: '#/components/examples/ErrorBodyForbidden'
+                ErrorBodyAPIKeyInvalid:
+                  $ref: '#/components/examples/ErrorBodyAPIKeyInvalid'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyTooManyRequests:
+                  $ref: '#/components/examples/ErrorBodyTooManyRequests'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                RunTimeError:
+                  $ref: '#/components/examples/RunTimeError'
+                StudioAPIFailedEntitiesErrorResponse:
+                  $ref: '#/components/examples/StudioAPIFailedEntitiesErrorResponse'
+  /v1/generate-speech:
+    post:
+      tags:
+      - Text-to-speech
+      summary: Generate speech from text
+      description: This endpoint generates speech from a transcript. You can provide the transcript either as plain text or a pre-signed URL. The response will include a job ID and a status URL for tracking the job.
+      operationId: generate-speech
+      requestBody:
+        description: The request body contains the transcript used for generating speech.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSRequest'
+            examples:
+              TextInputForSpeechGeneration:
+                $ref: '#/components/examples/TextInputForSpeechGeneration'
+              URLInputForSpeechGeneration:
+                $ref: '#/components/examples/URLInputForSpeechGeneration'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitAPIResponse'
+              examples:
+                SubmitRequestResponse:
+                  $ref: '#/components/examples/SubmitRequestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                BadRequestError:
+                  $ref: '#/components/examples/BadRequestError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                UnauthorizedAccessError:
+                  $ref: '#/components/examples/ErrorBodyUnauthorized'
+                ErrorBodyAccessDenied:
+                  $ref: '#/components/examples/ErrorBodyAccessDenied'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyForbidden:
+                  $ref: '#/components/examples/ErrorBodyForbidden'
+                ErrorBodyAPIKeyInvalid:
+                  $ref: '#/components/examples/ErrorBodyAPIKeyInvalid'
+                UserNotEntitledError:
+                  $ref: '#/components/examples/UserNotEntitledError'
+                QuotaExceededError:
+                  $ref: '#/components/examples/QuotaExceededError'
+                UserProfileDeniedError:
+                  $ref: '#/components/examples/UserProfileDeniedError'
+                UserBlockedError:
+                  $ref: '#/components/examples/UserBlockedError'
+                InvalidSubscriptionError:
+                  $ref: '#/components/examples/InvalidSubscriptionError'
+                ViolationError:
+                  $ref: '#/components/examples/ViolationError'
+                TasteExhaustedError:
+                  $ref: '#/components/examples/TasteExhaustedError'
+                AccessError:
+                  $ref: '#/components/examples/AccessError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                InvalidInputErrorExample:
+                  $ref: '#/components/examples/InvalidInputErrorExample'
+                MissingInputFileUrlErrorExample:
+                  $ref: '#/components/examples/MissingInputFileUrlErrorExample'
+                InvalidInputUrlErrorExample:
+                  $ref: '#/components/examples/InvalidInputUrlErrorExample'
+                InputFileFormatValidationErrorExample:
+                  $ref: '#/components/examples/InputFileFormatValidationErrorExample'
+                MissingScriptErrorExample:
+                  $ref: '#/components/examples/MissingScriptErrorExample'
+                EmptyTextForScriptErrorExample:
+                  $ref: '#/components/examples/EmptyTextForScriptErrorExample'
+                TextLengthExceededForScriptErrorExample:
+                  $ref: '#/components/examples/TextLengthExceededForScriptErrorExample'
+                TextLengthTooShortForScriptErrorExample:
+                  $ref: '#/components/examples/TextLengthTooShortForScriptErrorExample'
+                ScriptInvalidASCIIRange:
+                  $ref: '#/components/examples/ScriptInvalidASCIIRange'
+                ScriptInvalidTextSupportedRange:
+                  $ref: '#/components/examples/ScriptInvalidTextSupportedRange'
+                InvalidOrMissingLocaleCodeForScriptErrorExample:
+                  $ref: '#/components/examples/InvalidOrMissingLocaleCodeForScriptErrorExample'
+                MissingMediaTypeForScriptErrorExample:
+                  $ref: '#/components/examples/MissingMediaTypeForScriptErrorExample'
+                MediatypeIncompatibleForText:
+                  $ref: '#/components/examples/MediatypeIncompatibleForText'
+                MissingSourceLocaleErrorExample:
+                  $ref: '#/components/examples/MissingSourceLocaleErrorExample'
+                SourceUrlSourceTextConflictErrorExample:
+                  $ref: '#/components/examples/SourceUrlSourceTextConflictErrorExample'
+                UnsupportedVoiceIdErrorExample:
+                  $ref: '#/components/examples/UnsupportedVoiceIdErrorExample'
+                MissingVoiceIdErrorExample:
+                  $ref: '#/components/examples/MissingVoiceIdErrorExample'
+                MissingOutputErrorExample:
+                  $ref: '#/components/examples/MissingOutputErrorExample'
+                MissingMediaTypeForOutputErrorExample:
+                  $ref: '#/components/examples/MissingMediaTypeForOutputErrorExample'
+                InvalidOutputFileFormatErrorExample:
+                  $ref: '#/components/examples/InvalidOutputFileFormatErrorExample'
+                InvalidRequestPayloadErrorExample:
+                  $ref: '#/components/examples/InvalidRequestPayloadErrorExample'
+                InvalidSourceUrlErrorExample:
+                  $ref: '#/components/examples/InvalidSourceUrlErrorExample'
+                IncorrectVoiceNameErrorExample:
+                  $ref: '#/components/examples/IncorrectVoiceNameErrorExample'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyTooManyRequests:
+                  $ref: '#/components/examples/ErrorBodyTooManyRequests'
+                ErrorBodyRateLimited:
+                  $ref: '#/components/examples/ErrorBodyRateLimited'
+        '451':
+          description: Unauthorized For Legal Reasons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                ErrorBodyLegalReasons:
+                  $ref: '#/components/examples/ErrorBodyLegalReasons'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailedResponse'
+              examples:
+                TTSServiceSubmitError:
+                  $ref: '#/components/examples/TTSServiceSubmitError'
+                TTSEntityCreationError:
+                  $ref: '#/components/examples/TTSEntityCreationError'
+                TTSRuntimeError:
+                  $ref: '#/components/examples/TTSRuntimeError'
+components:
+  schemas:
+    SupportedLanguageCode:
+      type: string
+      enum:
+      - en-US
+      - es-ES
+      - de-DE
+      - fr-FR
+      - da-DK
+      - en-GB
+      - en-IN
+      - es-419
+      - es-AR
+      - fr-CA
+      - hi-IN
+      - it-IT
+      - ja-JP
+      - ko-KR
+      - nb-NO
+      - pt-BR
+      - pt-PT
+      - nl-NL
+      - zh-CN
+      - sv-SE
+      description: The language code for the supported language desired in the result.
+    SuccessfulVoicesResponse:
+      type: object
+      description: List of available voices.
+      properties:
+        voices:
+          type: array
+          items:
+            $ref: '#/components/schemas/VoiceEntity'
+    FailedResponse:
+      type: object
+      description: Generic error response object.
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+    TTSRequest:
+      $ref: '#/components/schemas/GenerateSpeechUsingPlainText'
+    SubmitAPIResponse:
+      type: object
+      description: Response returned when a job is successfully submitted.
+      properties:
+        jobId:
+          type: string
+        statusUrl:
+          type: string
+    TextSource:
+      description: Details of the text resource.
+      type: string
+      properties:
+        text:
+          type: string
+    GenerateSpeechUsingPlainText:
+      type: object
+      properties:
+        script:
+          oneOf:
+          - $ref: '#/components/schemas/TextSource'
+          - $ref: '#/components/schemas/URLSource'
+          type: object
+          properties:
+            localeCode:
+              $ref: '#/components/schemas/SupportedLanguageCode'
+            mediaType:
+              type: string
+              enum:
+              - text/plain
+              description: The format of the text resource.
+          required:
+          - localeCode
+          - mediaType
+        voiceId:
+          type: string
+          description: ID of the voice to use from the catalog of voices.
+        output:
+          type: object
+          properties:
+            mediaType:
+              $ref: '#/components/schemas/SupportedAudioOutputAudioFormat'
+          required:
+          - mediaType
+      required:
+      - voiceId
+      - output
+      - script
+    VoiceEntity:
+      type: object
+      description: Details of Voice Entity.
+      properties:
+        voiceId:
+          type: string
+          description: The unique ID for the voice.
+        displayName:
+          type: string
+          description: The displayed name for the voice.
+        gender:
+          type: string
+          description: The gender of the voice.
+        style:
+          type: string
+          description: The speaking style of the voice.
+          enum:
+          - Casual
+          - Excited
+        voiceType:
+          type: string
+          description: Not applicable at this time.
+        status:
+          type: string
+          description: This determines if the specific voice ID is available for use. Deprecated voices will have an Inactive status.
+          enum:
+          - Active
+          - Inactive
+        extendedPropertyMap:
+          type: object
+          description: This is a field for any additional properties for the voice.
+        wordsPerMinute:
+          type: string
+          description: The speed of speaking, in words per minute.
+        rolePlayList:
+          type: array
+          description: Not applicable at this time.
+          items:
+            type: string
+        sampleURL:
+          type: string
+          description: A pre-signed URL for downloading the sample audio.
+    SupportedAudioOutputAudioFormat:
+      type: string
+      enum:
+      - audio/wav
+      description: The supported audio format for output.
+    URLSource:
+      type: object
+      title: Image or video background
+      properties:
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: The pre-signed URL pointing to the resource to be used for avatar/speech generation.
+          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+  examples:
+    InvalidSourceUrlErrorExample:
+      summary: Invalid Source URL
+      value:
+        error_code: validation_error
+        message: Invalid source url specified
+    MediatypeIncompatibleForText:
+      summary: Invalid Script Mediatype
+      value:
+        error_code: validation_error
+        message: Provided text format is not valid for input mediaType
+    ScriptInvalidASCIIRange:
+      summary: Non-ASCII Input Text
+      value:
+        error_code: validation_error
+        message: Input contains unsupported characters. Please use only ASCII or extended ASCII.
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    MissingMediaTypeForScriptErrorExample:
+      summary: Missing Script Mediatype
+      value:
+        error_code: validation_error
+        message: Missing script 'mediaType' in the payload
+    TasteExhaustedError:
+      summary: Taste Exhausted
+      value:
+        error_code: taste_exhausted
+        message: 'Unauthorized: Limited taste for user is exhausted.'
+    RunTimeError:
+      summary: Internal Server Error
+      value:
+        error_code: runtime_error
+        message: Internal Server Error
+    SuccessfulVoicesResponse:
+      summary: Successful response with voices details
+      value:
+        voices:
+        - voiceId: v123
+          displayName: John Doe
+          gender: M
+          style: Professional
+          voiceType: Nurse
+          status: Active
+          extendedPropertyMap: {}
+          wordsPerMinute: '100'
+          rolePlayList: []
+          sampleURL: <pre-signed url for downloading the sample audio>
+    ErrorBodyLegalReasons:
+      summary: Legal Restrictions
+      value:
+        error_code: unauthorized_legal_reasons
+        message: 'Unauthorized access: Legal restrictions prevent you from accessing this resource.'
+    MissingInputFileUrlErrorExample:
+      summary: Missing Input URL
+      value:
+        error_code: validation_error
+        message: Missing input file URL
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    MissingMediaTypeForOutputErrorExample:
+      summary: Missing Output Mediatype
+      value:
+        error_code: validation_error
+        message: Missing output 'mediaType' in payload
+    ErrorBodyRateLimited:
+      summary: Rate Limited
+      value:
+        error_code: rate_limited
+        message: Too many requests received
+    MissingSourceLocaleErrorExample:
+      summary: Missing Source Locale
+      value:
+        error_code: validation_error
+        message: Source locale missing in payload
+    MissingScriptErrorExample:
+      summary: Missing Input Script
+      value:
+        error_code: validation_error
+        message: Script missing in the payload
+    UserNotEntitledError:
+      summary: User Not Entitled
+      value:
+        error_code: user_not_entitled
+        message: 'User not entitled: You do not have the entitlement to perform this operation.'
+    InvalidRequestPayloadErrorExample:
+      summary: Invalid TTS Request
+      value:
+        error_code: validation_error
+        message: Text to speech service marked this request as invalid
+    EmptyTextForScriptErrorExample:
+      summary: Empty Input Text
+      value:
+        error_code: validation_error
+        message: The provided 'text' is empty
+    SourceUrlSourceTextConflictErrorExample:
+      summary: Both URL and Text
+      value:
+        error_code: validation_error
+        message: Both source url and source text is present in the request
+    TextLengthTooShortForScriptErrorExample:
+      summary: Input Text Too Short
+      value:
+        error_code: validation_error
+        message: Input text has less than 15 characters
+    MissingVoiceIdErrorExample:
+      summary: Missing Voice ID
+      value:
+        error_code: validation_error
+        message: Missing 'voiceId' in the payload
+    SubmitRequestResponse:
+      summary: Successful response with job details
+      value:
+        jobId: string
+        statusUrl: string
+    ErrorBodyAccessDenied:
+      summary: Access Denied
+      value:
+        error_code: unauthorized_forbidden
+        message: 'Access Denied: You do not have the necessary permissions to access this resource'
+    InputFileFormatValidationErrorExample:
+      summary: Invalid Input Format
+      value:
+        error_code: validation_error
+        message: Input file format is not supported
+    UnsupportedVoiceIdErrorExample:
+      summary: Invalid Voice ID
+      value:
+        error_code: validation_error
+        message: The requested 'voiceId' is not supported
+    InvalidInputUrlErrorExample:
+      summary: Invalid Input URL
+      value:
+        error_code: validation_error
+        message: Invalid input 'url' specified
+    ErrorBodyAPIKeyInvalid:
+      summary: Api Key is invalid
+      value:
+        error_code: '403003'
+        message: Api Key is invalid
+    BadRequestError:
+      summary: Bad Request
+      value:
+        error_code: invalid_json
+        message: Invalid request. Please check the input data.
+    InvalidOrMissingLocaleCodeForScriptErrorExample:
+      summary: Invalid Source Locale
+      value:
+        error_code: validation_error
+        message: Invalid source locale code specified
+    StudioAPIFailedEntitiesErrorResponse:
+      summary: Error Fetching Entities
+      value:
+        error_code: runtime_error
+        message: Error while fetching available entities
+    TextLengthExceededForScriptErrorExample:
+      summary: Input Text Too Long
+      value:
+        error_code: validation_error
+        message: Input text has more than 20000 characters
+    InvalidInputErrorExample:
+      summary: Invalid Input
+      value:
+        error_code: validation_error
+        message: The request could not be processed due to invalid input
+    TTSEntityCreationError:
+      summary: Error Processing Request
+      value:
+        error_code: runtime_error
+        message: Internal Server Error while creating text to speech request
+    InvalidOutputFileFormatErrorExample:
+      summary: Invalid Output Format
+      value:
+        error_code: validation_error
+        message: Output file format is not valid
+    QuotaExceededError:
+      summary: Quota Exceeded
+      value:
+        error_code: quota_exhausted
+        message: 'Quota exceeded: You have reached the maximum allowed usage for this service.'
+    ScriptInvalidTextSupportedRange:
+      summary: Invalid Input Text
+      value:
+        error_code: validation_error
+        message: Input contains unsupported characters. Please remove any Emojis or Symbols
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
+    MissingOutputErrorExample:
+      summary: Missing Output Config
+      value:
+        error_code: validation_error
+        message: Missing 'output' field in the payload
+    IncorrectVoiceNameErrorExample:
+      summary: Invalid Voice Name
+      value:
+        error_code: validation_error
+        message: The provided `voice name` is incorrect in the script text
+    TTSRuntimeError:
+      summary: Error Handling Response
+      value:
+        error_code: runtime_error
+        message: Internal Server Error while receiving or handling response
+    UserBlockedError:
+      summary: User Blocked By Admin
+      value:
+        error_code: user_blocked_by_admin
+        message: 'Access blocked: Your account has been blocked by an administrator.'
+    UserProfileDeniedError:
+      summary: User Profile Denied
+      value:
+        error_code: user_profile_denied
+        message: 'User profile denied: Your profile does not meet the requirements for this action.'
+    AccessError:
+      summary: Access Error
+      value:
+        error_code: access_error
+        message: Token not allowed in the current context
+    TextInputForSpeechGeneration:
+      summary: Generate speech using plain text
+      value:
+        script:
+          text: <plain text>
+          mediaType: text/plain
+          localeCode: en-US
+        voiceId: <voice id>
+        output:
+          mediaType: audio/wav
+    TTSServiceSubmitError:
+      summary: Error Submitting Request
+      value:
+        error_code: runtime_error
+        message: Internal Server Error while submitting text to speech request
+    ViolationError:
+      summary: User Blocked Due To Violation
+      value:
+        error_code: user_blocked_due_to_violation
+        message: 'Account blocked: Your account has been blocked due to a violation of terms.'
+    InvalidSubscriptionError:
+      summary: Invalid Subscription
+      value:
+        error_code: invalid_subscription
+        message: 'Invalid subscription: Your subscription does not cover this service or feature.'
+    URLInputForSpeechGeneration:
+      summary: Generate speech using text file
+      value:
+        script:
+          source:
+            url: <pre-signed url of text file>
+          mediaType: text/plain
+          localeCode: en-US
+        voiceId: <voice id>
+        output:
+          mediaType: audio/wav
+  securitySchemes:
+    AccessToken:
+      type: http
+      scheme: bearer
+      description: The Adobe-generated access token, S2S format.
+    X-Api-Key:
+      type: apiKey
+      name: x-api-key
+      in: header
+      description: The client ID for authentication.
