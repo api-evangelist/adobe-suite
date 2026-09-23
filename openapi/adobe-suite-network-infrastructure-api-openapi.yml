@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   version: 1.0.0
   title: Cloud Manager Network infrastructure API
-  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console.
 servers:
 - url: https://cloudmanager.adobe.io
 tags:
@@ -264,91 +264,26 @@ paths:
           description: Network Infrastructure not found
 components:
   schemas:
-    IpSecPolicyInfrastructure:
+    HalLink:
       type: object
-      required:
-      - dhGroup
-      - ikeEncryption
-      - ikeIntegrity
-      - ipsecEncryption
-      - ipsecIntegrity
-      - pfsGroup
-      - saDatasize
-      - saLifetime
       properties:
-        dhGroup:
+        href:
           type: string
-          description: DH Group
-          enum:
-          - DHGroup24
-          - ECP384
-          - ECP256
-          - DHGroup14
-          - DHGroup2048
-          - DHGroup2
-          - DHGroup1
-          - None
-        ikeEncryption:
+        templated:
+          type: boolean
+          default: false
+        type:
           type: string
-          description: IKEv2 Encryption
-          enum:
-          - AES256
-          - AES192
-          - AES128
-          - DES3
-          - DES
-        ikeIntegrity:
+        deprecation:
           type: string
-          description: IKEv2 Integrity
-          enum:
-          - SHA384
-          - SHA256
-          - SHA1
-          - MD5
-        ipsecEncryption:
+        profile:
           type: string
-          description: IPsec Encryption
-          enum:
-          - GCMAES256
-          - GCMAES192
-          - GCMAES128
-          - AES256
-          - AES192
-          - AES128
-          - DES3
-          - DES
-          - None
-        ipsecIntegrity:
+        title:
           type: string
-          description: IPsec Integrity
-          enum:
-          - GCMAES256
-          - GCMAES192
-          - GCMAES128
-          - SHA256
-          - SHA1
-          - MD5
-        pfsGroup:
+        hreflang:
           type: string
-          description: PFS Group
-          enum:
-          - PFS24
-          - ECP384
-          - ECP256
-          - PFS2048
-          - PFS2
-          - PFS1
-          - None
-        saDatasize:
-          type: integer
-          format: int64
-          description: QM SA Lifetime in KBytes under 1024
-          minimum: 1024
-        saLifetime:
-          type: integer
-          format: int32
-          description: QM SA Lifetime in Seconds, minimum 300
-          minimum: 300
+        name:
+          type: string
     NetworkInfrastructure:
       type: object
       required:
@@ -446,6 +381,136 @@ components:
           type: string
           description: Human readable error message
           readOnly: true
+    IpSecPolicyInfrastructure:
+      type: object
+      required:
+      - dhGroup
+      - ikeEncryption
+      - ikeIntegrity
+      - ipsecEncryption
+      - ipsecIntegrity
+      - pfsGroup
+      - saDatasize
+      - saLifetime
+      properties:
+        dhGroup:
+          type: string
+          description: DH Group
+          enum:
+          - DHGroup24
+          - ECP384
+          - ECP256
+          - DHGroup14
+          - DHGroup2048
+          - DHGroup2
+          - DHGroup1
+          - None
+        ikeEncryption:
+          type: string
+          description: IKEv2 Encryption
+          enum:
+          - AES256
+          - AES192
+          - AES128
+          - DES3
+          - DES
+        ikeIntegrity:
+          type: string
+          description: IKEv2 Integrity
+          enum:
+          - SHA384
+          - SHA256
+          - SHA1
+          - MD5
+        ipsecEncryption:
+          type: string
+          description: IPsec Encryption
+          enum:
+          - GCMAES256
+          - GCMAES192
+          - GCMAES128
+          - AES256
+          - AES192
+          - AES128
+          - DES3
+          - DES
+          - None
+        ipsecIntegrity:
+          type: string
+          description: IPsec Integrity
+          enum:
+          - GCMAES256
+          - GCMAES192
+          - GCMAES128
+          - SHA256
+          - SHA1
+          - MD5
+        pfsGroup:
+          type: string
+          description: PFS Group
+          enum:
+          - PFS24
+          - ECP384
+          - ECP256
+          - PFS2048
+          - PFS2
+          - PFS1
+          - None
+        saDatasize:
+          type: integer
+          format: int64
+          description: QM SA Lifetime in KBytes under 1024
+          minimum: 1024
+        saLifetime:
+          type: integer
+          format: int32
+          description: QM SA Lifetime in Seconds, minimum 300
+          minimum: 300
+    VpnConnection:
+      type: object
+      required:
+      - gateway
+      - ipsecPolicy
+      - name
+      - sharedKey
+      properties:
+        name:
+          type: string
+          description: Name of the connection
+        gateway:
+          description: Gateway configuration
+          $ref: '#/components/schemas/GatewayInfrastructure'
+        sharedKey:
+          type: string
+          description: Customer VPN preshared key
+        ipsecPolicy:
+          description: IPSec Policy
+          $ref: '#/components/schemas/IpSecPolicyInfrastructure'
+    GatewayInfrastructure:
+      type: object
+      required:
+      - address
+      - addressSpace
+      properties:
+        address:
+          type: string
+          description: Customer VPN Device IP Address
+        addressSpace:
+          type: array
+          description: IP Ranges to route through the VPN
+          items:
+            type: string
+    DnsConfiguration:
+      type: object
+      required:
+      - resolvers
+      properties:
+        resolvers:
+          type: array
+          description: List of remote DNS resolvers
+          items:
+            type: string
+      description: DNS Information. Only applicable to VPN infrastructures.
     NetworkInfrastructuresList:
       type: object
       properties:
@@ -474,68 +539,3 @@ components:
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
-    HalLink:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-          default: false
-        type:
-          type: string
-        deprecation:
-          type: string
-        profile:
-          type: string
-        title:
-          type: string
-        hreflang:
-          type: string
-        name:
-          type: string
-    GatewayInfrastructure:
-      type: object
-      required:
-      - address
-      - addressSpace
-      properties:
-        address:
-          type: string
-          description: Customer VPN Device IP Address
-        addressSpace:
-          type: array
-          description: IP Ranges to route through the VPN
-          items:
-            type: string
-    DnsConfiguration:
-      type: object
-      required:
-      - resolvers
-      properties:
-        resolvers:
-          type: array
-          description: List of remote DNS resolvers
-          items:
-            type: string
-      description: DNS Information. Only applicable to VPN infrastructures.
-    VpnConnection:
-      type: object
-      required:
-      - gateway
-      - ipsecPolicy
-      - name
-      - sharedKey
-      properties:
-        name:
-          type: string
-          description: Name of the connection
-        gateway:
-          description: Gateway configuration
-          $ref: '#/components/schemas/GatewayInfrastructure'
-        sharedKey:
-          type: string
-          description: Customer VPN preshared key
-        ipsecPolicy:
-          description: IPSec Policy
-          $ref: '#/components/schemas/IpSecPolicyInfrastructure'

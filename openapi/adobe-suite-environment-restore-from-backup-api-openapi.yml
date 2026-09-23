@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   version: 1.0.0
   title: Cloud Manager Environment Restore From Backup API
-  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console.
 servers:
 - url: https://cloudmanager.adobe.io
 tags:
@@ -281,71 +281,26 @@ paths:
         description: Restore Parameters Representation
 components:
   schemas:
-    RequestedPageDetails:
+    HalLink:
       type: object
       properties:
-        start:
-          type: integer
-          format: int32
-          description: The start index for the current page of results
-        limit:
-          type: integer
-          format: int32
-          description: The item limit for the current page of results
-        next:
-          type: integer
-          format: int32
-          description: The start index for the next page of results
-        prev:
-          type: integer
-          format: int32
-          description: The start index for the previous page of results
-        orderBy:
+        href:
           type: string
-        property:
-          type: array
-          items:
-            type: string
+        templated:
+          type: boolean
+          default: false
         type:
           type: string
-      description: Filtering and sorting page details
-    RestoreExecutionList:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int64
-          description: The total number of embedded items
-        limits:
-          description: Restore executions limits
-          $ref: '#/components/schemas/RestoreExecutionLimit'
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            restoreExecutions:
-              type: array
-              items:
-                $ref: '#/components/schemas/RestoreExecution'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
     Restore-Environmentdetailsrepresentation:
       type: object
       properties:
@@ -381,26 +336,111 @@ components:
           type: string
           description: Human readable error message
           readOnly: true
-    HalLink:
+    RequestedPageDetails:
       type: object
       properties:
-        href:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
           type: string
-        templated:
-          type: boolean
-          default: false
+        property:
+          type: array
+          items:
+            type: string
         type:
           type: string
-        deprecation:
+      description: Filtering and sorting page details
+    RestoreExecution:
+      type: object
+      properties:
+        id:
           type: string
-        profile:
+          description: id
+        programId:
           type: string
-        title:
+          example: '14'
+          description: Identifier of the program, unique within the space
+        environmentId:
           type: string
-        hreflang:
+          example: '14'
+          description: Identifier of the environment, unique within the space
+        status:
           type: string
-        name:
+          example: not_started
+          description: Status of the restore execution
+          enum:
+          - not_started
+          - running
+          - finished
+          - error
+          - failed
+        errorDetails:
+          description: Error details, present only when execution failed
+          $ref: '#/components/schemas/ErrorDetailsRepresentation'
+        environmentDetailsAtSnapshotDate:
+          description: Environment details at snapshot timestamp
+          $ref: '#/components/schemas/Restore-Environmentdetailsrepresentation'
+        environmentDetailsAtRestoreDate:
+          description: Environment details when the restore was triggered
+          $ref: '#/components/schemas/Restore-Environmentdetailsrepresentation'
+        createdAt:
           type: string
+          format: date-time
+          description: createdAt
+        updatedAt:
+          type: string
+          format: date-time
+          description: updatedAt
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/environment:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/flow:
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Application this environment belongs to
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/restoreExecution/logs/download:
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A RestoreExecution
+    RestoreExecutionLimit:
+      type: object
+      properties:
+        resetDate:
+          type: string
+          format: date
+          description: Reset date
+        available:
+          type: integer
+          format: int64
+          description: Available runs until reset
+        max:
+          type: integer
+          format: int64
+          description: Max runs per interval
+        countInterval:
+          type: integer
+          format: int64
+          description: Rolling window used to count the available runs
     RestorePointDetails:
       type: object
       properties:
@@ -461,64 +501,43 @@ components:
           type: string
           description: Desired point in time
           pattern: \d{1,19}$
-    RestoreExecution:
+    RestoreExecutionList:
       type: object
       properties:
-        id:
-          type: string
-          description: id
-        programId:
-          type: string
-          example: '14'
-          description: Identifier of the program, unique within the space
-        environmentId:
-          type: string
-          example: '14'
-          description: Identifier of the environment, unique within the space
-        status:
-          type: string
-          example: not_started
-          description: Status of the restore execution
-          enum:
-          - not_started
-          - running
-          - finished
-          - error
-          - failed
-        errorDetails:
-          description: Error details, present only when execution failed
-          $ref: '#/components/schemas/ErrorDetailsRepresentation'
-        environmentDetailsAtSnapshotDate:
-          description: Environment details at snapshot timestamp
-          $ref: '#/components/schemas/Restore-Environmentdetailsrepresentation'
-        environmentDetailsAtRestoreDate:
-          description: Environment details when the restore was triggered
-          $ref: '#/components/schemas/Restore-Environmentdetailsrepresentation'
-        createdAt:
-          type: string
-          format: date-time
-          description: createdAt
-        updatedAt:
-          type: string
-          format: date-time
-          description: updatedAt
+        _totalNumberOfItems:
+          type: integer
+          format: int64
+          description: The total number of embedded items
+        limits:
+          description: Restore executions limits
+          $ref: '#/components/schemas/RestoreExecutionLimit'
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            restoreExecutions:
+              type: array
+              items:
+                $ref: '#/components/schemas/RestoreExecution'
         _links:
           type: object
           readOnly: true
           properties:
-            http://ns.adobe.com/adobecloud/rel/environment:
+            next:
               $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/flow:
+              description: The next page of results.
+            page:
               $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/program:
-              description: The Application this environment belongs to
+              description: An arbitrary page of results.
+            prev:
               $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/restoreExecution/logs/download:
-              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
-      description: A RestoreExecution
     RestorePointsList:
       type: object
       properties:
@@ -548,22 +567,3 @@ components:
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
-    RestoreExecutionLimit:
-      type: object
-      properties:
-        resetDate:
-          type: string
-          format: date
-          description: Reset date
-        available:
-          type: integer
-          format: int64
-          description: Available runs until reset
-        max:
-          type: integer
-          format: int64
-          description: Max runs per interval
-        countInterval:
-          type: integer
-          format: int64
-          description: Rolling window used to count the available runs

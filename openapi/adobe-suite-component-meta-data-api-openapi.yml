@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  description: "The endpoints described here are routed through analytics.adobe.io. In order to use these endpoints you must create an oAuth client that is subscribed to access the Adobe Analytics Reporting API. \n\n To view the API References for non-core Analytics 2.0 APIs, select the **API Reference** drop-down menu at the top of the page. \n\n Note: Adobe may add optional request and response members (name/value pairs) to existing API objects at any time and without notice or changes in versioning. Adobe recommends that you refer to the API documentation of any third-party tool you integrate with our APIs so that such additions are ignored in processing if not understood. If implemented properly, such additions are non-breaking changes for your implementation. Adobe will not remove parameters or add required parameters without first providing standard notification through release notes."
+  description: The endpoints described here are routed through analytics.adobe.io.
   title: Adobe Analytics Component Meta Data API
   version: '2.0'
 servers:
@@ -67,11 +67,21 @@ paths:
                   $ref: '#/components/schemas/Share'
         '500':
           description: Unable to retrieve list of components.
+      operationId: getByGlobalCompanyIdComponentmetadataShares
+      x-operation-id-source: derived
     post:
       tags:
       - Component Meta Data
       summary: Share component with user
-      description: 'Note that only the following component types are currently supported: "segment", "project"<br>There are three valid values for "shareToType":<br><b>"all"</b>: Shares the component to all users in the organization. For this operation, "shareToId" is not required (ignored if sent)<br><b>"user"</b>: Shares the component with a specific user. For this operation, "shareToId" (the loginId of the user to share to) is required.<br><b>"group"</b>: Shares the component with an entire custom user group as defined in the Admin Console. For this operation, "shareToId" (the groupId of the group to share to) is required.'
+      description: 'Note that only the following component types are currently supported: "segment", "project"
+
+        There are three valid values for "shareToType":
+
+        "all": Shares the component to all users in the organization. For this operation, "shareToId" is not required (ignored if sent)
+
+        "user": Shares the component with a specific user. For this operation, "shareToId" (the loginId of the user to share to) is required.
+
+        "group": Shares the component with an entire custom user group as defined in the Admin Console. For this operation, "shareToId" (the groupId of the group to share to) is required.'
       parameters:
       - name: globalCompanyId
         in: path
@@ -107,11 +117,13 @@ paths:
             schema:
               $ref: '#/components/schemas/Share'
         description: JSON-formatted Share object containing key-value pairs that conform to the Share schema
+      operationId: postByGlobalCompanyIdComponentmetadataShares
+      x-operation-id-source: derived
     put:
       tags:
       - Component Meta Data
       summary: Update shared components with users
-      description: 'Warning: Deletes and overwrites all pre-existing shares for given components. Create one/many shares for one/many components at once. For each component object in the passed list, the given shares will replace the current set of shares for each component. For example, if one of the components was previously shared with additional users, and that share is not passed in here, it will no longer be shared with them.<br>'
+      description: 'Warning: Deletes and overwrites all pre-existing shares for given components. Create one/many shares for one/many components at once. For each component object in the passed list, the given shares will replace the current set of shares for each component. For example, if one of the components was previously shared with additional users, and that share is not passed in here, it will no longer be shared with them.'
       operationId: modifyShares
       parameters:
       - name: globalCompanyId
@@ -715,41 +727,22 @@ paths:
         '400':
           description: Invalid component type.
 components:
+  parameters:
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
   schemas:
-    SavedSharedComponent:
-      type: object
-      properties:
-        componentType:
-          type: string
-        componentId:
-          type: string
-        shares:
-          type: array
-          items:
-            $ref: '#/components/schemas/Share'
-    TaggedComponent:
-      type: object
-      properties:
-        componentType:
-          type: string
-        componentId:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-    SharedToEntity:
-      type: object
-      properties:
-        shareToId:
-          type: integer
-          format: int32
-        shareToImsId:
-          type: string
-        shareToType:
-          type: string
-        accessLevel:
-          type: string
     Share:
       type: object
       properties:
@@ -776,6 +769,27 @@ components:
           type: string
         accessLevel:
           type: string
+    ComponentSearch:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentIds:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    TaggedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
     Tag:
       type: object
       properties:
@@ -796,16 +810,18 @@ components:
           items:
             $ref: '#/components/schemas/TaggedComponent'
       description: Tag Model
-    ComponentSearch:
+    SharedToEntity:
       type: object
       properties:
-        componentType:
+        shareToId:
+          type: integer
+          format: int32
+        shareToImsId:
           type: string
-        componentIds:
-          type: array
-          uniqueItems: true
-          items:
-            type: string
+        shareToType:
+          type: string
+        accessLevel:
+          type: string
     SharedComponent:
       type: object
       properties:
@@ -817,18 +833,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SharedToEntity'
-  parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
-      required: true
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the Analytics API](https://developer.adobe.com/analytics-apis/docs/2.0/guides/).
-      required: true
-      schema:
-        type: string
+    SavedSharedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/Share'

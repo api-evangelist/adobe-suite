@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   description: REST API for Adobe Substance 3D - Firefly Services.
-  title: Adobe Substance 3D API - Firefly Services Spaces Next Frame IO API
+  title: Adobe Substance 3D API - Firefly Services Spaces Next Frame…
   version: 1.0.0
 servers:
 - url: https://s3d.adobe.io
@@ -15,7 +15,44 @@ paths:
     post:
       operationId: createSpaceFromNextFrameIO_v2
       summary: Create Space From Next Frame IO API
-      description: "## Overview\n\nThe **Substance 3D API** provides a way to upload and temporary store files.\nYou can upload folders from **next.frame.io** to create a space.\nTo upload a folder from next.frame.io, you must pass the following parameters:\n\n- **access Token**\n- **account ID**\n- **folder ID**\n\nThe result of the post is a **JSON** which contained the **id** of the space created.  \nSpace **id** can be used into a space source to use space content as a source for API operations.\n\nExample of a space source:\n\n```json\n{\n  \"space\": {\n    \"id\": \"<space_id>\"\n  }\n}\n```\n\n"
+      description: '## Overview
+
+
+        The **Substance 3D API** provides a way to upload and temporary store files.
+
+        You can upload folders from **next.frame.io** to create a space.
+
+        To upload a folder from next.frame.io, you must pass the following parameters:
+
+
+        - **access Token**
+
+        - **account ID**
+
+        - **folder ID**
+
+
+        The result of the post is a **JSON** which contained the **id** of the space created.
+
+        Space **id** can be used into a space source to use space content as a source for API operations.
+
+
+        Example of a space source:
+
+
+        ```json
+
+        {
+
+        "space": {
+
+        "id": ""
+
+        }
+
+        }
+
+        ```'
       requestBody:
         required: true
         content:
@@ -100,6 +137,57 @@ paths:
       x-s3d-public: true
 components:
   schemas:
+    rest_base.Space:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.Space.json
+          readOnly: true
+        expiry:
+          description: time at which the space will be deleted
+          type: string
+          format: date-time
+        files:
+          description: List of all files contained in Space, ordered by name.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/rest_base.SpaceFile'
+        id:
+          description: Unique identifier of this Space.
+          type: string
+        url:
+          description: URL to the full description of this Space.
+          type: string
+        archiveUrl:
+          description: URL to fetch the whole space as an archive (usually a ZIP file).
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - expiry
+      - files
+    rest_base.SpaceFile:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - name
+      - size
     ffapierrors.FFAPIError:
       description: The error within the error response.
       type: object
@@ -155,57 +243,6 @@ components:
       - folderId
       - accountId
       - accessToken
-    rest_base.Space:
-      type: object
-      properties:
-        $schema:
-          description: A URL to the JSON schema for this object.
-          type: string
-          format: uri
-          examples:
-          - https://s3d.adobe.io/schemas/rest_base.Space.json
-          readOnly: true
-        expiry:
-          description: time at which the space will be deleted
-          type: string
-          format: date-time
-        files:
-          description: List of all files contained in Space, ordered by name.
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/rest_base.SpaceFile'
-        id:
-          description: Unique identifier of this Space.
-          type: string
-        url:
-          description: URL to the full description of this Space.
-          type: string
-        archiveUrl:
-          description: URL to fetch the whole space as an archive (usually a ZIP file).
-      additionalProperties: false
-      required:
-      - url
-      - id
-      - expiry
-      - files
-    rest_base.SpaceFile:
-      type: object
-      properties:
-        name:
-          type: string
-        size:
-          type: integer
-          format: int64
-          minimum: 0
-        url:
-          type: string
-      additionalProperties: false
-      required:
-      - url
-      - name
-      - size
   securitySchemes:
     bearerAuth:
       description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'

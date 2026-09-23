@@ -19,7 +19,10 @@ paths:
       tags:
       - Reframe
       summary: Reframe video
-      description: "This endpoint enables you to reframe video using AI. Provide video input with a pre-signed URL to generate reframed video output. \n\nThis API has more limited capabilities than the v2 endpoint, and may be deprecated soon. **It's recommended to use the v2 endpoint instead.**"
+      description: 'This endpoint enables you to reframe video using AI. Provide video input with a pre-signed URL to generate reframed video output.
+
+
+        This API has more limited capabilities than the v2 endpoint, and may be deprecated soon. **It''s recommended to use the v2 endpoint instead.**'
       operationId: generate-reframed-video
       requestBody:
         description: The reframe request body.
@@ -937,60 +940,36 @@ paths:
                     error_code: '500001'
                     message: An internal server error occurred. Please try again later.
 components:
-  examples:
-    ErrorBodyForbidden:
-      summary: Api Key is required
-      value:
-        error_code: '403000'
-        message: Api Key is required
-    ErrorBodyUnauthorized:
-      summary: Invalid Token
-      value:
-        error_code: '401013'
-        message: Oauth token is not valid
-    ErrorBodyInternalServerError:
-      summary: Internal Server Error
-      value:
-        error_code: internal_server_error
-        message: An unexpected error occurred while processing the request.
-    ErrorBodyBadRequest:
-      summary: Bad Request
-      value:
-        error_code: bad_request
-        message: The request was invalid or cannot be served.
-    ErrorBodyTooManyRequests:
-      summary: Too many requests
-      value:
-        error_code: '429050'
-        message: Too many requests
-    ErrorBodyMethodNotAllowed:
-      summary: Method Not Allowed
-      value:
-        error_code: method_not_allowed
-        message: The HTTP method is not supported for this endpoint.
-    ErrorBodyResourceNotFound:
-      summary: Not Found
-      value:
-        error_code: unknown_job_id
-        message: The requested resource was not found.
   schemas:
-    RepeatV2:
-      type: string
-      enum:
-      - stop_on_last_frame
-      - loop
-      - time_stretch
-      description: Defines the repeat behavior of the overlay.
-    Destination:
+    VideoInputV2:
       type: object
       properties:
-        url:
-          type: string
-          format: uri
-          description: The pre-signed URL pointing to the output destination.
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: The pre-signed URL pointing to the input source.
+          required:
+          - url
+          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
       required:
-      - url
-      description: Destination details including a pre-signed URL for the output media.
+      - source
+      description: Video input details for generate reframed video request.
+    AspectRatioV2:
+      type: object
+      description: Aspect ratio specification for video output.
+      properties:
+        x:
+          type: integer
+          description: AspectRatio x ratio.
+        y:
+          type: integer
+          description: AspectRatio y ratio.
+      required:
+      - x
+      - y
     Overlay:
       type: object
       properties:
@@ -1069,133 +1048,25 @@ components:
       - scale
       - position
       description: Configuration for an overlay in the reframed video.
-    AspectRatioV2:
-      type: object
-      description: Aspect ratio specification for video output.
-      properties:
-        x:
-          type: integer
-          description: AspectRatio x ratio.
-        y:
-          type: integer
-          description: AspectRatio y ratio.
-      required:
-      - x
-      - y
-    OverlayV2:
-      type: object
-      properties:
-        source:
-          $ref: '#/components/schemas/Source'
-        startTime:
-          type: string
-          format: HH:MM:SS:FRAME_NUMBER
-          description: Start time for the overlay in the format HH:MM:SS:FF.
-        duration:
-          type: string
-          format: HH:MM:SS:FRAME_NUMBER
-          description: Duration of the overlay in the format HH:MM:SS:FF.
-        scale:
-          $ref: '#/components/schemas/ScaleV2'
-        position:
-          $ref: '#/components/schemas/PositionV2'
-        repeat:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/RepeatV2'
-          description: Repeat behavior for GIF overlay (optional).
-    OutputFormatV2:
-      type: object
-      default: source
-      properties:
-        media:
-          type: string
-          enum:
-          - none
-          - mp4
-          - mov
-          - source
-          description: Media format for the output video. If only the OTIO file is needed, set this as `none`.
-        sidecar:
-          type: string
-          enum:
-          - json
-          - otio
-          description: Sidecar format for additional metadata.
-      description: Output format configuration. A media property is mandatory when this format object is specified.
-      required:
-      - media
-      - sidecar
-    Source:
+    Destination:
       type: object
       properties:
         url:
           type: string
           format: uri
-          description: The pre-signed URL pointing to the input source.
+          description: The pre-signed URL pointing to the output destination.
       required:
       - url
-      description: Source details including a pre-signed URL for accessing the input media. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
-    AnalysisV2:
+      description: Destination details including a pre-signed URL for the output media.
+    CompositionV2:
       type: object
       properties:
-        sceneEditDetection:
-          type: boolean
-          default: true
-          description: Applies scene edit detection before reframing.
-        focalPoints:
+        overlays:
           type: array
           items:
-            type: string
-            maxLength: 1000
-            pattern: ^[a-zA-Z0-9\s\-_]+$
-            description: Focal point keyword to utilize Semantic Subject Lock. Must be alphanumeric characters, spaces, hyphens, or underscores only. Maximum 1000 characters per keyword.
-          maxItems: 10
-          description: Array of focal point keyword identifiers for reframing. Up to 10 keywords are allowed. Keywords must be alphanumeric characters, spaces, hyphens, or underscores only, with a maximum of 1000 characters per keyword.
-          default: []
-          externalDocs:
-            description: See documentation for Semantic Subject Lock.
-            url: https://developer.adobe.com/reframev2/getting-started/semantic-search/
-      description: Analysis configuration for the video processing.
-    PositionV2:
-      type: object
-      description: Position configuration for overlay placement.
-      properties:
-        anchorPoint:
-          type: string
-          enum:
-          - top_left
-          - top_right
-          - bottom_left
-          - bottom_right
-          - center
-          description: Anchor point for taking the position reference.
-        offsetX:
-          type:
-          - integer
-          - 'null'
-          description: Horizontal offset for the anchor point.
-        offsetY:
-          type:
-          - integer
-          - 'null'
-          description: Vertical offset for the anchor point.
-    VideoInputV2:
-      type: object
-      properties:
-        source:
-          type: object
-          properties:
-            url:
-              type: string
-              format: uri
-              description: The pre-signed URL pointing to the input source.
-          required:
-          - url
-          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
-      required:
-      - source
-      description: Video input details for generate reframed video request.
+            $ref: '#/components/schemas/OverlayV2'
+          description: List of overlays to be composed on the video.
+      description: Configuration for composing elements on the video.
     GenerateReframedVideoJobErrorBody:
       type: object
       properties:
@@ -1219,15 +1090,147 @@ components:
         height:
           type: integer
           description: The height of the scaled overlay.
-    CompositionV2:
+    AnalysisV2:
       type: object
       properties:
-        overlays:
+        sceneEditDetection:
+          type: boolean
+          default: true
+          description: Applies scene edit detection before reframing.
+        focalPoints:
           type: array
           items:
-            $ref: '#/components/schemas/OverlayV2'
-          description: List of overlays to be composed on the video.
-      description: Configuration for composing elements on the video.
+            type: string
+            maxLength: 1000
+            pattern: ^[a-zA-Z0-9\s\-_]+$
+            description: Focal point keyword to utilize Semantic Subject Lock. Must be alphanumeric characters, spaces, hyphens, or underscores only. Maximum 1000 characters per keyword.
+          maxItems: 10
+          description: Array of focal point keyword identifiers for reframing. Up to 10 keywords are allowed. Keywords must be alphanumeric characters, spaces, hyphens, or underscores only, with a maximum of 1000 characters per keyword.
+          default: []
+          externalDocs:
+            description: See documentation for Semantic Subject Lock.
+            url: https://developer.adobe.com/reframev2/getting-started/semantic-search/
+      description: Analysis configuration for the video processing.
+    OverlayV2:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+        startTime:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Start time for the overlay in the format HH:MM:SS:FF.
+        duration:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Duration of the overlay in the format HH:MM:SS:FF.
+        scale:
+          $ref: '#/components/schemas/ScaleV2'
+        position:
+          $ref: '#/components/schemas/PositionV2'
+        repeat:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/RepeatV2'
+          description: Repeat behavior for GIF overlay (optional).
+    Source:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The pre-signed URL pointing to the input source.
+      required:
+      - url
+      description: Source details including a pre-signed URL for accessing the input media. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+    RepeatV2:
+      type: string
+      enum:
+      - stop_on_last_frame
+      - loop
+      - time_stretch
+      description: Defines the repeat behavior of the overlay.
+    PositionV2:
+      type: object
+      description: Position configuration for overlay placement.
+      properties:
+        anchorPoint:
+          type: string
+          enum:
+          - top_left
+          - top_right
+          - bottom_left
+          - bottom_right
+          - center
+          description: Anchor point for taking the position reference.
+        offsetX:
+          type:
+          - integer
+          - 'null'
+          description: Horizontal offset for the anchor point.
+        offsetY:
+          type:
+          - integer
+          - 'null'
+          description: Vertical offset for the anchor point.
+    OutputFormatV2:
+      type: object
+      default: source
+      properties:
+        media:
+          type: string
+          enum:
+          - none
+          - mp4
+          - mov
+          - source
+          description: Media format for the output video. If only the OTIO file is needed, set this as `none`.
+        sidecar:
+          type: string
+          enum:
+          - json
+          - otio
+          description: Sidecar format for additional metadata.
+      description: Output format configuration. A media property is mandatory when this format object is specified.
+      required:
+      - media
+      - sidecar
+  examples:
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    ErrorBodyMethodNotAllowed:
+      summary: Method Not Allowed
+      value:
+        error_code: method_not_allowed
+        message: The HTTP method is not supported for this endpoint.
+    ErrorBodyBadRequest:
+      summary: Bad Request
+      value:
+        error_code: bad_request
+        message: The request was invalid or cannot be served.
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
+    ErrorBodyInternalServerError:
+      summary: Internal Server Error
+      value:
+        error_code: internal_server_error
+        message: An unexpected error occurred while processing the request.
+    ErrorBodyResourceNotFound:
+      summary: Not Found
+      value:
+        error_code: unknown_job_id
+        message: The requested resource was not found.
   securitySchemes:
     AccessToken:
       type: http

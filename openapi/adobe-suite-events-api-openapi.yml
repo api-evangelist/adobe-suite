@@ -14,7 +14,11 @@ paths:
       tags:
       - Events
       summary: Upload file for processing
-      description: "Upload a batch file to Analytics for processing. Uploaded files must:\n * Be 100 MB or less compressed (using gzip)\n* Follow the CSV formatting rules and include the required fields as specified in the documentation"
+      description: 'Upload a batch file to Analytics for processing. Uploaded files must:
+
+        * Be 100 MB or less compressed (using gzip)
+
+        * Follow the CSV formatting rules and include the required fields as specified in the documentation'
       operationId: filePost
       parameters:
       - name: globalCompanyId
@@ -611,14 +615,22 @@ paths:
     servers:
     - url: https://status.adobe.io/
 components:
+  parameters:
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
   schemas:
-    ApiUnauthorizedError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Invalid token (1)
-          description: Error during authentication
     UploadedFileInfo:
       type: object
       properties:
@@ -693,6 +705,13 @@ components:
           type: string
           example: File is valid
           description: A success message for validation requests
+    ApiUnauthorizedError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid token (1)
+          description: Error during authentication
     ApiError:
       type: object
       properties:
@@ -700,6 +719,18 @@ components:
           type: string
           example: Request is missing required header 'x-adobe-vgid'
           description: General request error is encountered
+    Event:
+      title: Event
+      type: object
+      properties:
+        incidents:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentDto'
+        maintenances:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceDto'
     MaintenanceDto:
       title: MaintenanceDto
       type: object
@@ -756,46 +787,6 @@ components:
           - Empty
           - Scheduled
           - Started
-    EventCloud:
-      title: EventCloud
-      type: object
-      properties:
-        cloudProducts:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        id:
-          type: string
-        name:
-          type: string
-    EventEnvironment:
-      title: EventEnvironment
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        serviceRegions:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    LocationImpact:
-      title: LocationImpact
-      type: object
-      properties:
-        serviceEnvironments:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        serviceRegions:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
     MaintenanceProductDto:
       title: MaintenanceProductDto
       type: object
@@ -838,6 +829,81 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventServices'
+    IncidentProductDto:
+      title: IncidentProductDto
+      type: object
+      properties:
+        endedOn:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentHistoryEventDto'
+        id:
+          type: string
+        name:
+          type: string
+        severity:
+          type: string
+          enum:
+          - Major
+          - Minor
+          - None
+          - Potential
+          - Trivial
+        startedOn:
+          type: string
+        status:
+          type: string
+          enum:
+          - Closed
+          - Empty
+          - Opened
+    EventEnvironment:
+      title: EventEnvironment
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    EventOfferingDto:
+      title: EventOfferingDto
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    ImpactedServices:
+      title: ImpactedServices
+      type: object
+      properties:
+        productCapabilities:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productOfferings:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
     IncidentHistoryEventDto:
       title: IncidentHistoryEventDto
       type: object
@@ -953,6 +1019,19 @@ components:
           - Updated
         titleToken:
           type: string
+    EventCloud:
+      title: EventCloud
+      type: object
+      properties:
+        cloudProducts:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        name:
+          type: string
     EventServices:
       title: EventServices
       type: object
@@ -966,80 +1045,6 @@ components:
           type: array
           items:
             type: string
-    ImpactedServices:
-      title: ImpactedServices
-      type: object
-      properties:
-        productCapabilities:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productOfferings:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productServices:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    EventOfferingDto:
-      title: EventOfferingDto
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        productServices:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    Event:
-      title: Event
-      type: object
-      properties:
-        incidents:
-          type: array
-          items:
-            $ref: '#/components/schemas/IncidentDto'
-        maintenances:
-          type: array
-          items:
-            $ref: '#/components/schemas/MaintenanceDto'
-    IncidentProductDto:
-      title: IncidentProductDto
-      type: object
-      properties:
-        endedOn:
-          type: string
-        history:
-          type: array
-          items:
-            $ref: '#/components/schemas/IncidentHistoryEventDto'
-        id:
-          type: string
-        name:
-          type: string
-        severity:
-          type: string
-          enum:
-          - Major
-          - Minor
-          - None
-          - Potential
-          - Trivial
-        startedOn:
-          type: string
-        status:
-          type: string
-          enum:
-          - Closed
-          - Empty
-          - Opened
     EventRegion:
       title: EventRegion
       type: object
@@ -1048,21 +1053,20 @@ components:
           type: string
         name:
           type: string
-  parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
-      required: true
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
-      required: true
-      schema:
-        type: string
+    LocationImpact:
+      title: LocationImpact
+      type: object
+      properties:
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
   securitySchemes:
     Authorization:
       description: '[To generate OAuth Authorization token](https://developer.adobe.com/developer-console/docs/guides/authentication/ServerToServerAuthentication/implementation/)'

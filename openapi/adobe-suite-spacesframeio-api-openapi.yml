@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   description: REST API for Adobe Substance 3D - Firefly Services.
-  title: Adobe Substance 3D API - Firefly Services Spaces Frame IO API
+  title: Adobe Substance 3D API - Firefly Services Spaces Frame IO…
   version: 1.0.0
 servers:
 - url: https://s3d.adobe.io
@@ -15,7 +15,42 @@ paths:
     post:
       operationId: createSpaceFromFrameIO_v2
       summary: Create Space From Frame IO API
-      description: "## Overview\n\nThe **Substance 3D API** provides a way to upload and temporary store files.\nYou can upload folders from **frame.io** to create a space.\nTo upload a folder from frame.io, you must pass the following parameters:\n\n- **access Token**\n- **folder ID**\n\nThe result of the post is a **JSON** which contained the **id** of the space created.  \nSpace **id** can be used into a space source to use space content as a source for API operations.\n\nExample of a space source:\n\n```json\n{\n  \"space\": {\n    \"id\": \"<space_id>\"\n  }\n}\n```"
+      description: '## Overview
+
+
+        The **Substance 3D API** provides a way to upload and temporary store files.
+
+        You can upload folders from **frame.io** to create a space.
+
+        To upload a folder from frame.io, you must pass the following parameters:
+
+
+        - **access Token**
+
+        - **folder ID**
+
+
+        The result of the post is a **JSON** which contained the **id** of the space created.
+
+        Space **id** can be used into a space source to use space content as a source for API operations.
+
+
+        Example of a space source:
+
+
+        ```json
+
+        {
+
+        "space": {
+
+        "id": ""
+
+        }
+
+        }
+
+        ```'
       requestBody:
         required: true
         content:
@@ -100,31 +135,30 @@ paths:
       x-s3d-public: true
 components:
   schemas:
-    ffapierrors.FFAPIError:
-      description: The error within the error response.
+    rest_base.FileFrameIO:
       type: object
       properties:
         $schema:
-          description: A URL to the JSON schema for this object.
+          description: A URL to the JSON Schema for this object.
           type: string
           format: uri
           examples:
-          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
+          - https://s3d.adobe.io/schemas/rest_base.FileFrameIO.json
           readOnly: true
-        error_code:
-          description: Associated error code.
+        accessToken:
+          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
           type: string
-        error_details:
-          description: Optional list of individual error details.
-          type: array
-          items:
-            type: object
-        message:
-          description: Error message.
+          examples:
+          - base64.jwt.token
+        folderId:
+          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
           type: string
+          examples:
+          - 01234567-89ab-cdef-0123-456789abcdef
       additionalProperties: false
       required:
-      - error_code
+      - folderId
+      - accessToken
     rest_base.Space:
       type: object
       properties:
@@ -176,30 +210,31 @@ components:
       - url
       - name
       - size
-    rest_base.FileFrameIO:
+    ffapierrors.FFAPIError:
+      description: The error within the error response.
       type: object
       properties:
         $schema:
-          description: A URL to the JSON Schema for this object.
+          description: A URL to the JSON schema for this object.
           type: string
           format: uri
           examples:
-          - https://s3d.adobe.io/schemas/rest_base.FileFrameIO.json
+          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
           readOnly: true
-        accessToken:
-          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
+        error_code:
+          description: Associated error code.
           type: string
-          examples:
-          - base64.jwt.token
-        folderId:
-          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
+        error_details:
+          description: Optional list of individual error details.
+          type: array
+          items:
+            type: object
+        message:
+          description: Error message.
           type: string
-          examples:
-          - 01234567-89ab-cdef-0123-456789abcdef
       additionalProperties: false
       required:
-      - folderId
-      - accessToken
+      - error_code
   securitySchemes:
     bearerAuth:
       description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'

@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   title: Unified Tags Folders API
   version: '1.0'
-  description: "Use the Unified Tags API to create folders, tags, and tag categories, which let you better organize your business objects. \n\n- **Related documentation**:\n  - [Unified Tags documentation](https://experienceleague.adobe.com/en/docs/experience-platform/administrative-tags/api/overview)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n  - [Real-time Customer Profile API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Real-time%20Customer%20Profile%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n  - Gateway URL: https://<span>experience.adobe.io/\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. Accepted values specific to each call are provided in the call parameters.     \n\n- **API error handling**:\n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  description: Use the Unified Tags API to create folders, tags, and tag categories, which let you better organize your business objects.
 servers:
 - url: https://experience.adobe.io
 tags:
@@ -155,7 +155,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/folder'
 components:
+  parameters:
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    folder-type:
+      name: FOLDER_TYPE
+      in: path
+      description: The type of folder you're retrieving. Supported values include `segment` and `dataset`.
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. This value should be `application/json`.
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    folder-id:
+      name: FOLDER_ID
+      in: path
+      description: The ID of the folder.
+      required: true
+      schema:
+        type: string
   schemas:
+    updatedFolder:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/folder'
+      - type: object
+        properties:
+          name:
+            type: string
+            description: The updated name for the folder.
+            example: RenamedSampleFolder
+    deleteFolderResponse:
+      type: object
+      description: A successful deletion response body.
+      properties:
+        message:
+          type: string
+          example: delete request accepted successfully
+    createFolderBody:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the folder you want to create.
+          example: SampleFolder
+        parentId:
+          type: string
+          description: The parent ID of the folder you want to create.
+          example: 6a5e0927-1527-4abc-9993-376fd7067ca5
     foldersList:
       type: object
       description: A list of subfolders for the requested folder.
@@ -209,7 +287,7 @@ components:
           description: The child folders for the parent folders.
           items:
             $ref: '#/components/schemas/childFolder'
-    updatedFolder:
+    childFolder:
       type: object
       allOf:
       - $ref: '#/components/schemas/folder'
@@ -217,8 +295,21 @@ components:
         properties:
           name:
             type: string
-            description: The updated name for the folder.
-            example: RenamedSampleFolder
+            example: ChildFolder
+            description: The name for the child folder.
+          parentId:
+            type: string
+            example: c626b4f7-223b-4486-8900-00c266e31dd1
+            description: The ID of the parent folder.
+          children:
+            type: array
+            description: An array showing children folders that belong to the child folder.
+            example: []
+            items: {}
+          _links:
+            type: object
+            example: null
+            description: A link to the child folder.
     folder:
       type: object
       properties:
@@ -298,94 +389,3 @@ components:
           type: string
           description: The updated value for the field that needs to be updated.
           example: RenamedSampleFolder
-    createFolderBody:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the folder you want to create.
-          example: SampleFolder
-        parentId:
-          type: string
-          description: The parent ID of the folder you want to create.
-          example: 6a5e0927-1527-4abc-9993-376fd7067ca5
-    deleteFolderResponse:
-      type: object
-      description: A successful deletion response body.
-      properties:
-        message:
-          type: string
-          example: delete request accepted successfully
-    childFolder:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/folder'
-      - type: object
-        properties:
-          name:
-            type: string
-            example: ChildFolder
-            description: The name for the child folder.
-          parentId:
-            type: string
-            example: c626b4f7-223b-4486-8900-00c266e31dd1
-            description: The ID of the parent folder.
-          children:
-            type: array
-            description: An array showing children folders that belong to the child folder.
-            example: []
-            items: {}
-          _links:
-            type: object
-            example: null
-            description: A link to the child folder.
-  parameters:
-    folder-type:
-      name: FOLDER_TYPE
-      in: path
-      description: The type of folder you're retrieving. Supported values include `segment` and `dataset`.
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the body of the request. This value should be `application/json`.
-      required: true
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      schema:
-        type: string
-    folder-id:
-      name: FOLDER_ID
-      in: path
-      description: The ID of the folder.
-      required: true
-      schema:
-        type: string

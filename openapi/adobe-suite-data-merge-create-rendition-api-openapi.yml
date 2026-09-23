@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Illustrator API - Firefly Services Data Merge & Create Rendition API
+  title: Illustrator API - Firefly Services Data Merge & Create…
   description: Illustrator API allows you to perform various operations with an Adobe Illustrator template. The API processes requests asynchronously.
   version: 1.0.0
   license:
@@ -548,7 +548,9 @@ paths:
       - Data Merge & Create Rendition
       operationId: facadeJobStatus
       summary: Retrieve job status
-      description: Retrieve the status of a job by providing the job ID. The job ID can be obtained from the response of other APIs. For all asynchronous jobs, polling this endpoint can return `running`, `succeeded`, or `failed`. The `partially_succeeded` status is returned only for Data Merge jobs when some CSV rows produce outputs while other rows fail or must be rerun after errors (for example, missing fonts). No other job types return the `partially_succeeded` status.<br>When `status` is `succeeded`, for Data Merge jobs each item in `outputs` includes a `row` field; for Create Rendition jobs, output items contain `destination` and `mediaType` only.
+      description: 'Retrieve the status of a job by providing the job ID. The job ID can be obtained from the response of other APIs. For all asynchronous jobs, polling this endpoint can return `running`, `succeeded`, or `failed`. The `partially_succeeded` status is returned only for Data Merge jobs when some CSV rows produce outputs while other rows fail or must be rerun after errors (for example, missing fonts). No other job types return the `partially_succeeded` status.
+
+        When `status` is `succeeded`, for Data Merge jobs each item in `outputs` includes a `row` field; for Create Rendition jobs, output items contain `destination` and `mediaType` only.'
       x-ffs-status-fetcher: true
       x-ffs-job-name: FacadeAsyncJob
       parameters:
@@ -830,131 +832,20 @@ paths:
                 message: An unexpected error occurred while processing your request. Please retry or contact support if the issue persists.
 components:
   schemas:
-    JobError:
+    JobLinkResponse:
       type: object
-      properties:
-        error_code:
-          type: string
-          description: The error code.
-          example: validation_error
-        message:
-          type: string
-          description: The error message.
-          example: Invalid request payload. Check validation_errors for details.
-        validation_errors:
-          description: An array of various validation errors.
-          type: array
-          items:
-            type: string
-      required:
-      - error_code
-    DataMergeFontSettings:
-      type: object
-      properties:
-        autoReduceFontSizeToFit:
-          type: boolean
-          description: Automatically reduce font size to fit text within text boxes. Defaults to false if not specified.
-          default: false
-        minFontSize:
-          type: number
-          description: Minimum font size (in points) when `autoReduceFontSizeToFit` is enabled. Must be a positive number.
-          example: 8
-        fallBackFont:
-          type: string
-          description: A case-sensitive PostScript font name (like Roboto-Thin, Oxygen, or SourceSansPro-Bold) to use as a fallback when the fonts are missing in the template file.
-          example: Roboto-Thin
-    DataMergeOutputSpec:
-      type: object
-      properties:
-        fileName:
-          type: string
-          description: The output file name. May or may not have an extension. It is recommended to provide with extension (e.g., 'result.png', 'output.pdf').
-          example: your-output.pdf
-        mediaType:
-          $ref: '#/components/schemas/DataMergeOutputMediaType'
-      required:
-      - fileName
-      - mediaType
-    UnauthorizedError:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The error title.
-          example: ErrInvalidOauthToken
-        status:
-          type: integer
-          description: The HTTP status code.
-        error_code:
-          type: integer
-          description: The error code.
-        message:
-          type: string
-          description: The error message.
-          example: Oauth token is not valid
-      required:
-      - status
-      - error_code
-    CreateRenditionOutputSpec:
-      type: object
-      properties:
-        mediaType:
-          $ref: '#/components/schemas/CreateRenditionOutputMediaType'
-      required:
-      - mediaType
-    DataMergeData:
-      type: object
-      properties:
-        source:
-          description: The source containing the CSV file with variable data. The media type defaults to `text/csv`.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeSourceUrl'
-      required:
-      - source
-    DataMergeJobPartiallySucceededResponse:
-      type: object
-      title: Partially Succeeded
-      description: Returned ONLY FOR DATA MERGE jobs when some rows produced outputs while others failed or require rerun. Other job types do not use this status.
       properties:
         jobId:
           type: string
           description: The job ID.
-          example: 1dd551c5-6023-4ff9-b736-bc27b36cbb7f
-        status:
+          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        statusUrl:
           type: string
-          enum:
-          - partially_succeeded
-          description: The job status.
-        outputs:
-          type: array
-          description: Output files produced for successfully merged rows.
-          items:
-            $ref: '#/components/schemas/DataMergeOutputWithRow'
-        errors:
-          type: array
-          description: Per-row errors for rows that did not produce outputs.
-          items:
-            $ref: '#/components/schemas/DataMergePartialSuccessError'
-        needsRerun:
-          type: array
-          description: Row ranges that must be rerun after addressing errors (for example, missing fonts).
-          items:
-            $ref: '#/components/schemas/DataMergeNeedsRerunItem'
+          description: The status URL.
+          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
       required:
       - jobId
-      - status
-      - outputs
-      - errors
-      - needsRerun
-    DataMergeSourceUrl:
-      type: object
-      properties:
-        url:
-          type: string
-          description: 'The URL pointing to the resource. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
-          example: https://your-bucket.s3.amazonaws.com/your-file.csv
-      required:
-      - url
+      - statusUrl
     DataMergePartialSuccessError:
       type: object
       description: An error for a specific CSV row when the job completes with partial success.
@@ -974,16 +865,6 @@ components:
       - row
       - error_code
       - message
-    DataMergeNeedsRerunItem:
-      type: object
-      description: A row range that must be rerun after errors are resolved.
-      properties:
-        rowRange:
-          description: The inclusive range of CSV rows to reprocess.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeRowRange'
-      required:
-      - rowRange
     DataMergeOutputWithRow:
       type: object
       description: A merged output file for a specific CSV row.
@@ -1004,7 +885,207 @@ components:
       - destination
       - mediaType
       additionalProperties: false
-    LongJobError:
+    CreateRenditionJobApiResponse:
+      type: object
+      title: Succeeded (Create Rendition)
+      description: Returned when a Create Rendition job completes successfully. Output items do not include a CSV row index.
+      properties:
+        status:
+          type: string
+          description: The job status.
+          enum:
+          - succeeded
+        jobId:
+          type: string
+          description: The job ID.
+          example: 6f35a027-c578-41e6-9e53-034424c69d14
+        outputs:
+          type: array
+          description: Array of converted output files (one for each artboard).
+          items:
+            $ref: '#/components/schemas/CreateRenditionOutput'
+      required:
+      - status
+      - jobId
+      - outputs
+    ForbiddenError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrMissingAPIKey
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: API key is missing
+      required:
+      - status
+      - error_code
+    DataMergeJobFailedResponse:
+      type: object
+      title: Failed
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
+        status:
+          type: string
+          enum:
+          - failed
+          description: The job status.
+        error_code:
+          type: string
+          description: The error code.
+          example: runtime_error
+        message:
+          type: string
+          description: The error message.
+          example: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+      required:
+      - jobId
+      - status
+      - error_code
+      - message
+    CreateRenditionOutputSpec:
+      type: object
+      properties:
+        mediaType:
+          $ref: '#/components/schemas/CreateRenditionOutputMediaType'
+      required:
+      - mediaType
+    DataMergeFontSettings:
+      type: object
+      properties:
+        autoReduceFontSizeToFit:
+          type: boolean
+          description: Automatically reduce font size to fit text within text boxes. Defaults to false if not specified.
+          default: false
+        minFontSize:
+          type: number
+          description: Minimum font size (in points) when `autoReduceFontSizeToFit` is enabled. Must be a positive number.
+          example: 8
+        fallBackFont:
+          type: string
+          description: A case-sensitive PostScript font name (like Roboto-Thin, Oxygen, or SourceSansPro-Bold) to use as a fallback when the fonts are missing in the template file.
+          example: Roboto-Thin
+    DataMergeSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: 'The URL pointing to the resource. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
+          example: https://your-bucket.s3.amazonaws.com/your-file.csv
+      required:
+      - url
+    DataMergeJobApiResponse:
+      type: object
+      title: Succeeded (Data Merge)
+      description: Returned when a Data Merge job completes successfully. Each output includes the CSV row index.
+      properties:
+        status:
+          type: string
+          description: The job status.
+          enum:
+          - succeeded
+        jobId:
+          type: string
+          description: The job ID.
+          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
+        outputs:
+          description: Array of output files from the data merge operation, one per CSV row.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataMergeOutputWithRow'
+      required:
+      - status
+      - jobId
+      - outputs
+    DataMergeFontFileMediaType:
+      type: string
+      description: The media type of the font file. Supports font/ttf and font/otf.
+      enum:
+      - font/ttf
+      - font/otf
+    DataMergeData:
+      type: object
+      properties:
+        source:
+          description: The source containing the CSV file with variable data. The media type defaults to `text/csv`.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+      required:
+      - source
+    DataMergeRowRange:
+      type: object
+      description: An inclusive range of CSV row indices.
+      properties:
+        start:
+          type: integer
+          description: The start row index for the range.
+        end:
+          type: integer
+          description: The end row index for the range.
+      required:
+      - start
+      - end
+    CreateRenditionSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: 'The URL pointing to the Adobe Illustrator file. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
+          example: https://your-bucket.s3.amazonaws.com/your-document.ai
+      required:
+      - url
+    DataMergeFontFile:
+      type: object
+      properties:
+        source:
+          description: The source containing the font file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+        mediaType:
+          $ref: '#/components/schemas/DataMergeFontFileMediaType'
+      required:
+      - source
+      - mediaType
+    DataMergeRequest:
+      type: object
+      properties:
+        data:
+          description: The data source containing variable data. Must be a CSV file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeData'
+        template:
+          description: The template source (Adobe Illustrator file).
+          allOf:
+          - $ref: '#/components/schemas/DataMergeTemplate'
+        fontFiles:
+          description: Optional array of font files to be used in the template. Supports .ttf and .otf font formats.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataMergeFontFile'
+        settings:
+          description: Settings for the data merge operation.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSettings'
+        output:
+          description: Output specification for the merge operation with file name and media type.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeOutputSpec'
+      required:
+      - data
+      - template
+      - output
+    UnauthorizedError:
       type: object
       properties:
         title:
@@ -1048,26 +1129,6 @@ components:
       - jobId
       - Retry-After
       additionalProperties: false
-    ForbiddenError:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The error title.
-          example: ErrMissingAPIKey
-        status:
-          type: integer
-          description: The HTTP status code.
-        error_code:
-          type: integer
-          description: The error code.
-        message:
-          type: string
-          description: The error message.
-          example: API key is missing
-      required:
-      - status
-      - error_code
     DataMergeOutputDestination:
       type: object
       properties:
@@ -1077,207 +1138,18 @@ components:
           example: https://output-bucket.s3.amazonaws.com/merge-results/row-1.pdf
       required:
       - url
-    JobLinkResponse:
+    DataMergeOutputSpec:
       type: object
       properties:
-        jobId:
+        fileName:
           type: string
-          description: The job ID.
-          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
-        statusUrl:
-          type: string
-          description: The status URL.
-          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
-      required:
-      - jobId
-      - statusUrl
-    CreateRenditionJobApiResponse:
-      type: object
-      title: Succeeded (Create Rendition)
-      description: Returned when a Create Rendition job completes successfully. Output items do not include a CSV row index.
-      properties:
-        status:
-          type: string
-          description: The job status.
-          enum:
-          - succeeded
-        jobId:
-          type: string
-          description: The job ID.
-          example: 6f35a027-c578-41e6-9e53-034424c69d14
-        outputs:
-          type: array
-          description: Array of converted output files (one for each artboard).
-          items:
-            $ref: '#/components/schemas/CreateRenditionOutput'
-      required:
-      - status
-      - jobId
-      - outputs
-    CreateRenditionOutputMediaType:
-      type: string
-      description: The desired output media type for the converted file.
-      enum:
-      - image/png
-      - image/jpeg
-      - image/webp
-      - image/svg+xml
-      - application/pdf
-      - application/eps
-    DataMergeJobApiResponse:
-      type: object
-      title: Succeeded (Data Merge)
-      description: Returned when a Data Merge job completes successfully. Each output includes the CSV row index.
-      properties:
-        status:
-          type: string
-          description: The job status.
-          enum:
-          - succeeded
-        jobId:
-          type: string
-          description: The job ID.
-          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
-        outputs:
-          description: Array of output files from the data merge operation, one per CSV row.
-          type: array
-          items:
-            $ref: '#/components/schemas/DataMergeOutputWithRow'
-      required:
-      - status
-      - jobId
-      - outputs
-    DataMergeRequest:
-      type: object
-      properties:
-        data:
-          description: The data source containing variable data. Must be a CSV file.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeData'
-        template:
-          description: The template source (Adobe Illustrator file).
-          allOf:
-          - $ref: '#/components/schemas/DataMergeTemplate'
-        fontFiles:
-          description: Optional array of font files to be used in the template. Supports .ttf and .otf font formats.
-          type: array
-          items:
-            $ref: '#/components/schemas/DataMergeFontFile'
-        settings:
-          description: Settings for the data merge operation.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeSettings'
-        output:
-          description: Output specification for the merge operation with file name and media type.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeOutputSpec'
-      required:
-      - data
-      - template
-      - output
-    DataMergeFontFile:
-      type: object
-      properties:
-        source:
-          description: The source containing the font file.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeSourceUrl'
+          description: The output file name. May or may not have an extension. It is recommended to provide with extension (e.g., 'result.png', 'output.pdf').
+          example: your-output.pdf
         mediaType:
-          $ref: '#/components/schemas/DataMergeFontFileMediaType'
+          $ref: '#/components/schemas/DataMergeOutputMediaType'
       required:
-      - source
+      - fileName
       - mediaType
-    DataMergeTemplate:
-      type: object
-      properties:
-        source:
-          description: The source containing the Adobe Illustrator template file.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeSourceUrl'
-      required:
-      - source
-    CreateRenditionSourceUrl:
-      type: object
-      properties:
-        url:
-          type: string
-          description: 'The URL pointing to the Adobe Illustrator file. Only the following allow-listed domains can be used: amazonaws.com, windows.net, dropboxusercontent.com, assets.frame.io, storage.googleapis.com.'
-          example: https://your-bucket.s3.amazonaws.com/your-document.ai
-      required:
-      - url
-    CreateRenditionOutputDestination:
-      type: object
-      properties:
-        url:
-          type: string
-          description: The URL to the output file.
-          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
-      required:
-      - url
-    DataMergeOutputMediaType:
-      type: string
-      description: The desired output media type for the merged documents.
-      enum:
-      - image/png
-      - image/jpeg
-      - application/pdf
-      - image/svg+xml
-      - application/illustrator
-      - application/eps
-    DataMergeFontFileMediaType:
-      type: string
-      description: The media type of the font file. Supports font/ttf and font/otf.
-      enum:
-      - font/ttf
-      - font/otf
-    DataMergeRowRange:
-      type: object
-      description: An inclusive range of CSV row indices.
-      properties:
-        start:
-          type: integer
-          description: The start row index for the range.
-        end:
-          type: integer
-          description: The end row index for the range.
-      required:
-      - start
-      - end
-    CreateRenditionInput:
-      type: object
-      properties:
-        source:
-          description: The source containing the Adobe Illustrator file.
-          allOf:
-          - $ref: '#/components/schemas/CreateRenditionSourceUrl'
-        mediaType:
-          description: The media type of the source file. Optional, defaults to application/illustrator.
-          allOf:
-          - $ref: '#/components/schemas/CreateRenditionSourceMediaType'
-      required:
-      - source
-    DataMergeSettings:
-      type: object
-      properties:
-        fontSettings:
-          description: Settings for font handling during the merge operation.
-          allOf:
-          - $ref: '#/components/schemas/DataMergeFontSettings'
-    CreateRenditionOutput:
-      type: object
-      properties:
-        destination:
-          description: Details of the location where the output is located.
-          allOf:
-          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
-        mediaType:
-          type: string
-          description: Media type of the output.
-          example: application/pdf
-      required:
-      - destination
-      - mediaType
-      additionalProperties: false
     CreateRenditionSettings:
       type: object
       properties:
@@ -1299,32 +1171,53 @@ components:
           default: 72
       required:
       - documentLevel
-    DataMergeJobFailedResponse:
+    CreateRenditionSourceMediaType:
+      type: string
+      description: The media type of the source file.
+      enum:
+      - application/illustrator
+    JobStatus:
+      type: string
+      description: The job status.
+      enum:
+      - running
+      - failed
+      - succeeded
+    CreateRenditionInput:
       type: object
-      title: Failed
       properties:
-        jobId:
-          type: string
-          description: The job ID.
-          example: ef4f7daa-0d09-4dcf-9884-029bb7f374ac
-        status:
-          type: string
-          enum:
-          - failed
-          description: The job status.
-        error_code:
-          type: string
-          description: The error code.
-          example: runtime_error
-        message:
-          type: string
-          description: The error message.
-          example: 'Missing fonts detected: Chabplan-Rg. Please provide font files.'
+        source:
+          description: The source containing the Adobe Illustrator file.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionSourceUrl'
+        mediaType:
+          description: The media type of the source file. Optional, defaults to application/illustrator.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionSourceMediaType'
       required:
-      - jobId
-      - status
-      - error_code
-      - message
+      - source
+    CreateRenditionOutput:
+      type: object
+      properties:
+        destination:
+          description: Details of the location where the output is located.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
+        mediaType:
+          type: string
+          description: Media type of the output.
+          example: application/pdf
+      required:
+      - destination
+      - mediaType
+      additionalProperties: false
+    DataMergeSettings:
+      type: object
+      properties:
+        fontSettings:
+          description: Settings for font handling during the merge operation.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeFontSettings'
     CreateRenditionRequest:
       type: object
       properties:
@@ -1344,18 +1237,127 @@ components:
       - input
       - output
       - settings
-    CreateRenditionSourceMediaType:
+    CreateRenditionOutputMediaType:
       type: string
-      description: The media type of the source file.
+      description: The desired output media type for the converted file.
       enum:
+      - image/png
+      - image/jpeg
+      - image/webp
+      - image/svg+xml
+      - application/pdf
+      - application/eps
+    LongJobError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrInvalidOauthToken
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: Oauth token is not valid
+      required:
+      - status
+      - error_code
+    DataMergeTemplate:
+      type: object
+      properties:
+        source:
+          description: The source containing the Adobe Illustrator template file.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeSourceUrl'
+      required:
+      - source
+    CreateRenditionOutputDestination:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to the output file.
+          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
+      required:
+      - url
+    DataMergeJobPartiallySucceededResponse:
+      type: object
+      title: Partially Succeeded
+      description: Returned ONLY FOR DATA MERGE jobs when some rows produced outputs while others failed or require rerun. Other job types do not use this status.
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: 1dd551c5-6023-4ff9-b736-bc27b36cbb7f
+        status:
+          type: string
+          enum:
+          - partially_succeeded
+          description: The job status.
+        outputs:
+          type: array
+          description: Output files produced for successfully merged rows.
+          items:
+            $ref: '#/components/schemas/DataMergeOutputWithRow'
+        errors:
+          type: array
+          description: Per-row errors for rows that did not produce outputs.
+          items:
+            $ref: '#/components/schemas/DataMergePartialSuccessError'
+        needsRerun:
+          type: array
+          description: Row ranges that must be rerun after addressing errors (for example, missing fonts).
+          items:
+            $ref: '#/components/schemas/DataMergeNeedsRerunItem'
+      required:
+      - jobId
+      - status
+      - outputs
+      - errors
+      - needsRerun
+    DataMergeOutputMediaType:
+      type: string
+      description: The desired output media type for the merged documents.
+      enum:
+      - image/png
+      - image/jpeg
+      - application/pdf
+      - image/svg+xml
       - application/illustrator
-    JobStatus:
-      type: string
-      description: The job status.
-      enum:
-      - running
-      - failed
-      - succeeded
+      - application/eps
+    DataMergeNeedsRerunItem:
+      type: object
+      description: A row range that must be rerun after errors are resolved.
+      properties:
+        rowRange:
+          description: The inclusive range of CSV rows to reprocess.
+          allOf:
+          - $ref: '#/components/schemas/DataMergeRowRange'
+      required:
+      - rowRange
+    JobError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+          example: validation_error
+        message:
+          type: string
+          description: The error message.
+          example: Invalid request payload. Check validation_errors for details.
+        validation_errors:
+          description: An array of various validation errors.
+          type: array
+          items:
+            type: string
+      required:
+      - error_code
   securitySchemes:
     AccessToken:
       type: http

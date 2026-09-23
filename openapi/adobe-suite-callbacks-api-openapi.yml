@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Reactor Callbacks API
-  description: "Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.\n**Related documentation**:\n  * [Tags overview and UI documentation](https://adobe.com/go/launch_help_en)\n  * [Reactor API guides](https://adobe.com/go/reactor-api-overview)\n\n**API paths**:\n  * Reactor Gateway URL: https://<span>reactor.adobe.io\n  * Example of a complete path for making a call to `/properties`: https://<span>reactor.adobe.io/properties\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).\n  * All GET requests to the Reactor API require an `Accept` header to determine what data is returned by the system. In most cases, this value will be `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. The specific `Content-Type` value for each call is provided in the parameters sections in the endpoints listed below.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  description: Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.
   version: '1.0'
 servers:
 - url: //reactor.adobe.io
@@ -14,7 +14,7 @@ paths:
       tags:
       - Callbacks
       summary: List a property's callbacks
-      description: '>**NOTE**: For more information on using this operation, see the [callbacks endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/callbacks.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the callbacks endpoint guide on Experience League.'
       operationId: listCallbacks
       parameters:
       - name: PROPERTY_ID
@@ -84,7 +84,7 @@ paths:
       tags:
       - Callbacks
       summary: Create a new callback
-      description: '>**NOTE**: For more information on using this operation, see the [callbacks endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/callbacks.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the callbacks endpoint guide on Experience League.'
       operationId: createCallback
       parameters:
       - name: PROPERTY_ID
@@ -137,7 +137,7 @@ paths:
       tags:
       - Callbacks
       summary: Retrieve a callback
-      description: '>**NOTE**: For more information on using this operation, see the [callbacks endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/callbacks.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the callbacks endpoint guide on Experience League.'
       operationId: retrieveCallback
       parameters:
       - name: CALLBACK_ID
@@ -182,7 +182,7 @@ paths:
       tags:
       - Callbacks
       summary: Delete a callback
-      description: '>**NOTE**: For more information on using this operation, see the [callbacks endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/callbacks.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the callbacks endpoint guide on Experience League.'
       operationId: deleteCallback
       parameters:
       - name: CALLBACK_ID
@@ -218,7 +218,7 @@ paths:
       tags:
       - Callbacks
       summary: Update a callback
-      description: '>**NOTE**: For more information on using this operation, see the [callbacks endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/callbacks.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the callbacks endpoint guide on Experience League.'
       operationId: updateCallback
       parameters:
       - name: CALLBACK_ID
@@ -268,44 +268,73 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    callbacksEntity:
+    callbacksLookupResponse:
       allOf:
-      - $ref: '#/components/schemas/basicResourceProperties'
+      - $ref: '#/components/schemas/dataLookup'
       - type: object
         properties:
-          attributes:
+          data:
             type: object
-            properties:
-              created_at:
-                type: string
-                description: A timestamp of when the callback was created in the system.
-              subscriptions:
-                type: array
-                description: Lists the audit event types that this callback is subscribed to.
-                items:
-                  type: string
-              updated_at:
-                type: string
-                description: A timestamp of when the callback was last updated.
-              url:
-                type: string
-                description: The URL that the callback will send messages to.
-            description: Contains the callback's attributes.
-          relationships:
-            type: object
-            description: Provides information about other entities that are related to this callback.
             allOf:
-            - $ref: '#/components/schemas/relatedProperty'
-          links:
-            type: object
-            properties:
-              property:
-                type: string
-                description: A link to the property that owns the callback.
-              self:
-                type: string
-                description: A link to the callback itself.
-            description: Contains links related to the callback which can be used in subsequent fetch requests.
+            - $ref: '#/components/schemas/callbacksEntity'
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    callbacksUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/callbacksLookupResponse'
+    dataCreateNoType:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          required:
+          - attributes
+          type: object
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+          description: Contains the attributes for the resource being created.
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
     dataUpdate:
       required:
       - data
@@ -346,13 +375,79 @@ components:
               - rule_components
               - secrets
           description: Contains the attributes and type for the resource being updated.
-    dataLookup:
+    callbacksEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the callback was created in the system.
+              subscriptions:
+                type: array
+                description: Lists the audit event types that this callback is subscribed to.
+                items:
+                  type: string
+              updated_at:
+                type: string
+                description: A timestamp of when the callback was last updated.
+              url:
+                type: string
+                description: The URL that the callback will send messages to.
+            description: Contains the callback's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this callback.
+            allOf:
+            - $ref: '#/components/schemas/relatedProperty'
+          links:
+            type: object
+            properties:
+              property:
+                type: string
+                description: A link to the property that owns the callback.
+              self:
+                type: string
+                description: A link to the callback itself.
+            description: Contains links related to the callback which can be used in subsequent fetch requests.
+    callbacksAttributes:
       type: object
       properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
+        subscriptions:
+          type: array
+          description: Lists the audit event types that this callback is subscribed to.
+          items:
+            type: string
+        url:
+          type: string
+          description: The URL that the callback will send messages to.
+    callbacksUpdatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataUpdate'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/callbacksAttributes'
+    callbacksCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreateNoType'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/callbacksAttributes'
     callbacksListResponse:
       allOf:
       - $ref: '#/components/schemas/dataList'
@@ -387,6 +482,9 @@ components:
                   description: The total number of results in the response.
               description: Contains pagination information about the list response.
           description: Contains a `pagination` object that provides pagination information about the list response.
+    callbacksCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/callbacksLookupResponse'
     dataList:
       type: object
       properties:
@@ -396,102 +494,4 @@ components:
           items:
             type: object
             properties: {}
-    callbacksLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/callbacksEntity'
-    callbacksCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreateNoType'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/callbacksAttributes'
-    dataCreateNoType:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          required:
-          - attributes
-          type: object
-          properties:
-            attributes:
-              type: object
-              properties: {}
-              description: The attributes for the resource being created.
-          description: Contains the attributes for the resource being created.
-    callbacksAttributes:
-      type: object
-      properties:
-        subscriptions:
-          type: array
-          description: Lists the audit event types that this callback is subscribed to.
-          items:
-            type: string
-        url:
-          type: string
-          description: The URL that the callback will send messages to.
-    callbacksUpdatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataUpdate'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/callbacksAttributes'
-    callbacksUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/callbacksLookupResponse'
-    callbacksCreateResponse:
-      allOf:
-      - $ref: '#/components/schemas/callbacksLookupResponse'
-    relatedProperty:
-      type: object
-      properties:
-        property:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the property.
-                type:
-                  type: string
-                  description: The resource type for the property (`properties`).
-              description: Contains further information about the related property.
-          description: Contains details about the property that owns the resource.
-    basicResourceProperties:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
 x-original-swagger-version: '2.0'

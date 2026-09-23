@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   title: Adobe Suite Search API
   version: '1.0'
-  description: 'Operations tagged Search across 3 of this provider''s published API definitions: adobe-suite-aep-reactor-openapi.yaml, adobe-suite-commerce-rest-customer-openapi.yaml, adobe-suite-commerce-rest-guest-openapi.yaml. Each path carries the servers of the definition it was published in.'
+  description: 'Operations tagged Search across 2 of this provider''s published API definitions: adobe-suite-aep-reactor-openapi.yaml, adobe-suite-commerce-rest-customer-openapi.yaml. Each path carries the servers of the definition it was published in.'
 servers:
 - url: //reactor.adobe.io
 - url: https://example.com/rest/default
@@ -17,7 +17,7 @@ paths:
       summary: Perform a search
       description: 'The payload of a search request must contain a `query` object. This query object must contain at least one property whose key is a dot-notation path to the attribute being queried (e.g. `attributes.name`).
 
-        >**NOTE**: For detailed information on how to construct a search payload, see the [search endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/search.html) on Experience League.'
+        >**NOTE**: For detailed information on how to construct a search payload, see the search endpoint guide on Experience League.'
       operationId: createSearch
       parameters:
       - name: Authorization
@@ -306,61 +306,6 @@ components:
             match_score: 3.1645029
         meta:
           total_hits: 1
-    error-errors:
-      type: array
-      description: Errors list
-      items:
-        $ref: '#/components/schemas/error-errors-item'
-    framework-sort-order:
-      type: object
-      description: Data object for sort order.
-      properties:
-        field:
-          type: string
-          description: Sorting field.
-        direction:
-          type: string
-          description: Sorting direction.
-      required:
-      - field
-      - direction
-    error-errors-item:
-      type: object
-      description: Error details
-      properties:
-        message:
-          type: string
-          description: Error message
-        parameters:
-          $ref: '#/components/schemas/error-parameters'
-    framework-attribute-interface:
-      type: object
-      description: Interface for custom attribute value.
-      properties:
-        attribute_code:
-          type: string
-          description: Attribute code
-        value:
-          type: string
-          description: Attribute value
-      required:
-      - attribute_code
-      - value
-    framework-search-bucket-interface:
-      type: object
-      description: Interface for facet Bucket
-      properties:
-        name:
-          type: string
-          description: Field name
-        values:
-          type: array
-          description: Field values
-          items:
-            $ref: '#/components/schemas/framework-search-aggregation-value-interface'
-      required:
-      - name
-      - values
     framework-search-aggregation-value-interface:
       type: object
       description: Interface Aggregation Value
@@ -376,6 +321,68 @@ components:
       required:
       - value
       - metrics
+    error-errors:
+      type: array
+      description: Errors list
+      items:
+        $ref: '#/components/schemas/error-errors-item'
+    framework-search-aggregation-interface:
+      type: object
+      description: Interface Aggregation to get faceted data
+      properties:
+        buckets:
+          type: array
+          description: All Document fields
+          items:
+            $ref: '#/components/schemas/framework-search-bucket-interface'
+        bucket_names:
+          type: array
+          description: Document field names
+          items:
+            type: string
+      required:
+      - buckets
+      - bucket_names
+    framework-filter:
+      type: object
+      description: Filter which can be used by any methods from service layer.
+      properties:
+        field:
+          type: string
+          description: Field
+        value:
+          type: string
+          description: Value
+        condition_type:
+          type: string
+          description: Condition type
+      required:
+      - field
+      - value
+    framework-search-filter-group:
+      type: object
+      description: Groups two or more filters together using a logical OR
+      properties:
+        filters:
+          type: array
+          description: A list of filters in this group
+          items:
+            $ref: '#/components/schemas/framework-filter'
+    framework-search-bucket-interface:
+      type: object
+      description: Interface for facet Bucket
+      properties:
+        name:
+          type: string
+          description: Field name
+        values:
+          type: array
+          description: Field values
+          items:
+            $ref: '#/components/schemas/framework-search-aggregation-value-interface'
+      required:
+      - name
+      - values
     framework-search-document-interface:
       type: object
       description: Interface Search Document
@@ -402,6 +409,20 @@ components:
         fieldValue:
           type: string
           description: Incorrect field value
+    error-errors-item:
+      type: object
+      description: Error details
+      properties:
+        message:
+          type: string
+          description: Error message
+        parameters:
+          $ref: '#/components/schemas/error-parameters'
+    error-parameters:
+      type: array
+      description: Error parameters list
+      items:
+        $ref: '#/components/schemas/error-parameters-item'
     error-response:
       type: object
       properties:
@@ -420,23 +441,6 @@ components:
           description: Stack trace
       required:
       - message
-    framework-search-aggregation-interface:
-      type: object
-      description: Interface Aggregation to get faceted data
-      properties:
-        buckets:
-          type: array
-          description: All Document fields
-          items:
-            $ref: '#/components/schemas/framework-search-bucket-interface'
-        bucket_names:
-          type: array
-          description: Document field names
-          items:
-            type: string
-      required:
-      - buckets
-      - bucket_names
     framework-search-search-result-interface:
       type: object
       description: Interface SearchResultInterface
@@ -457,27 +461,19 @@ components:
       - aggregations
       - search_criteria
       - total_count
-    error-parameters:
-      type: array
-      description: Error parameters list
-      items:
-        $ref: '#/components/schemas/error-parameters-item'
-    framework-filter:
+    framework-sort-order:
       type: object
-      description: Filter which can be used by any methods from service layer.
+      description: Data object for sort order.
       properties:
         field:
           type: string
-          description: Field
-        value:
+          description: Sorting field.
+        direction:
           type: string
-          description: Value
-        condition_type:
-          type: string
-          description: Condition type
+          description: Sorting direction.
       required:
       - field
-      - value
+      - direction
     framework-search-search-criteria-interface:
       type: object
       description: Interface SearchCriteriaInterface
@@ -503,15 +499,19 @@ components:
       required:
       - request_name
       - filter_groups
-    framework-search-filter-group:
+    framework-attribute-interface:
       type: object
-      description: Groups two or more filters together using a logical OR
+      description: Interface for custom attribute value.
       properties:
-        filters:
-          type: array
-          description: A list of filters in this group
-          items:
-            $ref: '#/components/schemas/framework-filter'
+        attribute_code:
+          type: string
+          description: Attribute code
+        value:
+          type: string
+          description: Attribute value
+      required:
+      - attribute_code
+      - value
   securitySchemes:
     api_key:
       type: apiKey
@@ -520,5 +520,4 @@ components:
 x-refined-from:
 - adobe-suite-aep-reactor-openapi.yaml
 - adobe-suite-commerce-rest-customer-openapi.yaml
-- adobe-suite-commerce-rest-guest-openapi.yaml
 x-original-swagger-version: '2.0'

@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Attribute Based Access Control Roles API
-  description: "Access Control in Adobe Experience Platform allows organization administrators to assign roles and permissions for various Platform capabilities. The Access Control API provides a public endpoint to retrieve effective policies for a user on given resources within a specified sandbox. All other access control capabilities are provided through the [Adobe Admin Console](https://adminconsole.adobe.com).\n- Related documentation:\n    - [Access Control documentation](https://adobe.com/go/access-control-overview-en)\n\n- Visualize API calls with Postman (a free, third-party software):\n    - [Access Control API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Access%20Control%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- API paths:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io\n    - Base path for this API: /data/foundation/access-control\n    - Example of a complete path for making a call to \"/acl/effective-policies\": https://<span>platform.adobe.io/data/foundation/access-control/acl/effective-policies\n\n- Required headers:\n    - All service calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`."
+  description: Access Control in Adobe Experience Platform allows organization administrators to assign roles and permissions for various Platform capabilities.
   version: '1.0'
 servers:
 - url: //{environment}.adobe.io/data/foundation/access-control
@@ -13,7 +13,7 @@ servers:
       - platform-stage
 tags:
 - name: Attribute Based Access Control Roles
-  description: Attribute based access control roles define the access that an administrator, a specialist, or an end-user has to resources in your organization. More information about using this set of endpoints can be found in the [roles endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/access-control/abac/abac-api/roles.html).
+  description: Attribute based access control roles define the access that an administrator, a specialist, or an end-user has to resources in your organization. More information about using this set of endpoints can be found in the roles endpoint guide.
 paths:
   /administration/roles:
     get:
@@ -214,7 +214,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/subjectsByRoleId'
 components:
+  parameters:
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en). If a user token is being passed, then the user of the token must have an “org admin” role for the requested org.
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The content type of the request body. For all requests, this value must be application/json.
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
   schemas:
+    roleUpdateById:
+      required:
+      - name
+      - description
+      - roleType
+      type: object
+      properties:
+        name:
+          type: string
+          description: The updated name of a role.
+          example: Administrator Role
+        description:
+          type: string
+          description: The updated description of a role.
+          example: Role for administrator type of responsibilities and access.
+        roleType:
+          type: string
+          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
+          example: user-defined
+          enum:
+          - user-defined
+          - system-defined
+      description: Put operation.
     rolesResponse:
       type: object
       properties:
@@ -291,30 +345,28 @@ components:
                   type: string
                   example: null
                   description: The HTTP method used for the link.
-    subjectPatchOperation:
-      required:
-      - op
-      - path
-      - value
+    subjects:
       type: object
       properties:
-        op:
+        roleId:
           type: string
-          description: The operation call used to define the action needed to update the role. Operations include add, replace, and remove.
-          example: add
-          enum:
-          - add
-          - replace
-          - remove
-        path:
+          description: The ID of the role.
+        subjectType:
           type: string
-          description: The path of the parameter to be updated.
-          example: /user
-        value:
+          description: The type of queried subject.
+        subjectId:
           type: string
-          description: The new value you want to update your parameter with.
-          example: example@AdobeID
-      description: Patch operation.
+          description: The ID that corresponds with the queried subject.
+      example:
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: PIRJ7WE5T3QT9Z4TCLVH86DE@AdobeID
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: WHPWE00MC26SHZ7AKBFG403D@AdobeID
     subjectsByRoleId:
       type: object
       properties:
@@ -334,6 +386,52 @@ components:
             count:
               type: integer
               example: 1
+              description: The number of results returned per page.
+        _links:
+          type: object
+          description: Contains the URL for the currently displayed response page.
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects
+                  description: The URL for the currently displayed response page.
+                templated:
+                  type: boolean
+                  example: true
+                  description: Indicates if the `href` property is a template.
+            page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects?limit={limit}&start={start}&orderBy={orderBy}&property={property}
+                  description: The URL for the currently displayed response page.
+                templated:
+                  type: boolean
+                  example: true
+                  description: Indicates if the `href` property is a template.
+    retrieveSubjects:
+      type: object
+      properties:
+        items:
+          type: array
+          description: A list ofsubjects associated with the queried role ID, including the corresponding subject ID and subject type.
+          items:
+            $ref: '#/components/schemas/subjects'
+        _page:
+          type: object
+          description: An object that shows what page the list is on.
+          properties:
+            limit:
+              type: integer
+              example: 1
+              description: Limit the response to a specific number of objects. This must be a positive number. For example, `limit=10`.
+            count:
+              type: integer
+              example: 3
               description: The number of results returned per page.
         _links:
           type: object
@@ -385,7 +483,7 @@ components:
           description: The new value you want to update your parameter with.
           example: Role for administrator type of responsibilities and access.
       description: Patch operation.
-    subjects:
+    subjectsForRole:
       type: object
       properties:
         roleId:
@@ -398,15 +496,8 @@ components:
           type: string
           description: The ID that corresponds with the queried subject.
       example:
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+      - subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
         subjectType: user
-        subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
-        subjectType: user
-        subjectId: PIRJ7WE5T3QT9Z4TCLVH86DE@AdobeID
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
-        subjectType: user
-        subjectId: WHPWE00MC26SHZ7AKBFG403D@AdobeID
     createNewRoleRequestBody:
       type: object
       properties:
@@ -425,75 +516,30 @@ components:
           - user-defined
           - system-defined
           description: The designated type of the role. The possible values for role type are user-defined and system-defined.
-    retrieveSubjects:
-      type: object
-      properties:
-        items:
-          type: array
-          description: A list ofsubjects associated with the queried role ID, including the corresponding subject ID and subject type.
-          items:
-            $ref: '#/components/schemas/subjects'
-        _page:
-          type: object
-          description: An object that shows what page the list is on.
-          properties:
-            limit:
-              type: integer
-              example: 1
-              description: Limit the response to a specific number of objects. This must be a positive number. For example, `limit=10`.
-            count:
-              type: integer
-              example: 3
-              description: The number of results returned per page.
-        _links:
-          type: object
-          description: Contains the URL for the currently displayed response page.
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects
-                  description: The URL for the currently displayed response page.
-                templated:
-                  type: boolean
-                  example: true
-                  description: Indicates if the `href` property is a template.
-            page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects?limit={limit}&start={start}&orderBy={orderBy}&property={property}
-                  description: The URL for the currently displayed response page.
-                templated:
-                  type: boolean
-                  example: true
-                  description: Indicates if the `href` property is a template.
-    roleUpdateById:
+    subjectPatchOperation:
       required:
-      - name
-      - description
-      - roleType
+      - op
+      - path
+      - value
       type: object
       properties:
-        name:
+        op:
           type: string
-          description: The updated name of a role.
-          example: Administrator Role
-        description:
-          type: string
-          description: The updated description of a role.
-          example: Role for administrator type of responsibilities and access.
-        roleType:
-          type: string
-          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
-          example: user-defined
+          description: The operation call used to define the action needed to update the role. Operations include add, replace, and remove.
+          example: add
           enum:
-          - user-defined
-          - system-defined
-      description: Put operation.
+          - add
+          - replace
+          - remove
+        path:
+          type: string
+          description: The path of the parameter to be updated.
+          example: /user
+        value:
+          type: string
+          description: The new value you want to update your parameter with.
+          example: example@AdobeID
+      description: Patch operation.
     roles:
       type: object
       properties:
@@ -568,50 +614,4 @@ components:
               - core/S1
               description: Displays the data usage labels applied to the queried role.
           description: The attributes that indicate the correlation between a subject and the Platform resources that they have access to.
-    subjectsForRole:
-      type: object
-      properties:
-        roleId:
-          type: string
-          description: The ID of the role.
-        subjectType:
-          type: string
-          description: The type of queried subject.
-        subjectId:
-          type: string
-          description: The ID that corresponds with the queried subject.
-      example:
-      - subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
-        subjectType: user
-  parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en). If a user token is being passed, then the user of the token must have an “org admin” role for the requested org.
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The content type of the request body. For all requests, this value must be application/json.
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
 x-original-swagger-version: '2.0'

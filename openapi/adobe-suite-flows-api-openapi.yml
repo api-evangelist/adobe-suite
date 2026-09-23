@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Flow Service API - Sources Flows API
-  description: "Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services. You can ingest data from a variety of sources such as Adobe applications, cloud-based storages, databases, and many others. The service provides a RESTful API from which all supported sources are connectable.\n>**NOTE**: Refer to [Flow Service API - Destinations](https://developer.adobe.com/experience-platform-apis/references/destinations/) if you are looking for API documentation to perform operations on *destinations* in Experience Platform.\n- **Related documentation**:\n  - [Sources documentation](https://www.adobe.com/go/sources-overview-en)\n\n- **Visualize API calls with Postman** (a free, third-party software):\n  - [Flow Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Flow%20Service%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/)\n\n- **API paths**:\n  - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n  - Base path for this API: /data/foundation/flowservice\n  - Example of a complete path: https://<span>platform.adobe.io/data/foundation/flowservice/connections\n\n- **Required headers**:\n  - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html?lang=en#request-header-errors). You can also view a list of [common Flow Service error messages](https://experienceleague.adobe.com/docs/experience-platform/sources/errors/flow-service-errors.html) and resolution suggestions.\n\n- **Sorting and filtering responses**:\n    - When performing listing (GET) requests in the Flow Service API, you can use query parameters to [sort and filter responses](https://experienceleague.adobe.com/docs/experience-platform/dataflows/api/sort-and-filter.html?lang=en)."
+  description: Adobe Experience Platform allows data to be ingested from external sources while providing you with the ability to structure, label, and enhance incoming data using Platform services.
   version: '1.0'
 servers:
 - url: //{environment}.adobe.io/data/foundation/flowservice
@@ -330,7 +330,7 @@ paths:
     post:
       tags:
       - Flows
-      summary: Retrieves list of flows based on a given filtering criteria.
+      summary: Retrieves list of flows based on a given filtering criteria
       description: Use this endpoint to retrieve a list of flows given a particular set of filtering criteria.
       operationId: getFlowsByFilters
       parameters:
@@ -391,7 +391,7 @@ paths:
     post:
       tags:
       - Flows
-      summary: Perform a state transition action given flow object.
+      summary: Perform a state transition action given flow object
       description: Use this endpoint to perform a state transition action on a given flow object.
       operationId: postStateTransition
       parameters:
@@ -474,6 +474,46 @@ paths:
           description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
 components:
   schemas:
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
+    StatusDTO:
+      type: object
+      properties:
+        value:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - COMPLETED
+          - SUCCESS
+          - PARTIAL_SUCCESS
+          - FAILED
+          - PARTIAL_FAILURE
+          - QUEUED
+          - SCHEDULED
+        properties:
+          type: object
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
     SourceConnectionMetaInfoDTOWrapper:
       type: object
       properties:
@@ -484,48 +524,35 @@ components:
           $ref: '#/components/schemas/SpecInfoDTO'
         baseConnection:
           $ref: '#/components/schemas/ConnectionMetaInfoDTO'
-    CreateFlowResponse:
+    TargetConnectionMetaInfoDTOWrapper:
       type: object
       properties:
         id:
           type: string
-          description: The ID of the flow.
-          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
-        etag:
-          type: string
-          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
-          example: '"7e05b480-0000-0200-0000-638e84a00000"'
-      description: Location of the newly created flow instance
-    FlowMetaInfoDTO:
-      type: object
-      properties:
-        sourceConnections:
-          type: array
-          items:
-            $ref: '#/components/schemas/SourceConnectionMetaInfoDTOWrapper'
-        targetConnections:
-          type: array
-          items:
-            $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
-    ConnectionMetaInfoDTO:
-      type: object
-      properties:
-        id:
-          type: string
-          example: 69f188b6-af07-4587-8061-e94d34637b41
+          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
         connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
-    PageLinksResponse:
+          type: object
+          properties:
+            id:
+              type: string
+              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
+            version:
+              type: string
+              example: '1.0'
+    SpecInfoDTO:
+      required:
+      - id
+      - version
       type: object
       properties:
-        next:
-          $ref: '#/components/schemas/PageLink'
-    PageLink:
-      type: object
-      properties:
-        href:
+        id:
           type: string
-          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
     FlowItemDTO:
       type: object
       properties:
@@ -653,177 +680,6 @@ components:
               type: integer
               description: The epoch time in milliseconds when the run was completed.
               example: 1670284518048
-    FlowFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
-        projectionFields:
-          type: string
-    PatchInstruction:
-      required:
-      - op
-      - path
-      - value
-      type: object
-      properties:
-        op:
-          type: string
-          enum:
-          - ADD
-          - REPLACE
-          - REMOVE
-        path:
-          type: string
-          example: /auth/params
-        value:
-          type: object
-          properties:
-            description:
-              type: string
-              description: The new description value you want to add.
-              example: A new description to provide further context on a specified connection or flow.
-    StatusDTO:
-      type: object
-      properties:
-        value:
-          type: string
-          enum:
-          - IN_PROGRESS
-          - COMPLETED
-          - SUCCESS
-          - PARTIAL_SUCCESS
-          - FAILED
-          - PARTIAL_FAILURE
-          - QUEUED
-          - SCHEDULED
-        properties:
-          type: object
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/StatusErrorDTO'
-    StatusErrorDTO:
-      type: object
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-        details:
-          type: object
-    TransformationSpecDTO:
-      type: object
-      properties:
-        mappingId:
-          type: string
-          example: 97051e9e86184c7d88d6bf8104ad7765
-        mappingVersion:
-          type: string
-          example: '0'
-    ScheduleSpecDTO:
-      type: object
-      properties:
-        startTime:
-          type: integer
-          description: The start time of the flow in epoch time in seconds.
-          format: int64
-          example: 1590091157
-        frequency:
-          type: string
-          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
-          example: minute
-        interval:
-          type: string
-          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
-          example: '15'
-        backfill:
-          type: boolean
-          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
-          example: true
-    FlowListResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowItemDTO'
-        _links:
-          $ref: '#/components/schemas/PageLinksResponse'
-        count:
-          type: integer
-          format: int64
-          example: 7
-    TargetConnectionMetaInfoDTOWrapper:
-      type: object
-      properties:
-        id:
-          type: string
-          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
-        connectionSpec:
-          type: object
-          properties:
-            id:
-              type: string
-              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
-            version:
-              type: string
-              example: '1.0'
-    FlowRecordTypeDTO:
-      type: object
-      required:
-      - extensions
-      - type
-      properties:
-        type:
-          type: string
-        extensions:
-          type: object
-    FlowTransformationDTO:
-      required:
-      - name
-      - params
-      type: object
-      properties:
-        name:
-          type: string
-          example: Mapping
-        params:
-          $ref: '#/components/schemas/TransformationSpecDTO'
-    StateActionDTO:
-      type: object
-      properties:
-        percentCompleted:
-          type: number
-          format: double
-        status:
-          $ref: '#/components/schemas/StatusDTO'
-        recordTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowRecordTypeDTO'
-    SpecInfoDTO:
-      required:
-      - id
-      - version
-      type: object
-      properties:
-        id:
-          type: string
-          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
-          example: 32e8f412-cdf7-464c-9885-78184cb113fd
-        version:
-          type: string
-          description: The version of the connection specification ID.
-          example: '1.0'
     CreateFlowRequest:
       required:
       - flowSpec
@@ -866,4 +722,148 @@ components:
             $ref: '#/components/schemas/FlowTransformationDTO'
         scheduleParams:
           $ref: '#/components/schemas/ScheduleSpecDTO'
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    FlowListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 7
+    FlowMetaInfoDTO:
+      type: object
+      properties:
+        sourceConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceConnectionMetaInfoDTOWrapper'
+        targetConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
+    CreateFlowResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        etag:
+          type: string
+          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
+          example: '"7e05b480-0000-0200-0000-638e84a00000"'
+      description: Location of the newly created flow instance
+    ScheduleSpecDTO:
+      type: object
+      properties:
+        startTime:
+          type: integer
+          description: The start time of the flow in epoch time in seconds.
+          format: int64
+          example: 1590091157
+        frequency:
+          type: string
+          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
+          example: minute
+        interval:
+          type: string
+          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
+          example: '15'
+        backfill:
+          type: boolean
+          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
+          example: true
+    FlowFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+        projectionFields:
+          type: string
+    TransformationSpecDTO:
+      type: object
+      properties:
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
+    FlowTransformationDTO:
+      required:
+      - name
+      - params
+      type: object
+      properties:
+        name:
+          type: string
+          example: Mapping
+        params:
+          $ref: '#/components/schemas/TransformationSpecDTO'
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    ConnectionMetaInfoDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
 x-original-swagger-version: '2.0'

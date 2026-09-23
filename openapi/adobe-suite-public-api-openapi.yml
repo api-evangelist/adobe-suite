@@ -2,22 +2,7 @@ openapi: 3.2.0
 info:
   title: Unified Approvals API (Deprecated) Public API
   version: '1.0'
-  description: 'The Unified Approvals public API endpoints allow you to create and manage approval records along with making decisions on those records.
-
-
-    Authentication is done through credentials obtained through the Adobe Developer Console. Currently, there is no ability to act on behalf of another user. This means if you are authenticating with a technical account, you will only be able to act as that technical account. For example, if you try to have the technical account make a decision on an approval that they are not a participant on, the API call will fail with a 404 saying they are not a participant. A user token for the actual participant on the approval would have to be used to authenticate to the API endpoint instead.
-
-
-    These endpoints only support single-stage approvals. They will not work with multi-stage approvals.
-
-
-    ### API Paths
-
-    - **Gateway URL**: `https://workfront.adobe.io`
-
-    - **Base Path**: `/unified-approvals`
-
-    - **Example URL**: `https://workfront.adobe.io/unified-approvals/public/api/v1/approvals/test/123`'
+  description: The Unified Approvals public API endpoints allow you to create and manage approval records along with making decisions on those records.
   contact:
     name: ''
     email: ''
@@ -45,6 +30,8 @@ paths:
           $ref: '#/components/responses/ApprovalResponse'
       tags:
       - Public
+      operationId: getPublicApiV1ApprovalsByAssetTypeByAssetId
+      x-operation-id-source: derived
   /public/api/v1/approvals/{assetType}/{assetId}/stages:
     parameters:
     - $ref: '#/components/parameters/AssetType'
@@ -143,6 +130,8 @@ paths:
                     - participants
       tags:
       - Public
+      operationId: putPublicApiV1ApprovalsByAssetTypeByAssetIdStages
+      x-operation-id-source: derived
   /public/api/v1/approvals/{assetType}/{assetId}/decisions:
     parameters:
     - $ref: '#/components/parameters/AssetType'
@@ -176,6 +165,8 @@ paths:
               - decision
       tags:
       - Public
+      operationId: putPublicApiV1ApprovalsByAssetTypeByAssetIdDecisions
+      x-operation-id-source: derived
   /public/api/v1/approvals/{assetType}/{assetId}/participants:
     parameters:
     - $ref: '#/components/parameters/AssetType'
@@ -251,6 +242,8 @@ paths:
       description: Adds new participants to an approval. You can also update an existing participants role by passing in the same participantId again but with their new role.
       tags:
       - Public
+      operationId: putPublicApiV1ApprovalsByAssetTypeByAssetIdParticipants
+      x-operation-id-source: derived
     delete:
       summary: Delete approval participants
       description: Removes requested participants from an approval. Removing the last participant on an approval will result in the approval being deleted.
@@ -308,6 +301,8 @@ paths:
                     - participantRole
       tags:
       - Public
+      operationId: deletePublicApiV1ApprovalsByAssetTypeByAssetIdParticipants
+      x-operation-id-source: derived
   /public/api/v1/approvals/{assetType}/{assetId}/stages/{stageId}/lock:
     parameters:
     - $ref: '#/components/parameters/AssetType'
@@ -326,6 +321,8 @@ paths:
           $ref: '#/components/responses/ApprovalResponse'
       tags:
       - Public
+      operationId: putPublicApiV1ApprovalsByAssetTypeByAssetIdStagesByStageIdLock
+      x-operation-id-source: derived
   /public/api/v1/approvals/{assetType}/{assetId}/stages/{stageId}/unlock:
     parameters:
     - $ref: '#/components/parameters/AssetType'
@@ -344,65 +341,9 @@ paths:
           $ref: '#/components/responses/ApprovalResponse'
       tags:
       - Public
+      operationId: putPublicApiV1ApprovalsByAssetTypeByAssetIdStagesByStageIdUnlock
+      x-operation-id-source: derived
 components:
-  responses:
-    ApprovalResponse:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AssetApproval'
-  parameters:
-    AssetId:
-      description: The id of the asset being approved
-      schema:
-        type: string
-        pattern: ^[\w-:|~]+$
-        example: 673fc29b0006af515e33732d1ebdc39a
-      name: assetId
-      in: path
-      required: true
-    AssetType:
-      name: AssetType
-      in: path
-      required: true
-      schema:
-        type: string
-        description: The type of the entity
-        enum:
-        - DOCV
-        example: test
-    Subdomain:
-      in: header
-      name: x-gw-subdomain
-      description: Customer's Workfront subdomain
-      required: true
-      schema:
-        type: string
-        example: your-workfront-subdomain
-    RequestId:
-      in: header
-      name: x-request-id
-      description: A unique identifier for the request
-      required: true
-      schema:
-        type: string
-        format: uuid
-    StageId:
-      schema:
-        type: string
-        pattern: ^[\w-:]+$
-        example: design-review
-      name: stageId
-      in: path
-      required: true
-    ApiKey:
-      in: header
-      name: x-api-key
-      description: Generated API key from Adobe Developer Console
-      required: true
-      schema:
-        type: string
   schemas:
     AssetApproval:
       type: object
@@ -678,6 +619,64 @@ components:
                 description: Stage structure and dependencies for this path
                 items:
                   type: object
+  parameters:
+    StageId:
+      schema:
+        type: string
+        pattern: ^[\w-:]+$
+        example: design-review
+      name: stageId
+      in: path
+      required: true
+    AssetType:
+      name: AssetType
+      in: path
+      required: true
+      schema:
+        type: string
+        description: The type of the entity
+        enum:
+        - DOCV
+        example: test
+    ApiKey:
+      in: header
+      name: x-api-key
+      description: Generated API key from Adobe Developer Console
+      required: true
+      schema:
+        type: string
+    AssetId:
+      description: The id of the asset being approved
+      schema:
+        type: string
+        pattern: ^[\w-:|~]+$
+        example: 673fc29b0006af515e33732d1ebdc39a
+      name: assetId
+      in: path
+      required: true
+    Subdomain:
+      in: header
+      name: x-gw-subdomain
+      description: Customer's Workfront subdomain
+      required: true
+      schema:
+        type: string
+        example: your-workfront-subdomain
+    RequestId:
+      in: header
+      name: x-request-id
+      description: A unique identifier for the request
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    ApprovalResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssetApproval'
   securitySchemes:
     developer-console-auth:
       type: http

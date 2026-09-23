@@ -113,6 +113,38 @@ paths:
                 $ref: '#/components/schemas/ApiErrorGeneric'
 components:
   schemas:
+    ApiErrorGeneric:
+      type: object
+      title: ApiErrorGeneric
+      description: The error within the error response for non-400 failure responses.
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+        message:
+          title: Message
+          description: A human-readable error message.
+          type: string
+    ValidationErrorDetail:
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - type: integer
+          description: Path to the field that caused the error.
+        msg:
+          type: string
+          description: Human-readable error message.
+        type:
+          type: string
+          description: Error type identifier.
+        ctx:
+          type: object
+          additionalProperties: true
+          description: Additional context about the error.
     PublicBinaryInputV3:
       properties:
         uploadId:
@@ -129,6 +161,15 @@ components:
           type: string
       title: PublicBinaryInputV3
       type: object
+    PreciseUpscaleTaskLink:
+      type: object
+      title: PreciseUpscaleTaskLink
+      required:
+      - href
+      properties:
+        href:
+          type: string
+          description: URL for the cancel or result endpoint.
     PreciseUpsamplerRequestV3:
       type: object
       title: PreciseUpsamplerRequestV3
@@ -152,43 +193,15 @@ components:
           description: The upscale factor (2, 3, 4, or 6). Output dimensions are input dimensions multiplied by this factor.
           allOf:
           - $ref: '#/components/schemas/UpsampleFactor'
-    PreciseUpscaleTaskLink:
-      type: object
-      title: PreciseUpscaleTaskLink
+    BaseInputImageV3:
+      properties:
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+          description: Source image that Firefly expands, fills, uses to generate similar images, or upscales.
       required:
-      - href
-      properties:
-        href:
-          type: string
-          description: URL for the cancel or result endpoint.
-    ValidationErrorDetail:
+      - source
+      title: BaseInputImageV3
       type: object
-      properties:
-        loc:
-          type: array
-          items:
-            oneOf:
-            - type: string
-            - type: integer
-          description: Path to the field that caused the error.
-        msg:
-          type: string
-          description: Human-readable error message.
-        type:
-          type: string
-          description: Error type identifier.
-        ctx:
-          type: object
-          additionalProperties: true
-          description: Additional context about the error.
-    UpsampleFactor:
-      type: integer
-      enum:
-      - 2
-      - 3
-      - 4
-      - 6
-      description: Supported upscale factors. Output size equals input size multiplied by this factor.
     ValidationErrorResponse:
       type: object
       title: ValidationErrorResponse
@@ -221,15 +234,14 @@ components:
         progress:
           type: number
           description: Progress percentage when available (for example when polling status).
-    BaseInputImageV3:
-      properties:
-        source:
-          $ref: '#/components/schemas/PublicBinaryInputV3'
-          description: Source image that Firefly expands, fills, uses to generate similar images, or upscales.
-      required:
-      - source
-      title: BaseInputImageV3
-      type: object
+    UpsampleFactor:
+      type: integer
+      enum:
+      - 2
+      - 3
+      - 4
+      - 6
+      description: Supported upscale factors. Output size equals input size multiplied by this factor.
     ValidationErrorCode422:
       type: string
       title: ValidationErrorCode422
@@ -237,18 +249,6 @@ components:
       enum:
       - validation_error
       - cai_assertion_violation_error
-    ApiErrorGeneric:
-      type: object
-      title: ApiErrorGeneric
-      description: The error within the error response for non-400 failure responses.
-      properties:
-        error_code:
-          type: string
-          description: The error code.
-        message:
-          title: Message
-          description: A human-readable error message.
-          type: string
   securitySchemes:
     AccessToken:
       type: http

@@ -13,13 +13,13 @@ servers:
       - platform-stage
 - url: //reactor.adobe.io
 tags:
-- name: Audit events
+- name: Audit Events
   description: Audit events are timestamped records of observed activities in Experience Platform. The API allows you to query events over the last 90 days and create export requests from the last 365 days in 90 day intervals.
 paths:
   /audit/events:
     get:
       tags:
-      - Audit events
+      - Audit Events
       summary: List audit events
       operationId: listAuditEvents
       parameters:
@@ -118,7 +118,7 @@ paths:
   /audit/export:
     get:
       tags:
-      - Audit events
+      - Audit Events
       summary: Export a list of audit events
       operationId: exportAuditEvents
       parameters:
@@ -200,9 +200,9 @@ paths:
   /audit_events:
     get:
       tags:
-      - Audit events
+      - Audit Events
       summary: List audit events
-      description: '>**NOTE**: For more information on using this operation, see the [audit events endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/audit-events.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the audit events endpoint guide on Experience League.'
       operationId: listAuditEvents
       parameters:
       - name: Authorization
@@ -272,9 +272,9 @@ paths:
   /audit_events/{EVENT_ID}:
     get:
       tags:
-      - Audit events
+      - Audit Events
       summary: Retrieve an audit event
-      description: '>**NOTE**: For more information on using this operation, see the [audit events endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/audit-events.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the audit events endpoint guide on Experience League.'
       operationId: retrieveAuditEvent
       parameters:
       - name: EVENT_ID
@@ -319,6 +319,34 @@ paths:
     - url: //reactor.adobe.io
 components:
   schemas:
+    Links:
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the currently displayed response page.
+          description: Contains the URL for the currently displayed response page.
+        next:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URL for the next response page.
+          description: Contains the URL for the next response page.
+        page:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The templated URL for viewing other response pages.
+            templated:
+              type: boolean
+              description: Indicates that the sibling `href` property is a template.
+          description: Contains a templated URL for viewing other response pages.
+      description: Contains pagination URLs to view the rest of the response.
     AbstractAuditLog:
       title: AbstractAuditLog
       type: object
@@ -529,34 +557,63 @@ components:
           totalPages: 1
           number: 1
         queryId: cXVlcnlJZD0xYjA4MDM4MV81ZWNkXzRjNTZfYTM2N18zYWExOWI5YzNhNTlfMTYyODExNDY5MTg1NSZ0b3RhbEVsZW1lbnRzPTI2
-    Links:
+    relatedEntity:
       type: object
       properties:
-        self:
+        entity:
           type: object
           properties:
-            href:
-              type: string
-              description: The URL for the currently displayed response page.
-          description: Contains the URL for the currently displayed response page.
-        next:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related entity.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related entity.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the entity.
+                type:
+                  type: string
+                  description: The resource type for the entity.
+              description: Contains further information about the related entity.
+          description: Contains details about the entity associated with the audit event.
+    relatedProperty:
+      type: object
+      properties:
+        property:
           type: object
           properties:
-            href:
-              type: string
-              description: The URL for the next response page.
-          description: Contains the URL for the next response page.
-        page:
-          type: object
-          properties:
-            href:
-              type: string
-              description: The templated URL for viewing other response pages.
-            templated:
-              type: boolean
-              description: Indicates that the sibling `href` property is a template.
-          description: Contains a templated URL for viewing other response pages.
-      description: Contains pagination URLs to view the rest of the response.
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    auditEventsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/auditEventsEntity'
     dataLookup:
       type: object
       properties:
@@ -564,32 +621,6 @@ components:
           type: object
           properties: {}
           description: Contains the details of the resource.
-    metaList:
-      type: object
-      properties:
-        meta:
-          type: object
-          properties:
-            pagination:
-              type: object
-              properties:
-                current_page:
-                  type: integer
-                  description: The current page of the response.
-                next_page:
-                  type: integer
-                  description: The next page of the response.
-                prev_page:
-                  type: integer
-                  description: The previous page of the response.
-                total_pages:
-                  type: integer
-                  description: The total number of pages in the response.
-                total_count:
-                  type: integer
-                  description: The total number of results in the response.
-              description: Contains pagination information about the list response.
-          description: Contains a `pagination` object that provides pagination information about the list response.
     auditEventsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -676,80 +707,6 @@ components:
                 type: string
                 description: A link to the audit event itself.
             description: Contains links related to the audit event which can be used in subsequent fetch requests.
-    dataList:
-      type: object
-      properties:
-        data:
-          type: array
-          description: Contains the results from the listing call.
-          items:
-            type: object
-            properties: {}
-    auditEventsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/auditEventsEntity'
-    relatedEntity:
-      type: object
-      properties:
-        entity:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related entity.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related entity.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the entity.
-                type:
-                  type: string
-                  description: The resource type for the entity.
-              description: Contains further information about the related entity.
-          description: Contains details about the entity associated with the audit event.
-    auditEventsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
-    relatedProperty:
-      type: object
-      properties:
-        property:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the property.
-                type:
-                  type: string
-                  description: The resource type for the property (`properties`).
-              description: Contains further information about the related property.
-          description: Contains details about the property that owns the resource.
     basicResourceProperties:
       type: object
       properties:
@@ -759,6 +716,49 @@ components:
         type:
           type: string
           description: The resource type.
+    auditEventsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    metaList:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  description: The current page of the response.
+                next_page:
+                  type: integer
+                  description: The next page of the response.
+                prev_page:
+                  type: integer
+                  description: The previous page of the response.
+                total_pages:
+                  type: integer
+                  description: The total number of pages in the response.
+                total_count:
+                  type: integer
+                  description: The total number of results in the response.
+              description: Contains pagination information about the list response.
+          description: Contains a `pagination` object that provides pagination information about the list response.
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
 x-refined-from:
 - adobe-suite-aep-audit-query-openapi.yaml
 - adobe-suite-aep-reactor-openapi.yaml

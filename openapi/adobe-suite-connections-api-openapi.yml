@@ -20,7 +20,7 @@ servers:
       - platform-stage
 tags:
 - name: Connections
-  description: Base connections retain information between your source and Adobe Experience Platform. They include metadata, a partial view of the credentials used to authenticate a given source, and the unique base connection ID that corresponds to the queried connection. The base connection ID is required to create a source connection. The base connection ID represents your authenticated connection and allows you to explore and inspect the type, structure, and contents of the data that you want to bring to Experience Platform. An instance of a base connection is specific to an organization.
+  description: Base connections retain information between your source and Adobe Experience Platform.
 paths:
   /connections:
     get:
@@ -384,7 +384,7 @@ paths:
     post:
       tags:
       - Connections
-      summary: Perform a state transition action on an existing connection.
+      summary: Perform a state transition action on an existing connection
       description: Use this endpoint to update the state of an existing connection.
       operationId: performAction
       parameters:
@@ -598,7 +598,7 @@ paths:
     get:
       tags:
       - Connections
-      summary: Retrieve configs for the properties of a given connection.
+      summary: Retrieve configs for the properties of a given connection
       description: Use this endpoint to retrieve the configs of a given connection.
       operationId: exploreConfigByConnectionId
       parameters:
@@ -669,7 +669,7 @@ paths:
     post:
       tags:
       - Connections
-      summary: Retrieve a list of connections based on a given filtering criteria.
+      summary: Retrieve a list of connections based on a given filtering criteria
       description: Use this endpoint to retrieve a list of connections given a particular filtering criteria.
       operationId: getConnectionsByFilters
       parameters:
@@ -796,15 +796,105 @@ paths:
           - platform-stage
 components:
   schemas:
-    AuthCreateBaseDTO:
+    PatchInstruction:
+      required:
+      - op
+      - path
+      - value
       type: object
       properties:
-        accessKeyId:
+        op:
           type: string
-          example: GOOGMG1234ABCDEFGHIJKLMN
-        secretAccessKey:
+          enum:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
           type: string
-          example: xxxx
+          example: /auth/params
+        value:
+          type: object
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    TestConnectionResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+          description: A boolean value indicating whether the connection is successful  or not.
+          example: true
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    CreateConnectionRequest:
+      required:
+      - connectionSpec
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the base connection.
+          example: Google Cloud Storage Base Connection
+        description:
+          type: string
+          description: An optional description that can be added to provide further context on the connection.
+          example: Google Cloud Storage base connection for customer data
+        auth:
+          $ref: '#/components/schemas/AuthInfoDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    AuthInfoDTO:
+      required:
+      - specName
+      type: object
+      properties:
+        specName:
+          type: string
+          description: Specifies the type of authentication a specific source is using to connect.
+          example: Basic Authentication for google-cloud
+        params:
+          $ref: '#/components/schemas/AuthCreateBaseDTO'
+    ConnectionFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+    ConnectionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionItemDTO'
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
     ConnectionItemDTO:
       type: object
       properties:
@@ -874,17 +964,6 @@ components:
           type: string
           description: The unique eTag returned by the HTTP response. The eTag value updates with every successful update of a base connection.
           example: '"6802064a-0000-0200-0000-6387c6b90000"'
-    AuthInfoDTO:
-      required:
-      - specName
-      type: object
-      properties:
-        specName:
-          type: string
-          description: Specifies the type of authentication a specific source is using to connect.
-          example: Basic Authentication for google-cloud
-        params:
-          $ref: '#/components/schemas/AuthCreateBaseDTO'
     ExploreConnectionResponse:
       type: array
       items:
@@ -910,41 +989,20 @@ components:
             type: boolean
             description: A boolean value indicating whether the schema can be fetched.
             example: false
-    StateActionDTO:
-      type: object
-      properties:
-        percentCompleted:
-          type: number
-          format: double
-        status:
-          $ref: '#/components/schemas/StatusDTO'
-        recordTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowRecordTypeDTO'
-    PatchInstruction:
+    SpecInfoDTO:
       required:
-      - op
-      - path
-      - value
+      - id
+      - version
       type: object
       properties:
-        op:
+        id:
           type: string
-          enum:
-          - ADD
-          - REPLACE
-          - REMOVE
-        path:
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
           type: string
-          example: /auth/params
-        value:
-          type: object
-          properties:
-            description:
-              type: string
-              description: The new description value you want to add.
-              example: A new description to provide further context on a specified connection or flow.
+          description: The version of the connection specification ID.
+          example: '1.0'
     StatusDTO:
       type: object
       properties:
@@ -965,83 +1023,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatusErrorDTO'
-    ConnectionFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
-    CreateConnectionRequest:
-      required:
-      - connectionSpec
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the base connection.
-          example: Google Cloud Storage Base Connection
-        description:
-          type: string
-          description: An optional description that can be added to provide further context on the connection.
-          example: Google Cloud Storage base connection for customer data
-        auth:
-          $ref: '#/components/schemas/AuthInfoDTO'
-        connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
-    TestConnectionResponse:
-      type: object
-      properties:
-        result:
-          type: boolean
-          description: A boolean value indicating whether the connection is successful  or not.
-          example: true
-    SpecInfoDTO:
-      required:
-      - id
-      - version
-      type: object
-      properties:
-        id:
-          type: string
-          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
-          example: 32e8f412-cdf7-464c-9885-78184cb113fd
-        version:
-          type: string
-          description: The version of the connection specification ID.
-          example: '1.0'
-    StatusErrorDTO:
-      type: object
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-        details:
-          type: object
-    FlowRecordTypeDTO:
-      type: object
-      required:
-      - extensions
-      - type
-      properties:
-        type:
-          type: string
-        extensions:
-          type: object
-    ConnectionListResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConnectionItemDTO'
     CreateConnectionResponse:
       type: object
       properties:
@@ -1054,6 +1035,25 @@ components:
           description: The eTag assigned to the base connection ID.
           example: '"6802064a-0000-0200-0000-6387c6b90000"'
       description: The location of the newly created connection instance.
+    AuthCreateBaseDTO:
+      type: object
+      properties:
+        accessKeyId:
+          type: string
+          example: GOOGMG1234ABCDEFGHIJKLMN
+        secretAccessKey:
+          type: string
+          example: xxxx
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
     connection_parameters:
       type: object
       properties:

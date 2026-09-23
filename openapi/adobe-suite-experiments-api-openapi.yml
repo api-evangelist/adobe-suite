@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Sensei Machine Learning Experiments API
-  description: "Sensei Machine Learning API provides a mechanism for data scientists to organize and manage ML services from algorithm onboarding through experimentation and to service deployment.\n\nRelated documentation:\n  * [Data Science Workspace documentation](http://www.adobe.com/go/data-science-overview-en)\n  \nVisualize API calls with Postman (a free, third-party software):\n  * [Sensei Machine Learning API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Sensei%20Machine%20Learning%20API.postman_collection.json)\n  * [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  * [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n\n**API paths**: \n  * PLATFORM Gateway URL: https://<span>platform.adobe.io/ \n  * Base path for this API: /data/sensei\n  * Example of a complete path: https://<span>platform.adobe.io/data/sensei/engines\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n  * All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`. \n  \n**API error handling**: \n  - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  description: Sensei Machine Learning API provides a mechanism for data scientists to organize and manage ML services from algorithm onboarding through experimentation and to service deployment.
   version: '1.0'
 servers:
 - url: //{environment}.adobe.io/data/sensei
@@ -934,6 +934,22 @@ paths:
           content: {}
 components:
   schemas:
+    PagingNavigationAttributes:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/LinkObject'
+        page:
+          $ref: '#/components/schemas/LinkObject'
+    ExperimentRunListingLinks:
+      allOf:
+      - $ref: '#/components/schemas/PagingNavigationAttributes'
+      - type: object
+        properties:
+          self:
+            $ref: '#/components/schemas/LinkObject'
+          createExperimentRun:
+            $ref: '#/components/schemas/LinkObject'
     LinkObject:
       required:
       - href
@@ -981,54 +997,6 @@ components:
                 $ref: '#/components/schemas/LinkObject'
               listExperimentRuns:
                 $ref: '#/components/schemas/LinkObject'
-    ExperimentTemplate:
-      type: object
-      properties:
-        experimentRunId:
-          type: string
-        tasks:
-          $ref: '#/components/schemas/MLInstanceTaskList'
-        schedule:
-          type: object
-          properties:
-            cron:
-              type: string
-            startTime:
-              type: string
-              format: datetime
-            endTime:
-              type: string
-              format: datetime
-        notification:
-          type: object
-          properties:
-            email:
-              type: string
-            emailOnRetry:
-              type: boolean
-            emailOnFailure:
-              type: boolean
-    MLInstanceTaskParameter:
-      type: object
-      properties:
-        key:
-          type: string
-        value:
-          type: string
-        secret:
-          type: boolean
-      description: A parameter passed to an MLInstanceTask
-    ExperimentRunListing:
-      type: object
-      properties:
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExperimentRunSummary'
-        _page:
-          $ref: '#/components/schemas/PagingInformationAttributes'
-        _links:
-          $ref: '#/components/schemas/ExperimentRunListingLinks'
     ExperimentRunSummary:
       required:
       - experimentId
@@ -1080,97 +1048,6 @@ components:
       description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
       discriminator:
         propertyName: type
-    RunStatus:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        experimentRunId:
-          type: string
-        description:
-          type: string
-        deleted:
-          type: boolean
-          default: false
-        status:
-          type: object
-          properties:
-            tasks:
-              type: array
-              items:
-                $ref: '#/components/schemas/Status'
-    TaskLog:
-      type: object
-      properties:
-        name:
-          type: string
-          readOnly: true
-        url:
-          type: string
-          readOnly: true
-    ExperimentListing:
-      type: object
-      properties:
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExperimentSummary'
-        _page:
-          $ref: '#/components/schemas/PagingInformationAttributes'
-        _links:
-          $ref: '#/components/schemas/ExperimentListingLinks'
-    PagingNavigationAttributes:
-      type: object
-      properties:
-        next:
-          $ref: '#/components/schemas/LinkObject'
-        page:
-          $ref: '#/components/schemas/LinkObject'
-    ExperimentRun:
-      allOf:
-      - $ref: '#/components/schemas/ExperimentRunSummary'
-      - type: object
-        properties:
-          tasks:
-            $ref: '#/components/schemas/MLInstanceTaskList'
-          runChain:
-            type: object
-            properties:
-              preprocessTaskId:
-                type: string
-                format: urn
-              trainTaskId:
-                type: string
-                format: urn
-              batchScoreTaskId:
-                type: string
-                format: urn
-              validateTaskId:
-                type: string
-                format: urn
-              evaluateTaskId:
-                type: string
-                format: urn
-    ExperimentRunListingLinks:
-      allOf:
-      - $ref: '#/components/schemas/PagingNavigationAttributes'
-      - type: object
-        properties:
-          self:
-            $ref: '#/components/schemas/LinkObject'
-          createExperimentRun:
-            $ref: '#/components/schemas/LinkObject'
-    ExperimentListingLinks:
-      allOf:
-      - $ref: '#/components/schemas/PagingNavigationAttributes'
-      - type: object
-        properties:
-          self:
-            $ref: '#/components/schemas/LinkObject'
-          createExperiment:
-            $ref: '#/components/schemas/LinkObject'
     ExperimentSummary:
       required:
       - name
@@ -1217,6 +1094,47 @@ components:
           properties:
             self:
               $ref: '#/components/schemas/LinkObject'
+    TaskLog:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+        url:
+          type: string
+          readOnly: true
+    ExperimentListing:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExperimentSummary'
+        _page:
+          $ref: '#/components/schemas/PagingInformationAttributes'
+        _links:
+          $ref: '#/components/schemas/ExperimentListingLinks'
+    ExperimentRunListing:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExperimentRunSummary'
+        _page:
+          $ref: '#/components/schemas/PagingInformationAttributes'
+        _links:
+          $ref: '#/components/schemas/ExperimentRunListingLinks'
+    MLInstanceTaskParameter:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        secret:
+          type: boolean
+      description: A parameter passed to an MLInstanceTask
     PagingInformationAttributes:
       type: object
       properties:
@@ -1240,65 +1158,27 @@ components:
         next:
           type: string
           readOnly: true
-    Status:
+    RunStatus:
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        state:
+        experimentRunId:
           type: string
-          enum:
-          - PENDING
-          - RUNNING
-          - ABORTED
-          - FAILED
-          - RETRY
-          - DONE
-        logs:
+        description:
           type: string
-        tasklogs:
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/TaskLog'
-        message:
-          type: string
-        started:
-          type: string
-          format: datetime
-        ended:
-          type: string
-          format: datetime
-    MLInstanceTaskList:
-      type: array
-      items:
-        $ref: '#/components/schemas/MLInstanceTask'
-    SenseiApiResponse:
-      type: object
-      properties:
-        type:
-          type: string
-          readOnly: true
-          example: https://platform.adobe.io/data/foundation/ml/problems/illegal-argument
-        title:
-          type: string
-          readOnly: true
-          example: Illegal Argument
+        deleted:
+          type: boolean
+          default: false
         status:
-          type: integer
-          format: int32
-          readOnly: true
-          example: 400
-        detail:
-          type: string
-          readOnly: true
-          example: Model specification name must not be empty
-        additionalDetails:
           type: object
-          additionalProperties:
-            type: string
+          properties:
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/Status'
     MLInstanceTask:
       type: object
       properties:
@@ -1375,4 +1255,124 @@ components:
                       type: object
                       properties: {}
       description: A single execution unit of Sensei
+    ExperimentListingLinks:
+      allOf:
+      - $ref: '#/components/schemas/PagingNavigationAttributes'
+      - type: object
+        properties:
+          self:
+            $ref: '#/components/schemas/LinkObject'
+          createExperiment:
+            $ref: '#/components/schemas/LinkObject'
+    MLInstanceTaskList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MLInstanceTask'
+    ExperimentRun:
+      allOf:
+      - $ref: '#/components/schemas/ExperimentRunSummary'
+      - type: object
+        properties:
+          tasks:
+            $ref: '#/components/schemas/MLInstanceTaskList'
+          runChain:
+            type: object
+            properties:
+              preprocessTaskId:
+                type: string
+                format: urn
+              trainTaskId:
+                type: string
+                format: urn
+              batchScoreTaskId:
+                type: string
+                format: urn
+              validateTaskId:
+                type: string
+                format: urn
+              evaluateTaskId:
+                type: string
+                format: urn
+    ExperimentTemplate:
+      type: object
+      properties:
+        experimentRunId:
+          type: string
+        tasks:
+          $ref: '#/components/schemas/MLInstanceTaskList'
+        schedule:
+          type: object
+          properties:
+            cron:
+              type: string
+            startTime:
+              type: string
+              format: datetime
+            endTime:
+              type: string
+              format: datetime
+        notification:
+          type: object
+          properties:
+            email:
+              type: string
+            emailOnRetry:
+              type: boolean
+            emailOnFailure:
+              type: boolean
+    SenseiApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+          example: https://platform.adobe.io/data/foundation/ml/problems/illegal-argument
+        title:
+          type: string
+          readOnly: true
+          example: Illegal Argument
+        status:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 400
+        detail:
+          type: string
+          readOnly: true
+          example: Model specification name must not be empty
+        additionalDetails:
+          type: object
+          additionalProperties:
+            type: string
+    Status:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        state:
+          type: string
+          enum:
+          - PENDING
+          - RUNNING
+          - ABORTED
+          - FAILED
+          - RETRY
+          - DONE
+        logs:
+          type: string
+        tasklogs:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/TaskLog'
+        message:
+          type: string
+        started:
+          type: string
+          format: datetime
+        ended:
+          type: string
+          format: datetime
 x-original-swagger-version: '2.0'

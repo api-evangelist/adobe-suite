@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Reactor Builds API
-  description: "Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.\n**Related documentation**:\n  * [Tags overview and UI documentation](https://adobe.com/go/launch_help_en)\n  * [Reactor API guides](https://adobe.com/go/reactor-api-overview)\n\n**API paths**:\n  * Reactor Gateway URL: https://<span>reactor.adobe.io\n  * Example of a complete path for making a call to `/properties`: https://<span>reactor.adobe.io/properties\n\n**Required headers**:\n  * All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/launch-authentication-en).\n  * All GET requests to the Reactor API require an `Accept` header to determine what data is returned by the system. In most cases, this value will be `application/vnd.api+json;revision=#` (where `#` is the revision number of the resource you want to retrieve, e.g. `1`).\n  * All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type`. The specific `Content-Type` value for each call is provided in the parameters sections in the endpoints listed below.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors)."
+  description: Use the Reactor API to programmatically manage resources and develop tag extensions in Adobe Experience Platform.
   version: '1.0'
 servers:
 - url: //reactor.adobe.io
@@ -14,7 +14,7 @@ paths:
       tags:
       - Builds
       summary: List a library's builds
-      description: '>**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+      description: '>**NOTE**: For more information on using this operation, see the builds endpoint guide on Experience League.'
       operationId: listLibraryBuilds
       parameters:
       - name: LIBRARY_ID
@@ -97,7 +97,7 @@ paths:
       description: 'This POST request does not accept a payload, as the build parameters are determined by the parent library.
 
 
-        >**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+        >**NOTE**: For more information on using this operation, see the builds endpoint guide on Experience League.'
       operationId: createBuild
       parameters:
       - name: LIBRARY_ID
@@ -137,8 +137,8 @@ paths:
       operationId: getBuild
       tags:
       - Builds
-      summary: Look up a build by ID.
-      description: '>**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+      summary: Look up a build by ID
+      description: '>**NOTE**: For more information on using this operation, see the builds endpoint guide on Experience League.'
       parameters:
       - name: BUILD_ID
         in: path
@@ -185,7 +185,7 @@ paths:
       description: 'When republishing a build, its ID must be provided in both the request path and the request payload. These IDs must match in order for the call to be successful.
 
 
-        >**NOTE**: For more information on using this operation, see the [builds endpoint guide](https://experienceleague.adobe.com/docs/experience-platform/tags/api/endpoints/builds.html) on Experience League.'
+        >**NOTE**: For more information on using this operation, see the builds endpoint guide on Experience League.'
       operationId: republishBuild
       parameters:
       - name: BUILD_ID
@@ -259,6 +259,9 @@ components:
                   description: The resource type for the property (`properties`).
               description: Contains further information about the related property.
           description: Contains details about the property that owns the resource.
+    buildsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsLookupResponse'
     relatedExtensions:
       type: object
       properties:
@@ -273,6 +276,117 @@ components:
                   description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
               description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
           description: Contains a link to the related extensions for the resource.
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    buildsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    buildsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsLookupResponse'
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    buildsUpdatePayload:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          required:
+          - id
+          - meta
+          - type
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the build being republished.
+            type:
+              type: string
+              description: Must be set to `builds`.
+            meta:
+              type: object
+              properties:
+                action:
+                  type: string
+                  description: If this property is included with a value of `republish`, the call republishes the build.
+              description: If this property is included with an `action` property set to `republish`, the call republishes the build.
+          description: Contains the attributes and type for the build being republished.
+      example:
+        data:
+          id: BLb408c04c20ba4a82b6df496969a99781
+          type: builds
+          meta:
+            action: republish
+    relatedEnvironment:
+      type: object
+      properties:
+        environment:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environment.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the environment.
+                type:
+                  type: string
+                  description: The resource type for the environment (`environments`).
+              description: Contains further information about the related environment.
+          description: Contains information about the environment that this resource is active under.
+    relatedDataElements:
+      type: object
+      properties:
+        data_elements:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
+          description: Contains a link to the related data elements for the resource.
+    relatedRules:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
+          description: Contains a link to the related rules for the resource.
     relatedLibrary:
       type: object
       properties:
@@ -297,60 +411,6 @@ components:
                   description: The resource type for the library (`libraries`).
               description: Contains further information about the library.
           description: Contains a link to the library that is assigned to this environment.
-    buildsUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/buildsLookupResponse'
-    dataLookup:
-      type: object
-      properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
-    buildsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/buildsEntity'
-    metaList:
-      type: object
-      properties:
-        meta:
-          type: object
-          properties:
-            pagination:
-              type: object
-              properties:
-                current_page:
-                  type: integer
-                  description: The current page of the response.
-                next_page:
-                  type: integer
-                  description: The next page of the response.
-                prev_page:
-                  type: integer
-                  description: The previous page of the response.
-                total_pages:
-                  type: integer
-                  description: The total number of pages in the response.
-                total_count:
-                  type: integer
-                  description: The total number of results in the response.
-              description: Contains pagination information about the list response.
-          description: Contains a `pagination` object that provides pagination information about the list response.
-    dataList:
-      type: object
-      properties:
-        data:
-          type: array
-          description: Contains the results from the listing call.
-          items:
-            type: object
-            properties: {}
     buildsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -414,108 +474,48 @@ components:
                 type: string
                 description: The host type for the environment that the build is  assigned to, either `akamai` for Adobe-managed hosting or `sftp`  for self hosting.
             description: Contains meta information about the build.
-    relatedRules:
+    metaList:
       type: object
       properties:
-        rules:
+        meta:
           type: object
           properties:
-            links:
+            pagination:
               type: object
               properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
-          description: Contains a link to the related rules for the resource.
-    buildsUpdatePayload:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          required:
-          - id
-          - meta
-          - type
-          type: object
-          properties:
-            id:
-              type: string
-              description: The ID of the build being republished.
-            type:
-              type: string
-              description: Must be set to `builds`.
-            meta:
-              type: object
-              properties:
-                action:
-                  type: string
-                  description: If this property is included with a value of `republish`, the call republishes the build.
-              description: If this property is included with an `action` property set to `republish`, the call republishes the build.
-          description: Contains the attributes and type for the build being republished.
-      example:
-        data:
-          id: BLb408c04c20ba4a82b6df496969a99781
-          type: builds
-          meta:
-            action: republish
-    relatedEnvironment:
-      type: object
-      properties:
-        environment:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related environment.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the environment.
-                type:
-                  type: string
-                  description: The resource type for the environment (`environments`).
-              description: Contains further information about the related environment.
-          description: Contains information about the environment that this resource is active under.
-    buildsListResponse:
+                current_page:
+                  type: integer
+                  description: The current page of the response.
+                next_page:
+                  type: integer
+                  description: The next page of the response.
+                prev_page:
+                  type: integer
+                  description: The previous page of the response.
+                total_pages:
+                  type: integer
+                  description: The total number of pages in the response.
+                total_count:
+                  type: integer
+                  description: The total number of results in the response.
+              description: Contains pagination information about the list response.
+          description: Contains a `pagination` object that provides pagination information about the list response.
+    buildsLookupResponse:
       allOf:
-      - $ref: '#/components/schemas/dataList'
+      - $ref: '#/components/schemas/dataLookup'
       - type: object
         properties:
           data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
-    buildsCreateResponse:
-      allOf:
-      - $ref: '#/components/schemas/buildsLookupResponse'
-    relatedDataElements:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/buildsEntity'
+    dataList:
       type: object
       properties:
-        data_elements:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
-          description: Contains a link to the related data elements for the resource.
-    basicResourceProperties:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
 x-original-swagger-version: '2.0'

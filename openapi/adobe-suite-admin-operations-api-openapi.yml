@@ -1,7 +1,7 @@
 openapi: 3.2.0
 info:
   title: Sandbox Admin operations API
-  description: "Adobe Experience Platform provides virtual sandbox environments which provide isolation and access control for Platform integrations. Use sandboxes for application lifecycle management, project management, and to build customized development ecosystems. Use sandbox tooling to seamlessly export and import sandbox configurations between sandboxes through the use of packages.\n- **Related documentation**:\n    - [Sandbox documentation](https://adobe.com/go/sandbox-overview-en)\n    - [Sandbox tooling documentation](http://adobe.com/go/sandbox-tooling-en)\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n    - [Sandbox API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Sandbox%20API.postman_collection.json)\n    - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n    - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n    - PLATFORM Gateway URL: https://<span>platform.adobe.io/\n    - Base path for the sandbox API: /data/foundation/sandbox-management\n    - Example of a complete path: https://<span>platform.adobe.io/data/foundation/sandbox-management/sandboxes\n    - Base path for the sandbox tooling API: /data/foundation/exim\n    - Example of a complete path: https://<span>platform.adobe.io/data/foundation/exim/packages\n\n- **Required headers**:\n    - All calls require the headers `Authorization`, `x-gw-ims-org-id`, and `x-api-key`. For more information on how to obtain these values, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n    - All resources in Experience Platform are isolated to specific virtual sandboxes. All requests to Platform APIs require the header `x-sandbox-name` whose value is the all-lowercase name of the sandbox the operation will take place in (for example, \"prod\"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.\n    - All requests with a payload in the request body (such as POST, PUT, and PATCH calls) must include the header `Content-Type` with a value of `application/json`.\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors).        \n\n- **Filtering responses**:\n    - When performing listing (GET) requests in the Sandbox API, you can use query parameters to filter responses. Refer to the [Sandbox API queries](https://experienceleague.adobe.com/docs/experience-platform/sandbox/api/appendix.html#query) or the [Sandbox tooling API queries](http://experienceleague.adobe.com/en/docs/experience-platform/sandbox/sandbox-tooling-api/appendix) for a list of available queries."
+  description: Adobe Experience Platform provides virtual sandbox environments which provide isolation and access control for Platform integrations.
   version: '1.0'
 servers:
 - url: https://{environment}.adobe.io/data/foundation
@@ -13,7 +13,7 @@ servers:
       - platform-stage
 tags:
 - name: Admin operations
-  description: Sandbox operations available only to admins. Sandbox admin privileges are managed through the [Adobe Admin Console](https://adminconsole.adobe.com).
+  description: Sandbox operations available only to admins. Sandbox admin privileges are managed through the Adobe Admin Console.
 paths:
   /sandbox-management/sandboxTypes:
     get:
@@ -233,58 +233,26 @@ paths:
       x-codegen-request-body-name: action
 components:
   schemas:
-    ResetSandboxPayload:
-      required:
-      - action
+    DeleteSandbox:
       type: object
-      properties:
-        action:
-          type: string
-          example: reset
-    Page.Links:
-      type: object
-      properties:
-        next:
-          $ref: '#/components/schemas/Link'
-        page:
-          $ref: '#/components/schemas/Link'
-    Page:
-      type: object
-      properties:
-        limit:
-          type: integer
-          description: The maximum number of records to be returned in the response.
-        count:
-          type: integer
-          description: The number of records returned in the response.
-    PatchSandboxPayload:
-      required:
-      - title
-      type: object
-      properties:
-        title:
-          type: string
-          example: My Sandbox
-    CreateSandboxResponse:
-      type: object
-      description: A successful response returns the details of the newly created sandbox.
+      description: A successful response returns the sandbox’s updated details, showing that its state is `deleted`.
       properties:
         id:
           type: string
-          description: Only visible to services. User responses will omit this attribute.
+          description: Only visible to services.
           example: 180e1210-d33a-11e9-8b17-d9e538719ued
         name:
           type: string
-          description: The user-generated human-friendly name for the sandbox that will be used to access the sandbox in future requests. This value must be unique, and best practice is to make it as descriptive as possible. This value cannot contain any spaces or special characters.
+          description: The name of the sandbox you want to delete.
           example: acme-sandbox
         title:
           type: string
-          description: A human-readable name used for display purposes in the Platform user interface.
+          description: The display name for the sandbox.
           example: ACME Sandbox
         state:
           type: string
-          description: The state of the sandbox and has two values, `active` or `failed`. A sandbox becomes `active` once it has been successfully provisioned.
-          example: creating
+          description: A successful deletion request for a sandbox updates the sandbox `state` to `deleted` and deactivates it. The default production sandbox cannot be deleted.
+          example: cleaning
           enum:
           - creating
           - provisioning
@@ -295,7 +263,7 @@ components:
           - failed
         type:
           type: string
-          description: The type of sandbox to be created. For a non-production sandbox, this value must be `development`. For a production sandbox, this value must be `production`.
+          description: The type of sandbox being deleted. The current supported sandbox types include `development` and `production`.
           example: development
           enum:
           - production
@@ -303,14 +271,14 @@ components:
         region:
           type: string
           example: VA7
-    ListSandboxTypes:
+    ResetSandboxPayload:
+      required:
+      - action
       type: object
-      description: A successful response returns a list of sandbox types that are supported for your organization.
       properties:
-        sandboxTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetSandboxTypeResponse'
+        action:
+          type: string
+          example: reset
     CreateSandboxPayload:
       required:
       - name
@@ -330,6 +298,37 @@ components:
           enum:
           - production
           - development
+    SandboxSystemObject:
+      type: object
+      description: Only visible to services. User responses will omit this attribute
+      properties:
+        state:
+          type: string
+          example: active
+          enum:
+          - creating
+          - provisioning
+          - active
+          - cleaning
+          - de-provisioning
+          - deleted
+          - failed
+        createdDate:
+          type: string
+          description: The date and time the sandbox was created.
+          format: date-time
+        createdBy:
+          type: string
+          description: Details of the user who created the sandbox.
+          example: ''
+        lastModifiedDate:
+          type: string
+          description: The date and time the sandbox was last modified.
+          format: date-time
+        lastModifiedBy:
+          type: string
+          description: Details of the user who last modified the sandbox.
+          example: ''
     RetrieveSandbox:
       type: object
       description: A successful response returns the details of the sandbox.
@@ -394,6 +393,80 @@ components:
           example: ''
         _system:
           $ref: '#/components/schemas/SandboxSystemObject'
+    ListSandboxTypes:
+      type: object
+      description: A successful response returns a list of sandbox types that are supported for your organization.
+      properties:
+        sandboxTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetSandboxTypeResponse'
+    Page:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: The maximum number of records to be returned in the response.
+        count:
+          type: integer
+          description: The number of records returned in the response.
+    CreateSandboxResponse:
+      type: object
+      description: A successful response returns the details of the newly created sandbox.
+      properties:
+        id:
+          type: string
+          description: Only visible to services. User responses will omit this attribute.
+          example: 180e1210-d33a-11e9-8b17-d9e538719ued
+        name:
+          type: string
+          description: The user-generated human-friendly name for the sandbox that will be used to access the sandbox in future requests. This value must be unique, and best practice is to make it as descriptive as possible. This value cannot contain any spaces or special characters.
+          example: acme-sandbox
+        title:
+          type: string
+          description: A human-readable name used for display purposes in the Platform user interface.
+          example: ACME Sandbox
+        state:
+          type: string
+          description: The state of the sandbox and has two values, `active` or `failed`. A sandbox becomes `active` once it has been successfully provisioned.
+          example: creating
+          enum:
+          - creating
+          - provisioning
+          - active
+          - cleaning
+          - de-provisioning
+          - deleted
+          - failed
+        type:
+          type: string
+          description: The type of sandbox to be created. For a non-production sandbox, this value must be `development`. For a production sandbox, this value must be `production`.
+          example: development
+          enum:
+          - production
+          - development
+        region:
+          type: string
+          example: VA7
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+    ListSandboxes:
+      type: object
+      description: A successful response returns a list of sandboxes belonging to your organization.
+      properties:
+        sandboxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetSandboxSystemResponse'
+        _page:
+          $ref: '#/components/schemas/Page'
+        _links:
+          $ref: '#/components/schemas/Page.Links'
     GetSandboxSystemResponse:
       type: object
       properties:
@@ -457,94 +530,22 @@ components:
           example: ''
         _system:
           $ref: '#/components/schemas/SandboxSystemObject'
-    SandboxSystemObject:
+    PatchSandboxPayload:
+      required:
+      - title
       type: object
-      description: Only visible to services. User responses will omit this attribute
       properties:
-        state:
+        title:
           type: string
-          example: active
-          enum:
-          - creating
-          - provisioning
-          - active
-          - cleaning
-          - de-provisioning
-          - deleted
-          - failed
-        createdDate:
-          type: string
-          description: The date and time the sandbox was created.
-          format: date-time
-        createdBy:
-          type: string
-          description: Details of the user who created the sandbox.
-          example: ''
-        lastModifiedDate:
-          type: string
-          description: The date and time the sandbox was last modified.
-          format: date-time
-        lastModifiedBy:
-          type: string
-          description: Details of the user who last modified the sandbox.
-          example: ''
-    DeleteSandbox:
+          example: My Sandbox
+    GetSandboxTypeResponse:
       type: object
-      description: A successful response returns the sandbox’s updated details, showing that its state is `deleted`.
+      description: A successful response returns a list of sandbox types that are supported for your organization.
       properties:
         id:
           type: string
-          description: Only visible to services.
-          example: 180e1210-d33a-11e9-8b17-d9e538719ued
-        name:
-          type: string
-          description: The name of the sandbox you want to delete.
-          example: acme-sandbox
         title:
           type: string
-          description: The display name for the sandbox.
-          example: ACME Sandbox
-        state:
-          type: string
-          description: A successful deletion request for a sandbox updates the sandbox `state` to `deleted` and deactivates it. The default production sandbox cannot be deleted.
-          example: cleaning
-          enum:
-          - creating
-          - provisioning
-          - active
-          - cleaning
-          - de-provisioning
-          - deleted
-          - failed
-        type:
-          type: string
-          description: The type of sandbox being deleted. The current supported sandbox types include `development` and `production`.
-          example: development
-          enum:
-          - production
-          - development
-        region:
-          type: string
-          example: VA7
-    Link:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-    ListSandboxes:
-      type: object
-      description: A successful response returns a list of sandboxes belonging to your organization.
-      properties:
-        sandboxes:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetSandboxSystemResponse'
-        _page:
-          $ref: '#/components/schemas/Page'
-        _links:
-          $ref: '#/components/schemas/Page.Links'
     ResetSandboxResponse:
       type: object
       description: A successful response returns the details of the updated sandbox.
@@ -573,59 +574,14 @@ components:
           type: string
           description: Region code where the sandbox is hosted.
           example: VA7
-    GetSandboxTypeResponse:
+    Page.Links:
       type: object
-      description: A successful response returns a list of sandbox types that are supported for your organization.
       properties:
-        id:
-          type: string
-        title:
-          type: string
-  responses:
-    InternalServerError:
-      x-summary: Internal Server Error.
-      description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
-      content: {}
-    Forbidden:
-      x-summary: Forbidden
-      description: You do not have the correct access permissions for this endpoint.
-      content: {}
-    BadRequest:
-      x-summary: Bad Request
-      description: Bad request. Check the syntax and payload information.
-      content: {}
-    Conflict:
-      x-summary: Conflict.
-      description: There was a conflict with the request. Double check for unique parameters.
-      content: {}
+        next:
+          $ref: '#/components/schemas/Link'
+        page:
+          $ref: '#/components/schemas/Link'
   parameters:
-    accept:
-      name: Accept
-      in: header
-      description: The type of content that should be accepted. This value should be `application/json`.
-      required: true
-      schema:
-        type: string
-    property:
-      name: property
-      in: query
-      description: 'Regex used to filter objects in the response. For example: "property=name==test."'
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-user-token:
       name: x-user-token
       in: header
@@ -639,13 +595,6 @@ components:
       required: true
       schema:
         type: string
-    sandboxName:
-      name: sandboxName
-      in: path
-      description: The name of a sandbox, used as an identifier.
-      required: true
-      schema:
-        type: string
     content-type:
       name: Content-Type
       in: header
@@ -653,10 +602,17 @@ components:
       required: true
       schema:
         type: string
-    orderBy:
-      name: orderBy
+    accept:
+      name: Accept
+      in: header
+      description: The type of content that should be accepted. This value should be `application/json`.
+      required: true
+      schema:
+        type: string
+    property:
+      name: property
       in: query
-      description: Parameter used to identify a property to order listed responses by, including sort direction ("asc:" for ascending, "desc:" for descending). For example, "orderBy=asc:created,updated".
+      description: 'Regex used to filter objects in the response. For example: "property=name==test."'
       schema:
         type: string
     x-sandbox-name:
@@ -666,3 +622,47 @@ components:
       required: true
       schema:
         type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    orderBy:
+      name: orderBy
+      in: query
+      description: Parameter used to identify a property to order listed responses by, including sort direction ("asc:" for ascending, "desc:" for descending). For example, "orderBy=asc:created,updated".
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    sandboxName:
+      name: sandboxName
+      in: path
+      description: The name of a sandbox, used as an identifier.
+      required: true
+      schema:
+        type: string
+  responses:
+    Conflict:
+      x-summary: Conflict.
+      description: There was a conflict with the request. Double check for unique parameters.
+      content: {}
+    Forbidden:
+      x-summary: Forbidden
+      description: You do not have the correct access permissions for this endpoint.
+      content: {}
+    InternalServerError:
+      x-summary: Internal Server Error.
+      description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
+      content: {}
+    BadRequest:
+      x-summary: Bad Request
+      description: Bad request. Check the syntax and payload information.
+      content: {}

@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  description: Lightroom API Documentation, made available through [adobe.io](https://developer.adobe.com). API Change Logs are available [here](https://developer.adobe.com/lightroom/lightroom-api-docs/release-notes/).
+  description: Lightroom API Documentation, made available through adobe.io. API Change Logs are available here.
   version: 1.0.0
   title: Lightroom API Documentation Albums API
   license:
@@ -975,143 +975,59 @@ paths:
                 MaintenanceError:
                   $ref: '#/components/examples/MaintenanceErrorExample'
 components:
-  examples:
-    ForbiddenKeyExample:
-      summary: Invalid API Key
-      value:
-        code: 403003
-        description: API Key is invalid
-    MaintenanceErrorExample:
-      summary: MaintenanceError
-      value:
-        code: MaintenanceError
-        description: Service is unavailable
-    AlbumNotFoundExample:
-      summary: ResourceNotFoundError
-      value:
-        errors:
-          album:
-          - does not exist
-        code: 1000
-        description: Resource not found
-    InvaildRequestJSONExample:
-      summary: InvalidRequestJSON
-      value:
-        errors:
-          body:
-          - Must be a valid JSON
-        code: 1005
-        description: Input Validation Error
-    CatalogInvaildRequestGUIDExample:
-      summary: InvalidRequestGUID
-      value:
-        errors:
-          catalog_id:
-          - Must be a valid GUID
-        code: 1005
-        description: Input Validation Error
-    AlbumInvaildRequestGUIDExample:
-      summary: InvalidRequestGUID
-      value:
-        errors:
-          album_id:
-          - Must be a valid GUID
-        code: 1005
-        description: Input Validation Error
-    ServiceUnavailableExample:
-      summary: ServiceUnavailable
-      value:
-        code: 9999
-        description: Service is temporarily unavailable
-    InvaildRequestPayloadExample:
-      summary: InvalidRequestPayload
-      value:
-        errors:
-          payload.importSource.importTimestamp:
-          - invalid
-        code: 1030
-        description: Payload Validation Error
-    AlbumResourceExistsErrorExample:
-      summary: ResourceExistsError
-      value:
-        errors:
-          album:
-          - already exists
-        code: 1002
-        description: Resource already exists
-    OperationNotPermittedExample:
-      summary: Operation Not Permitted
-      value:
-        code: 1016
-        description: Requested operation not permitted
-    AccessForbiddenExample:
-      summary: Access Forbidden
-      value:
-        code: 4300
-        description: Access is forbidden
+  responses:
+    UnsupportedMediaType:
+      description: The request failed because the Content-Type did not match the request.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: object
+                properties:
+                  content_type:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - should be json
+                      - should match the subtype of the asset
+              code:
+                type: integer
+                enum:
+                - 1003
+              description:
+                type: string
+                enum:
+                - Invalid content type
+    Unauthorized:
+      description: The request failed due to missing or invalid authentication token.
+    InvaildRequestJSON:
+      description: The request failed due to an invalid JSON.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: object
+                properties:
+                  body:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - Must be valid JSON
+              code:
+                type: integer
+                enum:
+                - 1005
+              description:
+                type: string
+                enum:
+                - Input Validation Error
   schemas:
-    InvalidAPIKeyError:
-      type: object
-      properties:
-        code:
-          type: integer
-          enum:
-          - 403003
-        description:
-          type: string
-          enum:
-          - API Key is invalid
-    InvaildRequestGUID:
-      type: object
-      properties:
-        errors:
-          type: object
-          properties:
-            <param_name>:
-              type: array
-              items:
-                type: string
-                enum:
-                - Must be a valid GUID
-        code:
-          type: integer
-          enum:
-          - 1005
-        description:
-          type: string
-          enum:
-          - Input Validation Error
-    ResourceExistsError:
-      type: object
-      properties:
-        errors:
-          type: object
-          properties:
-            <resource_type>:
-              type: array
-              items:
-                type: string
-                enum:
-                - already exists
-        code:
-          type: integer
-          enum:
-          - 1002
-        description:
-          type: string
-          enum:
-          - Resource already exists
-    OperationNotPermittedError:
-      type: object
-      properties:
-        code:
-          type: integer
-          enum:
-          - 1016
-        description:
-          type: string
-          enum:
-          - Requested operation not permitted
     ServiceUnavailable:
       type: object
       properties:
@@ -1123,6 +1039,32 @@ components:
           type: string
           enum:
           - Service is temporarily unavailable
+    ForbiddenKeyError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 403003
+        description:
+          type: string
+          enum:
+          - API Key is invalid
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
     NotFound:
       type: object
       properties:
@@ -1163,10 +1105,44 @@ components:
           type: string
           enum:
           - Input Validation Error
+    InvalidAPIKeyError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 403003
+        description:
+          type: string
+          enum:
+          - API Key is invalid
     lex64SortOrderString:
       maxLength: 1024
       minLength: 1
       pattern: ^[-_0-9a-zA-Z]*[_0-9a-zA-Z]$
+      type: string
+    ResourceExistsError:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            <resource_type>:
+              type: array
+              items:
+                type: string
+                enum:
+                - already exists
+        code:
+          type: integer
+          enum:
+          - 1002
+        description:
+          type: string
+          enum:
+          - Resource already exists
+    uuid:
+      pattern: ^[a-f0-9]{32}$
       type: string
     AccessForbiddenError:
       type: object
@@ -1179,39 +1155,41 @@ components:
           type: string
           enum:
           - Access is forbidden
-    uuid:
-      pattern: ^[a-f0-9]{32}$
-      type: string
-    utcDateTime:
-      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
-      type: string
-      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
-    ForbiddenKeyError:
+    OperationNotPermittedError:
       type: object
       properties:
         code:
           type: integer
           enum:
-          - 403003
+          - 1016
         description:
           type: string
           enum:
-          - API Key is invalid
-    MaintenanceError:
+          - Requested operation not permitted
+    utcDateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
+      type: string
+      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
+    InvaildRequestGUID:
       type: object
       properties:
+        errors:
+          type: object
+          properties:
+            <param_name>:
+              type: array
+              items:
+                type: string
+                enum:
+                - Must be a valid GUID
         code:
-          type: string
+          type: integer
           enum:
-          - MaintenanceError
+          - 1005
         description:
           type: string
           enum:
-          - Service is unavailable
-        subtype:
-          type: string
-          enum:
-          - MaintenanceError
+          - Input Validation Error
     albumPayload:
       type: object
       properties:
@@ -1285,58 +1263,80 @@ components:
           type: string
           enum:
           - Payload Validation Error
-  responses:
-    Unauthorized:
-      description: The request failed due to missing or invalid authentication token.
-    InvaildRequestJSON:
-      description: The request failed due to an invalid JSON.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              errors:
-                type: object
-                properties:
-                  body:
-                    type: array
-                    items:
-                      type: string
-                      enum:
-                      - Must be valid JSON
-              code:
-                type: integer
-                enum:
-                - 1005
-              description:
-                type: string
-                enum:
-                - Input Validation Error
-    UnsupportedMediaType:
-      description: The request failed because the Content-Type did not match the request.
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              errors:
-                type: object
-                properties:
-                  content_type:
-                    type: array
-                    items:
-                      type: string
-                      enum:
-                      - should be json
-                      - should match the subtype of the asset
-              code:
-                type: integer
-                enum:
-                - 1003
-              description:
-                type: string
-                enum:
-                - Invalid content type
+  examples:
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+    AlbumNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          album:
+          - does not exist
+        code: 1000
+        description: Resource not found
+    InvaildRequestJSONExample:
+      summary: InvalidRequestJSON
+      value:
+        errors:
+          body:
+          - Must be a valid JSON
+        code: 1005
+        description: Input Validation Error
+    ForbiddenKeyExample:
+      summary: Invalid API Key
+      value:
+        code: 403003
+        description: API Key is invalid
+    AccessForbiddenExample:
+      summary: Access Forbidden
+      value:
+        code: 4300
+        description: Access is forbidden
+    AlbumInvaildRequestGUIDExample:
+      summary: InvalidRequestGUID
+      value:
+        errors:
+          album_id:
+          - Must be a valid GUID
+        code: 1005
+        description: Input Validation Error
+    OperationNotPermittedExample:
+      summary: Operation Not Permitted
+      value:
+        code: 1016
+        description: Requested operation not permitted
+    CatalogInvaildRequestGUIDExample:
+      summary: InvalidRequestGUID
+      value:
+        errors:
+          catalog_id:
+          - Must be a valid GUID
+        code: 1005
+        description: Input Validation Error
+    AlbumResourceExistsErrorExample:
+      summary: ResourceExistsError
+      value:
+        errors:
+          album:
+          - already exists
+        code: 1002
+        description: Resource already exists
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
+    InvaildRequestPayloadExample:
+      summary: InvalidRequestPayload
+      value:
+        errors:
+          payload.importSource.importTimestamp:
+          - invalid
+        code: 1030
+        description: Payload Validation Error
 externalDocs:
   description: Find out more about Lightroom
   url: https://www.adobe.com/products/photoshop-lightroom.html

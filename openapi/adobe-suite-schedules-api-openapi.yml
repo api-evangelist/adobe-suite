@@ -1005,32 +1005,39 @@ paths:
           - platform-stage
 components:
   schemas:
-    self_and_cancel_links:
+    task_detail:
+      type: object
       properties:
-        self:
-          type: object
-          properties:
-            href:
-              type: string
-              description: The URI of this resource.
-              example: https://platform-va7.adobe.io/data/foundation/query/schedules/fcbd04245jeec73f0a495fc9_51c9d32c-7654-468a-89d3-2e7654768ad1_a3000599_c779_417f_9933_4ec1c1d8828d4bwimtwh0aag3xxzvzv7_85deee/runs/c2NoZWR1bGVkX18yMDIyLTAxLTMwVDE1OjQxOjAwKzAwOfAw
-            method:
-              type: string
-              description: The HTTP method to use with the `href`.
-              example: GET
-          description: Contains the information required to access this resource.
-        cancel:
-          properties:
-            href:
-              type: string
-              description: The URI to call to cancel the run of this scheduled query.
-              example: https://platform-va7.adobe.io/data/foundation/query/schedules/fcbd04245jeec73f0a495fc9_51c9d32c-7654-468a-89d3-2e7654768ad1_a3000599_c779_417f_9933_4ec1c1d8828d4bwimtwh0aag3xxzvzv7_85deee/runs/c2NoZWR1bGVkX18yMDIyLTAxLTMwVDE1OjQxOjAwKzAwOfAw
-            method:
-              type: string
-              description: The HTTP method to use with the `href`.
-              example: PATCH
-          description: Contains the information required to cancel this resource.
-      description: Contains links to perform actions on this schedule run.
+        duration:
+          type: string
+          description: The amount of seconds taken to complete this run.
+          example: 9
+        endDate:
+          type: string
+          description: The end date of this run.
+          example: 2022-06-03 11:04:03.236972+00:00
+        state:
+          type: string
+          description: The state of the task.
+          enum:
+          - SUCCESS
+          - IN_PROGRESS
+          - FAILED
+          - QUEUED_FOR_RETRY
+          - QUEUED
+          example: FAILED
+        message:
+          type: string
+          description: A message giving more information related to this run.
+          example: Processing Failed
+        startDate:
+          type: string
+          description: The start date of this run.
+          example: 2022-06-03 11:03:54.095191+00:00
+        taskId:
+          type: string
+          description: The task ID of this run.
+          example: 0tx2JTP56S
     _page:
       type: object
       properties:
@@ -1055,62 +1062,43 @@ components:
           description: The number of items on the page.
           example: 26
       description: Pagination information for this resource. It contains a `count` property for the number of resources returned.
-    schedules_list:
+    schedules:
       type: object
       properties:
-        schedules:
-          type: array
-          items:
-            $ref: '#/components/schemas/schedules'
-          description: Each object contains the schedule information for your organization's queries.
-        _page:
-          $ref: '#/components/schemas/_page'
-        _links:
-          properties:
-            next:
-              type: string
-              description: A link to the next page of results.
-              example: https://platform-va7.adobe.io/data/foundation/query/schedules?start=2022-11-01T00:11:08.389Z&limit=10&linkType=next
-          description: Contains the URI reference to obtain the next page of resources.
-        version:
-          type: integer
-          description: The REST API version of this resource.
-      description: List of schedules
-    schedules_run_details:
-      type: object
-      properties:
-        created:
-          type: string
-          description: The execution date of the run provided in the request path.
-          example: 2022-06-02 10:56:00+00:00
-        state:
-          type: string
-          description: The state of the run provided in the request path.
-          enum:
-          - SUCCESS
-          - IN_PROGRESS
-          - FAILED
-          example: FAILED
-        taskStatusList:
-          type: array
-          description: A list of information related to run provided in the request path.
-          items:
-            $ref: '#/components/schemas/task_detail'
         id:
           type: string
-          description: The unique identifier for the run provided in the request path..
-          example: a2NoKWR1dGVkX18yMDIyLJA2LTAyVDEwOfU2OfAwKzAwOfAw
-        scheduleId:
+          description: The ID for the schedule.
+          example: e95168d65a26abf00a495d82_28e74200-e3de-11e9-8f5d-7f27416c5f0d_sample_scheduled_query7omob151bm_birvwm
+        userId:
           type: string
-          description: The ID of the schedule that the run belongs to.
-          example: fcbd04245fcec73j0a495fc9_51c9d32e-7654-466a-89b3-2c7654768ab1_d623a799_6jbb_4b13_aaf5_j8b4f728fc3cw6tmcbapd30tx2ktp58s_mqj4xg
-        externalTrigger:
-          type: boolean
-          description: Identifies whether the given run was triggered through a POST request to  `/schedules/{scheduleId}/runs`.
-          example: false
+          description: The ID of the user that created the schedule.
+          example: '{USER_ID}'
+        updatedUserId:
+          type: string
+          description: The ID of the user who last updated the schedule.
+          example: '{USER_ID}'
+        state:
+          type: string
+          description: When a schedule has recently being created and is in the process of being registered on internal systems, it enters the `REGISTERING` state. It will automatically transition into `ENABLED` once it is acknowledged by internal systems. When `ENABLED`, a schedule will run based on time interval specified and can be triggered to run manually via `POST /schedules/{scheduleId}/runs`. When `DISABLED`, a schedule will not run on the specified time interval and will not be allowed to run manually via `POST /schedules/{scheduleId}/runs`. Only schedules in the `DISABLED` state can be deleted via `DELETE /schedules/{scheduleId}`.
+          enum:
+          - REGISTERING
+          - ENABLED
+          - DISABLED
+        query:
+          $ref: '#/components/schemas/query_def'
+        schedule:
+          $ref: '#/components/schemas/schedules_response'
+        created:
+          type: string
+          description: 'UTC time when schedule was submitted. Note: We don''t return this parameter in response for POST /schedules'
+          example: '2022-01-06T23:42:15.352Z'
+        updated:
+          type: string
+          description: 'UTC time when schedule was last updated. Note: We don''t return this parameter in response for POST /schedules'
+          example: '2022-01-06T23:42:15.352Z'
         _links:
-          $ref: '#/components/schemas/self_and_cancel_links'
-      description: The schedule run details.
+          $ref: '#/components/schemas/schedules_links'
+      description: Each object contains the schedule information for your organization's queries.
     schedules_run:
       type: object
       properties:
@@ -1165,6 +1153,37 @@ components:
           example: 1
           description: The REST API version of this resource.
       description: A list of all the run information for a specified query schedule.
+    schedules_list:
+      type: object
+      properties:
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/schedules'
+          description: Each object contains the schedule information for your organization's queries.
+        _page:
+          $ref: '#/components/schemas/_page'
+        _links:
+          properties:
+            next:
+              type: string
+              description: A link to the next page of results.
+              example: https://platform-va7.adobe.io/data/foundation/query/schedules?start=2022-11-01T00:11:08.389Z&limit=10&linkType=next
+          description: Contains the URI reference to obtain the next page of resources.
+        version:
+          type: integer
+          description: The REST API version of this resource.
+      description: List of schedules
+    schedules_create_request:
+      required:
+      - query
+      - schedule
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/query_def'
+        schedule:
+          $ref: '#/components/schemas/schedules_request'
     query_def:
       type: object
       properties:
@@ -1230,70 +1249,29 @@ components:
               example: Schema for sampling_test_geometrix_sitesection_copy
           description: If this property is defined, this query will be converted into a CTAS query. Optional.
       description: The POST request payload sent to the `/queries` endpoint.
-    schedules:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID for the schedule.
-          example: e95168d65a26abf00a495d82_28e74200-e3de-11e9-8f5d-7f27416c5f0d_sample_scheduled_query7omob151bm_birvwm
-        userId:
-          type: string
-          description: The ID of the user that created the schedule.
-          example: '{USER_ID}'
-        updatedUserId:
-          type: string
-          description: The ID of the user who last updated the schedule.
-          example: '{USER_ID}'
-        state:
-          type: string
-          description: When a schedule has recently being created and is in the process of being registered on internal systems, it enters the `REGISTERING` state. It will automatically transition into `ENABLED` once it is acknowledged by internal systems. When `ENABLED`, a schedule will run based on time interval specified and can be triggered to run manually via `POST /schedules/{scheduleId}/runs`. When `DISABLED`, a schedule will not run on the specified time interval and will not be allowed to run manually via `POST /schedules/{scheduleId}/runs`. Only schedules in the `DISABLED` state can be deleted via `DELETE /schedules/{scheduleId}`.
-          enum:
-          - REGISTERING
-          - ENABLED
-          - DISABLED
-        query:
-          $ref: '#/components/schemas/query_def'
-        schedule:
-          $ref: '#/components/schemas/schedules_response'
-        created:
-          type: string
-          description: 'UTC time when schedule was submitted. Note: We don''t return this parameter in response for POST /schedules'
-          example: '2022-01-06T23:42:15.352Z'
-        updated:
-          type: string
-          description: 'UTC time when schedule was last updated. Note: We don''t return this parameter in response for POST /schedules'
-          example: '2022-01-06T23:42:15.352Z'
-        _links:
-          $ref: '#/components/schemas/schedules_links'
-      description: Each object contains the schedule information for your organization's queries.
-    schedule_patch_operation:
+    schedules_request:
       required:
-      - op
-      - path
-      - value
+      - schedule
+      - startDate
       type: object
       properties:
-        op:
+        schedule:
           type: string
-          description: The operation to be performed on the query schedule.
-          enum:
-          - replace
-          example: replace
-        path:
+          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
+          example: 51 12 * * 1
+        startDate:
           type: string
-          description: The path to the resource that will be updated.
-          enum:
-          - /state
-          - /schedule/schedule
-          example: /state
-        value:
+          description: The start date for the scheduled query runs.
+          example: 2020-01-08 12:30:00+00:00
+        endDate:
           type: string
-          enum:
-          - enable
-          - disable
-          description: The value to update the resource with. The value can either enable or disable the scheduled query.
-          example: disable
+          description: The end date for the scheduled query runs.
+          example: 2021-01-08 12:30:00+00:00
+        maxActiveRuns:
+          type: integer
+          description: The number of parallel schedule runs allowed. The default value is 1.
+          example: 3
+      description: Information on the cadence of the query schedule.
     schedules_links:
       type: object
       properties:
@@ -1378,62 +1356,6 @@ components:
               example: POST
           description: Contains the necessary information to trigger an immediate run for the associated query.
       description: Contains links to perform a variety of actions on this query schedule.
-    task_detail:
-      type: object
-      properties:
-        duration:
-          type: string
-          description: The amount of seconds taken to complete this run.
-          example: 9
-        endDate:
-          type: string
-          description: The end date of this run.
-          example: 2022-06-03 11:04:03.236972+00:00
-        state:
-          type: string
-          description: The state of the task.
-          enum:
-          - SUCCESS
-          - IN_PROGRESS
-          - FAILED
-          - QUEUED_FOR_RETRY
-          - QUEUED
-          example: FAILED
-        message:
-          type: string
-          description: A message giving more information related to this run.
-          example: Processing Failed
-        startDate:
-          type: string
-          description: The start date of this run.
-          example: 2022-06-03 11:03:54.095191+00:00
-        taskId:
-          type: string
-          description: The task ID of this run.
-          example: 0tx2JTP56S
-    schedules_request:
-      required:
-      - schedule
-      - startDate
-      type: object
-      properties:
-        schedule:
-          type: string
-          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
-          example: 51 12 * * 1
-        startDate:
-          type: string
-          description: The start date for the scheduled query runs.
-          example: 2020-01-08 12:30:00+00:00
-        endDate:
-          type: string
-          description: The end date for the scheduled query runs.
-          example: 2021-01-08 12:30:00+00:00
-        maxActiveRuns:
-          type: integer
-          description: The number of parallel schedule runs allowed. The default value is 1.
-          example: 3
-      description: Information on the cadence of the query schedule.
     schedules_run_list:
       type: object
       properties:
@@ -1455,16 +1377,32 @@ components:
           type: integer
           description: The REST API version of this resource.
       description: List of schedules runs
-    schedules_create_request:
-      required:
-      - query
-      - schedule
-      type: object
+    self_and_cancel_links:
       properties:
-        query:
-          $ref: '#/components/schemas/query_def'
-        schedule:
-          $ref: '#/components/schemas/schedules_request'
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              description: The URI of this resource.
+              example: https://platform-va7.adobe.io/data/foundation/query/schedules/fcbd04245jeec73f0a495fc9_51c9d32c-7654-468a-89d3-2e7654768ad1_a3000599_c779_417f_9933_4ec1c1d8828d4bwimtwh0aag3xxzvzv7_85deee/runs/c2NoZWR1bGVkX18yMDIyLTAxLTMwVDE1OjQxOjAwKzAwOfAw
+            method:
+              type: string
+              description: The HTTP method to use with the `href`.
+              example: GET
+          description: Contains the information required to access this resource.
+        cancel:
+          properties:
+            href:
+              type: string
+              description: The URI to call to cancel the run of this scheduled query.
+              example: https://platform-va7.adobe.io/data/foundation/query/schedules/fcbd04245jeec73f0a495fc9_51c9d32c-7654-468a-89d3-2e7654768ad1_a3000599_c779_417f_9933_4ec1c1d8828d4bwimtwh0aag3xxzvzv7_85deee/runs/c2NoZWR1bGVkX18yMDIyLTAxLTMwVDE1OjQxOjAwKzAwOfAw
+            method:
+              type: string
+              description: The HTTP method to use with the `href`.
+              example: PATCH
+          description: Contains the information required to cancel this resource.
+      description: Contains links to perform actions on this schedule run.
     schedules_response:
       type: object
       properties:
@@ -1485,6 +1423,68 @@ components:
           description: The number of parallel schedule runs allowed. The default value is 1.
           example: 3
       description: Information on the cadence of the query schedule.
+    schedule_patch_operation:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          description: The operation to be performed on the query schedule.
+          enum:
+          - replace
+          example: replace
+        path:
+          type: string
+          description: The path to the resource that will be updated.
+          enum:
+          - /state
+          - /schedule/schedule
+          example: /state
+        value:
+          type: string
+          enum:
+          - enable
+          - disable
+          description: The value to update the resource with. The value can either enable or disable the scheduled query.
+          example: disable
+    schedules_run_details:
+      type: object
+      properties:
+        created:
+          type: string
+          description: The execution date of the run provided in the request path.
+          example: 2022-06-02 10:56:00+00:00
+        state:
+          type: string
+          description: The state of the run provided in the request path.
+          enum:
+          - SUCCESS
+          - IN_PROGRESS
+          - FAILED
+          example: FAILED
+        taskStatusList:
+          type: array
+          description: A list of information related to run provided in the request path.
+          items:
+            $ref: '#/components/schemas/task_detail'
+        id:
+          type: string
+          description: The unique identifier for the run provided in the request path..
+          example: a2NoKWR1dGVkX18yMDIyLJA2LTAyVDEwOfU2OfAwKzAwOfAw
+        scheduleId:
+          type: string
+          description: The ID of the schedule that the run belongs to.
+          example: fcbd04245fcec73j0a495fc9_51c9d32e-7654-466a-89b3-2c7654768ab1_d623a799_6jbb_4b13_aaf5_j8b4f728fc3cw6tmcbapd30tx2ktp58s_mqj4xg
+        externalTrigger:
+          type: boolean
+          description: Identifies whether the given run was triggered through a POST request to  `/schedules/{scheduleId}/runs`.
+          example: false
+        _links:
+          $ref: '#/components/schemas/self_and_cancel_links'
+      description: The schedule run details.
     schedulePatchOperation:
       required:
       - op
@@ -1507,72 +1507,6 @@ components:
           description: The updated value for the field you want to update. If using the `/state` path, this value can either be active or inactive. If using the `/schedule` path, this will be the updated cron schedule.
           example: active
       description: Patch operation
-    SchedulesResponse:
-      required:
-      - _page
-      - children
-      type: object
-      properties:
-        _page:
-          $ref: '#/components/schemas/SchedulesPage'
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/Schedule'
-    Schedule:
-      required:
-      - name
-      - properties
-      - schedule
-      - type
-      type: object
-      properties:
-        id:
-          type: string
-          description: A unique, read-only, system-generated schedule ID.
-          example: 5e61e66e-e8b4-4a7b-8d41-70c74b0b981a
-        name:
-          type: string
-          description: The name of the schedule.
-          example: profile-default
-        type:
-          type: string
-          description: The job type for the schedule.
-          example: batch_segmentation
-          enum:
-          - batch_segmentation
-        schedule:
-          type: string
-          description: A cron expression stating when the schedule should be triggered. Jobs can only be scheduled to run once a day, meaning you cannot schedule a job to run more than once during a 24 hour period. For more information, please review the [cron expression format](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) documentation.
-          example: 0 0 1 * * ?
-        state:
-          type: string
-          description: The state of the schedule. If the schedule is inactive, it must be activated before it will be triggered.
-          example: inactive
-          enum:
-          - active
-          - inactive
-        properties:
-          required:
-          - segments
-          type: object
-          properties:
-            segments:
-              type: array
-              description: This field is required if the job type is batch_segmentation. It holds a list of segment definitions which need to be evaluated at the scheduled time. Use `*` to evaluate all segment definitions.
-              items:
-                type: string
-                example: '*'
-          description: schedule properties
-        createEpoch:
-          type: integer
-          description: The timestamp, as unix time in seconds, for when the schedule was created.
-          example: 1234567890
-        updateEpoch:
-          type: integer
-          description: The timestamp, as unix time in seconds, for when the schedule was last updated.
-          example: 1234567890
-      description: The schedule entity.
     ScheduleCreate:
       required:
       - name
@@ -1633,21 +1567,73 @@ components:
           type: string
           description: The offset to start pagination for the schedules.
           example: '1'
+    Schedule:
+      required:
+      - name
+      - properties
+      - schedule
+      - type
+      type: object
+      properties:
+        id:
+          type: string
+          description: A unique, read-only, system-generated schedule ID.
+          example: 5e61e66e-e8b4-4a7b-8d41-70c74b0b981a
+        name:
+          type: string
+          description: The name of the schedule.
+          example: profile-default
+        type:
+          type: string
+          description: The job type for the schedule.
+          example: batch_segmentation
+          enum:
+          - batch_segmentation
+        schedule:
+          type: string
+          description: A cron expression stating when the schedule should be triggered. Jobs can only be scheduled to run once a day, meaning you cannot schedule a job to run more than once during a 24 hour period. For more information, please review the [cron expression format](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) documentation.
+          example: 0 0 1 * * ?
+        state:
+          type: string
+          description: The state of the schedule. If the schedule is inactive, it must be activated before it will be triggered.
+          example: inactive
+          enum:
+          - active
+          - inactive
+        properties:
+          required:
+          - segments
+          type: object
+          properties:
+            segments:
+              type: array
+              description: This field is required if the job type is batch_segmentation. It holds a list of segment definitions which need to be evaluated at the scheduled time. Use `*` to evaluate all segment definitions.
+              items:
+                type: string
+                example: '*'
+          description: schedule properties
+        createEpoch:
+          type: integer
+          description: The timestamp, as unix time in seconds, for when the schedule was created.
+          example: 1234567890
+        updateEpoch:
+          type: integer
+          description: The timestamp, as unix time in seconds, for when the schedule was last updated.
+          example: 1234567890
+      description: The schedule entity.
+    SchedulesResponse:
+      required:
+      - _page
+      - children
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/SchedulesPage'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Schedule'
   parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the body of the request. Should be 'application/json'.
-      required: true
-      schema:
-        type: string
     x-api-key:
       name: x-api-key
       in: header
@@ -1659,6 +1645,20 @@ components:
       name: x-gw-ims-org-id
       in: header
       description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. Should be 'application/json'.
       required: true
       schema:
         type: string

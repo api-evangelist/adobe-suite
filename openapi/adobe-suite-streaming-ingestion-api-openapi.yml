@@ -1,7 +1,9 @@
 openapi: 3.2.0
 info:
   title: Streaming Ingestion API
-  description: "Streaming ingestion allows you to send data from client and server-side devices to \nExperience Platform in real time. Platform supports the use of data inlets to stream \nincoming experience data, which is persisted in streaming-enabled datasets within the \ndata lake. Data inlets can be configured to automatically authenticate the data they \ncollect, ensuring that the data is coming from a trusted source.\n\n- **Related Documentation**:\n  - [Data ingestion documentation](http://www.adobe.com/go/data-ingestion-overview-en)\n  - [Batch ingestion API reference](https://developer.adobe.com/experience-platform-apis/references/batch-ingestion))\n\n- **Visualize API calls with Postman (a free, third-party software)**:\n  - [Data Ingestion Service API Postman collection on GitHub](https://github.com/adobe/experience-platform-postman-samples/blob/master/apis/experience-platform/Data%20Ingestion%20API.postman_collection.json)\n  - [Video guide for creating the Postman environment](https://video.tv.adobe.com/v/28832)\n  - [Steps for importing environments and collections in Postman](https://learning.getpostman.com/docs/postman/collection_runs/using_environments_in_collection_runs/)\n\n- **API paths**:\n  - Base path for streaming ingestion APIs:\n    - Data inlet management: https://<span>platform.adobe.io/data/core/edge\n    - Data collection: https://<span>dcs.adobedc.net/\n    - Example of a complete path for batch ingestion: https://<span>platform.adobe.io/data/foundation/import/batches\n    - Example of a complete path for streaming ingestion: https://<span>dcs.adobedc.net/collection/{CONNECTION_ID}\n\n- **Required headers**:\n  - All calls require `Content-Type` and `x-sandbox-name`. Authorized/authenticated accounts will need the \n  `Authorization` header. For more information on how to obtain the `Authorization` value, see the \n  [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).\n\n- **API error handling**:\n    - Refer to the Experience Platform API troubleshooting guide for [FAQs](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#faq), [API status codes](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#api-status-codes), and [request header errors](https://experienceleague.adobe.com/docs/experience-platform/landing/troubleshooting.html#request-header-errors). View also the [streaming ingestion troubleshooting guide](https://experienceleague.adobe.com/docs/experience-platform/ingestion/streaming/troubleshooting.html)."
+  description: 'Streaming ingestion allows you to send data from client and server-side devices to
+
+    Experience Platform in real time.'
   version: '1.0'
 servers:
 - url: https://dcs.adobedc.net/
@@ -184,6 +186,147 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
+    BatchMessage:
+      type: object
+      description: The batch message to be published to Platform.
+      properties:
+        messages:
+          $ref: '#/components/schemas/BatchMessageArray'
+    messageHeader:
+      required:
+      - schemaRef
+      - imsOrgId
+      - datasetId
+      - flowId
+      type: object
+      description: This payload header describes the payload information and is necessary for the transport and reconstruction of the original resource. It ensures that the packet is received at it's destination.
+      properties:
+        schemaRef:
+          $ref: '#/components/schemas/SchemaReference'
+        imsOrgId:
+          type: string
+          description: Your organization ID. It can be found under the integration details in the Adobe Developer Console.
+        datasetId:
+          type: string
+          description: The ID of the dataset that you want to publish to.
+        createdAt:
+          type: string
+          description: A timestamp to date the creation of the connection. This is automatically generated.
+        flowId:
+          type: string
+          description: The ID of the dataflow. Use the flow ID to query against a specific dataflow, when the account you are using has been used to create multiple dataflows.
+        source:
+          type: object
+          description: Information regarding the source of the data to be ingested.
+          properties:
+            name:
+              type: string
+              description: An optional name for your source. If this value is missing, the streaming message will automatically add the source ID from the streaming connection definition.
+    BatchMessageArray:
+      type: array
+      description: The array of messages to be published.
+      items:
+        required:
+        - header
+        - body
+        type: object
+        properties:
+          header:
+            required:
+            - schemaRef
+            - imsOrgId
+            - datasetId
+            - flowId
+            type: object
+            description: This payload header describes the payload information and is necessary for the transport and reconstruction of the original resource. It ensures that the packet is received at it's destination.
+            properties:
+              schemaRef:
+                $ref: '#/components/schemas/SchemaReference'
+              imsOrgId:
+                type: string
+                description: Your organization ID. It can be found under the integration details in the Adobe Developer Console.
+              datasetId:
+                type: string
+                description: The ID of the dataset that you want to publish to.
+              flowId:
+                type: string
+                description: The ID of the dataflow. Use the flow ID to query against a specific dataflow, when the account you are using has been used to create multiple dataflows.
+              source:
+                type: object
+                description: Information regarding the source of the data to be ingested.
+                properties:
+                  name:
+                    type: string
+                    description: An optional name for your source. If this value is missing, the streaming message will automatically add the source ID from the streaming connection definition.
+            example:
+              schemaRef:
+                id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
+                contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
+              imsOrgId: 5C1328435BF324E90A49402A@AdobeOrg
+              datasetId: 5da9452f7de80400007jc52a
+              flowId: 69f188b6-af07-4587-8061-e94d34637b41
+              source:
+                name: Streaming dataflow - 06/07/2022 3:09 PM
+          body:
+            $ref: '#/components/schemas/BatchMessageBody'
+    messageBody:
+      required:
+      - xdmMeta
+      - xdmEntity
+      type: object
+      description: The payload body contains information on the data that you want to send.
+      properties:
+        xdmMeta:
+          required:
+          - schemaRef
+          type: object
+          description: The `schemaRef` included in `xdmMeta` must match the schema reference included in the header and also the `DATASET_ID` referenced in the request. This allows it to pass DCCS validation and be successfully ingested into Platform.
+          properties:
+            schemaRef:
+              $ref: '#/components/schemas/SchemaReference'
+        xdmEntity:
+          type: object
+          description: Information on the specific entity described by the schema. The `xdmEntity` object contains the payload you want to send to Platform. It must conform to the schema referenced in the `schemaRef` property. Your entity will differ from that seen in the example.
+          properties:
+            person:
+              type: object
+              description: Information relating to an XDM identity. This object provides information that can be used to identify a profile. Specifically, a set of biologically and culturally determined characteristics known as an 'identity set'.
+              properties:
+                name:
+                  type: object
+                  description: A word or set of words by which a person, animal, place, or thing is known, addressed, or referred to.
+                  properties:
+                    firstName:
+                      type: string
+                      description: A personal name given to someone at birth.
+                    middleName:
+                      type: string
+                      description: A name between the first given name and the family name or surname
+                    lastName:
+                      type: string
+                      description: A portion of a name that indicates one's family, tribe, or community.
+                birthDate:
+                  type: string
+                  description: The date on which the person was born.
+                gender:
+                  type: string
+                  description: Gender refers to the socially constructed characteristics of women, men, girls, and boys.
+            workEmail:
+              type: object
+              description: Information relating to an XDM identity. This object provides information that can be used to identify a profile. Specifically, the characteristics of an electronic mailbox used for work purposes.
+              properties:
+                primary:
+                  type: boolean
+                  description: This boolean value indicates whether this is a primary source of contact for the associated profile.
+                address:
+                  type: string
+                  description: The address of the electronic mailbox.
+                type:
+                  type: string
+                  description: Indicates whether this is a personal or work email address.
+                status:
+                  type: string
+                  description: Indicates whether or not this email address is currently used.
     SchemaReference:
       required:
       - id
@@ -200,46 +343,6 @@ components:
       example:
         id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
         contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
-    streamingMessage:
-      required:
-      - header
-      - body
-      type: object
-      description: The payload to be published to Platform.
-      properties:
-        header:
-          $ref: '#/components/schemas/messageHeader'
-        body:
-          $ref: '#/components/schemas/messageBody'
-      example:
-        header:
-          schemaRef:
-            id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
-            contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
-          imsOrgId: 5C1328435BF324E90A49402A@AdobeOrg
-          datasetId: 5da9452f7de80400007jc52a
-          createdAt: '1526283801869'
-          flowId: 69f188b6-af07-4587-8061-e94d34637b41
-          source:
-            name: ACME Streaming Connection
-        body:
-          xdmMeta:
-            schemaRef:
-              id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
-              contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
-          xdmEntity:
-            person:
-              name:
-                firstName: Jane
-                middleName: F
-                lastName: Doe
-              birthDate: 1969-03-14
-              gender: female
-            workEmail:
-              primary: true
-              address: janedoe@example.com
-              type: work
-              status: active
     BatchMessageBody:
       required:
       - xdmMeta
@@ -364,6 +467,54 @@ components:
                 profileSnapshot:
                   workEmail:
                     address: janedoe@example.com
+    streamingMessage:
+      required:
+      - header
+      - body
+      type: object
+      description: The payload to be published to Platform.
+      properties:
+        header:
+          $ref: '#/components/schemas/messageHeader'
+        body:
+          $ref: '#/components/schemas/messageBody'
+      example:
+        header:
+          schemaRef:
+            id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
+            contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
+          imsOrgId: 5C1328435BF324E90A49402A@AdobeOrg
+          datasetId: 5da9452f7de80400007jc52a
+          createdAt: '1526283801869'
+          flowId: 69f188b6-af07-4587-8061-e94d34637b41
+          source:
+            name: ACME Streaming Connection
+        body:
+          xdmMeta:
+            schemaRef:
+              id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
+              contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
+          xdmEntity:
+            person:
+              name:
+                firstName: Jane
+                middleName: F
+                lastName: Doe
+              birthDate: 1969-03-14
+              gender: female
+            workEmail:
+              primary: true
+              address: janedoe@example.com
+              type: work
+              status: active
+    BatchResponseMessage:
+      type: object
+      properties:
+        xactionId:
+          type: string
+          description: The universal unique identifier (UUID) assigned to the message.
+          example: 1565650704337:2124:92:3
+      description: The response to an ingested batch.
     StreamingIngestionResponse:
       type: object
       properties:
@@ -402,152 +553,3 @@ components:
           items:
             $ref: '#/components/schemas/BatchResponseMessage'
       description: The batch message to be published to Adobe Experience Platform Data Collection.
-    messageBody:
-      required:
-      - xdmMeta
-      - xdmEntity
-      type: object
-      description: The payload body contains information on the data that you want to send.
-      properties:
-        xdmMeta:
-          required:
-          - schemaRef
-          type: object
-          description: The `schemaRef` included in `xdmMeta` must match the schema reference included in the header and also the `DATASET_ID` referenced in the request. This allows it to pass DCCS validation and be successfully ingested into Platform.
-          properties:
-            schemaRef:
-              $ref: '#/components/schemas/SchemaReference'
-        xdmEntity:
-          type: object
-          description: Information on the specific entity described by the schema. The `xdmEntity` object contains the payload you want to send to Platform. It must conform to the schema referenced in the `schemaRef` property. Your entity will differ from that seen in the example.
-          properties:
-            person:
-              type: object
-              description: Information relating to an XDM identity. This object provides information that can be used to identify a profile. Specifically, a set of biologically and culturally determined characteristics known as an 'identity set'.
-              properties:
-                name:
-                  type: object
-                  description: A word or set of words by which a person, animal, place, or thing is known, addressed, or referred to.
-                  properties:
-                    firstName:
-                      type: string
-                      description: A personal name given to someone at birth.
-                    middleName:
-                      type: string
-                      description: A name between the first given name and the family name or surname
-                    lastName:
-                      type: string
-                      description: A portion of a name that indicates one's family, tribe, or community.
-                birthDate:
-                  type: string
-                  description: The date on which the person was born.
-                gender:
-                  type: string
-                  description: Gender refers to the socially constructed characteristics of women, men, girls, and boys.
-            workEmail:
-              type: object
-              description: Information relating to an XDM identity. This object provides information that can be used to identify a profile. Specifically, the characteristics of an electronic mailbox used for work purposes.
-              properties:
-                primary:
-                  type: boolean
-                  description: This boolean value indicates whether this is a primary source of contact for the associated profile.
-                address:
-                  type: string
-                  description: The address of the electronic mailbox.
-                type:
-                  type: string
-                  description: Indicates whether this is a personal or work email address.
-                status:
-                  type: string
-                  description: Indicates whether or not this email address is currently used.
-    BatchMessage:
-      type: object
-      description: The batch message to be published to Platform.
-      properties:
-        messages:
-          $ref: '#/components/schemas/BatchMessageArray'
-    BatchResponseMessage:
-      type: object
-      properties:
-        xactionId:
-          type: string
-          description: The universal unique identifier (UUID) assigned to the message.
-          example: 1565650704337:2124:92:3
-      description: The response to an ingested batch.
-    messageHeader:
-      required:
-      - schemaRef
-      - imsOrgId
-      - datasetId
-      - flowId
-      type: object
-      description: This payload header describes the payload information and is necessary for the transport and reconstruction of the original resource. It ensures that the packet is received at it's destination.
-      properties:
-        schemaRef:
-          $ref: '#/components/schemas/SchemaReference'
-        imsOrgId:
-          type: string
-          description: Your organization ID. It can be found under the integration details in the Adobe Developer Console.
-        datasetId:
-          type: string
-          description: The ID of the dataset that you want to publish to.
-        createdAt:
-          type: string
-          description: A timestamp to date the creation of the connection. This is automatically generated.
-        flowId:
-          type: string
-          description: The ID of the dataflow. Use the flow ID to query against a specific dataflow, when the account you are using has been used to create multiple dataflows.
-        source:
-          type: object
-          description: Information regarding the source of the data to be ingested.
-          properties:
-            name:
-              type: string
-              description: An optional name for your source. If this value is missing, the streaming message will automatically add the source ID from the streaming connection definition.
-    BatchMessageArray:
-      type: array
-      description: The array of messages to be published.
-      items:
-        required:
-        - header
-        - body
-        type: object
-        properties:
-          header:
-            required:
-            - schemaRef
-            - imsOrgId
-            - datasetId
-            - flowId
-            type: object
-            description: This payload header describes the payload information and is necessary for the transport and reconstruction of the original resource. It ensures that the packet is received at it's destination.
-            properties:
-              schemaRef:
-                $ref: '#/components/schemas/SchemaReference'
-              imsOrgId:
-                type: string
-                description: Your organization ID. It can be found under the integration details in the Adobe Developer Console.
-              datasetId:
-                type: string
-                description: The ID of the dataset that you want to publish to.
-              flowId:
-                type: string
-                description: The ID of the dataflow. Use the flow ID to query against a specific dataflow, when the account you are using has been used to create multiple dataflows.
-              source:
-                type: object
-                description: Information regarding the source of the data to be ingested.
-                properties:
-                  name:
-                    type: string
-                    description: An optional name for your source. If this value is missing, the streaming message will automatically add the source ID from the streaming connection definition.
-            example:
-              schemaRef:
-                id: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
-                contentType: application/vnd.adobe.xed-full+json;version={SCHEMA_VERSION}
-              imsOrgId: 5C1328435BF324E90A49402A@AdobeOrg
-              datasetId: 5da9452f7de80400007jc52a
-              flowId: 69f188b6-af07-4587-8061-e94d34637b41
-              source:
-                name: Streaming dataflow - 06/07/2022 3:09 PM
-          body:
-            $ref: '#/components/schemas/BatchMessageBody'

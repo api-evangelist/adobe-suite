@@ -1,7 +1,13 @@
 openapi: 3.2.0
 info:
   title: AJO Customer Loyalty Metadata Challenges API
-  description: APIs for managing AJO Customer Loyalty. <br/><br/>**Related documentation:** See [Loyalty challenges](https://experienceleague.adobe.com/docs/journey-optimizer/using/loyalty-challenges/get-started.html) in Journey Optimizer documentation. <br/><br/>**Required headers:** All calls require the headers Authorization, x-gw-ims-org-id, and x-api-key. For more information, see the [authentication tutorial](https://developer.adobe.com/journey-optimizer-apis/references/authentication).
+  description: 'APIs for managing AJO Customer Loyalty.
+
+
+    **Related documentation:** See Loyalty challenges in Journey Optimizer documentation.
+
+
+    **Required headers:** All calls require the headers Authorization, x-gw-ims-org-id, and x-api-key. For more information, see the authentication tutorial.'
   contact:
     url: http://adobe.com
   version: 0.1.0
@@ -813,7 +819,7 @@ paths:
     post:
       tags:
       - Challenges
-      summary: Archive a Challenge. Once in this state, the challenge can only be deleted.
+      summary: Archive a Challenge. Once in this state, the challenge can only be deleted
       operationId: archive
       parameters:
       - name: x-request-id
@@ -981,33 +987,209 @@ paths:
                 $ref: '#/components/schemas/ProblemDetail'
 components:
   schemas:
-    ContentPhaseConfig:
+    EventTemplateDetail:
       type: object
-      description: Message sequence for a journey phase
+      description: Event definition for journey progression
       properties:
-        messages:
+        eventType:
+          type: string
+          description: Event type identifier (e.g., signup, task_complete, challenge_complete)
+          example: signup
+        name:
+          type: string
+          description: Human-readable event name
+          example: ChallengeSignupEvent
+        description:
+          type: string
+          description: Event description
+          example: Triggered when user opts into the challenge
+        namespaceId:
+          type: string
+          description: Identity namespace for profile matching
+          example: LOYALTYID
+      required:
+      - eventType
+      - name
+    PersonalizedTaskAttributes:
+      type: object
+      properties:
+        desc:
+          type: boolean
+        name:
+          type: boolean
+        include_csv:
+          type: boolean
+        exclude_csv:
+          type: boolean
+        qtyMin:
+          type: boolean
+        spendMin:
+          type: boolean
+        multiDayDays:
+          type: boolean
+        streak:
+          type: boolean
+        maxRepeat:
+          type: boolean
+        reward:
+          type: boolean
+    PersonalizedAttributes:
+      type: object
+      properties:
+        desc:
+          type: boolean
+        dayPart:
+          type: boolean
+        reward:
+          type: boolean
+        milestones:
+          type: boolean
+        allTasks:
+          type: boolean
+    MetadataConfig:
+      type: object
+      description: Journey metadata for context and challenge linking
+      properties:
+        creationStatus:
+          type: string
+          description: 'Journey creation status: ''inProgress'' (building) or ''created'' (journey exists)'
+          example: inProgress
+        challengeId:
+          type: string
+          description: Associated challenge UUID (required - journey must be linked to a challenge)
+          example: 507f1f77-bcf8-6cd7-9943-9011abcd1234
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+        journeyName:
+          type: string
+          description: Journey name displayed in Adobe Journey Optimizer UI
+          example: Holiday Challenge Journey
+        taskNames:
+          type: object
+          additionalProperties:
+            type: string
+          description: Task names by index (used for event naming)
+          example:
+            '0': Complete 5 transactions
+            '1': Spend $100
+        numberOfTasks:
+          type: integer
+          format: int32
+      required:
+      - challengeId
+      - journeyName
+    ContentConfig:
+      type: object
+      description: Content phases for journey messaging
+      properties:
+        launch:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'Launch phase messages (initial engagement). Example: welcome email, onboarding content card.'
+        inProgress:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'In-progress phase messages (during challenge). Example: reminder push, progress update email.'
+        end:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'End phase messages (completion confirmation). Example: congratulations email, reward notification.'
+    Task:
+      type: object
+      discriminator:
+        propertyName: taskType
+      properties:
+        get_id:
+          type: string
+        imsOrgId:
+          type: string
+        sandboxId:
+          type: string
+        creationDate:
+          type: string
+          format: date-time
+        lastModifiedDate:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        lastModifiedBy:
+          type: string
+        taskType:
+          type: string
+          enum:
+          - purchase
+        taskId:
+          type: string
+        taskName:
+          type: string
+        desc:
+          type: string
+        variables:
+          $ref: '#/components/schemas/Variables'
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        dependsOnTaskName:
           type: array
-          description: Ordered list of messages for this phase
           items:
-            $ref: '#/components/schemas/MessageConfig'
-    Daypart:
+            type: string
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        personalizedTaskAttributes:
+          $ref: '#/components/schemas/PersonalizedTaskAttributes'
+        reward:
+          $ref: '#/components/schemas/Reward'
+        uiStash:
+          type: string
+        taskClass:
+          type: string
+    MessageConfig:
       type: object
+      description: Message configuration for a journey node
       properties:
-        startMinute:
-          type: integer
-          format: int32
-        endMinute:
-          type: integer
-          format: int32
-    Reward:
-      type: object
-      properties:
-        endpoint:
+        type:
           type: string
-        definition:
+          description: Message type determining the node type
+          enum:
+          - contentCard
+          - email
+          - push
+          - inapp
+          - wait
+          example: email
+          pattern: ^(contentCard|email|push|inapp|wait)$
+        surfaceId:
           type: string
-        rewardValue:
+          description: Delivery surface ID (required for contentCard, email, push)
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        messageId:
           type: string
+          description: Pre-created message ID from Inline Message Service (required for contentCard, email, push)
+          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
+        actionUID:
+          type: string
+          description: Unique action ID for the message node. Required for campaign message types (contentCard, email, push, inapp). Generated by UI when creating inline campaign.
+          example: c1d2e3f4-a5b6-7890-cdef-1234567890ab
+        name:
+          type: string
+          description: Human-readable message name (displayed in journey UI)
+          example: Welcome Email
+        description:
+          type: string
+          description: Optional message description
+          example: Sent when user signs up for challenge
+        shouldRepeat:
+          type: boolean
+          description: Whether this message should repeat (for recurring journeys)
+          example: false
+        delay:
+          type: string
+          description: Wait duration for 'wait' type nodes (ISO-8601 duration format)
+          example: PT30M
+          pattern: ^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$
+      required:
+      - name
+      - type
     ProblemDetail:
       type: object
       properties:
@@ -1028,13 +1210,80 @@ components:
           type: object
           additionalProperties:
             type: object
-    ChallengeList:
+    Milestone:
       type: object
       properties:
-        challengeList:
+        contiguous:
+          type: boolean
+        interval:
+          type: string
+          enum:
+          - none
+          - task
+          - daily
+          - weekly
+          - monthly
+          - annually
+        completions:
           type: array
           items:
-            $ref: '#/components/schemas/Challenge'
+            $ref: '#/components/schemas/MilestoneReward'
+    DependsOn:
+      type: object
+      properties:
+        challengeId:
+          type: string
+    EventTemplatesConfig:
+      type: object
+      properties:
+        signupEventTemplateId:
+          type: string
+        taskCompleteEventTemplateId:
+          type: string
+        challengeCompleteEventTemplateId:
+          type: string
+    TaskTemplate:
+      type: object
+      properties:
+        templateTaskId:
+          type: string
+        overrides:
+          type: object
+          additionalProperties:
+            type: object
+    Schedule:
+      type: object
+      properties:
+        duration:
+          type: string
+          enum:
+          - task
+          - daily
+        maxRepeat:
+          type: integer
+          format: int32
+    JourneyMetadata:
+      type: object
+      description: Journey configuration for challenge journeys
+      properties:
+        metadata:
+          $ref: '#/components/schemas/MetadataConfig'
+          description: Core journey metadata including challenge ID and journey name
+        audienceQualification:
+          $ref: '#/components/schemas/AudienceQualificationConfig'
+          description: Adobe Experience Platform audience/segment configuration
+        eventTemplateDetails:
+          type: array
+          description: Event template definitions for journey events
+          items:
+            $ref: '#/components/schemas/EventTemplateDetail'
+        content:
+          $ref: '#/components/schemas/ContentConfig'
+          description: Content phases with message sequences
+      required:
+      - audienceQualification
+      - content
+      - metadata
     Variables:
       type: object
       properties:
@@ -1058,6 +1307,54 @@ components:
         maxTrans:
           type: integer
           format: int32
+    Daypart:
+      type: object
+      properties:
+        startMinute:
+          type: integer
+          format: int32
+        endMinute:
+          type: integer
+          format: int32
+    ContentPhaseConfig:
+      type: object
+      description: Message sequence for a journey phase
+      properties:
+        messages:
+          type: array
+          description: Ordered list of messages for this phase
+          items:
+            $ref: '#/components/schemas/MessageConfig'
+    MilestoneReward:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int32
+        rewardValue:
+          type: string
+    PurchaseTask:
+      allOf:
+      - $ref: '#/components/schemas/Task'
+    IncludeExclude:
+      type: object
+      properties:
+        values_csv:
+          type: string
+        valuesSet:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+    Reward:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        definition:
+          type: string
+        rewardValue:
+          type: string
     AudienceQualificationConfig:
       type: object
       description: Audience configuration for journey targeting
@@ -1073,6 +1370,13 @@ components:
           pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
       required:
       - segmentId
+    ChallengeList:
+      type: object
+      properties:
+        challengeList:
+          type: array
+          items:
+            $ref: '#/components/schemas/Challenge'
     Challenge:
       type: object
       properties:
@@ -1170,301 +1474,3 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskTemplate'
-    Milestone:
-      type: object
-      properties:
-        contiguous:
-          type: boolean
-        interval:
-          type: string
-          enum:
-          - none
-          - task
-          - daily
-          - weekly
-          - monthly
-          - annually
-        completions:
-          type: array
-          items:
-            $ref: '#/components/schemas/MilestoneReward'
-    PurchaseTask:
-      allOf:
-      - $ref: '#/components/schemas/Task'
-    IncludeExclude:
-      type: object
-      properties:
-        values_csv:
-          type: string
-        valuesSet:
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-    PersonalizedAttributes:
-      type: object
-      properties:
-        desc:
-          type: boolean
-        dayPart:
-          type: boolean
-        reward:
-          type: boolean
-        milestones:
-          type: boolean
-        allTasks:
-          type: boolean
-    MetadataConfig:
-      type: object
-      description: Journey metadata for context and challenge linking
-      properties:
-        creationStatus:
-          type: string
-          description: 'Journey creation status: ''inProgress'' (building) or ''created'' (journey exists)'
-          example: inProgress
-        challengeId:
-          type: string
-          description: Associated challenge UUID (required - journey must be linked to a challenge)
-          example: 507f1f77-bcf8-6cd7-9943-9011abcd1234
-          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
-        journeyName:
-          type: string
-          description: Journey name displayed in Adobe Journey Optimizer UI
-          example: Holiday Challenge Journey
-        taskNames:
-          type: object
-          additionalProperties:
-            type: string
-          description: Task names by index (used for event naming)
-          example:
-            '0': Complete 5 transactions
-            '1': Spend $100
-        numberOfTasks:
-          type: integer
-          format: int32
-      required:
-      - challengeId
-      - journeyName
-    JourneyMetadata:
-      type: object
-      description: Journey configuration for challenge journeys
-      properties:
-        metadata:
-          $ref: '#/components/schemas/MetadataConfig'
-          description: Core journey metadata including challenge ID and journey name
-        audienceQualification:
-          $ref: '#/components/schemas/AudienceQualificationConfig'
-          description: Adobe Experience Platform audience/segment configuration
-        eventTemplateDetails:
-          type: array
-          description: Event template definitions for journey events
-          items:
-            $ref: '#/components/schemas/EventTemplateDetail'
-        content:
-          $ref: '#/components/schemas/ContentConfig'
-          description: Content phases with message sequences
-      required:
-      - audienceQualification
-      - content
-      - metadata
-    EventTemplatesConfig:
-      type: object
-      properties:
-        signupEventTemplateId:
-          type: string
-        taskCompleteEventTemplateId:
-          type: string
-        challengeCompleteEventTemplateId:
-          type: string
-    PersonalizedTaskAttributes:
-      type: object
-      properties:
-        desc:
-          type: boolean
-        name:
-          type: boolean
-        include_csv:
-          type: boolean
-        exclude_csv:
-          type: boolean
-        qtyMin:
-          type: boolean
-        spendMin:
-          type: boolean
-        multiDayDays:
-          type: boolean
-        streak:
-          type: boolean
-        maxRepeat:
-          type: boolean
-        reward:
-          type: boolean
-    ContentConfig:
-      type: object
-      description: Content phases for journey messaging
-      properties:
-        launch:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'Launch phase messages (initial engagement). Example: welcome email, onboarding content card.'
-        inProgress:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'In-progress phase messages (during challenge). Example: reminder push, progress update email.'
-        end:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'End phase messages (completion confirmation). Example: congratulations email, reward notification.'
-    Schedule:
-      type: object
-      properties:
-        duration:
-          type: string
-          enum:
-          - task
-          - daily
-        maxRepeat:
-          type: integer
-          format: int32
-    MessageConfig:
-      type: object
-      description: Message configuration for a journey node
-      properties:
-        type:
-          type: string
-          description: Message type determining the node type
-          enum:
-          - contentCard
-          - email
-          - push
-          - inapp
-          - wait
-          example: email
-          pattern: ^(contentCard|email|push|inapp|wait)$
-        surfaceId:
-          type: string
-          description: Delivery surface ID (required for contentCard, email, push)
-          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-        messageId:
-          type: string
-          description: Pre-created message ID from Inline Message Service (required for contentCard, email, push)
-          example: b2c3d4e5-f6a7-8901-bcde-f12345678901
-        actionUID:
-          type: string
-          description: Unique action ID for the message node. Required for campaign message types (contentCard, email, push, inapp). Generated by UI when creating inline campaign.
-          example: c1d2e3f4-a5b6-7890-cdef-1234567890ab
-        name:
-          type: string
-          description: Human-readable message name (displayed in journey UI)
-          example: Welcome Email
-        description:
-          type: string
-          description: Optional message description
-          example: Sent when user signs up for challenge
-        shouldRepeat:
-          type: boolean
-          description: Whether this message should repeat (for recurring journeys)
-          example: false
-        delay:
-          type: string
-          description: Wait duration for 'wait' type nodes (ISO-8601 duration format)
-          example: PT30M
-          pattern: ^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+(?:\.\d+)?S)?)?$
-      required:
-      - name
-      - type
-    DependsOn:
-      type: object
-      properties:
-        challengeId:
-          type: string
-    TaskTemplate:
-      type: object
-      properties:
-        templateTaskId:
-          type: string
-        overrides:
-          type: object
-          additionalProperties:
-            type: object
-    EventTemplateDetail:
-      type: object
-      description: Event definition for journey progression
-      properties:
-        eventType:
-          type: string
-          description: Event type identifier (e.g., signup, task_complete, challenge_complete)
-          example: signup
-        name:
-          type: string
-          description: Human-readable event name
-          example: ChallengeSignupEvent
-        description:
-          type: string
-          description: Event description
-          example: Triggered when user opts into the challenge
-        namespaceId:
-          type: string
-          description: Identity namespace for profile matching
-          example: LOYALTYID
-      required:
-      - eventType
-      - name
-    Task:
-      type: object
-      discriminator:
-        propertyName: taskType
-      properties:
-        get_id:
-          type: string
-        imsOrgId:
-          type: string
-        sandboxId:
-          type: string
-        creationDate:
-          type: string
-          format: date-time
-        lastModifiedDate:
-          type: string
-          format: date-time
-        createdBy:
-          type: string
-        lastModifiedBy:
-          type: string
-        taskType:
-          type: string
-          enum:
-          - purchase
-        taskId:
-          type: string
-        taskName:
-          type: string
-        desc:
-          type: string
-        variables:
-          $ref: '#/components/schemas/Variables'
-        startDate:
-          type: string
-          format: date-time
-        endDate:
-          type: string
-          format: date-time
-        dependsOnTaskName:
-          type: array
-          items:
-            type: string
-        schedule:
-          $ref: '#/components/schemas/Schedule'
-        personalizedTaskAttributes:
-          $ref: '#/components/schemas/PersonalizedTaskAttributes'
-        reward:
-          $ref: '#/components/schemas/Reward'
-        uiStash:
-          type: string
-        taskClass:
-          type: string
-    MilestoneReward:
-      type: object
-      properties:
-        count:
-          type: integer
-          format: int32
-        rewardValue:
-          type: string

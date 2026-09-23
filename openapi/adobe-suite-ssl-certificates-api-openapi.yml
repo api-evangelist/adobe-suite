@@ -2,7 +2,7 @@ openapi: 3.2.0
 info:
   version: 1.0.0
   title: Cloud Manager SSL Certificates API
-  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console. The base url for this API is https://cloudmanager.adobe.io, e.g. to get the list of programs for an organization, you would make a GET request to https://cloudmanager.adobe.io/api/programs (with the correct set of headers as described below). This swagger file can be downloaded from https://raw.githubusercontent.com/AdobeDocs/cloudmanager-api-docs/main/swagger-specs/api.yaml.
+  description: This API allows access to Cloud Manager programs, pipelines, and environments by an authorized technical account created through the Adobe I/O Console.
 servers:
 - url: https://cloudmanager.adobe.io
 tags:
@@ -378,6 +378,41 @@ paths:
         required: true
 components:
   schemas:
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    CreateDvCertificateBody:
+      type: object
+      required:
+      - domainIds
+      properties:
+        name:
+          type: string
+          example: my-cert
+          description: Name of the certificate
+        domainIds:
+          type: array
+          description: List of domain IDs to associate with the certificate
+          items:
+            type: integer
+            format: int64
     RequestedPageDetails:
       type: object
       properties:
@@ -468,28 +503,6 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: Describes an SSL Certificate
-    CreateDvCertificateBody:
-      type: object
-      required:
-      - domainIds
-      properties:
-        name:
-          type: string
-          example: my-cert
-          description: Name of the certificate
-        domainIds:
-          type: array
-          description: List of domain IDs to associate with the certificate
-          items:
-            type: integer
-            format: int64
-    SslCertificateNotFoundException:
-      type: object
-      properties:
-        message:
-          type: string
-        localizedMessage:
-          type: string
     SslCertificate:
       type: object
       properties:
@@ -550,49 +563,12 @@ components:
           - PENDING
           - VALID
           - EXPIRED
-    CreateOrUpdateSslCertificateBody:
-      type: object
-      required:
-      - name
-      - certificate
-      - privateKey
-      - chain
-      properties:
-        name:
-          type: string
-          description: The name of the new SSL Certificate.
-        certificate:
-          type: string
-          description: The PEM-encoded certificate.
-        privateKey:
-          type: object
-          properties:
-            value:
-              type: string
-              description: Private key value
-          description: The PEM-encoded private key.
-        chain:
-          type: string
-          description: The PEM-encoded certificate chain.
-    HalLink:
+    SslCertificateNotFoundException:
       type: object
       properties:
-        href:
+        message:
           type: string
-        templated:
-          type: boolean
-          default: false
-        type:
-          type: string
-        deprecation:
-          type: string
-        profile:
-          type: string
-        title:
-          type: string
-        hreflang:
-          type: string
-        name:
+        localizedMessage:
           type: string
     AllSSLCertificatesList:
       type: object
@@ -628,3 +604,27 @@ components:
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
+    CreateOrUpdateSslCertificateBody:
+      type: object
+      required:
+      - name
+      - certificate
+      - privateKey
+      - chain
+      properties:
+        name:
+          type: string
+          description: The name of the new SSL Certificate.
+        certificate:
+          type: string
+          description: The PEM-encoded certificate.
+        privateKey:
+          type: object
+          properties:
+            value:
+              type: string
+              description: Private key value
+          description: The PEM-encoded private key.
+        chain:
+          type: string
+          description: The PEM-encoded certificate chain.
