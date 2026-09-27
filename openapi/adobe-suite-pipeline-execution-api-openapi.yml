@@ -626,6 +626,36 @@ paths:
           description: Pipeline does not exist
 components:
   schemas:
+    Redirect:
+      type: object
+      required:
+      - redirect
+      properties:
+        redirect:
+          type: string
+          description: The url to redirect to.
+    SystemUnderMaintenanceExceptionMapper:
+      type: object
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
     PipelineExecutionStepState:
       type: object
       properties:
@@ -712,26 +742,67 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: Describes the status of a particular pipeline execution step for display purposes
-    HalLink:
+    PipelineExecutionStepStateDetails:
+      type: object
+      description: Details available for each step state. The set of properties available will vary by the step action.
+      properties:
+        deployCommands:
+          type: string
+          description: For deploy steps, a JSON array encoded as a string which lists the deployment activities expected to be performed.
+        currentDeployCommandId:
+          type: string
+          description: For deploy steps, the current identifier from the deployCommands which is being executed.
+        environmentUrls:
+          type: array
+          description: For deploy steps, the the set of URLs for the environment.
+          items:
+            type: object
+            properties:
+              instanceType:
+                type: string
+              instanceUrl:
+                type: string
+        deploymentStepDescription:
+          type: string
+          description: For deploy steps, a JSON array encoded as a string which includes the detailed list of deployment activities which have been performed.
+        input:
+          type: object
+          description: Input provided when advancing the step. See documentation at https://www.adobe.io/experience-cloud/cloud-manager/guides/api-usage/advancing-and-cancelling-steps/ for details.
+    PipelineExecutionListRepresentation:
       type: object
       properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-          default: false
-        type:
-          type: string
-        deprecation:
-          type: string
-        profile:
-          type: string
-        title:
-          type: string
-        hreflang:
-          type: string
-        name:
-          type: string
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            executions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PipelineExecution'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: List of pipeline executions
     RequestedPageDetails:
       type: object
       properties:
@@ -760,55 +831,15 @@ components:
         type:
           type: string
       description: Filtering and sorting page details
-    Metric:
+    PipelineStepMetrics:
       type: object
       properties:
-        id:
-          type: string
-          description: KPI result identifier
-        severity:
-          type: string
-          description: Severity of the metric
-          enum:
-          - critical
-          - important
-          - informational
-        passed:
-          type: boolean
-          description: Whether metric is considered passed
-          default: false
-        override:
-          type: boolean
-          description: Whether user override the failed metric
-          default: false
-        actualValue:
-          type: string
-          description: Expected value for the metric
-        expectedValue:
-          type: string
-          description: Expected value for the metric
-        comparator:
-          type: string
-          description: Comparator used for the metric
-          enum:
-          - GT
-          - GTE
-          - LT
-          - LTE
-          - EQ
-          - NEQ
-        kpi:
-          type: string
-          description: KPI identifier
-      description: A representation of a specific metric generated by a CI/CD Pipeline step.
-    Redirect:
-      type: object
-      required:
-      - redirect
-      properties:
-        redirect:
-          type: string
-          description: The url to redirect to.
+        metrics:
+          type: array
+          description: metrics
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/Metric'
     PipelineExecution:
       type: object
       properties:
@@ -897,75 +928,44 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of an execution of a CI/CD Pipeline.
-    SystemUnderMaintenanceExceptionMapper:
-      type: object
-    PipelineStepMetrics:
+    Metric:
       type: object
       properties:
-        metrics:
-          type: array
-          description: metrics
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/Metric'
-    PipelineExecutionStepStateDetails:
-      type: object
-      description: Details available for each step state. The set of properties available will vary by the step action.
-      properties:
-        deployCommands:
+        id:
           type: string
-          description: For deploy steps, a JSON array encoded as a string which lists the deployment activities expected to be performed.
-        currentDeployCommandId:
+          description: KPI result identifier
+        severity:
           type: string
-          description: For deploy steps, the current identifier from the deployCommands which is being executed.
-        environmentUrls:
-          type: array
-          description: For deploy steps, the the set of URLs for the environment.
-          items:
-            type: object
-            properties:
-              instanceType:
-                type: string
-              instanceUrl:
-                type: string
-        deploymentStepDescription:
+          description: Severity of the metric
+          enum:
+          - critical
+          - important
+          - informational
+        passed:
+          type: boolean
+          description: Whether metric is considered passed
+          default: false
+        override:
+          type: boolean
+          description: Whether user override the failed metric
+          default: false
+        actualValue:
           type: string
-          description: For deploy steps, a JSON array encoded as a string which includes the detailed list of deployment activities which have been performed.
-        input:
-          type: object
-          description: Input provided when advancing the step. See documentation at https://www.adobe.io/experience-cloud/cloud-manager/guides/api-usage/advancing-and-cancelling-steps/ for details.
-    PipelineExecutionListRepresentation:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int32
-          description: The total number of embedded items
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            executions:
-              type: array
-              items:
-                $ref: '#/components/schemas/PipelineExecution'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: List of pipeline executions
+          description: Expected value for the metric
+        expectedValue:
+          type: string
+          description: Expected value for the metric
+        comparator:
+          type: string
+          description: Comparator used for the metric
+          enum:
+          - GT
+          - GTE
+          - LT
+          - LTE
+          - EQ
+          - NEQ
+        kpi:
+          type: string
+          description: KPI identifier
+      description: A representation of a specific metric generated by a CI/CD Pipeline step.

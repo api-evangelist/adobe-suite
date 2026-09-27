@@ -404,49 +404,30 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse500'
 components:
   parameters:
-    expiryDate:
-      name: expiryDate
-      in: query
-      schema:
-        type: string
-      description: 'Filters results to include records that have an expiration date matching the specified date. This parameter is used  to retrieve data associated with a specific expiration date.
-
-        '
-      example: '2024-01-06'
-    Authorization:
-      name: Authorization
+    ContentType:
+      name: Content-Type
       in: header
       required: true
-      description: The bearer token for authentication. For more information, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      description: The media type of the request body. Should be 'application/json'.
       schema:
         type: string
-      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.GOTCHARACTER.TOKENVALUE
-    include:
-      name: include
-      in: query
-      description: "Optional. Specifies additional details to include in the response. Supported value: - `history`: Includes the change history for the dataset expiration configuration.\n  The response will include a `history` array showing the status (created or updated), expiry, timestamp, and user for each change event.\n"
-      required: false
+      example: application/json
+    ttlId:
+      name: ID
+      in: path
+      required: true
       schema:
         type: string
-        enum:
-        - history
-        example: history
-    expiryToDate:
-      name: expiryToDate
-      in: query
+      description: An expiration ID to identify which dataset expiration to perform an action on.
+      example: SD-c8c75921-2416-4be7-9cfd-9ab01de66c5f
+    XApiKey:
+      name: x-api-key
+      in: header
+      required: true
+      description: The API key associated with your Experience Platform account. For more information, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       schema:
         type: string
-      description: 'Filters results to include records with expirations that are due to be executed or have already been executed up to the  specified end date. It is used to match expirations within or before the given interval.
-
-        '
-      example: '2099-01-01'
-    description:
-      name: description
-      in: query
-      schema:
-        type: string
-      description: A description of the purpose of the request.
-      example: Handle expiration of Acme information through the end of 2024.
+      example: 3c14558cb79f4ee6dd9884243314f482
     limit:
       name: limit
       in: query
@@ -457,48 +438,24 @@ components:
         default: 25
       description: An integer between 1 and 100 indicates the maximum number of expirations to return. Defaults to 25.
       example: 50
-    XApiKey:
-      name: x-api-key
-      in: header
-      required: true
-      description: The API key associated with your Experience Platform account. For more information, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+    page:
+      name: page
+      in: query
       schema:
-        type: string
-      example: 3c14558cb79f4ee6dd9884243314f482
-    ttlOrDatasetId:
-      name: ID
-      in: path
-      required: true
-      schema:
-        type: string
-        example: SD-c8c75921-2416-4be7-9cfd-9ab01de66c5f
-      description: 'An ID to identify the dataset expiration to perform an action on. This can be either the dataset expiration ID or  the dataset ID.
+        type: integer
+      description: 'An integer that indicates which page of expirations to return. Index of the results page to return. Page indexing  starts at 0. The default page size is 50 results, with a maximum of 100 results per page.
 
         '
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      description: The media type of the request body. Should be 'application/json'.
-      schema:
-        type: string
-      example: application/json
-    orgId:
-      name: orgId
+      example: 3
+    expiryToDate:
+      name: expiryToDate
       in: query
       schema:
         type: string
-      description: 'Matches datasets expirations whose organization ID matches that of the parameter. This value defaults to that of  the `x-gw-ims-org-id` header. This parameter is ignored unless a service token is supplied in the request.
+      description: 'Filters results to include records with expirations that are due to be executed or have already been executed up to the  specified end date. It is used to match expirations within or before the given interval.
 
         '
-      example: 885737B25DC460C50A49411B@AdobeOrg
-    datasetName:
-      name: datasetName
-      in: query
-      schema:
-        type: string
-      description: Matches expirations whose dataset name contains the provided search string. The match is case-insensitive.
-      example: Acme-loyalty-customers-2025
+      example: '2099-01-01'
     XSandboxName:
       name: x-sandbox-name
       in: header
@@ -509,20 +466,21 @@ components:
 
         '
       example: loyalty-uat
-    ttlStatus:
-      name: status
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      description: The bearer token for authentication. For more information, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.GOTCHARACTER.TOKENVALUE
+    datasetId:
+      name: datasetId
       in: query
       schema:
         type: string
-        enum:
-        - cancelled
-        - completed
-        - executing
-        - pending
-      description: 'A comma-separated list of dataset expiration statuses to filter results. When included, the response returns only dataset expirations matching the specified statuses. Status values are case-sensitive and must match exactly.
-
-        '
-      example: completed,executing
+      description: Matches expirations that apply to a specific dataset.
+      example: 62b3925ff20f8e1b990a7434
     author:
       name: author
       in: query
@@ -532,15 +490,29 @@ components:
 
         '
       example: LIKE %john%, John Q. Public
-    search:
-      name: search
+    datasetName:
+      name: datasetName
       in: query
       schema:
         type: string
-      description: 'Filters expirations using a case-insensitive partial match (wildcard search) across multiple fields. The `search` parameter matches records where the value is contained in any of the following fields:  `author`, `displayName`, `description`, or `datasetName`, or is an exact match for the expiration ID.
+      description: Matches expirations whose dataset name contains the provided search string. The match is case-insensitive.
+      example: Acme-loyalty-customers-2025
+    expiryFromDate:
+      name: expiryFromDate
+      in: query
+      schema:
+        type: string
+      description: 'Filters results to include records with expirations that are due to be executed or have already been executed starting  from the specified start date. It is used to match expirations within or after the given interval.
 
         '
-      example: acme
+      example: '2099-01-01'
+    XImsOrgId:
+      name: x-gw-ims-org-id
+      in: header
+      required: true
+      description: The organization ID associated with your Experience Platform account. See the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
     XRequestId:
       name: x-request-id
       in: header
@@ -551,39 +523,50 @@ components:
 
         '
       example: YrgXiqvCobA9neOmrzCP7kQLi4yIizoP
-    datasetId:
-      name: datasetId
+    orgId:
+      name: orgId
       in: query
       schema:
         type: string
-      description: Matches expirations that apply to a specific dataset.
-      example: 62b3925ff20f8e1b990a7434
-    page:
-      name: page
-      in: query
-      schema:
-        type: integer
-      description: 'An integer that indicates which page of expirations to return. Index of the results page to return. Page indexing  starts at 0. The default page size is 50 results, with a maximum of 100 results per page.
+      description: 'Matches datasets expirations whose organization ID matches that of the parameter. This value defaults to that of  the `x-gw-ims-org-id` header. This parameter is ignored unless a service token is supplied in the request.
 
         '
-      example: 3
-    ttlId:
-      name: ID
-      in: path
-      required: true
-      schema:
-        type: string
-      description: An expiration ID to identify which dataset expiration to perform an action on.
-      example: SD-c8c75921-2416-4be7-9cfd-9ab01de66c5f
-    expiryFromDate:
-      name: expiryFromDate
+      example: 885737B25DC460C50A49411B@AdobeOrg
+    updatedToDate:
+      name: updatedToDate
       in: query
       schema:
         type: string
-      description: 'Filters results to include records with expirations that are due to be executed or have already been executed starting  from the specified start date. It is used to match expirations within or after the given interval.
+      description: 'Filters results to include records that have been updated up to and including the specified date. Useful for retrieving  data updated before or on a certain date, encompassing all types of updates.
 
         '
-      example: '2099-01-01'
+      example: '2022-01-01'
+    displayName:
+      name: displayName
+      in: query
+      schema:
+        type: string
+      description: Matches the display name provided in the search string. The match is case-insensitive.
+      example: License Expiry
+    search:
+      name: search
+      in: query
+      schema:
+        type: string
+      description: 'Filters expirations using a case-insensitive partial match (wildcard search) across multiple fields. The `search` parameter matches records where the value is contained in any of the following fields:  `author`, `displayName`, `description`, or `datasetName`, or is an exact match for the expiration ID.
+
+        '
+      example: acme
+    include:
+      name: include
+      in: query
+      description: "Optional. Specifies additional details to include in the response. Supported value: - `history`: Includes the change history for the dataset expiration configuration.\n  The response will include a `history` array showing the status (created or updated), expiry, timestamp, and user for each change event.\n"
+      required: false
+      schema:
+        type: string
+        enum:
+        - history
+        example: history
     updatedDate:
       name: updatedDate
       in: query
@@ -602,382 +585,47 @@ components:
 
         '
       example: '2022-01-01'
-    XImsOrgId:
-      name: x-gw-ims-org-id
-      in: header
+    ttlOrDatasetId:
+      name: ID
+      in: path
       required: true
-      description: The organization ID associated with your Experience Platform account. See the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       schema:
         type: string
-    updatedToDate:
-      name: updatedToDate
-      in: query
-      schema:
-        type: string
-      description: 'Filters results to include records that have been updated up to and including the specified date. Useful for retrieving  data updated before or on a certain date, encompassing all types of updates.
+        example: SD-c8c75921-2416-4be7-9cfd-9ab01de66c5f
+      description: 'An ID to identify the dataset expiration to perform an action on. This can be either the dataset expiration ID or  the dataset ID.
 
         '
-      example: '2022-01-01'
-    displayName:
-      name: displayName
+    ttlStatus:
+      name: status
       in: query
       schema:
         type: string
-      description: Matches the display name provided in the search string. The match is case-insensitive.
-      example: License Expiry
+        enum:
+        - cancelled
+        - completed
+        - executing
+        - pending
+      description: 'A comma-separated list of dataset expiration statuses to filter results. When included, the response returns only dataset expirations matching the specified statuses. Status values are case-sensitive and must match exactly.
+
+        '
+      example: completed,executing
+    expiryDate:
+      name: expiryDate
+      in: query
+      schema:
+        type: string
+      description: 'Filters results to include records that have an expiration date matching the specified date. This parameter is used  to retrieve data associated with a specific expiration date.
+
+        '
+      example: '2024-01-06'
+    description:
+      name: description
+      in: query
+      schema:
+        type: string
+      description: A description of the purpose of the request.
+      example: Handle expiration of Acme information through the end of 2024.
   schemas:
-    UpdateTTLRequest:
-      type: object
-      properties:
-        displayName:
-          type: string
-          description: A human-readable name for the dataset expiration configuration.
-          example: Customer Dataset Expiry Rule
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Updated description for Acme customer dataset
-        expiry:
-          type: string
-          format: date
-          description: "The expiry date and time in ISO 8601 format. If the value includes only a date (e.g., YYYY-MM-DD), \nit defaults to midnight UTC (00:00:00Z) on that day.  If no explicit zone offset is provided, UTC \nis used by default. A dataset expiration will be created with the specified timestamp. \nNote: The expiry must be at least 24 hours in the future..\n"
-          example: '2031-06-15'
-    ttlErrorResponse400:
-      type: object
-      properties:
-        type:
-          type: string
-          example: http://ns.adobe.com/aep/errors/HYGN-3102-400
-        title:
-          type: string
-          example: The requested operation could not be completed due to invalid or missing required parameters.
-        status:
-          type: integer
-          example: 400
-        report:
-          type: object
-          properties:
-            tenantInfo:
-              type: object
-              properties:
-                sandboxName:
-                  type: string
-                  example: prod
-                sandboxId:
-                  type: string
-                  example: not-applicable
-                imsOrgId:
-                  type: string
-                  example: FD3C3AC6921BC3460A483ED2@AdobeOrg
-            additionalContext:
-              type: object
-              properties:
-                Invoking Client ID:
-                  type: string
-                  example: <client_id>
-        error-chain:
-          type: array
-          items:
-            type: object
-            properties:
-              serviceId:
-                type: string
-                example: HYGN
-              errorCode:
-                type: string
-                example: HYGN-3102-400
-              invokingServiceId:
-                type: string
-                example: acp_privacy_hygiene
-              unixTimeStampMs:
-                type: integer
-                example: 1754408150394
-    CreateTTLRequest:
-      type: object
-      required:
-      - datasetId
-      - expiry
-      - displayName
-      properties:
-        datasetId:
-          type: string
-          description: The unique identifier for the dataset to apply the expiration.
-          example: 3e9f815ae1194c65b2a4c5ea
-        expiry:
-          type: string
-          format: date
-          description: "The expiry date and time in ISO 8601 format. If the value includes only a date (e.g., YYYY-MM-DD), \nit defaults to midnight UTC (00:00:00Z) on that day.  If no explicit zone offset is provided, UTC \nis used by default. A dataset expiration will be created with the specified timestamp. \nNote: The expiry must be at least 24 hours in the future.\n"
-          example: 2030-12-31
-        displayName:
-          type: string
-          description: A human-readable name for the dataset expiration configuration.
-          example: Expiry rule for Acme customers
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Set expiration for Acme customer dataset
-    DatasetExpirationConfig:
-      type: object
-      properties:
-        ttlId:
-          type: string
-          description: The unique identifier for the dataset expiration configuration.
-          example: SD-c9f113f2-d751-44bc-bc20-9d5ca0b6ae15
-        datasetId:
-          type: string
-          description: The unique identifier of the dataset associated with this dataset expiration configuration.
-          example: 3e9f815ae1194c65b2a4c5ea
-        datasetName:
-          type: string
-          description: The name of the dataset.
-          example: Acme_Profile_Engagements
-        sandboxName:
-          type: string
-          description: The sandbox in which this dataset expiration is configured.
-          example: acme-beta
-        displayName:
-          type: string
-          description: A human-readable name for the dataset expiration configuration.
-          example: Loyalty Program Dataset Annual Cleanup
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Scheduled expiry for Acme marketing data
-        imsOrg:
-          type: string
-          description: Your unique organization identifier associated with this configuration.
-          example: C9D8E7F6A5B41234567890AB@AcmeOrg
-        status:
-          type: string
-          description: Current status of the dataset expiration configuration.
-          enum:
-          - pending
-          - executing
-          - cancelled
-          - completed
-          example: pending
-        expiry:
-          type: string
-          format: date-time
-          description: The scheduled expiration timestamp for the dataset.
-          example: '2027-01-12T17:15:31.000Z'
-        updatedAt:
-          type: string
-          format: date-time
-          description: The last updated timestamp for this dataset expiration configuration.
-          example: '2026-12-15T12:40:20.000Z'
-        updatedBy:
-          type: string
-          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
-          example: t.lannister@acme.com <t.lannister@acme.com> 3E9F815AE1194C65B2A4C5EA@acme.com
-    ErrorResponse500:
-      type: object
-      properties:
-        error_code:
-          type: string
-          example: '500001'
-        message:
-          type: string
-          example: Internal server error.
-    ErrorResponse401:
-      type: object
-      properties:
-        error_code:
-          type: string
-          example: '401013'
-        message:
-          type: string
-          example: Unauthorized. Authentication failed or user does not have permissions for the requested operation.
-    ErrorResponse404:
-      type: object
-      properties:
-        error_code:
-          type: string
-          example: '404003'
-        message:
-          type: string
-          example: Dataset expiration configuration SD-c9f113f2-d751-44bc-bc20-9d5ca0b6ae15 not found.
-    DeleteTTLResponse:
-      type: object
-      properties:
-        ttlId:
-          type: string
-          description: The unique identifier for the deleted dataset expiration configuration.
-          example: SD-d4a7d918-283b-41fd-bfe1-4e730a613d21
-        datasetId:
-          type: string
-          description: The unique identifier for the dataset.
-          example: 5a9e2c68d3b24f03b55a91ce
-        datasetName:
-          type: string
-          description: The name of the dataset.
-          example: Acme_Customer_Data
-        sandboxName:
-          type: string
-          description: The sandbox where this dataset expiration is configured.
-          example: acme-prod
-        displayName:
-          type: string
-          description: The display name for the dataset expiration configuration.
-          example: Customer Dataset Expiry Rule
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Cancelled expiry configuration for Acme customer dataset
-        imsOrg:
-          type: string
-          description: Your unique organization identifier associated with this configuration.
-          example: C9D8E7F6A5B41234567890AB@AcmeOrg
-        status:
-          type: string
-          description: The current status of the dataset expiration configuration.
-          enum:
-          - pending
-          - executing
-          - cancelled
-          - completed
-          example: cancelled
-        expiry:
-          type: string
-          format: date-time
-          description: The scheduled expiration timestamp for the dataset.
-          example: '2032-02-28T00:00:00Z'
-        updatedAt:
-          type: string
-          format: date-time
-          description: The timestamp for the most recent update.
-          example: '2032-01-15T08:27:31.000Z'
-        updatedBy:
-          type: string
-          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
-          example: s.clegane@acme.com <s.clegane@acme.com> 5A9E2C68D3B24F03B55A91CE@acme.com
-    CreateTTLResponse:
-      type: object
-      properties:
-        ttlId:
-          type: string
-          description: The unique identifier for the created dataset expiration configuration.
-          example: SD-2aaf113e-3f17-4321-bf29-a2c51152b042
-        datasetId:
-          type: string
-          description: The unique identifier for the dataset.
-          example: 3e9f815ae1194c65b2a4c5ea
-        datasetName:
-          type: string
-          description: The name of the dataset.
-          example: Acme_Customer_Data
-        sandboxName:
-          type: string
-          description: The sandbox in which this dataset expiration is configured.
-          example: acme-prod
-        displayName:
-          type: string
-          description: The display name for the dataset expiration configuration.
-          example: Expiry rule for Acme customers
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Set expiration for Acme customer dataset
-        imsOrg:
-          type: string
-          description: Your unique organization identifier associated with this configuration.
-          example: C9D8E7F6A5B41234567890AB@AcmeOrg
-        status:
-          type: string
-          description: The current status of the dataset expiration configuration.
-          enum:
-          - pending
-          - executing
-          - cancelled
-          - completed
-          example: pending
-        expiry:
-          type: string
-          format: date-time
-          description: The scheduled expiration timestamp for the dataset.
-          example: '2030-12-31T00:00:00Z'
-        updatedAt:
-          type: string
-          format: date-time
-          description: The timestamp for the most recent update.
-          example: '2029-01-02T10:35:45.000Z'
-        updatedBy:
-          type: string
-          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
-          example: s.stark@acme.com <s.stark@acme.com> 3E9F815AE1194C65B2A4C5EA@acme.com
-    TTLListResponse:
-      type: object
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DatasetExpirationConfig'
-        current_page:
-          type: integer
-          description: A zero-based index of the current results page.
-          example: 0
-        total_pages:
-          type: integer
-          description: The total number of pages available.
-          example: 1
-        total_count:
-          type: integer
-          description: The total number of dataset expiration configuration records available.
-          example: 2
-    TTLDetailResponse:
-      type: object
-      properties:
-        ttlId:
-          type: string
-          description: The unique identifier for the dataset expiration configuration.
-          example: SD-34e7811a-d9c8-4e22-9a63-7fb33c4b8e61
-        datasetId:
-          type: string
-          description: The unique identifier for the dataset.
-          example: a1b2c3d4e5f67890abcd1234
-        datasetName:
-          type: string
-          description: The name of the dataset.
-          example: Acme_Customer_Archive
-        sandboxName:
-          type: string
-          description: The sandbox in which the dataset expiration is configured.
-          example: got-prod
-        displayName:
-          type: string
-          description: A human-readable name for the dataset expiration configuration.
-          example: Archived Customer Expiry Rule
-        description:
-          type: string
-          description: A description of the dataset expiration configuration.
-          example: Expiry rule for archived Acme customer data
-        imsOrg:
-          type: string
-          description: Your unique organization identifier associated with this configuration.
-          example: C9D8E7F6A5B41234567890AB@AcmeOrg
-        status:
-          type: string
-          description: The current status of the dataset expiration configuration.
-          enum:
-          - pending
-          - executing
-          - cancelled
-          - completed
-          example: executing
-        expiry:
-          type: string
-          format: date-time
-          description: The scheduled expiration timestamp for the dataset.
-          example: '2035-09-25T00:00:00Z'
-        updatedAt:
-          type: string
-          format: dayoute-time
-          description: Timestamp for the most recent update.
-          example: '2035-09-01T19:00:55.000Z'
-        updatedBy:
-          type: string
-          description: The identifier and email of the user or service that last updated the dataset expiration.
-          example: j.lannister@acme.com <j.lannister@acme.com> A1B2C3D4E5F67890ABCD1234@acme.com
     UpdateTTLResponse:
       type: object
       properties:
@@ -1032,3 +680,355 @@ components:
           type: string
           description: The identifier and email of the user or service that last updated the dataset expiration configuration.
           example: b.tarth@acme.com <b.tarth@acme.com> 3E9F815AE1194C65B2A4C5EA@acme.com
+    CreateTTLRequest:
+      type: object
+      required:
+      - datasetId
+      - expiry
+      - displayName
+      properties:
+        datasetId:
+          type: string
+          description: The unique identifier for the dataset to apply the expiration.
+          example: 3e9f815ae1194c65b2a4c5ea
+        expiry:
+          type: string
+          format: date
+          description: "The expiry date and time in ISO 8601 format. If the value includes only a date (e.g., YYYY-MM-DD), \nit defaults to midnight UTC (00:00:00Z) on that day.  If no explicit zone offset is provided, UTC \nis used by default. A dataset expiration will be created with the specified timestamp. \nNote: The expiry must be at least 24 hours in the future.\n"
+          example: 2030-12-31
+        displayName:
+          type: string
+          description: A human-readable name for the dataset expiration configuration.
+          example: Expiry rule for Acme customers
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Set expiration for Acme customer dataset
+    ErrorResponse500:
+      type: object
+      properties:
+        error_code:
+          type: string
+          example: '500001'
+        message:
+          type: string
+          example: Internal server error.
+    CreateTTLResponse:
+      type: object
+      properties:
+        ttlId:
+          type: string
+          description: The unique identifier for the created dataset expiration configuration.
+          example: SD-2aaf113e-3f17-4321-bf29-a2c51152b042
+        datasetId:
+          type: string
+          description: The unique identifier for the dataset.
+          example: 3e9f815ae1194c65b2a4c5ea
+        datasetName:
+          type: string
+          description: The name of the dataset.
+          example: Acme_Customer_Data
+        sandboxName:
+          type: string
+          description: The sandbox in which this dataset expiration is configured.
+          example: acme-prod
+        displayName:
+          type: string
+          description: The display name for the dataset expiration configuration.
+          example: Expiry rule for Acme customers
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Set expiration for Acme customer dataset
+        imsOrg:
+          type: string
+          description: Your unique organization identifier associated with this configuration.
+          example: C9D8E7F6A5B41234567890AB@AcmeOrg
+        status:
+          type: string
+          description: The current status of the dataset expiration configuration.
+          enum:
+          - pending
+          - executing
+          - cancelled
+          - completed
+          example: pending
+        expiry:
+          type: string
+          format: date-time
+          description: The scheduled expiration timestamp for the dataset.
+          example: '2030-12-31T00:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp for the most recent update.
+          example: '2029-01-02T10:35:45.000Z'
+        updatedBy:
+          type: string
+          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
+          example: s.stark@acme.com <s.stark@acme.com> 3E9F815AE1194C65B2A4C5EA@acme.com
+    DatasetExpirationConfig:
+      type: object
+      properties:
+        ttlId:
+          type: string
+          description: The unique identifier for the dataset expiration configuration.
+          example: SD-c9f113f2-d751-44bc-bc20-9d5ca0b6ae15
+        datasetId:
+          type: string
+          description: The unique identifier of the dataset associated with this dataset expiration configuration.
+          example: 3e9f815ae1194c65b2a4c5ea
+        datasetName:
+          type: string
+          description: The name of the dataset.
+          example: Acme_Profile_Engagements
+        sandboxName:
+          type: string
+          description: The sandbox in which this dataset expiration is configured.
+          example: acme-beta
+        displayName:
+          type: string
+          description: A human-readable name for the dataset expiration configuration.
+          example: Loyalty Program Dataset Annual Cleanup
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Scheduled expiry for Acme marketing data
+        imsOrg:
+          type: string
+          description: Your unique organization identifier associated with this configuration.
+          example: C9D8E7F6A5B41234567890AB@AcmeOrg
+        status:
+          type: string
+          description: Current status of the dataset expiration configuration.
+          enum:
+          - pending
+          - executing
+          - cancelled
+          - completed
+          example: pending
+        expiry:
+          type: string
+          format: date-time
+          description: The scheduled expiration timestamp for the dataset.
+          example: '2027-01-12T17:15:31.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: The last updated timestamp for this dataset expiration configuration.
+          example: '2026-12-15T12:40:20.000Z'
+        updatedBy:
+          type: string
+          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
+          example: t.lannister@acme.com <t.lannister@acme.com> 3E9F815AE1194C65B2A4C5EA@acme.com
+    UpdateTTLRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          description: A human-readable name for the dataset expiration configuration.
+          example: Customer Dataset Expiry Rule
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Updated description for Acme customer dataset
+        expiry:
+          type: string
+          format: date
+          description: "The expiry date and time in ISO 8601 format. If the value includes only a date (e.g., YYYY-MM-DD), \nit defaults to midnight UTC (00:00:00Z) on that day.  If no explicit zone offset is provided, UTC \nis used by default. A dataset expiration will be created with the specified timestamp. \nNote: The expiry must be at least 24 hours in the future..\n"
+          example: '2031-06-15'
+    ErrorResponse401:
+      type: object
+      properties:
+        error_code:
+          type: string
+          example: '401013'
+        message:
+          type: string
+          example: Unauthorized. Authentication failed or user does not have permissions for the requested operation.
+    ttlErrorResponse400:
+      type: object
+      properties:
+        type:
+          type: string
+          example: http://ns.adobe.com/aep/errors/HYGN-3102-400
+        title:
+          type: string
+          example: The requested operation could not be completed due to invalid or missing required parameters.
+        status:
+          type: integer
+          example: 400
+        report:
+          type: object
+          properties:
+            tenantInfo:
+              type: object
+              properties:
+                sandboxName:
+                  type: string
+                  example: prod
+                sandboxId:
+                  type: string
+                  example: not-applicable
+                imsOrgId:
+                  type: string
+                  example: FD3C3AC6921BC3460A483ED2@AdobeOrg
+            additionalContext:
+              type: object
+              properties:
+                Invoking Client ID:
+                  type: string
+                  example: <client_id>
+        error-chain:
+          type: array
+          items:
+            type: object
+            properties:
+              serviceId:
+                type: string
+                example: HYGN
+              errorCode:
+                type: string
+                example: HYGN-3102-400
+              invokingServiceId:
+                type: string
+                example: acp_privacy_hygiene
+              unixTimeStampMs:
+                type: integer
+                example: 1754408150394
+    ErrorResponse404:
+      type: object
+      properties:
+        error_code:
+          type: string
+          example: '404003'
+        message:
+          type: string
+          example: Dataset expiration configuration SD-c9f113f2-d751-44bc-bc20-9d5ca0b6ae15 not found.
+    TTLListResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetExpirationConfig'
+        current_page:
+          type: integer
+          description: A zero-based index of the current results page.
+          example: 0
+        total_pages:
+          type: integer
+          description: The total number of pages available.
+          example: 1
+        total_count:
+          type: integer
+          description: The total number of dataset expiration configuration records available.
+          example: 2
+    DeleteTTLResponse:
+      type: object
+      properties:
+        ttlId:
+          type: string
+          description: The unique identifier for the deleted dataset expiration configuration.
+          example: SD-d4a7d918-283b-41fd-bfe1-4e730a613d21
+        datasetId:
+          type: string
+          description: The unique identifier for the dataset.
+          example: 5a9e2c68d3b24f03b55a91ce
+        datasetName:
+          type: string
+          description: The name of the dataset.
+          example: Acme_Customer_Data
+        sandboxName:
+          type: string
+          description: The sandbox where this dataset expiration is configured.
+          example: acme-prod
+        displayName:
+          type: string
+          description: The display name for the dataset expiration configuration.
+          example: Customer Dataset Expiry Rule
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Cancelled expiry configuration for Acme customer dataset
+        imsOrg:
+          type: string
+          description: Your unique organization identifier associated with this configuration.
+          example: C9D8E7F6A5B41234567890AB@AcmeOrg
+        status:
+          type: string
+          description: The current status of the dataset expiration configuration.
+          enum:
+          - pending
+          - executing
+          - cancelled
+          - completed
+          example: cancelled
+        expiry:
+          type: string
+          format: date-time
+          description: The scheduled expiration timestamp for the dataset.
+          example: '2032-02-28T00:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp for the most recent update.
+          example: '2032-01-15T08:27:31.000Z'
+        updatedBy:
+          type: string
+          description: The identifier and email of the user or service that last updated the dataset expiration configuration.
+          example: s.clegane@acme.com <s.clegane@acme.com> 5A9E2C68D3B24F03B55A91CE@acme.com
+    TTLDetailResponse:
+      type: object
+      properties:
+        ttlId:
+          type: string
+          description: The unique identifier for the dataset expiration configuration.
+          example: SD-34e7811a-d9c8-4e22-9a63-7fb33c4b8e61
+        datasetId:
+          type: string
+          description: The unique identifier for the dataset.
+          example: a1b2c3d4e5f67890abcd1234
+        datasetName:
+          type: string
+          description: The name of the dataset.
+          example: Acme_Customer_Archive
+        sandboxName:
+          type: string
+          description: The sandbox in which the dataset expiration is configured.
+          example: got-prod
+        displayName:
+          type: string
+          description: A human-readable name for the dataset expiration configuration.
+          example: Archived Customer Expiry Rule
+        description:
+          type: string
+          description: A description of the dataset expiration configuration.
+          example: Expiry rule for archived Acme customer data
+        imsOrg:
+          type: string
+          description: Your unique organization identifier associated with this configuration.
+          example: C9D8E7F6A5B41234567890AB@AcmeOrg
+        status:
+          type: string
+          description: The current status of the dataset expiration configuration.
+          enum:
+          - pending
+          - executing
+          - cancelled
+          - completed
+          example: executing
+        expiry:
+          type: string
+          format: date-time
+          description: The scheduled expiration timestamp for the dataset.
+          example: '2035-09-25T00:00:00Z'
+        updatedAt:
+          type: string
+          format: dayoute-time
+          description: Timestamp for the most recent update.
+          example: '2035-09-01T19:00:55.000Z'
+        updatedBy:
+          type: string
+          description: The identifier and email of the user or service that last updated the dataset expiration.
+          example: j.lannister@acme.com <j.lannister@acme.com> A1B2C3D4E5F67890ABCD1234@acme.com

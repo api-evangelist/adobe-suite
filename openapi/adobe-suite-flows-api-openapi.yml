@@ -474,17 +474,51 @@ paths:
           description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
 components:
   schemas:
-    PageLink:
+    CreateFlowResponse:
       type: object
       properties:
-        href:
+        id:
           type: string
-          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
-    PageLinksResponse:
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        etag:
+          type: string
+          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
+          example: '"7e05b480-0000-0200-0000-638e84a00000"'
+      description: Location of the newly created flow instance
+    FlowListResponse:
       type: object
       properties:
-        next:
-          $ref: '#/components/schemas/PageLink'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 7
+    FlowTransformationDTO:
+      required:
+      - name
+      - params
+      type: object
+      properties:
+        name:
+          type: string
+          example: Mapping
+        params:
+          $ref: '#/components/schemas/TransformationSpecDTO'
+    TransformationSpecDTO:
+      type: object
+      properties:
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
     StatusDTO:
       type: object
       properties:
@@ -514,45 +548,39 @@ components:
           type: string
         details:
           type: object
-    SourceConnectionMetaInfoDTOWrapper:
+    ConnectionMetaInfoDTO:
       type: object
       properties:
         id:
           type: string
-          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+          example: 69f188b6-af07-4587-8061-e94d34637b41
         connectionSpec:
           $ref: '#/components/schemas/SpecInfoDTO'
-        baseConnection:
-          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
-    TargetConnectionMetaInfoDTOWrapper:
+    FlowFilterRequest:
       type: object
       properties:
-        id:
+        queryString:
           type: string
-          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
-        connectionSpec:
-          type: object
-          properties:
-            id:
-              type: string
-              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
-            version:
-              type: string
-              example: '1.0'
-    SpecInfoDTO:
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+        projectionFields:
+          type: string
+    FlowRecordTypeDTO:
+      type: object
       required:
-      - id
-      - version
-      type: object
+      - extensions
+      - type
       properties:
-        id:
+        type:
           type: string
-          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
-          example: 32e8f412-cdf7-464c-9885-78184cb113fd
-        version:
-          type: string
-          description: The version of the connection specification ID.
-          example: '1.0'
+        extensions:
+          type: object
     FlowItemDTO:
       type: object
       properties:
@@ -680,6 +708,53 @@ components:
               type: integer
               description: The epoch time in milliseconds when the run was completed.
               example: 1670284518048
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    PageLink:
+      type: object
+      properties:
+        href:
+          type: string
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    TargetConnectionMetaInfoDTOWrapper:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eea7eaf4-3fe5-4792-b59b-2ec24c3e8331
+        connectionSpec:
+          type: object
+          properties:
+            id:
+              type: string
+              example: c604ff05-7f1a-43c0-8e18-33bf874cb11c
+            version:
+              type: string
+              example: '1.0'
     CreateFlowRequest:
       required:
       - flowSpec
@@ -722,6 +797,31 @@ components:
             $ref: '#/components/schemas/FlowTransformationDTO'
         scheduleParams:
           $ref: '#/components/schemas/ScheduleSpecDTO'
+    ScheduleSpecDTO:
+      type: object
+      properties:
+        startTime:
+          type: integer
+          description: The start time of the flow in epoch time in seconds.
+          format: int64
+          example: 1590091157
+        frequency:
+          type: string
+          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
+          example: minute
+        interval:
+          type: string
+          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
+          example: '15'
+        backfill:
+          type: boolean
+          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
+          example: true
+    PageLinksResponse:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/PageLink'
     PatchInstruction:
       required:
       - op
@@ -745,19 +845,6 @@ components:
               type: string
               description: The new description value you want to add.
               example: A new description to provide further context on a specified connection or flow.
-    FlowListResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowItemDTO'
-        _links:
-          $ref: '#/components/schemas/PageLinksResponse'
-        count:
-          type: integer
-          format: int64
-          example: 7
     FlowMetaInfoDTO:
       type: object
       properties:
@@ -769,101 +856,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
-    CreateFlowResponse:
+    SourceConnectionMetaInfoDTOWrapper:
       type: object
       properties:
         id:
           type: string
-          description: The ID of the flow.
-          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
-        etag:
-          type: string
-          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
-          example: '"7e05b480-0000-0200-0000-638e84a00000"'
-      description: Location of the newly created flow instance
-    ScheduleSpecDTO:
-      type: object
-      properties:
-        startTime:
-          type: integer
-          description: The start time of the flow in epoch time in seconds.
-          format: int64
-          example: 1590091157
-        frequency:
-          type: string
-          description: The scheduled frequency of ingestion for a flow. Valid values include once, minute, hour, day, week.
-          example: minute
-        interval:
-          type: string
-          description: The period between two consecutive flow runs. Its assigned value should be a non zero integer. Interval is not required when frequency is set as once, and should be set as equal or greater than 15 if frequency is set on a per minute basis. There are no constraints on interval for other frequency settings.
-          example: '15'
-        backfill:
-          type: boolean
-          description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
-          example: true
-    FlowFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
-        projectionFields:
-          type: string
-    TransformationSpecDTO:
-      type: object
-      properties:
-        mappingId:
-          type: string
-          example: 97051e9e86184c7d88d6bf8104ad7765
-        mappingVersion:
-          type: string
-          example: '0'
-    FlowTransformationDTO:
-      required:
-      - name
-      - params
-      type: object
-      properties:
-        name:
-          type: string
-          example: Mapping
-        params:
-          $ref: '#/components/schemas/TransformationSpecDTO'
-    StateActionDTO:
-      type: object
-      properties:
-        percentCompleted:
-          type: number
-          format: double
-        status:
-          $ref: '#/components/schemas/StatusDTO'
-        recordTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowRecordTypeDTO'
-    ConnectionMetaInfoDTO:
-      type: object
-      properties:
-        id:
-          type: string
-          example: 69f188b6-af07-4587-8061-e94d34637b41
+          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
         connectionSpec:
           $ref: '#/components/schemas/SpecInfoDTO'
-    FlowRecordTypeDTO:
-      type: object
-      required:
-      - extensions
-      - type
-      properties:
-        type:
-          type: string
-        extensions:
-          type: object
+        baseConnection:
+          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
 x-original-swagger-version: '2.0'

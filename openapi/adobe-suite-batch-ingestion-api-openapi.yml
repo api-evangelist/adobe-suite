@@ -648,6 +648,87 @@ paths:
           content: {}
 components:
   schemas:
+    errors:
+      type: object
+      properties:
+        code:
+          type: string
+          description: An enumerated code that identifies the type of error encountered.
+          example: 405
+        rows:
+          type: array
+          description: Indicates which rows exhibit this error. This could be a single number or a hyphen-delimited range.
+          items:
+            type: string
+            description: The row or range of rows that the error was encountered on.
+            example: 13-26
+        description:
+          type: string
+          description: A human-readable description of the error.
+          example: HTTP 405 Method Not Allowed
+    FormatParams:
+      type: object
+      description: A list of parameters used to format the parsed data.
+      properties:
+        delimiter:
+          type: string
+          description: The character used to specify boundaries between separate strings when parsing column values.
+          example: ','
+        quote:
+          type: string
+          description: The character used to quote a value when parsing data.
+          example: '"'
+        escape:
+          type: string
+          description: The character used to escape a reserved character when parsing data.
+          example: \
+        charset:
+          type: string
+          description: The character encoding used for parsing data.
+          example: UTF-8
+        header:
+          type: boolean
+          description: The flag to indicate if the header is supplied in the dataset files.
+          example: true
+        format:
+          type: string
+          description: The file format for the uploaded file.
+          example: parquet
+    Preview:
+      type: object
+      description: A data preview for the files uploaded to the batch so far.
+      properties:
+        columns:
+          description: This describes the columns of the batch ingested records.
+          type: array
+          items:
+            $ref: '#/components/schemas/Column'
+        rows:
+          description: This describes the rows of the batch ingested records.
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
+    Row:
+      type: object
+      additionalProperties:
+        type: string
+        description: These properties correlate to the column IDs and contain the values for each row.
+        example:
+        - "0 : 0011I000002IfeuQAC\tFALSE\tCarpenter\tLeland\tGenePoint"
+        - "1 : 0011I000002IfesQAC\tFALSE\tRuiz\tLucille\t\"United Oil & Gas, UK"
+        - "2 : 0011I000002IfekQAC\tFALSE\tParsons\tAngelica\tEdge Communications"
+    File:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The complete file path and name of the file you sent in the request.
+          example: acme/customers/campaigns/summer.json
+        sizeInBytes:
+          type: integer
+          description: The size in bytes of the file you have uploaded.
+          example: 3682
+          format: int64
     IngestBatch:
       required:
       - datasetId
@@ -710,6 +791,58 @@ components:
             - tagValue1
             - tagValue2
           description: Additional batch tags. This object contains any properties associated with the previous batches.
+    relatedObjects:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of object processed in this batch.
+          example: dataSet
+          enum:
+          - batch
+          - connection
+          - connector
+          - dataSet
+          - dataSetFile
+          - dataSetView
+          - transform
+        id:
+          type: string
+          description: The ID of the dataset.
+          example: 5da9452f7de80400007jc52a
+        tag:
+          type: string
+          properties: {}
+          description: 'The name for the relation the specified object had with this batch operation. For example: input, output, or trigger.'
+        status:
+          type: string
+          description: The current status of the dataset.
+          enum:
+          - processing
+          - active
+          - success
+          - failed
+          - failure
+          - queued
+          - retrying
+          - stalled
+        errors:
+          type: array
+          description: Information about any errors associated with the dataset.
+          items:
+            $ref: '#/components/schemas/errors'
+        metrics:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Contains metrics related to the dataset.
+    PreviewResponse:
+      type: object
+      properties:
+        formatParams:
+          $ref: '#/components/schemas/FormatParams'
+        preview:
+          $ref: '#/components/schemas/Preview'
     Column:
       type: object
       properties:
@@ -726,50 +859,6 @@ components:
         name: _acmesandbox/testClassField1
       - cid: 2
         name: _acmesandbox/testClassField2
-    Row:
-      type: object
-      additionalProperties:
-        type: string
-        description: These properties correlate to the column IDs and contain the values for each row.
-        example:
-        - "0 : 0011I000002IfeuQAC\tFALSE\tCarpenter\tLeland\tGenePoint"
-        - "1 : 0011I000002IfesQAC\tFALSE\tRuiz\tLucille\t\"United Oil & Gas, UK"
-        - "2 : 0011I000002IfekQAC\tFALSE\tParsons\tAngelica\tEdge Communications"
-    FormatParams:
-      type: object
-      description: A list of parameters used to format the parsed data.
-      properties:
-        delimiter:
-          type: string
-          description: The character used to specify boundaries between separate strings when parsing column values.
-          example: ','
-        quote:
-          type: string
-          description: The character used to quote a value when parsing data.
-          example: '"'
-        escape:
-          type: string
-          description: The character used to escape a reserved character when parsing data.
-          example: \
-        charset:
-          type: string
-          description: The character encoding used for parsing data.
-          example: UTF-8
-        header:
-          type: boolean
-          description: The flag to indicate if the header is supplied in the dataset files.
-          example: true
-        format:
-          type: string
-          description: The file format for the uploaded file.
-          example: parquet
-    PreviewResponse:
-      type: object
-      properties:
-        formatParams:
-          $ref: '#/components/schemas/FormatParams'
-        preview:
-          $ref: '#/components/schemas/Preview'
     Batch:
       type: object
       properties:
@@ -922,92 +1011,3 @@ components:
               description: The flag to indicate if the header is supplied in the dataset files.
               example: true
           description: Metadata describing the ingest format of the batch being ingested.
-    errors:
-      type: object
-      properties:
-        code:
-          type: string
-          description: An enumerated code that identifies the type of error encountered.
-          example: 405
-        rows:
-          type: array
-          description: Indicates which rows exhibit this error. This could be a single number or a hyphen-delimited range.
-          items:
-            type: string
-            description: The row or range of rows that the error was encountered on.
-            example: 13-26
-        description:
-          type: string
-          description: A human-readable description of the error.
-          example: HTTP 405 Method Not Allowed
-    File:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The complete file path and name of the file you sent in the request.
-          example: acme/customers/campaigns/summer.json
-        sizeInBytes:
-          type: integer
-          description: The size in bytes of the file you have uploaded.
-          example: 3682
-          format: int64
-    relatedObjects:
-      type: object
-      properties:
-        type:
-          type: string
-          description: The type of object processed in this batch.
-          example: dataSet
-          enum:
-          - batch
-          - connection
-          - connector
-          - dataSet
-          - dataSetFile
-          - dataSetView
-          - transform
-        id:
-          type: string
-          description: The ID of the dataset.
-          example: 5da9452f7de80400007jc52a
-        tag:
-          type: string
-          properties: {}
-          description: 'The name for the relation the specified object had with this batch operation. For example: input, output, or trigger.'
-        status:
-          type: string
-          description: The current status of the dataset.
-          enum:
-          - processing
-          - active
-          - success
-          - failed
-          - failure
-          - queued
-          - retrying
-          - stalled
-        errors:
-          type: array
-          description: Information about any errors associated with the dataset.
-          items:
-            $ref: '#/components/schemas/errors'
-        metrics:
-          type: object
-          additionalProperties:
-            type: integer
-          description: Contains metrics related to the dataset.
-    Preview:
-      type: object
-      description: A data preview for the files uploaded to the batch so far.
-      properties:
-        columns:
-          description: This describes the columns of the batch ingested records.
-          type: array
-          items:
-            $ref: '#/components/schemas/Column'
-        rows:
-          description: This describes the rows of the batch ingested records.
-          type: array
-          items:
-            $ref: '#/components/schemas/Row'

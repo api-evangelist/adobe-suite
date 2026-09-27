@@ -156,13 +156,6 @@ paths:
                 $ref: '#/components/schemas/folder'
 components:
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -170,24 +163,10 @@ components:
       required: true
       schema:
         type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    folder-type:
-      name: FOLDER_TYPE
+    folder-id:
+      name: FOLDER_ID
       in: path
-      description: The type of folder you're retrieving. Supported values include `segment` and `dataset`.
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the body of the request. This value should be `application/json`.
+      description: The ID of the folder.
       required: true
       schema:
         type: string
@@ -198,10 +177,31 @@ components:
       required: true
       schema:
         type: string
-    folder-id:
-      name: FOLDER_ID
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. This value should be `application/json`.
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    folder-type:
+      name: FOLDER_TYPE
       in: path
-      description: The ID of the folder.
+      description: The type of folder you're retrieving. Supported values include `segment` and `dataset`.
       required: true
       schema:
         type: string
@@ -216,13 +216,51 @@ components:
             type: string
             description: The updated name for the folder.
             example: RenamedSampleFolder
-    deleteFolderResponse:
+    childFolder:
       type: object
-      description: A successful deletion response body.
+      allOf:
+      - $ref: '#/components/schemas/folder'
+      - type: object
+        properties:
+          name:
+            type: string
+            example: ChildFolder
+            description: The name for the child folder.
+          parentId:
+            type: string
+            example: c626b4f7-223b-4486-8900-00c266e31dd1
+            description: The ID of the parent folder.
+          children:
+            type: array
+            description: An array showing children folders that belong to the child folder.
+            example: []
+            items: {}
+          _links:
+            type: object
+            example: null
+            description: A link to the child folder.
+    updateFolderBody:
+      type: object
+      description: The request body to update the folder.
+      required:
+      - op
+      - path
+      - value
       properties:
-        message:
+        op:
           type: string
-          example: delete request accepted successfully
+          description: The type of operation for the PATCH operation. Only `replace` is supported.
+          example: replace
+          enum:
+          - replace
+        path:
+          type: string
+          example: /name
+          description: The path for the field that needs to be updated.
+        value:
+          type: string
+          description: The updated value for the field that needs to be updated.
+          example: RenamedSampleFolder
     createFolderBody:
       type: object
       properties:
@@ -287,29 +325,13 @@ components:
           description: The child folders for the parent folders.
           items:
             $ref: '#/components/schemas/childFolder'
-    childFolder:
+    deleteFolderResponse:
       type: object
-      allOf:
-      - $ref: '#/components/schemas/folder'
-      - type: object
-        properties:
-          name:
-            type: string
-            example: ChildFolder
-            description: The name for the child folder.
-          parentId:
-            type: string
-            example: c626b4f7-223b-4486-8900-00c266e31dd1
-            description: The ID of the parent folder.
-          children:
-            type: array
-            description: An array showing children folders that belong to the child folder.
-            example: []
-            items: {}
-          _links:
-            type: object
-            example: null
-            description: A link to the child folder.
+      description: A successful deletion response body.
+      properties:
+        message:
+          type: string
+          example: delete request accepted successfully
     folder:
       type: object
       properties:
@@ -367,25 +389,3 @@ components:
                   type: string
                   example: /folders/dataset/83f8287c-767b-4106-b271-257282fd170e
           description: A link to the folder.
-    updateFolderBody:
-      type: object
-      description: The request body to update the folder.
-      required:
-      - op
-      - path
-      - value
-      properties:
-        op:
-          type: string
-          description: The type of operation for the PATCH operation. Only `replace` is supported.
-          example: replace
-          enum:
-          - replace
-        path:
-          type: string
-          example: /name
-          description: The path for the field that needs to be updated.
-        value:
-          type: string
-          description: The updated value for the field that needs to be updated.
-          example: RenamedSampleFolder

@@ -659,6 +659,29 @@ paths:
           description: Program not found.
 components:
   schemas:
+    NewContentSet:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of this content set.
+        description:
+          type: string
+          description: The description of this content set.
+        paths:
+          type: array
+          description: Included asset paths
+          items:
+            $ref: '#/components/schemas/ContentSetPath'
+    ContentFlowLogs:
+      type: object
+      properties:
+        download:
+          $ref: '#/components/schemas/Redirect'
+          description: link to download logs
+        logs/tail:
+          $ref: '#/components/schemas/Redirect'
+          description: link to download tails log
     ContentFlowList:
       type: object
       properties:
@@ -690,111 +713,27 @@ components:
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
-    InvalidParameter:
+    ContentFlowResultDetails:
       type: object
       properties:
-        name:
+        errorCode:
           type: string
-          example: paramName
-          description: Name of the invalid parameter.
-        reason:
+          description: content flow error
+        message:
           type: string
-          example: value must be a positive number
-          description: Reason of why the parameter's value is not accepted.
-    ContentFlow:
-      type: object
-      properties:
-        contentSetId:
-          type: string
-          description: The content set id
-        contentSetName:
-          type: string
-          description: The content set name
-        srcEnvironmentId:
-          type: string
-          description: Source environment id
-        srcEnvironmentName:
-          type: string
-          description: Source environment name
-        destEnvironmentId:
-          type: string
-          description: Destination environment id
-        destEnvironmentName:
-          type: string
-          description: Destination environment name
-        tier:
-          type: string
-          description: The tier, for example author
-        status:
-          type: string
-          description: Status of the flows
-        destProgramId:
-          type: string
-          description: Destination program id
-        resultDetails:
-          description: Details of this content flow result
-          $ref: '#/components/schemas/ContentFlowResults'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/contentSet:
-              description: The Content set for this flow.
-              $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/program:
-              description: The Application this content set belongs to.
-              $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/environment:
-              description: The source Environment this content flow is copying from.
-              $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/destEnvironment:
-              description: The destination Environment this content flow is copying to.
-              $ref: '#/components/schemas/HalLink'
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: The Content Flow Execution
-    ContentSet:
-      type: object
-      properties:
-        id:
-          type: string
-          example: '123'
-          description: Identifier of the Content Set
-        name:
-          type: string
-          description: The name of the content set
-        paths:
+          description: content flow error message
+        details:
           type: array
-          description: Included asset paths
-          uniqueItems: true
+          description: details
           items:
-            $ref: '#/components/schemas/ContentSetPath'
-        programId:
+            type: string
+        info:
+          description: info
+          $ref: '#/components/schemas/ContentFlowInfo'
+        phase:
           type: string
-          example: '658'
-          description: Identifier of the program. Unique within the space.
-        createdAt:
-          type: string
-          format: date-time
-          description: Create date
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          description: Update date
-          readOnly: true
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/program:
-              description: The Application this content set belongs to.
-              $ref: '#/components/schemas/HalLink'
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: A representation of a ContentSet custom
+          description: phase
+      description: The Content Flow Result Details
     ContentFlowResults:
       type: object
       properties:
@@ -808,6 +747,36 @@ components:
           type: string
           description: Transfer progress percentage
       description: The Content Flow Results
+    Redirect:
+      type: object
+      required:
+      - redirect
+      properties:
+        redirect:
+          type: string
+          description: The url to redirect to.
+    ContentFlowInfo:
+      type: object
+      properties:
+        validationErrors:
+          type: array
+          description: validationErrors
+          items:
+            $ref: '#/components/schemas/ContentFlowValidationErrors'
+      description: The Content Flow Info
+    ContentSetPath:
+      type: object
+      properties:
+        path:
+          type: string
+          description: path
+        excluded:
+          type: array
+          description: excluded
+          uniqueItems: true
+          items:
+            type: string
+      description: Describes a __Content Set path__
     MissingParameter:
       type: object
       properties:
@@ -819,6 +788,107 @@ components:
           type: string
           example: string
           description: Type of the missing parameter.
+    RequestedPageDetails:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
+          type: string
+        property:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+      description: Filtering and sorting page details
+    ContentSetList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            contentSets:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentSet'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: Describes a Content Set List representation
+    BadRequestError:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+          example: 4xx
+          description: HTTP status code of the response.
+        type:
+          type: string
+          example: http://ns.adobe.com/adobecloud/error
+          description: Error type identifier.
+        title:
+          type: string
+          example: Validation failed
+          description: A short summary of the error.
+        missingParams:
+          type: array
+          description: Request's missing parameters.
+          items:
+            $ref: '#/components/schemas/MissingParameter'
+        invalidParams:
+          type: array
+          description: Request's invalid parameters.
+          items:
+            $ref: '#/components/schemas/InvalidParameter'
+      description: A Bad Request response error.
+    InvalidParameter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: paramName
+          description: Name of the invalid parameter.
+        reason:
+          type: string
+          example: value must be a positive number
+          description: Reason of why the parameter's value is not accepted.
     CompatibilityCheckResponse:
       type: object
       properties:
@@ -874,44 +944,115 @@ components:
           type: integer
           format: int32
       description: Describes the Backflow Compatibility between two topologies.
-    ContentFlowLogs:
+    ContentSet:
       type: object
       properties:
-        download:
-          $ref: '#/components/schemas/Redirect'
-          description: link to download logs
-        logs/tail:
-          $ref: '#/components/schemas/Redirect'
-          description: link to download tails log
-    CompatibilityCheckInput:
-      type: object
-      required:
-      - destinationEnvironmentId
-      - sourceEnvironmentId
-      properties:
-        sourceEnvironmentId:
+        id:
           type: string
-        destinationEnvironmentId:
+          example: '123'
+          description: Identifier of the Content Set
+        name:
           type: string
-        tier:
-          type: string
-          enum:
-          - PUBLISH
-          - AUTHOR
-      description: Wraps the content copy compatibility check execution arguments.
-    ContentSetPath:
-      type: object
-      properties:
-        path:
-          type: string
-          description: path
-        excluded:
+          description: The name of the content set
+        paths:
           type: array
-          description: excluded
+          description: Included asset paths
           uniqueItems: true
           items:
+            $ref: '#/components/schemas/ContentSetPath'
+        programId:
+          type: string
+          example: '658'
+          description: Identifier of the program. Unique within the space.
+        createdAt:
+          type: string
+          format: date-time
+          description: Create date
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Update date
+          readOnly: true
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Application this content set belongs to.
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A representation of a ContentSet custom
+    ContentFlow:
+      type: object
+      properties:
+        contentSetId:
+          type: string
+          description: The content set id
+        contentSetName:
+          type: string
+          description: The content set name
+        srcEnvironmentId:
+          type: string
+          description: Source environment id
+        srcEnvironmentName:
+          type: string
+          description: Source environment name
+        destEnvironmentId:
+          type: string
+          description: Destination environment id
+        destEnvironmentName:
+          type: string
+          description: Destination environment name
+        tier:
+          type: string
+          description: The tier, for example author
+        status:
+          type: string
+          description: Status of the flows
+        destProgramId:
+          type: string
+          description: Destination program id
+        resultDetails:
+          description: Details of this content flow result
+          $ref: '#/components/schemas/ContentFlowResults'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/contentSet:
+              description: The Content set for this flow.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Application this content set belongs to.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/environment:
+              description: The source Environment this content flow is copying from.
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/destEnvironment:
+              description: The destination Environment this content flow is copying to.
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: The Content Flow Execution
+    ContentFlowValidationErrors:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: content flow warning error code
+        message:
+          type: string
+          description: content flow warning message
+        details:
+          type: array
+          description: details
+          items:
             type: string
-      description: Describes a __Content Set path__
+      description: The Content Flow Validation Errors
     HalLink:
       type: object
       properties:
@@ -932,30 +1073,6 @@ components:
           type: string
         name:
           type: string
-    ContentFlowInfo:
-      type: object
-      properties:
-        validationErrors:
-          type: array
-          description: validationErrors
-          items:
-            $ref: '#/components/schemas/ContentFlowValidationErrors'
-      description: The Content Flow Info
-    ContentFlowValidationErrors:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: content flow warning error code
-        message:
-          type: string
-          description: content flow warning message
-        details:
-          type: array
-          description: details
-          items:
-            type: string
-      description: The Content Flow Validation Errors
     ContentFlowInput:
       type: object
       properties:
@@ -983,136 +1100,19 @@ components:
           description: copyVersions
           default: false
       description: Wraps the content flow execution arguments
-    BadRequestError:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-          example: 4xx
-          description: HTTP status code of the response.
-        type:
-          type: string
-          example: http://ns.adobe.com/adobecloud/error
-          description: Error type identifier.
-        title:
-          type: string
-          example: Validation failed
-          description: A short summary of the error.
-        missingParams:
-          type: array
-          description: Request's missing parameters.
-          items:
-            $ref: '#/components/schemas/MissingParameter'
-        invalidParams:
-          type: array
-          description: Request's invalid parameters.
-          items:
-            $ref: '#/components/schemas/InvalidParameter'
-      description: A Bad Request response error.
-    ContentSetList:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int32
-          description: The total number of embedded items
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            contentSets:
-              type: array
-              items:
-                $ref: '#/components/schemas/ContentSet'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: Describes a Content Set List representation
-    RequestedPageDetails:
-      type: object
-      properties:
-        start:
-          type: integer
-          format: int32
-          description: The start index for the current page of results
-        limit:
-          type: integer
-          format: int32
-          description: The item limit for the current page of results
-        next:
-          type: integer
-          format: int32
-          description: The start index for the next page of results
-        prev:
-          type: integer
-          format: int32
-          description: The start index for the previous page of results
-        orderBy:
-          type: string
-        property:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-      description: Filtering and sorting page details
-    Redirect:
+    CompatibilityCheckInput:
       type: object
       required:
-      - redirect
+      - destinationEnvironmentId
+      - sourceEnvironmentId
       properties:
-        redirect:
+        sourceEnvironmentId:
           type: string
-          description: The url to redirect to.
-    NewContentSet:
-      type: object
-      properties:
-        name:
+        destinationEnvironmentId:
           type: string
-          description: The name of this content set.
-        description:
+        tier:
           type: string
-          description: The description of this content set.
-        paths:
-          type: array
-          description: Included asset paths
-          items:
-            $ref: '#/components/schemas/ContentSetPath'
-    ContentFlowResultDetails:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: content flow error
-        message:
-          type: string
-          description: content flow error message
-        details:
-          type: array
-          description: details
-          items:
-            type: string
-        info:
-          description: info
-          $ref: '#/components/schemas/ContentFlowInfo'
-        phase:
-          type: string
-          description: phase
-      description: The Content Flow Result Details
+          enum:
+          - PUBLISH
+          - AUTHOR
+      description: Wraps the content copy compatibility check execution arguments.

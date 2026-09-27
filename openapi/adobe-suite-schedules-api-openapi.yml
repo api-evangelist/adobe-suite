@@ -745,7 +745,7 @@ paths:
       tags:
       - Schedules
       summary: List schedules
-      operationId: listSchedules
+      operationId: getConfigSchedules
       parameters:
       - $ref: '#/components/parameters/authorization'
       - $ref: '#/components/parameters/x-api-key'
@@ -786,12 +786,14 @@ paths:
           x-summary: Service unavailable
           description: The service is unavailable.
           content: {}
+      x-operation-id-source: normalized
+      x-operation-id-original: listSchedules
     post:
       tags:
       - Schedules
       summary: Create a schedule
       description: This endpoint is used to create a schedule, including specifying the time when the schedule should be triggered. Note that the scheduler is updated periodically (approximately every 30 minutes), so changes to a schedule may not go into effect immediately.
-      operationId: createSchedule
+      operationId: postConfigSchedules
       parameters:
       - $ref: '#/components/parameters/authorization'
       - $ref: '#/components/parameters/content-type'
@@ -835,6 +837,8 @@ paths:
           description: The service is unavailable.
           content: {}
       x-codegen-request-body-name: body
+      x-operation-id-source: normalized
+      x-operation-id-original: createSchedule
     servers:
     - url: //{environment}.adobe.io/data/core/ups
       variables:
@@ -849,7 +853,7 @@ paths:
       - Schedules
       summary: Retrieve a schedule
       description: The scheduler is updated periodically (approximately every 30 minutes), so changes to a schedule may not go into effect immediately.
-      operationId: retrieveSchedule
+      operationId: getConfigSchedulesBySCHEDULEID
       parameters:
       - $ref: '#/components/parameters/authorization'
       - $ref: '#/components/parameters/content-type'
@@ -887,11 +891,13 @@ paths:
           x-summary: Service unavailable
           description: The service is unavailable.
           content: {}
+      x-operation-id-source: normalized
+      x-operation-id-original: retrieveSchedule
     delete:
       tags:
       - Schedules
       summary: Delete a schedule
-      operationId: deleteSchedule
+      operationId: deleteConfigSchedulesBySCHEDULEID
       parameters:
       - $ref: '#/components/parameters/authorization'
       - $ref: '#/components/parameters/content-type'
@@ -926,12 +932,14 @@ paths:
           x-summary: Service unavailable
           description: The service is unavailable.
           content: {}
+      x-operation-id-source: normalized
+      x-operation-id-original: deleteSchedule
     patch:
       tags:
       - Schedules
       summary: Update a schedule
       description: This endpoint is ued to update a schedule, including changing the trigger time or enabling/disabling the schedule. Note that the scheduler is updated periodically (approximately every 30 minutes), so changes to a schedule may not go into effect immediately.
-      operationId: updateSchedule
+      operationId: patchConfigSchedulesBySCHEDULEID
       parameters:
       - $ref: '#/components/parameters/authorization'
       - $ref: '#/components/parameters/content-type'
@@ -995,6 +1003,8 @@ paths:
           description: The service is unavailable.
           content: {}
       x-codegen-request-body-name: body
+      x-operation-id-source: normalized
+      x-operation-id-original: updateSchedule
     servers:
     - url: //{environment}.adobe.io/data/core/ups
       variables:
@@ -1038,67 +1048,6 @@ components:
           type: string
           description: The task ID of this run.
           example: 0tx2JTP56S
-    _page:
-      type: object
-      properties:
-        orderby:
-          type: string
-          description: The property by which this page is ordered.
-          example: -created
-        start:
-          type: string
-          description: The first value, in sorted order, of the orderby property on this page.
-          example: '2021-12-06T22:00:17.362Z'
-        next:
-          type: string
-          description: The start value for the next page.
-          example: '2022-11-22T00:52:34.839Z'
-        property:
-          type: string
-          description: The list of properties by which the result is filtered, if any. If the `property` query parameter is set when the query is issued, then it is returned in the `_page` object.
-          example: created>=2021-04-05T13:30:00Z,state==IN_PROGRESS
-        count:
-          type: integer
-          description: The number of items on the page.
-          example: 26
-      description: Pagination information for this resource. It contains a `count` property for the number of resources returned.
-    schedules:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID for the schedule.
-          example: e95168d65a26abf00a495d82_28e74200-e3de-11e9-8f5d-7f27416c5f0d_sample_scheduled_query7omob151bm_birvwm
-        userId:
-          type: string
-          description: The ID of the user that created the schedule.
-          example: '{USER_ID}'
-        updatedUserId:
-          type: string
-          description: The ID of the user who last updated the schedule.
-          example: '{USER_ID}'
-        state:
-          type: string
-          description: When a schedule has recently being created and is in the process of being registered on internal systems, it enters the `REGISTERING` state. It will automatically transition into `ENABLED` once it is acknowledged by internal systems. When `ENABLED`, a schedule will run based on time interval specified and can be triggered to run manually via `POST /schedules/{scheduleId}/runs`. When `DISABLED`, a schedule will not run on the specified time interval and will not be allowed to run manually via `POST /schedules/{scheduleId}/runs`. Only schedules in the `DISABLED` state can be deleted via `DELETE /schedules/{scheduleId}`.
-          enum:
-          - REGISTERING
-          - ENABLED
-          - DISABLED
-        query:
-          $ref: '#/components/schemas/query_def'
-        schedule:
-          $ref: '#/components/schemas/schedules_response'
-        created:
-          type: string
-          description: 'UTC time when schedule was submitted. Note: We don''t return this parameter in response for POST /schedules'
-          example: '2022-01-06T23:42:15.352Z'
-        updated:
-          type: string
-          description: 'UTC time when schedule was last updated. Note: We don''t return this parameter in response for POST /schedules'
-          example: '2022-01-06T23:42:15.352Z'
-        _links:
-          $ref: '#/components/schemas/schedules_links'
-      description: Each object contains the schedule information for your organization's queries.
     schedules_run:
       type: object
       properties:
@@ -1153,125 +1102,57 @@ components:
           example: 1
           description: The REST API version of this resource.
       description: A list of all the run information for a specified query schedule.
-    schedules_list:
+    _page:
       type: object
       properties:
-        schedules:
-          type: array
-          items:
-            $ref: '#/components/schemas/schedules'
-          description: Each object contains the schedule information for your organization's queries.
-        _page:
-          $ref: '#/components/schemas/_page'
-        _links:
-          properties:
-            next:
-              type: string
-              description: A link to the next page of results.
-              example: https://platform-va7.adobe.io/data/foundation/query/schedules?start=2022-11-01T00:11:08.389Z&limit=10&linkType=next
-          description: Contains the URI reference to obtain the next page of resources.
-        version:
+        orderby:
+          type: string
+          description: The property by which this page is ordered.
+          example: -created
+        start:
+          type: string
+          description: The first value, in sorted order, of the orderby property on this page.
+          example: '2021-12-06T22:00:17.362Z'
+        next:
+          type: string
+          description: The start value for the next page.
+          example: '2022-11-22T00:52:34.839Z'
+        property:
+          type: string
+          description: The list of properties by which the result is filtered, if any. If the `property` query parameter is set when the query is issued, then it is returned in the `_page` object.
+          example: created>=2021-04-05T13:30:00Z,state==IN_PROGRESS
+        count:
           type: integer
-          description: The REST API version of this resource.
-      description: List of schedules
-    schedules_create_request:
+          description: The number of items on the page.
+          example: 26
+      description: Pagination information for this resource. It contains a `count` property for the number of resources returned.
+    schedule_patch_operation:
       required:
-      - query
-      - schedule
+      - op
+      - path
+      - value
       type: object
       properties:
-        query:
-          $ref: '#/components/schemas/query_def'
-        schedule:
-          $ref: '#/components/schemas/schedules_request'
-    query_def:
-      type: object
-      properties:
-        dbName:
+        op:
           type: string
-          description: The name of the database you are making the query to. The value for `dbName` should take the format of `{SANDBOX}:{DATABASE}.{SCHEMA}`.
-          example: acmesbox1:acmeacceldb:accmeaggschema
-        sql:
+          description: The operation to be performed on the query schedule.
+          enum:
+          - replace
+          example: replace
+        path:
           type: string
-          description: The SQL query statement. You can either use standard SQL (such as `SELECT * FROM t1;`) or include parameter replacements. To use a parameter replacement in the SQL you must prepend the parameter key with a `$`. For example, `$key`, and provide the parameters used in the SQL as JSON key value pairs in the `queryParameters` field. The values passed here will be the default parameters used in the template. If you want to override these parameters, you must override them in the POST request.
-          example: SELECT $key FROM $key1 WHERE $key > $key2;
-        queryParameters:
-          type: object
-          properties:
-            key:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value
-            key1:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value1
-            key2:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value2
-          description: A key value pairing to replace values in the SQL statement. These are required if you are using parameter replacements. No value type checking will be done on these key value pairs.
-        templateId:
+          description: The path to the resource that will be updated.
+          enum:
+          - /state
+          - /schedule/schedule
+          example: /state
+        value:
           type: string
-          description: The unique identifier for the query created and saved using a POST request to the `/query-templates` endpoint.
-          example: 0094d000-9062-4e6a-8fdb-05606805f08f
-        name:
-          type: string
-          description: An optional human friendly name for the query.
-          example: Sample Query Template for ACME Data
-        description:
-          type: string
-          description: An optional comment on the intended purpose of the query.
-          example: This query returns all account details.
-        insertIntoParameters:
-          type: object
-          properties:
-            datasetName:
-              type: string
-              description: The name of the dataset used in the query.
-              example: Acme - Product Dataset
-          description: If this property is defined, then this query will be converted into an `INSERT INTO` query. Optional.
-          example: sampling_test_geometrix_sitesection_copy
-        ctasParameters:
-          type: object
-          properties:
-            datasetName:
-              type: string
-              description: The name of the dataset to created as part of the CTAS statement.
-              example: sampling_test_geometrix_sitesection_copy
-            description:
-              type: string
-              description: A description for the new dataset. Optional.
-              example: Sampling of geometrix dataset.
-            targetSchemaTitle:
-              type: string
-              description: The schema name for the new dataset.
-              example: Schema for sampling_test_geometrix_sitesection_copy
-          description: If this property is defined, this query will be converted into a CTAS query. Optional.
-      description: The POST request payload sent to the `/queries` endpoint.
-    schedules_request:
-      required:
-      - schedule
-      - startDate
-      type: object
-      properties:
-        schedule:
-          type: string
-          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
-          example: 51 12 * * 1
-        startDate:
-          type: string
-          description: The start date for the scheduled query runs.
-          example: 2020-01-08 12:30:00+00:00
-        endDate:
-          type: string
-          description: The end date for the scheduled query runs.
-          example: 2021-01-08 12:30:00+00:00
-        maxActiveRuns:
-          type: integer
-          description: The number of parallel schedule runs allowed. The default value is 1.
-          example: 3
-      description: Information on the cadence of the query schedule.
+          enum:
+          - enable
+          - disable
+          description: The value to update the resource with. The value can either enable or disable the scheduled query.
+          example: disable
     schedules_links:
       type: object
       properties:
@@ -1356,6 +1237,217 @@ components:
               example: POST
           description: Contains the necessary information to trigger an immediate run for the associated query.
       description: Contains links to perform a variety of actions on this query schedule.
+    query_def:
+      type: object
+      properties:
+        dbName:
+          type: string
+          description: The name of the database you are making the query to. The value for `dbName` should take the format of `{SANDBOX}:{DATABASE}.{SCHEMA}`.
+          example: acmesbox1:acmeacceldb:accmeaggschema
+        sql:
+          type: string
+          description: The SQL query statement. You can either use standard SQL (such as `SELECT * FROM t1;`) or include parameter replacements. To use a parameter replacement in the SQL you must prepend the parameter key with a `$`. For example, `$key`, and provide the parameters used in the SQL as JSON key value pairs in the `queryParameters` field. The values passed here will be the default parameters used in the template. If you want to override these parameters, you must override them in the POST request.
+          example: SELECT $key FROM $key1 WHERE $key > $key2;
+        queryParameters:
+          type: object
+          properties:
+            key:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value
+            key1:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value1
+            key2:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value2
+          description: A key value pairing to replace values in the SQL statement. These are required if you are using parameter replacements. No value type checking will be done on these key value pairs.
+        templateId:
+          type: string
+          description: The unique identifier for the query created and saved using a POST request to the `/query-templates` endpoint.
+          example: 0094d000-9062-4e6a-8fdb-05606805f08f
+        name:
+          type: string
+          description: An optional human friendly name for the query.
+          example: Sample Query Template for ACME Data
+        description:
+          type: string
+          description: An optional comment on the intended purpose of the query.
+          example: This query returns all account details.
+        insertIntoParameters:
+          type: object
+          properties:
+            datasetName:
+              type: string
+              description: The name of the dataset used in the query.
+              example: Acme - Product Dataset
+          description: If this property is defined, then this query will be converted into an `INSERT INTO` query. Optional.
+          example: sampling_test_geometrix_sitesection_copy
+        ctasParameters:
+          type: object
+          properties:
+            datasetName:
+              type: string
+              description: The name of the dataset to created as part of the CTAS statement.
+              example: sampling_test_geometrix_sitesection_copy
+            description:
+              type: string
+              description: A description for the new dataset. Optional.
+              example: Sampling of geometrix dataset.
+            targetSchemaTitle:
+              type: string
+              description: The schema name for the new dataset.
+              example: Schema for sampling_test_geometrix_sitesection_copy
+          description: If this property is defined, this query will be converted into a CTAS query. Optional.
+      description: The POST request payload sent to the `/queries` endpoint.
+    schedules_run_details:
+      type: object
+      properties:
+        created:
+          type: string
+          description: The execution date of the run provided in the request path.
+          example: 2022-06-02 10:56:00+00:00
+        state:
+          type: string
+          description: The state of the run provided in the request path.
+          enum:
+          - SUCCESS
+          - IN_PROGRESS
+          - FAILED
+          example: FAILED
+        taskStatusList:
+          type: array
+          description: A list of information related to run provided in the request path.
+          items:
+            $ref: '#/components/schemas/task_detail'
+        id:
+          type: string
+          description: The unique identifier for the run provided in the request path..
+          example: a2NoKWR1dGVkX18yMDIyLJA2LTAyVDEwOfU2OfAwKzAwOfAw
+        scheduleId:
+          type: string
+          description: The ID of the schedule that the run belongs to.
+          example: fcbd04245fcec73j0a495fc9_51c9d32e-7654-466a-89b3-2c7654768ab1_d623a799_6jbb_4b13_aaf5_j8b4f728fc3cw6tmcbapd30tx2ktp58s_mqj4xg
+        externalTrigger:
+          type: boolean
+          description: Identifies whether the given run was triggered through a POST request to  `/schedules/{scheduleId}/runs`.
+          example: false
+        _links:
+          $ref: '#/components/schemas/self_and_cancel_links'
+      description: The schedule run details.
+    schedules_request:
+      required:
+      - schedule
+      - startDate
+      type: object
+      properties:
+        schedule:
+          type: string
+          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
+          example: 51 12 * * 1
+        startDate:
+          type: string
+          description: The start date for the scheduled query runs.
+          example: 2020-01-08 12:30:00+00:00
+        endDate:
+          type: string
+          description: The end date for the scheduled query runs.
+          example: 2021-01-08 12:30:00+00:00
+        maxActiveRuns:
+          type: integer
+          description: The number of parallel schedule runs allowed. The default value is 1.
+          example: 3
+      description: Information on the cadence of the query schedule.
+    schedules_list:
+      type: object
+      properties:
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/schedules'
+          description: Each object contains the schedule information for your organization's queries.
+        _page:
+          $ref: '#/components/schemas/_page'
+        _links:
+          properties:
+            next:
+              type: string
+              description: A link to the next page of results.
+              example: https://platform-va7.adobe.io/data/foundation/query/schedules?start=2022-11-01T00:11:08.389Z&limit=10&linkType=next
+          description: Contains the URI reference to obtain the next page of resources.
+        version:
+          type: integer
+          description: The REST API version of this resource.
+      description: List of schedules
+    schedules_create_request:
+      required:
+      - query
+      - schedule
+      type: object
+      properties:
+        query:
+          $ref: '#/components/schemas/query_def'
+        schedule:
+          $ref: '#/components/schemas/schedules_request'
+    schedules_response:
+      type: object
+      properties:
+        schedule:
+          type: string
+          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
+          example: 51 12 * * 1
+        startDate:
+          type: string
+          description: The start date for the scheduled query runs.
+          example: 2020-01-08 12:30:00+00:00
+        endDate:
+          type: string
+          description: The end date for the scheduled query runs.
+          example: 2021-01-08 12:30:00+00:00
+        maxActiveRuns:
+          type: integer
+          description: The number of parallel schedule runs allowed. The default value is 1.
+          example: 3
+      description: Information on the cadence of the query schedule.
+    schedules:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID for the schedule.
+          example: e95168d65a26abf00a495d82_28e74200-e3de-11e9-8f5d-7f27416c5f0d_sample_scheduled_query7omob151bm_birvwm
+        userId:
+          type: string
+          description: The ID of the user that created the schedule.
+          example: '{USER_ID}'
+        updatedUserId:
+          type: string
+          description: The ID of the user who last updated the schedule.
+          example: '{USER_ID}'
+        state:
+          type: string
+          description: When a schedule has recently being created and is in the process of being registered on internal systems, it enters the `REGISTERING` state. It will automatically transition into `ENABLED` once it is acknowledged by internal systems. When `ENABLED`, a schedule will run based on time interval specified and can be triggered to run manually via `POST /schedules/{scheduleId}/runs`. When `DISABLED`, a schedule will not run on the specified time interval and will not be allowed to run manually via `POST /schedules/{scheduleId}/runs`. Only schedules in the `DISABLED` state can be deleted via `DELETE /schedules/{scheduleId}`.
+          enum:
+          - REGISTERING
+          - ENABLED
+          - DISABLED
+        query:
+          $ref: '#/components/schemas/query_def'
+        schedule:
+          $ref: '#/components/schemas/schedules_response'
+        created:
+          type: string
+          description: 'UTC time when schedule was submitted. Note: We don''t return this parameter in response for POST /schedules'
+          example: '2022-01-06T23:42:15.352Z'
+        updated:
+          type: string
+          description: 'UTC time when schedule was last updated. Note: We don''t return this parameter in response for POST /schedules'
+          example: '2022-01-06T23:42:15.352Z'
+        _links:
+          $ref: '#/components/schemas/schedules_links'
+      description: Each object contains the schedule information for your organization's queries.
     schedules_run_list:
       type: object
       properties:
@@ -1403,110 +1495,6 @@ components:
               example: PATCH
           description: Contains the information required to cancel this resource.
       description: Contains links to perform actions on this schedule run.
-    schedules_response:
-      type: object
-      properties:
-        schedule:
-          type: string
-          description: A cron like definition for recurring jobs. For example, the expression  "0 0 * * *" will run on the hour, every hour, every day, and every month. For a non-recurring job, set the value to "@once" and the job would run once at the timestamp specified in "startDate" parameter
-          example: 51 12 * * 1
-        startDate:
-          type: string
-          description: The start date for the scheduled query runs.
-          example: 2020-01-08 12:30:00+00:00
-        endDate:
-          type: string
-          description: The end date for the scheduled query runs.
-          example: 2021-01-08 12:30:00+00:00
-        maxActiveRuns:
-          type: integer
-          description: The number of parallel schedule runs allowed. The default value is 1.
-          example: 3
-      description: Information on the cadence of the query schedule.
-    schedule_patch_operation:
-      required:
-      - op
-      - path
-      - value
-      type: object
-      properties:
-        op:
-          type: string
-          description: The operation to be performed on the query schedule.
-          enum:
-          - replace
-          example: replace
-        path:
-          type: string
-          description: The path to the resource that will be updated.
-          enum:
-          - /state
-          - /schedule/schedule
-          example: /state
-        value:
-          type: string
-          enum:
-          - enable
-          - disable
-          description: The value to update the resource with. The value can either enable or disable the scheduled query.
-          example: disable
-    schedules_run_details:
-      type: object
-      properties:
-        created:
-          type: string
-          description: The execution date of the run provided in the request path.
-          example: 2022-06-02 10:56:00+00:00
-        state:
-          type: string
-          description: The state of the run provided in the request path.
-          enum:
-          - SUCCESS
-          - IN_PROGRESS
-          - FAILED
-          example: FAILED
-        taskStatusList:
-          type: array
-          description: A list of information related to run provided in the request path.
-          items:
-            $ref: '#/components/schemas/task_detail'
-        id:
-          type: string
-          description: The unique identifier for the run provided in the request path..
-          example: a2NoKWR1dGVkX18yMDIyLJA2LTAyVDEwOfU2OfAwKzAwOfAw
-        scheduleId:
-          type: string
-          description: The ID of the schedule that the run belongs to.
-          example: fcbd04245fcec73j0a495fc9_51c9d32e-7654-466a-89b3-2c7654768ab1_d623a799_6jbb_4b13_aaf5_j8b4f728fc3cw6tmcbapd30tx2ktp58s_mqj4xg
-        externalTrigger:
-          type: boolean
-          description: Identifies whether the given run was triggered through a POST request to  `/schedules/{scheduleId}/runs`.
-          example: false
-        _links:
-          $ref: '#/components/schemas/self_and_cancel_links'
-      description: The schedule run details.
-    schedulePatchOperation:
-      required:
-      - op
-      - path
-      - value
-      type: object
-      properties:
-        op:
-          type: string
-          description: The patch operation you are performing.
-          example: add
-          enum:
-          - add
-        path:
-          type: string
-          description: The path of the attribute that needs to be updated. This value can either be `/state` or `/schedule`, depending what you want to update.
-          example: /state
-        value:
-          type: string
-          description: The updated value for the field you want to update. If using the `/state` path, this value can either be active or inactive. If using the `/schedule` path, this will be the updated cron schedule.
-          example: active
-      description: Patch operation
     ScheduleCreate:
       required:
       - name
@@ -1549,6 +1537,40 @@ components:
           - active
           - inactive
       description: The request body for creating a schedule.
+    SchedulesResponse:
+      required:
+      - _page
+      - children
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/SchedulesPage'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Schedule'
+    schedulePatchOperation:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          description: The patch operation you are performing.
+          example: add
+          enum:
+          - add
+        path:
+          type: string
+          description: The path of the attribute that needs to be updated. This value can either be `/state` or `/schedule`, depending what you want to update.
+          example: /state
+        value:
+          type: string
+          description: The updated value for the field you want to update. If using the `/state` path, this value can either be active or inactive. If using the `/schedule` path, this will be the updated cron schedule.
+          example: active
+      description: Patch operation
     SchedulesPage:
       required:
       - pageSize
@@ -1621,30 +1643,18 @@ components:
           description: The timestamp, as unix time in seconds, for when the schedule was last updated.
           example: 1234567890
       description: The schedule entity.
-    SchedulesResponse:
-      required:
-      - _page
-      - children
-      type: object
-      properties:
-        _page:
-          $ref: '#/components/schemas/SchedulesPage'
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/Schedule'
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
       description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
       required: true
       schema:
         type: string
@@ -1662,10 +1672,10 @@ components:
       required: true
       schema:
         type: string
-    x-sandbox-name:
-      name: x-sandbox-name
+    x-api-key:
+      name: x-api-key
       in: header
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string

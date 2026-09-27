@@ -116,10 +116,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
-    Authorization:
+    XSandboxId:
       in: header
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      name: x-sandbox-name
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
       schema:
         type: string
       required: true
@@ -127,6 +127,13 @@ components:
       in: header
       name: x-api-key
       description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      schema:
+        type: string
+      required: true
+    Authorization:
+      in: header
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with 'Bearer '. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       schema:
         type: string
       required: true
@@ -138,13 +145,6 @@ components:
         type: string
         default: application/json; version=1
       required: false
-    XSandboxId:
-      in: header
-      name: x-sandbox-name
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place.
-      schema:
-        type: string
-      required: true
     XImsOrgId:
       in: header
       name: x-gw-ims-org-id
@@ -152,271 +152,6 @@ components:
       schema:
         type: string
       required: true
-  schemas:
-    FileSummary:
-      type: object
-      description: Model for capturing file metrics.
-      title: File Summary
-      properties:
-        inputFileCount:
-          type: integer
-          description: Total number of input files.
-          title: Input File Count
-        outputFileCount:
-          type: integer
-          description: Total number of output files.
-          title: Output File Count
-        skippedFileCount:
-          type: integer
-          description: Total number of skipped files.
-          title: Skipped File Count
-        failedFileCount:
-          type: integer
-          description: Total number of failed files.
-          title: Failed File Count
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    RecordSummary:
-      type: object
-      description: Model for capturing record metrics.
-      title: Record Summary
-      properties:
-        inputRecordCount:
-          type: integer
-          description: Total records in input.
-          title: Input Record Count
-        createdRecordCount:
-          type: integer
-          description: Total records created.
-          title: Created Record Count
-        updatedRecordCount:
-          type: integer
-          description: Total records updated.
-          title: Updated Record Count
-        deletedRecordCount:
-          type: integer
-          description: Total records deleted.
-          title: Deleted Record Count
-        skippedRecordCount:
-          type: integer
-          description: Total records skipped.
-          title: Skipped Record Count
-        failedRecordCount:
-          type: integer
-          description: Total records failed.
-          title: Failed Record Count
-        warningRecordCount:
-          type: integer
-          description: Total records that triggered warnings.
-          title: Warning Record Count
-        failedInfo:
-          type: array
-          description: Additional information about failed records.
-          title: Failed Info
-          items:
-            $ref: '#/components/schemas/Info'
-        skippedInfo:
-          type: array
-          description: Additional information about skipped records.
-          title: Failed Info
-          items:
-            $ref: '#/components/schemas/Info'
-        warningInfo:
-          type: array
-          description: Additional information about records that triggered a warning.
-          title: Warning Info
-          items:
-            $ref: '#/components/schemas/Info'
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    StatusSummary:
-      type: object
-      description: Model for capturing details related to the status of the dataflow run.
-      title: Status Summary
-      properties:
-        status:
-          type: string
-          description: Status representing the current state of the dataflow run.
-          enum:
-          - Success
-          - Processing
-          - Waiting
-          - Failed
-        errors:
-          type: array
-          description: Info about errors.
-          title: Failed Info
-          items:
-            $ref: '#/components/schemas/Info'
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    DurationSummary:
-      type: object
-      description: Model for capturing metrics related to the duration of the dataflow run.
-      title: Duration Summary
-      properties:
-        startedAtUTC:
-          type: integer
-          description: Epoch in milliseconds when the dataflow run started.
-          title: Started Time UTC
-        stoppedAtUTC:
-          type: integer
-          description: Epoch in milliseconds when the dataflow run stopped.
-          title: Stopped Time UTC
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    Flow_Runs:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Flow_Run'
-    FlowRunMetrics:
-      type: object
-      description: Various metrics for the dataflow run.
-      properties:
-        durationSummary:
-          $ref: '#/components/schemas/DurationSummary'
-        latencySummary:
-          $ref: '#/components/schemas/LatencySummary'
-        sizeSummary:
-          $ref: '#/components/schemas/SizeSummary'
-        recordSummary:
-          $ref: '#/components/schemas/RecordSummary'
-        fileSummary:
-          $ref: '#/components/schemas/FileSummary'
-        statusSummary:
-          $ref: '#/components/schemas/StatusSummary'
-    Extensions:
-      type: object
-      description: Generic property bag for details.
-      title: Extensions
-      additionalProperties:
-        type: object
-        maxProperties: 20
-    Info:
-      type: object
-      description: Model to capture details for a particular error or warning that occurred within the dataflow run. For example, this can include failed records, skipped records and more.
-      title: Info
-      properties:
-        code:
-          type: string
-          description: Standardized platform code.
-          title: Info Code
-          pattern: ([A-Z]{3,6})-([0-9]{3,6})-([1-5]{1}[0-9]{2})
-        message:
-          type: string
-          description: Detailed description of the encountered error or warning.
-          title: Error Message
-        count:
-          type: integer
-          description: Number of occurrences for current info code.
-          title: Info Count
-        type:
-          type: string
-          description: Error type
-          enum:
-          - Error
-          - Warning
-    LatencySummary:
-      type: object
-      description: Model for capturing latency metrics.
-      title: Latency Summary
-      properties:
-        minMs:
-          type: integer
-          description: Minimum latency observed in milliseconds
-          title: Minimum latency
-        maxMs:
-          type: integer
-          description: Maximum latency observed in milliseconds
-          title: Maximum latency
-        avgMs:
-          type: integer
-          description: Average latency observed in milliseconds
-          title: Average latency
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    ErrorResponse:
-      type: object
-    SizeSummary:
-      type: object
-      description: Model for capturing data size metrics.
-      title: Size Summary
-      properties:
-        inputBytes:
-          type: integer
-          description: Total bytes in input.
-          title: Input Bytes
-        outputBytes:
-          type: integer
-          description: Total bytes in output.
-          title: Output Bytes
-        skippedBytes:
-          type: integer
-          description: Total bytes which were skipped.
-          title: Skipped Bytes
-        failedBytes:
-          type: integer
-          description: Total bytes which failed.
-          title: Failed Bytes
-        extensions:
-          $ref: '#/components/schemas/Extensions'
-    Flow_Run:
-      type: object
-      title: Batch Dataflow Run
-      description: A data model representing a dataflow run entity.
-      required:
-      - id
-      - flowId
-      - createdClient
-      - updatedClient
-      - createdBy
-      - updatedBy
-      - imsOrgId
-      - sandboxId
-      - sandboxName
-      - metrics
-      properties:
-        id:
-          type: string
-          title: Flow Run Id
-          description: The ID of the dataflow run you are inspecting.
-        flowId:
-          type: string
-          title: Flow Id
-          description: The ID of the dataflow that the dataflow run belongs to.
-        createdClient:
-          type: string
-          title: Created client
-          description: The Adobe Identity Management System (IMS) client who created the dataflow run. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
-        updatedClient:
-          type: string
-          title: Updated client
-          description: The Adobe Identity Management System (IMS) client who last updated the dataflow run. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
-        createdBy:
-          type: string
-          title: Created User
-          description: The Adobe ID of the Identity Management System (IMS) user who created the dataflow run. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
-        updatedBy:
-          type: string
-          title: Updated User
-          description: The Adobe ID of the Identity Management System (IMS) user who last updated the dataflow run. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
-        imsOrgId:
-          type: string
-          title: Created client
-          description: The organization ID to which the dataflow run belongs.
-        sandboxId:
-          type: string
-          title: Sandbox ID
-          description: The ID of the sandbox in which the dataflow run occurred.
-        sandboxName:
-          type: string
-          title: Created client
-          description: The ID of the sandbox in which the dataflow run occurred.
-        metrics:
-          $ref: '#/components/schemas/FlowRunMetrics'
   examples:
     Batch_Flow_Run_Success:
       summary: Batch Dataflow Run Success Example.
@@ -589,3 +324,268 @@ components:
               - code: ACTIVATION_BATCH-0000-FAILED
                 message: Job aborted.
               extensions: {}
+  schemas:
+    DurationSummary:
+      type: object
+      description: Model for capturing metrics related to the duration of the dataflow run.
+      title: Duration Summary
+      properties:
+        startedAtUTC:
+          type: integer
+          description: Epoch in milliseconds when the dataflow run started.
+          title: Started Time UTC
+        stoppedAtUTC:
+          type: integer
+          description: Epoch in milliseconds when the dataflow run stopped.
+          title: Stopped Time UTC
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    ErrorResponse:
+      type: object
+    FileSummary:
+      type: object
+      description: Model for capturing file metrics.
+      title: File Summary
+      properties:
+        inputFileCount:
+          type: integer
+          description: Total number of input files.
+          title: Input File Count
+        outputFileCount:
+          type: integer
+          description: Total number of output files.
+          title: Output File Count
+        skippedFileCount:
+          type: integer
+          description: Total number of skipped files.
+          title: Skipped File Count
+        failedFileCount:
+          type: integer
+          description: Total number of failed files.
+          title: Failed File Count
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    Flow_Runs:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Flow_Run'
+    LatencySummary:
+      type: object
+      description: Model for capturing latency metrics.
+      title: Latency Summary
+      properties:
+        minMs:
+          type: integer
+          description: Minimum latency observed in milliseconds
+          title: Minimum latency
+        maxMs:
+          type: integer
+          description: Maximum latency observed in milliseconds
+          title: Maximum latency
+        avgMs:
+          type: integer
+          description: Average latency observed in milliseconds
+          title: Average latency
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    FlowRunMetrics:
+      type: object
+      description: Various metrics for the dataflow run.
+      properties:
+        durationSummary:
+          $ref: '#/components/schemas/DurationSummary'
+        latencySummary:
+          $ref: '#/components/schemas/LatencySummary'
+        sizeSummary:
+          $ref: '#/components/schemas/SizeSummary'
+        recordSummary:
+          $ref: '#/components/schemas/RecordSummary'
+        fileSummary:
+          $ref: '#/components/schemas/FileSummary'
+        statusSummary:
+          $ref: '#/components/schemas/StatusSummary'
+    Info:
+      type: object
+      description: Model to capture details for a particular error or warning that occurred within the dataflow run. For example, this can include failed records, skipped records and more.
+      title: Info
+      properties:
+        code:
+          type: string
+          description: Standardized platform code.
+          title: Info Code
+          pattern: ([A-Z]{3,6})-([0-9]{3,6})-([1-5]{1}[0-9]{2})
+        message:
+          type: string
+          description: Detailed description of the encountered error or warning.
+          title: Error Message
+        count:
+          type: integer
+          description: Number of occurrences for current info code.
+          title: Info Count
+        type:
+          type: string
+          description: Error type
+          enum:
+          - Error
+          - Warning
+    Extensions:
+      type: object
+      description: Generic property bag for details.
+      title: Extensions
+      additionalProperties:
+        type: object
+        maxProperties: 20
+    RecordSummary:
+      type: object
+      description: Model for capturing record metrics.
+      title: Record Summary
+      properties:
+        inputRecordCount:
+          type: integer
+          description: Total records in input.
+          title: Input Record Count
+        createdRecordCount:
+          type: integer
+          description: Total records created.
+          title: Created Record Count
+        updatedRecordCount:
+          type: integer
+          description: Total records updated.
+          title: Updated Record Count
+        deletedRecordCount:
+          type: integer
+          description: Total records deleted.
+          title: Deleted Record Count
+        skippedRecordCount:
+          type: integer
+          description: Total records skipped.
+          title: Skipped Record Count
+        failedRecordCount:
+          type: integer
+          description: Total records failed.
+          title: Failed Record Count
+        warningRecordCount:
+          type: integer
+          description: Total records that triggered warnings.
+          title: Warning Record Count
+        failedInfo:
+          type: array
+          description: Additional information about failed records.
+          title: Failed Info
+          items:
+            $ref: '#/components/schemas/Info'
+        skippedInfo:
+          type: array
+          description: Additional information about skipped records.
+          title: Failed Info
+          items:
+            $ref: '#/components/schemas/Info'
+        warningInfo:
+          type: array
+          description: Additional information about records that triggered a warning.
+          title: Warning Info
+          items:
+            $ref: '#/components/schemas/Info'
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    StatusSummary:
+      type: object
+      description: Model for capturing details related to the status of the dataflow run.
+      title: Status Summary
+      properties:
+        status:
+          type: string
+          description: Status representing the current state of the dataflow run.
+          enum:
+          - Success
+          - Processing
+          - Waiting
+          - Failed
+        errors:
+          type: array
+          description: Info about errors.
+          title: Failed Info
+          items:
+            $ref: '#/components/schemas/Info'
+        extensions:
+          $ref: '#/components/schemas/Extensions'
+    Flow_Run:
+      type: object
+      title: Batch Dataflow Run
+      description: A data model representing a dataflow run entity.
+      required:
+      - id
+      - flowId
+      - createdClient
+      - updatedClient
+      - createdBy
+      - updatedBy
+      - imsOrgId
+      - sandboxId
+      - sandboxName
+      - metrics
+      properties:
+        id:
+          type: string
+          title: Flow Run Id
+          description: The ID of the dataflow run you are inspecting.
+        flowId:
+          type: string
+          title: Flow Id
+          description: The ID of the dataflow that the dataflow run belongs to.
+        createdClient:
+          type: string
+          title: Created client
+          description: The Adobe Identity Management System (IMS) client who created the dataflow run. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+        updatedClient:
+          type: string
+          title: Updated client
+          description: The Adobe Identity Management System (IMS) client who last updated the dataflow run. This can be an application or a user. For example, the value `exc_app` represents dataflows created in the Experience Platform UI.
+        createdBy:
+          type: string
+          title: Created User
+          description: The Adobe ID of the Identity Management System (IMS) user who created the dataflow run. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        updatedBy:
+          type: string
+          title: Updated User
+          description: The Adobe ID of the Identity Management System (IMS) user who last updated the dataflow run. In the case of service tokens, the value for `createdBy` is the same as `createdClient`.
+        imsOrgId:
+          type: string
+          title: Created client
+          description: The organization ID to which the dataflow run belongs.
+        sandboxId:
+          type: string
+          title: Sandbox ID
+          description: The ID of the sandbox in which the dataflow run occurred.
+        sandboxName:
+          type: string
+          title: Created client
+          description: The ID of the sandbox in which the dataflow run occurred.
+        metrics:
+          $ref: '#/components/schemas/FlowRunMetrics'
+    SizeSummary:
+      type: object
+      description: Model for capturing data size metrics.
+      title: Size Summary
+      properties:
+        inputBytes:
+          type: integer
+          description: Total bytes in input.
+          title: Input Bytes
+        outputBytes:
+          type: integer
+          description: Total bytes in output.
+          title: Output Bytes
+        skippedBytes:
+          type: integer
+          description: Total bytes which were skipped.
+          title: Skipped Bytes
+        failedBytes:
+          type: integer
+          description: Total bytes which failed.
+          title: Failed Bytes
+        extensions:
+          $ref: '#/components/schemas/Extensions'

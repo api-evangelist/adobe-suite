@@ -257,53 +257,31 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    AppVersionUpdateRequest:
+    BaseJobRequestWithOutput:
+      allOf:
+      - $ref: '#/components/schemas/BaseJobRequest'
+      - description: The base job request for any job with the option to specify output URLs.
+        type: object
+        properties:
+          outputs:
+            type: array
+            items:
+              $ref: '#/components/schemas/OutputAsset'
+    CustomScriptsListResponse:
       type: object
-      description: Request body for updating app version configuration for a custom script
-      required:
-      - appVersionStrategy
+      description: Response containing list of registered custom scripts
       properties:
-        appVersionStrategy:
-          type: string
-          description: Strategy for determining the InDesign app version to use. latest_version uses the most recent version, fixed_major_version locks to a major version, fixed_major_and_minor_version locks to a specific version.
-          enum:
-          - latest_version
-          - fixed_major_version
-          - fixed_major_and_minor_version
-          example: fixed_major_and_minor_version
-        majorAppVersion:
-          type: string
-          description: Major version of the InDesign app. Required when appVersionStrategy is fixed_major_version or fixed_major_and_minor_version.
-          example: '20'
-        minorAppVersion:
-          type: string
-          description: Minor version of the InDesign app. Required when appVersionStrategy is fixed_major_and_minor_version.
-          example: '1'
-    OutputAsset:
-      description: The URL where the output assets are to be posted after the job is processed.
-      type: object
-      required:
-      - destination
-      - source
-      properties:
-        destination:
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomScriptDetails'
+        paging:
           type: object
-          required:
-          - url
           properties:
-            url:
+            nextUrl:
               type: string
-              description: The URL of the asset.
-            storageType:
-              type: string
-              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
-              enum:
-              - Azure
-              - Dropbox
-              - AWS
-        source:
-          type: string
-          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
+              description: URL for the next page of results
+              example: https://indesign.adobe.io/api/v3/scripts?page=1
     AppVersionInfo:
       type: object
       description: Information about a registered InDesign app version
@@ -392,6 +370,63 @@ components:
                     logsRelativePath:
                       type: string
                       description: This provides a path to a file, relative to the temporary base directory (working directory). This file is where the application's logs are to be dumped.
+    AppVersionUpdateRequest:
+      type: object
+      description: Request body for updating app version configuration for a custom script
+      required:
+      - appVersionStrategy
+      properties:
+        appVersionStrategy:
+          type: string
+          description: Strategy for determining the InDesign app version to use. latest_version uses the most recent version, fixed_major_version locks to a major version, fixed_major_and_minor_version locks to a specific version.
+          enum:
+          - latest_version
+          - fixed_major_version
+          - fixed_major_and_minor_version
+          example: fixed_major_and_minor_version
+        majorAppVersion:
+          type: string
+          description: Major version of the InDesign app. Required when appVersionStrategy is fixed_major_version or fixed_major_and_minor_version.
+          example: '20'
+        minorAppVersion:
+          type: string
+          description: Minor version of the InDesign app. Required when appVersionStrategy is fixed_major_and_minor_version.
+          example: '1'
+    OutputAsset:
+      description: The URL where the output assets are to be posted after the job is processed.
+      type: object
+      required:
+      - destination
+      - source
+      properties:
+        destination:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The URL of the asset.
+            storageType:
+              type: string
+              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
+              enum:
+              - Azure
+              - Dropbox
+              - AWS
+        source:
+          type: string
+          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     CustomScriptDetails:
       type: object
       description: Details of a custom script
@@ -433,16 +468,6 @@ components:
           type: string
           description: Minor version of the InDesign app required for this script
           example: '1'
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
-      required:
-      - message
-      - error_code
     InputAsset:
       type: object
       description: The URL where the asset will be fetched.
@@ -460,32 +485,56 @@ components:
         destination:
           type: string
           description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
-    BaseJobRequestWithOutput:
-      allOf:
-      - $ref: '#/components/schemas/BaseJobRequest'
-      - description: The base job request for any job with the option to specify output URLs.
-        type: object
-        properties:
-          outputs:
-            type: array
-            items:
-              $ref: '#/components/schemas/OutputAsset'
-    CustomScriptsListResponse:
-      type: object
-      description: Response containing list of registered custom scripts
-      properties:
-        capabilities:
-          type: array
-          items:
-            $ref: '#/components/schemas/CustomScriptDetails'
-        paging:
-          type: object
-          properties:
-            nextUrl:
-              type: string
-              description: URL for the next page of results
-              example: https://indesign.adobe.io/api/v3/scripts?page=1
   responses:
+    Accepted:
+      description: The job has been accepted for processing.
+      content:
+        application/json:
+          schema:
+            properties:
+              jobId:
+                type: string
+                description: The job ID.
+              statusUrl:
+                type: string
+                description: The status URL.
+      headers:
+        link:
+          schema:
+            type: string
+          description: The status URL for a retry.
+        retry-after:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content that is returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
     Unauthorized:
       description: Unauthorized
       content:
@@ -521,35 +570,25 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    Accepted:
-      description: The job has been accepted for processing.
+    TooManyRequests:
+      description: Too Many Requests
       content:
         application/json:
           schema:
-            properties:
-              jobId:
-                type: string
-                description: The job ID.
-              statusUrl:
-                type: string
-                description: The status URL.
+            $ref: '#/components/schemas/Error'
       headers:
-        link:
-          schema:
-            type: string
-          description: The status URL for a retry.
-        retry-after:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
         Content-Type:
           schema:
             type: string
-          description: The type of content that is returned (e.g., `application/json`).
+          description: The format of the content returned (e.g., `application/json`).
         Content-Length:
           schema:
             type: integer
           description: The length of the response content.
+        Retry-After:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
         Access-Control-Allow-Origin:
           schema:
             type: string
@@ -605,8 +644,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    BadParams:
-      description: Bad Parameter
+    NotFound:
+      description: Not Found
       content:
         application/json:
           schema:
@@ -675,47 +714,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    TooManyRequests:
-      description: Too Many Requests
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The format of the content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Retry-After:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
+    BadParams:
+      description: Bad Parameter
       content:
         application/json:
           schema:

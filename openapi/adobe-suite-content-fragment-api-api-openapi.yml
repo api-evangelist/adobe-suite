@@ -285,6 +285,54 @@ paths:
           $ref: '#/components/responses/404'
 components:
   schemas:
+    description:
+      type: string
+      title: Description
+      description: Description
+      example: Cyber Monday Sale - Header Banner!!
+    live-fragment-content:
+      title: Published Content Fragment
+      type: object
+      required:
+      - type
+      - fragment
+      properties:
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        fragment:
+          oneOf:
+          - $ref: '#/components/schemas/published-html-fragment-content'
+          - $ref: '#/components/schemas/published-expression-fragment-content'
+    page:
+      title: Page
+      type: object
+      properties:
+        orderBy:
+          type: string
+          enum:
+          - modifiedAt
+          - createdAt
+          - name
+          example: -modifiedAt
+        start:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        next:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        count:
+          type: integer
+          example: 10
+    href-link:
+      title: Href-link
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
     patch-document:
       title: Patch Document
       description: A JSONPatch document as defined by RFC 6902
@@ -308,105 +356,64 @@ components:
         from:
           type: string
           description: A string containing a JSON Pointer value.
-    fragment-content:
+    fragment-origin:
       type: string
-      title: Html Fragment Content
-      description: Html Fragment Content
-      example: <div> Hi {{profile.person.name}} its a great day to shop !! </div>
-    href-link:
-      title: Href-link
-      type: object
-      required:
-      - href
-      properties:
-        href:
-          type: string
-    publishing-job-status:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-          - complete
-          - inProgress
-          - error
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/errorResponse'
-    fragment-page-response:
-      title: Content Fragment Page Response
-      type: object
-      properties:
-        _page:
-          $ref: '#/components/schemas/page'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/content-fragment-listing-response'
-        _links:
-          $ref: '#/components/schemas/fragment-list-link'
-    live-fragment-content:
-      title: Published Content Fragment
-      type: object
-      required:
-      - type
-      - fragment
-      properties:
-        type:
-          $ref: '#/components/schemas/fragment-type'
-        fragment:
-          oneOf:
-          - $ref: '#/components/schemas/published-html-fragment-content'
-          - $ref: '#/components/schemas/published-expression-fragment-content'
-    entity-audit-fields:
-      title: Entity Audit Fields.
-      type: object
-      properties:
-        createdAt:
-          type: string
-          format: date-time
-          example: '2016-08-29T09:12:33.001Z'
-        createdBy:
-          type: string
-          example: 4c0190e5d702748f0931@AdobeId
-        modifiedAt:
-          type: string
-          format: date-time
-          example: '2016-08-29T09:12:33.001Z'
-        modifiedBy:
-          type: string
-          example: 4c0190e5d702748f0931@AdobeId
-    fragment-type:
-      type: string
-      title: Fragment Type
-      description: Fragment Type
-      example: html
+      title: Origin
+      description: Content Fragment Origin/Source system.
       enum:
-      - html
-      - expression
-    publish-fragment-request:
-      type: object
-      properties:
-        fragmentId:
-          $ref: '#/components/schemas/id'
-      required:
-      - fragmentId
-    published-html-fragment-content:
-      description: Published HTML Fragment content
-      title: Published HTML Fragment content.
-      type: object
-      required:
-      - content
-      properties:
-        content:
-          $ref: '#/components/schemas/fragment-content'
+      - ajo
+      - external
     name:
       type: string
       title: Content Name
       description: Content Name
       example: Cyber Monday Sale - Header !!
       minLength: 1
+    expression-content:
+      type: string
+      title: Expression Content
+      description: Expression Content
+      example: Hi {{profile.person.name}} its a great day to shop !!
+    content-fragment-listing-response:
+      title: Content Fragment
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/content-fragment-metadata'
+      - $ref: '#/components/schemas/entity-audit-fields'
+      - $ref: '#/components/schemas/fragment-self-href'
+    fragment-channel-enum:
+      type: string
+      title: channel
+      description: Supported channels for Content Fragment.
+      example: email
+      enum:
+      - email
+      - shared
+    fragment-status:
+      type: string
+      title: Fragment Status
+      description: Fragment Status
+      example: DRAFT
+      enum:
+      - DRAFT
+      - PUBLISHING
+      - PUBLISHED
+    fragment-content:
+      type: string
+      title: Html Fragment Content
+      description: Html Fragment Content
+      example: <div> Hi {{profile.person.name}} its a great day to shop !! </div>
+    olac-labels:
+      title: OLAC Label Details
+      type: array
+      items:
+        type: string
+        example: custom/sensitive-data
+    patch-request:
+      title: Patch Request
+      type: array
+      items:
+        $ref: '#/components/schemas/patch-document'
     errorResponse:
       title: Error Response
       type: object
@@ -464,6 +471,15 @@ components:
               errorCode: CJMMAS-*
               invokingServiceId: cjm-content-service
               unixTimeStampMs: 1610446917396
+    published-html-fragment-content:
+      description: Published HTML Fragment content
+      title: Published HTML Fragment content.
+      type: object
+      required:
+      - content
+      properties:
+        content:
+          $ref: '#/components/schemas/fragment-content'
     content-fragment-metadata:
       title: Content Fragment metadata.
       type: object
@@ -490,49 +506,24 @@ components:
           $ref: '#/components/schemas/fragment-source'
         parentFolderId:
           $ref: '#/components/schemas/parent-folder-id'
-    fragment-source:
-      title: Fragment Source.
-      type:
-      - object
-      - 'null'
-      required:
-      - origin
-      properties:
-        origin:
-          $ref: '#/components/schemas/fragment-origin'
-        metadata:
-          title: MetaData
-          description: Map containing custom properties(key-value pair).
-          additionalProperties: true
-    parent-folder-id:
-      type:
-      - string
-      - 'null'
-      title: Folder Id
-      description: Id of the folder in which the content is present.
-      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
-    page:
-      title: Page
+    publishing-job-status:
       type: object
       properties:
-        orderBy:
+        status:
           type: string
           enum:
-          - modifiedAt
-          - createdAt
-          - name
-          example: -modifiedAt
-        start:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-        next:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-        count:
-          type: integer
-          example: 10
+          - complete
+          - inProgress
+          - error
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/errorResponse'
+    id:
+      type: string
+      title: Content Template Id.
+      description: Content Template Id.
+      example: b6d70a45-a149-453b-85ba-809a5d40066d
     content-fragment:
       title: Content Fragment
       type: object
@@ -556,52 +547,20 @@ components:
           $ref: '#/components/schemas/fragment-source'
         parentFolderId:
           $ref: '#/components/schemas/parent-folder-id'
-    description:
-      type: string
-      title: Description
-      description: Description
-      example: Cyber Monday Sale - Header Banner!!
-    fragment-status:
-      type: string
-      title: Fragment Status
-      description: Fragment Status
-      example: DRAFT
-      enum:
-      - DRAFT
-      - PUBLISHING
-      - PUBLISHED
-    olac-labels:
-      title: OLAC Label Details
-      type: array
-      items:
-        type: string
-        example: custom/sensitive-data
-    id:
-      type: string
-      title: Content Template Id.
-      description: Content Template Id.
-      example: b6d70a45-a149-453b-85ba-809a5d40066d
-    content-fragment-listing-response:
-      title: Content Fragment
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/content-fragment-metadata'
-      - $ref: '#/components/schemas/entity-audit-fields'
-      - $ref: '#/components/schemas/fragment-self-href'
-    patch-request:
-      title: Patch Request
-      type: array
-      items:
-        $ref: '#/components/schemas/patch-document'
-    published-expression-fragment-content:
-      description: Published Expression Fragment content
-      title: Published Expression Fragment content.
-      type: object
+    fragment-source:
+      title: Fragment Source.
+      type:
+      - object
+      - 'null'
       required:
-      - expression
+      - origin
       properties:
-        expression:
-          $ref: '#/components/schemas/expression-content'
+        origin:
+          $ref: '#/components/schemas/fragment-origin'
+        metadata:
+          title: MetaData
+          description: Map containing custom properties(key-value pair).
+          additionalProperties: true
     content-fragment-with-audit:
       title: Content Fragment with audit fields.
       type: object
@@ -633,13 +592,29 @@ components:
           $ref: '#/components/schemas/fragment-source'
         parentFolderId:
           $ref: '#/components/schemas/parent-folder-id'
-    fragment-origin:
-      type: string
-      title: Origin
-      description: Content Fragment Origin/Source system.
-      enum:
-      - ajo
-      - external
+    parent-folder-id:
+      type:
+      - string
+      - 'null'
+      title: Folder Id
+      description: Id of the folder in which the content is present.
+      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+    published-expression-fragment-content:
+      description: Published Expression Fragment content
+      title: Published Expression Fragment content.
+      type: object
+      required:
+      - expression
+      properties:
+        expression:
+          $ref: '#/components/schemas/expression-content'
+    publish-fragment-request:
+      type: object
+      properties:
+        fragmentId:
+          $ref: '#/components/schemas/id'
+      required:
+      - fragmentId
     fragment-self-href:
       title: Self-Href
       type: object
@@ -650,6 +625,18 @@ components:
             href:
               type: string
               example: /fragments/b6d70a45-a149-453b-85ba-809a5d40066d
+    fragment-page-response:
+      title: Content Fragment Page Response
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/page'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/content-fragment-listing-response'
+        _links:
+          $ref: '#/components/schemas/fragment-list-link'
     fragment-list-link:
       title: Content Fragment List Link.
       type: object
@@ -665,19 +652,37 @@ components:
           href: /fragments?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
         page:
           href: /fragments?orderBy={orderBy}&start={start}&limit={limit}
-    expression-content:
+    fragment-type:
       type: string
-      title: Expression Content
-      description: Expression Content
-      example: Hi {{profile.person.name}} its a great day to shop !!
-    fragment-channel-enum:
-      type: string
-      title: channel
-      description: Supported channels for Content Fragment.
-      example: email
+      title: Fragment Type
+      description: Fragment Type
+      example: html
       enum:
-      - email
-      - shared
+      - html
+      - expression
+    entity-audit-fields:
+      title: Entity Audit Fields.
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        createdBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+        modifiedAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        modifiedBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+  headers:
+    etag:
+      schema:
+        type: string
+      description: etag of resource
   parameters:
     limit:
       name: limit
@@ -689,6 +694,22 @@ components:
         minimum: 1
         maximum: 1000
       required: false
+    orderBy:
+      name: orderBy
+      description: Sort parameter and direction for sorting the response. Add the prefix as -/+ for desc/asc. If unspecified, the response will be sorted in desc order.
+      in: query
+      schema:
+        type: string
+        default: -modifiedAt
+      required: false
+      example: orderBy=%2BmodifiedAt.
+    ImsOrgIdParam:
+      name: x-gw-ims-org-id
+      in: header
+      description: Your Identity Management Services (IMS) Organization id
+      required: true
+      schema:
+        type: string
     start:
       name: start
       description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
@@ -698,26 +719,11 @@ components:
         format: byte
       required: false
       example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-    IfMatchParam:
-      name: If-Match
+    RequestIdParam:
       in: header
-      required: true
-      description: etag of resource to match before update of resource.
-      schema:
-        type: string
-    APIKeyParam:
-      name: x-api-key
-      in: header
-      description: API Key
-      required: true
-      schema:
-        type: string
-        x-example: cjm client
-    ImsOrgIdParam:
-      name: x-gw-ims-org-id
-      in: header
-      description: Your Identity Management Services (IMS) Organization id
-      required: true
+      name: x-request-id
+      description: A unique string to identify the request, MUST be unique for each request
+      required: false
       schema:
         type: string
     property:
@@ -730,20 +736,11 @@ components:
         type: array
       required: false
       example: property=name~^test
-    orderBy:
-      name: orderBy
-      description: Sort parameter and direction for sorting the response. Add the prefix as -/+ for desc/asc. If unspecified, the response will be sorted in desc order.
-      in: query
-      schema:
-        type: string
-        default: -modifiedAt
-      required: false
-      example: orderBy=%2BmodifiedAt.
-    RequestIdParam:
+    IfMatchParam:
+      name: If-Match
       in: header
-      name: x-request-id
-      description: A unique string to identify the request, MUST be unique for each request
-      required: false
+      required: true
+      description: etag of resource to match before update of resource.
       schema:
         type: string
     SandboxNameParam:
@@ -753,11 +750,14 @@ components:
       required: true
       schema:
         type: string
-  headers:
-    etag:
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key
+      required: true
       schema:
         type: string
-      description: etag of resource
+        x-example: cjm client
   securitySchemes:
     imsUserToken:
       type: http

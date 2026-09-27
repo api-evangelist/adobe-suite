@@ -702,20 +702,6 @@ paths:
                 $ref: '#/components/schemas/ResponseInternalErrorContext'
 components:
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -730,55 +716,89 @@ components:
       required: true
       schema:
         type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
   schemas:
+    ResponseErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '422'
+    ResponseInternalErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Unable to connect to server
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 500 : Connection Timeout'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '500'
+    PostIdentityEntityItem:
+      type: object
+      properties:
+        entityId:
+          type: string
+          description: ID of the entity.
+          example: '69935279872410346619186588147492736556'
+        entityIdNS:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Identity namespace code.
+              example: CRMID
+          description: Identity namespace of the entity.
+        relatedEntityId:
+          type: string
+          description: The ID of the related entity
+          example: GkouAW-2u-7iWt5vQ9u2wm40JOZY
+    GetEntityResponse:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Entity'
+    ForbiddenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
+        statusCode:
+          type: string
+          example: '403'
     NotFoundError:
       type: object
       properties:
         statusCode:
           type: string
           example: '404'
-    Entity:
-      properties:
-        requestedIdentity:
-          type: object
-        mergePolicy:
-          type: object
-        entityId:
-          type: string
-          description: The identifier of the XDM entity.
-          example: GugxAW-lI0GupgAOYSxOHl0_UX1_
-        sources:
-          type: array
-          items:
-            type: string
-            description: 'Sources of the merged XDM entity. For example: dataset IDs.'
-            example: 5bc7ee61cdcc8712f991f0ee
-        tags:
-          type: array
-          items:
-            type: string
-            description: 'Sources of the merged XDM entity. For example: batch ids.'
-            example: 4c442203cffc4635aa4553528958d969
-        identityGraph:
-          type: array
-          items:
-            type: string
-            description: Related identities of the merged XDM entity.
-            example: GugxAW-lI0GupgAOYSxOHl0_UX1_
-        entity:
-          type: object
-          description: Any user defined JSON as per the definition of XDM
-        lastModifiedAt:
-          type: string
-          description: Last modified timestamp. In RFC-3339 format.
-          example: 2018-10-18 15:59:10-08:00
-        _page:
-          type: object
-          description: ''
-    GetEntityResponse:
-      type: object
-      additionalProperties:
-        $ref: '#/components/schemas/Entity'
     PostTimeFilterEntity:
       type: object
       properties:
@@ -818,28 +838,44 @@ components:
           type: string
           description: 'The sort order of retrieved ExperienceEvents by timestamp. Syntax: (+/-)timestamp. Default: +timestamp'
           example: -timestamp
-    ResponseInternalErrorContext:
-      type: object
+    Entity:
       properties:
-        message:
+        requestedIdentity:
+          type: object
+        mergePolicy:
+          type: object
+        entityId:
           type: string
-          description: Error message
-          example: Unable to connect to server
-        cause:
+          description: The identifier of the XDM entity.
+          example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        sources:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: dataset IDs.'
+            example: 5bc7ee61cdcc8712f991f0ee
+        tags:
+          type: array
+          items:
+            type: string
+            description: 'Sources of the merged XDM entity. For example: batch ids.'
+            example: 4c442203cffc4635aa4553528958d969
+        identityGraph:
+          type: array
+          items:
+            type: string
+            description: Related identities of the merged XDM entity.
+            example: GugxAW-lI0GupgAOYSxOHl0_UX1_
+        entity:
+          type: object
+          description: Any user defined JSON as per the definition of XDM
+        lastModifiedAt:
           type: string
-          description: Cause message
-          example: 'Status Code - 500 : Connection Timeout'
-        statusCode:
-          type: string
-          description: Original status code from error
-          example: '500'
-    ErrorResponseById:
-      type: object
-      properties:
-        xid:
-          type: string
-        error:
-          $ref: '#/components/schemas/ResponseErrorContext'
+          description: Last modified timestamp. In RFC-3339 format.
+          example: 2018-10-18 15:59:10-08:00
+        _page:
+          type: object
+          description: ''
     SchemaEntity:
       type: object
       properties:
@@ -866,46 +902,10 @@ components:
           type: string
           description: Original status code from error
           example: '429'
-    PostIdentityEntityItem:
+    ErrorResponseById:
       type: object
       properties:
-        entityId:
+        xid:
           type: string
-          description: ID of the entity.
-          example: '69935279872410346619186588147492736556'
-        entityIdNS:
-          type: object
-          properties:
-            code:
-              type: string
-              description: Identity namespace code.
-              example: CRMID
-          description: Identity namespace of the entity.
-        relatedEntityId:
-          type: string
-          description: The ID of the related entity
-          example: GkouAW-2u-7iWt5vQ9u2wm40JOZY
-    ForbiddenError:
-      type: object
-      properties:
-        message:
-          type: string
-          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
-        statusCode:
-          type: string
-          example: '403'
-    ResponseErrorContext:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Error message
-          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
-        cause:
-          type: string
-          description: Cause message
-          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
-        statusCode:
-          type: string
-          description: Original status code from error
-          example: '422'
+        error:
+          $ref: '#/components/schemas/ResponseErrorContext'

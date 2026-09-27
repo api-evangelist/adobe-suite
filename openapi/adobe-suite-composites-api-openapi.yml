@@ -133,80 +133,88 @@ paths:
       x-s3d-public: true
 components:
   schemas:
-    rest_base.SourceFrameIO:
+    ffapierrors.FFAPIError:
+      description: The error within the error response.
       type: object
       properties:
-        accessToken:
-          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
+        $schema:
+          description: A URL to the JSON schema for this object.
           type: string
-        folderId:
-          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
-          type: string
-      additionalProperties: false
-      required:
-      - folderId
-      - accessToken
-    rest_base.MountedSource:
-      type: object
-      properties:
-        frame.io:
-          description: Fetch content from a Frame.io folder. ⚠️ All sources are exclusive.
-          $ref: '#/components/schemas/rest_base.SourceFrameIO'
-          deprecated: true
-        mountPoint:
-          description: Where to mount the content of the source in the virtual job working directory.
-          type: string
-          default: /
-        next.frame.io:
-          description: Fetch content from a next.frame.io folder. ⚠️ All sources are exclusive.
-          $ref: '#/components/schemas/rest_base.SourceFrameIOV4'
-        space:
-          description: Read content from an existing space (can be another job's output, or uploaded manually with the space API). ⚠️ All sources are exclusive.'
-          $ref: '#/components/schemas/rest_base.SourceSpace'
-        url:
-          description: Fetch content from a URL. ⚠️ All sources are exclusive.
-          $ref: '#/components/schemas/rest_base.SourceURL'
-      additionalProperties: false
-    rest_base.SourceURL:
-      type: object
-      properties:
-        filename:
-          description: Filename override. If unset, the service will try to detect the filename from the content disposition header, then the URL itself.
-          type: string
-        url:
-          description: URL to fetch content from.
-          type: string
+          format: uri
           examples:
-          - https://cdn.substance3d.com/v2/files/public/stepladder.usdz
-      additionalProperties: false
-      required:
-      - url
-    restv1beta.ComposeOutputImage:
-      type: object
-      properties:
-        url:
+          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
+          readOnly: true
+        error_code:
+          description: Associated error code.
           type: string
-      additionalProperties: false
-      required:
-      - url
-    types.Transform:
-      type: object
-      properties:
-        azimuthAltitude:
-          description: Transform is defined by azimuth, altitude and radius terms. If set, do not set `matrix` or `trs`.
-          $ref: '#/components/schemas/types.AzimuthAltitude'
-        matrix:
-          description: Transform is defined as a matrix. If set, do not set `trs` or `azimuthAltitude`.
+        error_details:
+          description: Optional list of individual error details.
           type: array
           items:
-            format: double
-            type: number
-          maxItems: 16
-          minItems: 16
-        trs:
-          description: Transform is defined by translation, rotation and scale terms. If set, do not set `matrix` or `azimuthAltitude`.
-          $ref: '#/components/schemas/types.TRS'
+            type: object
+        message:
+          description: Error message.
+          type: string
       additionalProperties: false
+      required:
+      - error_code
+    restv1beta.ComposeOutput:
+      type: object
+      properties:
+        backgroundImage:
+          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
+        image:
+          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
+        lightingSeed:
+          type: integer
+          format: int64
+        maskImage:
+          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
+        seed:
+          type: integer
+          format: int64
+      additionalProperties: false
+      required:
+      - seed
+      - lightingSeed
+      - image
+      - backgroundImage
+      - maskImage
+    rest_base.SpaceFile:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - name
+      - size
+    types.OutputSize:
+      type: object
+      properties:
+        height:
+          type: integer
+          format: int64
+          default: 1536
+          maximum: 2688
+          minimum: 1
+        width:
+          type: integer
+          format: int64
+          default: 2688
+          maximum: 2688
+          minimum: 1
+      additionalProperties: false
+      required:
+      - width
+      - height
     types.TRS:
       type: object
       properties:
@@ -239,99 +247,6 @@ components:
       - translation
       - rotation
       - scale
-    types.Rotation:
-      type: object
-      properties:
-        euler:
-          description: Euler angles in degrees.
-          type: array
-          items:
-            format: double
-            type: number
-          examples:
-          - - 0
-            - 0
-            - 0
-          maxItems: 3
-          minItems: 3
-        quaternion:
-          description: In W,X,Y,Z order.
-          type: array
-          items:
-            format: double
-            type: number
-          examples:
-          - - 1
-            - 0
-            - 0
-            - 0
-          maxItems: 4
-          minItems: 4
-      additionalProperties: false
-    restv1beta.ComposeSceneResponse:
-      type: object
-      properties:
-        $schema:
-          description: A URL to the JSON schema for this object.
-          type: string
-          format: uri
-          examples:
-          - https://s3d.adobe.io/schemas/restv1beta.ComposeSceneResponse.json
-          readOnly: true
-        bugReportUrl:
-          description: URL to report a bug about this job.
-          type: string
-        error:
-          description: Potential error that happened during the job processing.
-          type: string
-        id:
-          description: Unique identifier of the job.
-          type: string
-        result:
-          description: Result when the job is successfully finished.
-          $ref: '#/components/schemas/restv1beta.ComposeSceneJobResult'
-        status:
-          description: Status of the job. Can be `not_started`, `running`, `succeeded`, or `failed`.
-          type: string
-        url:
-          description: URL to fetch/poll for job result in case the job is not finished yet.
-          type: string
-      additionalProperties: false
-      required:
-      - url
-      - id
-      - status
-      - bugReportUrl
-    rest_base.SourceSpace:
-      type: object
-      properties:
-        id:
-          description: A space ID.
-          type: string
-      additionalProperties: false
-      required:
-      - id
-    types.SceneCamera:
-      type: object
-      properties:
-        focal:
-          description: Camera focal length, in mm.
-          type: number
-          format: double
-          default: 50
-          maximum: 1000
-          minimum: 10
-        sensorWidth:
-          description: Camera sensor width, in mm.
-          type: number
-          format: double
-          default: 36
-          maximum: 100
-          minimum: 1
-        transform:
-          description: Controls the position and angle of the camera.
-          $ref: '#/components/schemas/types.Transform'
-      additionalProperties: false
     types.AzimuthAltitude:
       type: object
       properties:
@@ -366,44 +281,207 @@ components:
       - altitude
       - lookAt
       - radius
-    rest_base.SpaceFile:
+    rest_base.SourceFrameIO:
       type: object
       properties:
-        name:
+        accessToken:
+          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
           type: string
-        size:
-          type: integer
-          format: int64
-          minimum: 0
+        folderId:
+          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
+          type: string
+      additionalProperties: false
+      required:
+      - folderId
+      - accessToken
+    types.Warning:
+      type: object
+      properties:
+        context:
+          type: string
+        message:
+          type: string
+      additionalProperties: false
+      required:
+      - context
+      - message
+    types.ComposeEnvironment:
+      type: object
+      properties:
+        file:
+          description: Path of environment file in `sources`. If value is null, the environment file will be generated.
+          type: string
+        rotation:
+          description: Controls the orientation of the environment map.
+          $ref: '#/components/schemas/types.Rotation'
+      additionalProperties: false
+      required:
+      - file
+    restv1beta.ComposeSceneResponse:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/restv1beta.ComposeSceneResponse.json
+          readOnly: true
+        bugReportUrl:
+          description: URL to report a bug about this job.
+          type: string
+        error:
+          description: Potential error that happened during the job processing.
+          type: string
+        id:
+          description: Unique identifier of the job.
+          type: string
+        result:
+          description: Result when the job is successfully finished.
+          $ref: '#/components/schemas/restv1beta.ComposeSceneJobResult'
+        status:
+          description: Status of the job. Can be `not_started`, `running`, `succeeded`, or `failed`.
+          type: string
+        url:
+          description: URL to fetch/poll for job result in case the job is not finished yet.
+          type: string
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - status
+      - bugReportUrl
+    types.ComposeSceneSceneDetails:
+      type: object
+      properties:
+        camera:
+          description: Custom camera definition for the scene render. Mutually exclusive with 'cameraName' at the top level. Use this to define camera parameters programmatically instead of referencing a named camera from the 3D scene.
+          $ref: '#/components/schemas/types.SceneCamera'
+      additionalProperties: false
+    rest_base.SourceURL:
+      type: object
+      properties:
+        filename:
+          description: Filename override. If unset, the service will try to detect the filename from the content disposition header, then the URL itself.
+          type: string
+        url:
+          description: URL to fetch content from.
+          type: string
+          examples:
+          - https://cdn.substance3d.com/v2/files/public/stepladder.usdz
+      additionalProperties: false
+      required:
+      - url
+    rest_base.Space:
+      type: object
+      properties:
+        $schema:
+          description: A URL to the JSON schema for this object.
+          type: string
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.Space.json
+          readOnly: true
+        expiry:
+          description: time at which the space will be deleted
+          type: string
+          format: date-time
+        files:
+          description: List of all files contained in Space, ordered by name.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/rest_base.SpaceFile'
+        id:
+          description: Unique identifier of this Space.
+          type: string
+        url:
+          description: URL to the full description of this Space.
+          type: string
+        archiveUrl:
+          description: URL to fetch the whole space as an archive (usually a ZIP file).
+      additionalProperties: false
+      required:
+      - url
+      - id
+      - expiry
+      - files
+    restv1beta.ComposeSceneJobResult:
+      type: object
+      properties:
+        outputSpace:
+          $ref: '#/components/schemas/rest_base.Space'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/restv1beta.ComposeOutput'
+        promptHasBlockedArtists:
+          type: boolean
+        promptHasDeniedWords:
+          type: boolean
+        warnings:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/types.Warning'
+      additionalProperties: false
+      required:
+      - outputSpace
+      - outputs
+      - promptHasDeniedWords
+      - promptHasBlockedArtists
+    rest_base.MountedSource:
+      type: object
+      properties:
+        frame.io:
+          description: Fetch content from a Frame.io folder. ⚠️ All sources are exclusive.
+          $ref: '#/components/schemas/rest_base.SourceFrameIO'
+          deprecated: true
+        mountPoint:
+          description: Where to mount the content of the source in the virtual job working directory.
+          type: string
+          default: /
+        next.frame.io:
+          description: Fetch content from a next.frame.io folder. ⚠️ All sources are exclusive.
+          $ref: '#/components/schemas/rest_base.SourceFrameIOV4'
+        space:
+          description: Read content from an existing space (can be another job's output, or uploaded manually with the space API). ⚠️ All sources are exclusive.'
+          $ref: '#/components/schemas/rest_base.SourceSpace'
+        url:
+          description: Fetch content from a URL. ⚠️ All sources are exclusive.
+          $ref: '#/components/schemas/rest_base.SourceURL'
+      additionalProperties: false
+    restv1beta.ComposeOutputImage:
+      type: object
+      properties:
         url:
           type: string
       additionalProperties: false
       required:
       - url
-      - name
-      - size
-    restv1beta.ComposeOutput:
+    types.SceneCamera:
       type: object
       properties:
-        backgroundImage:
-          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
-        image:
-          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
-        lightingSeed:
-          type: integer
-          format: int64
-        maskImage:
-          $ref: '#/components/schemas/restv1beta.ComposeOutputImage'
-        seed:
-          type: integer
-          format: int64
+        focal:
+          description: Camera focal length, in mm.
+          type: number
+          format: double
+          default: 50
+          maximum: 1000
+          minimum: 10
+        sensorWidth:
+          description: Camera sensor width, in mm.
+          type: number
+          format: double
+          default: 36
+          maximum: 100
+          minimum: 1
+        transform:
+          description: Controls the position and angle of the camera.
+          $ref: '#/components/schemas/types.Transform'
       additionalProperties: false
-      required:
-      - seed
-      - lightingSeed
-      - image
-      - backgroundImage
-      - maskImage
     restv1.ComposeSceneRequest:
       type: object
       properties:
@@ -507,98 +585,62 @@ components:
       - sources
       - prompt
       - heroAsset
-    types.OutputSize:
+    types.Rotation:
       type: object
       properties:
-        height:
-          type: integer
-          format: int64
-          default: 1536
-          maximum: 2688
-          minimum: 1
-        width:
-          type: integer
-          format: int64
-          default: 2688
-          maximum: 2688
-          minimum: 1
-      additionalProperties: false
-      required:
-      - width
-      - height
-    types.ComposeEnvironment:
-      type: object
-      properties:
-        file:
-          description: Path of environment file in `sources`. If value is null, the environment file will be generated.
-          type: string
-        rotation:
-          description: Controls the orientation of the environment map.
-          $ref: '#/components/schemas/types.Rotation'
-      additionalProperties: false
-      required:
-      - file
-    types.Warning:
-      type: object
-      properties:
-        context:
-          type: string
-        message:
-          type: string
-      additionalProperties: false
-      required:
-      - context
-      - message
-    ffapierrors.FFAPIError:
-      description: The error within the error response.
-      type: object
-      properties:
-        $schema:
-          description: A URL to the JSON schema for this object.
-          type: string
-          format: uri
+        euler:
+          description: Euler angles in degrees.
+          type: array
+          items:
+            format: double
+            type: number
           examples:
-          - https://s3d.adobe.io/schemas/ffapierrors.FFAPIError.json
-          readOnly: true
-        error_code:
-          description: Associated error code.
-          type: string
-        error_details:
-          description: Optional list of individual error details.
+          - - 0
+            - 0
+            - 0
+          maxItems: 3
+          minItems: 3
+        quaternion:
+          description: In W,X,Y,Z order.
           type: array
           items:
-            type: object
-        message:
-          description: Error message.
-          type: string
+            format: double
+            type: number
+          examples:
+          - - 1
+            - 0
+            - 0
+            - 0
+          maxItems: 4
+          minItems: 4
       additionalProperties: false
-      required:
-      - error_code
-    restv1beta.ComposeSceneJobResult:
+    types.Transform:
       type: object
       properties:
-        outputSpace:
-          $ref: '#/components/schemas/rest_base.Space'
-        outputs:
+        azimuthAltitude:
+          description: Transform is defined by azimuth, altitude and radius terms. If set, do not set `matrix` or `trs`.
+          $ref: '#/components/schemas/types.AzimuthAltitude'
+        matrix:
+          description: Transform is defined as a matrix. If set, do not set `trs` or `azimuthAltitude`.
           type: array
           items:
-            $ref: '#/components/schemas/restv1beta.ComposeOutput'
-        promptHasBlockedArtists:
-          type: boolean
-        promptHasDeniedWords:
-          type: boolean
-        warnings:
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/types.Warning'
+            format: double
+            type: number
+          maxItems: 16
+          minItems: 16
+        trs:
+          description: Transform is defined by translation, rotation and scale terms. If set, do not set `matrix` or `azimuthAltitude`.
+          $ref: '#/components/schemas/types.TRS'
+      additionalProperties: false
+    rest_base.SourceSpace:
+      type: object
+      properties:
+        id:
+          description: A space ID.
+          type: string
       additionalProperties: false
       required:
-      - outputSpace
-      - outputs
-      - promptHasDeniedWords
-      - promptHasBlockedArtists
+      - id
     rest_base.SourceFrameIOV4:
       type: object
       properties:
@@ -616,48 +658,6 @@ components:
       - folderId
       - accountId
       - accessToken
-    types.ComposeSceneSceneDetails:
-      type: object
-      properties:
-        camera:
-          description: Custom camera definition for the scene render. Mutually exclusive with 'cameraName' at the top level. Use this to define camera parameters programmatically instead of referencing a named camera from the 3D scene.
-          $ref: '#/components/schemas/types.SceneCamera'
-      additionalProperties: false
-    rest_base.Space:
-      type: object
-      properties:
-        $schema:
-          description: A URL to the JSON schema for this object.
-          type: string
-          format: uri
-          examples:
-          - https://s3d.adobe.io/schemas/rest_base.Space.json
-          readOnly: true
-        expiry:
-          description: time at which the space will be deleted
-          type: string
-          format: date-time
-        files:
-          description: List of all files contained in Space, ordered by name.
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/rest_base.SpaceFile'
-        id:
-          description: Unique identifier of this Space.
-          type: string
-        url:
-          description: URL to the full description of this Space.
-          type: string
-        archiveUrl:
-          description: URL to fetch the whole space as an archive (usually a ZIP file).
-      additionalProperties: false
-      required:
-      - url
-      - id
-      - expiry
-      - files
   securitySchemes:
     bearerAuth:
       description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'

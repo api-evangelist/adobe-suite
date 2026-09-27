@@ -320,18 +320,6 @@ paths:
           content: {}
 components:
   schemas:
-    PrivacyCompanyContextDetails:
-      required:
-      - namespace
-      - value
-      type: object
-      properties:
-        namespace:
-          type: string
-          description: The namespace for the company identifier (for example, `imsOrg`).
-        value:
-          type: string
-          description: The value for the company identifier. The value associated with the `imsOrg` namespace must match the value of the `x-gw-ims-org-id` authentication header.
     JsonNode:
       type: object
       properties:
@@ -409,6 +397,180 @@ components:
           type: boolean
           description: Indicates whether the JSON Node contains a float value.
       description: Contains metadata about any [JSON Node](https://people.gnome.org/~ebassi/docs/json-glib/json-glib-JSON-Node.html) response data returned by the product.
+    PrivacyCompanyContextDetails:
+      required:
+      - namespace
+      - value
+      type: object
+      properties:
+        namespace:
+          type: string
+          description: The namespace for the company identifier (for example, `imsOrg`).
+        value:
+          type: string
+          description: The value for the company identifier. The value associated with the `imsOrg` namespace must match the value of the `x-gw-ims-org-id` authentication header.
+    PrivacyJobCreateDetails:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: A unique, system-generated ID for the job.
+        customer:
+          type: object
+          properties:
+            user:
+              type: object
+              description: Contains information about the customer whose data is being processed by the job.
+              allOf:
+              - $ref: '#/components/schemas/PrivacyUserDetails'
+          description: Contains a single `user` object which captures information about the customer whose data is being processed by the job.
+    PrivacyUserIdDetails:
+      type: object
+      properties:
+        namespace:
+          type: string
+          description: The [identity namespace](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/appendix.html?lang=en#standard-namespaces) associated with this user identity value.
+        value:
+          type: string
+          description: The value for the identity.
+        type:
+          type: string
+          description: The [namespace qualifier](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/appendix.html?lang=en#namespace-qualifiers) for the identity.
+        namespaceId:
+          type: integer
+          description: The ID of the namespace that was created or mapped through the namespace service.
+          format: int32
+        isDeletedClientSide:
+          type: boolean
+          description: Indicates whether the user's identity information was deleted on the client side or browser.
+    PrivacyJobCreateList:
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: An ID for the API request that generated the jobs. If a `requestId` was not provided in the request payload, the system generates one automatically.
+          example: 16203318964318668RX-054
+        totalRecords:
+          type: integer
+          description: The number of jobs returned in the response.
+          format: int64
+        jobDetails:
+          type: array
+          description: Lists the details of each of the created privacy jobs.
+          items:
+            $ref: '#/components/schemas/PrivacyJobCreateDetails'
+      example:
+        requestId: 16203318964318668RX-054
+        totalRecords: 3
+        jobs:
+        - jobId: 6f40987c-e535-40bd-aad6-e9414978a095
+          customer:
+            user:
+              key: user12345
+              action:
+              - access
+              userIDs:
+              - namespace: email
+                value: ajones@acme.com
+                type: standard
+                namespaceId: 6
+                isDeletedClientSide: false
+              - namespace: loyaltyAccount
+                value: 12AD45FE30R29
+                type: integrationCode
+                isDeletedClientSide: false
+        - jobId: 6f258e0c-3a5c-4095-b379-e5e26b69ddec
+          customer:
+            user:
+              key: DavidSmith
+              action:
+              - access
+              userIDs:
+              - namespace: email
+                value: dsmith@acme.com
+                type: standard
+                namespaceId: 6
+                isDeletedClientSide: false
+              - namespace: ECID
+                value: '443636576799758681021090721276'
+                type: standard
+                namespaceId: 4
+                isDeletedClientSide: false
+        - jobId: cb62112d-aed8-4024-aa5c-312309e3dec7
+          customer:
+            user:
+              key: user12345
+              action:
+              - delete
+              userIDs:
+              - namespace: email
+                value: ajones@acme.com
+                type: standard
+                namespaceId: 6
+                isDeletedClientSide: false
+              - namespace: loyaltyAccount
+                value: 12AD45FE30R29
+                type: integrationCode
+                isDeletedClientSide: false
+    PrivacyProductJobResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The product-specific status code for the job.
+        results:
+          $ref: '#/components/schemas/JsonNode'
+        message:
+          type: string
+          description: The response message from the product.
+      description: Contains response data from the product.
+    PrivacyJobListResponse:
+      type: object
+      properties:
+        totalRecords:
+          type: integer
+          description: The number of jobs returned in the response.
+          format: int64
+        jobDetails:
+          type: array
+          description: A list of returned jobs for the specified regulation. Each listed object contains details about the privacy job in question.
+          items:
+            $ref: '#/components/schemas/PrivacyJobBasic'
+      example:
+        totalRecords: 4
+        jobDetails:
+        - jobId: 3f9d2e11-4c7a-481f-8f58-f49a113fd158
+          requestId: 16197332222128898RX-318
+          userKey: '{USER_ID}'
+          action: delete
+          status: complete
+          submittedBy: '{USER_ID}'
+          createdDate: 04/29/2021 09:53 PM GMT
+          lastModifiedDate: 04/29/2021 11:20 PM GMT
+        - jobId: 8ce192aa-7ba7-4975-b82e-8db2faadf14d
+          requestId: 16190370131972548RX-946
+          userKey: '{USER_ID}'
+          action: access
+          status: complete
+          submittedBy: '{USER_ID}'
+          createdDate: 04/21/2021 08:30 PM GMT
+          lastModifiedDate: 04/21/2021 09:52 PM GMT
+        - jobId: 15c1e737-9512-4d5d-a67f-0c6b8db24745
+          requestId: 16189645482190022RX-311
+          userKey: '{USER_ID}'
+          action: access
+          status: complete
+          submittedBy: '{USER_ID}'
+          createdDate: 04/21/2021 12:22 AM GMT
+          lastModifiedDate: 04/21/2021 09:52 PM GMT
+        - jobId: cb8aab65-ba38-4703-ab8f-d035156fbaa9
+          requestId: 16189644965236664RX-029
+          userKey: '{USER_ID}'
+          action: access
+          status: complete
+          submittedBy: '{USER_ID}'
+          createdDate: 04/21/2021 12:21 AM GMT
+          lastModifiedDate: 04/21/2021 09:52 PM GMT
     PrivacyUserDetails:
       required:
       - action
@@ -433,25 +595,6 @@ components:
           description: A collection of identities for the user. The number of identities a single user can have is limited to nine.
           items:
             $ref: '#/components/schemas/PrivacyUserIdDetails'
-    PrivacyUserIdDetails:
-      type: object
-      properties:
-        namespace:
-          type: string
-          description: The [identity namespace](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/appendix.html?lang=en#standard-namespaces) associated with this user identity value.
-        value:
-          type: string
-          description: The value for the identity.
-        type:
-          type: string
-          description: The [namespace qualifier](https://experienceleague.adobe.com/docs/experience-platform/privacy/api/appendix.html?lang=en#namespace-qualifiers) for the identity.
-        namespaceId:
-          type: integer
-          description: The ID of the namespace that was created or mapped through the namespace service.
-          format: int32
-        isDeletedClientSide:
-          type: boolean
-          description: Indicates whether the user's identity information was deleted on the client side or browser.
     PrivacyJobRequestDetails:
       required:
       - companyContexts
@@ -590,87 +733,6 @@ components:
           type: string
           description: A timestamp for when the job was last modified.
           format: date-time
-    PrivacyProductJobResponse:
-      type: object
-      properties:
-        status:
-          type: string
-          description: The product-specific status code for the job.
-        results:
-          $ref: '#/components/schemas/JsonNode'
-        message:
-          type: string
-          description: The response message from the product.
-      description: Contains response data from the product.
-    PrivacyJobCreateList:
-      type: object
-      properties:
-        requestId:
-          type: string
-          description: An ID for the API request that generated the jobs. If a `requestId` was not provided in the request payload, the system generates one automatically.
-          example: 16203318964318668RX-054
-        totalRecords:
-          type: integer
-          description: The number of jobs returned in the response.
-          format: int64
-        jobDetails:
-          type: array
-          description: Lists the details of each of the created privacy jobs.
-          items:
-            $ref: '#/components/schemas/PrivacyJobCreateDetails'
-      example:
-        requestId: 16203318964318668RX-054
-        totalRecords: 3
-        jobs:
-        - jobId: 6f40987c-e535-40bd-aad6-e9414978a095
-          customer:
-            user:
-              key: user12345
-              action:
-              - access
-              userIDs:
-              - namespace: email
-                value: ajones@acme.com
-                type: standard
-                namespaceId: 6
-                isDeletedClientSide: false
-              - namespace: loyaltyAccount
-                value: 12AD45FE30R29
-                type: integrationCode
-                isDeletedClientSide: false
-        - jobId: 6f258e0c-3a5c-4095-b379-e5e26b69ddec
-          customer:
-            user:
-              key: DavidSmith
-              action:
-              - access
-              userIDs:
-              - namespace: email
-                value: dsmith@acme.com
-                type: standard
-                namespaceId: 6
-                isDeletedClientSide: false
-              - namespace: ECID
-                value: '443636576799758681021090721276'
-                type: standard
-                namespaceId: 4
-                isDeletedClientSide: false
-        - jobId: cb62112d-aed8-4024-aa5c-312309e3dec7
-          customer:
-            user:
-              key: user12345
-              action:
-              - delete
-              userIDs:
-              - namespace: email
-                value: ajones@acme.com
-                type: standard
-                namespaceId: 6
-                isDeletedClientSide: false
-              - namespace: loyaltyAccount
-                value: 12AD45FE30R29
-                type: integrationCode
-                isDeletedClientSide: false
     PrivacyJobDetails:
       allOf:
       - $ref: '#/components/schemas/PrivacyJobBasic'
@@ -731,68 +793,6 @@ components:
           regulation:
             type: string
             description: The privacy regulation that the job was created under.
-    PrivacyJobListResponse:
-      type: object
-      properties:
-        totalRecords:
-          type: integer
-          description: The number of jobs returned in the response.
-          format: int64
-        jobDetails:
-          type: array
-          description: A list of returned jobs for the specified regulation. Each listed object contains details about the privacy job in question.
-          items:
-            $ref: '#/components/schemas/PrivacyJobBasic'
-      example:
-        totalRecords: 4
-        jobDetails:
-        - jobId: 3f9d2e11-4c7a-481f-8f58-f49a113fd158
-          requestId: 16197332222128898RX-318
-          userKey: '{USER_ID}'
-          action: delete
-          status: complete
-          submittedBy: '{USER_ID}'
-          createdDate: 04/29/2021 09:53 PM GMT
-          lastModifiedDate: 04/29/2021 11:20 PM GMT
-        - jobId: 8ce192aa-7ba7-4975-b82e-8db2faadf14d
-          requestId: 16190370131972548RX-946
-          userKey: '{USER_ID}'
-          action: access
-          status: complete
-          submittedBy: '{USER_ID}'
-          createdDate: 04/21/2021 08:30 PM GMT
-          lastModifiedDate: 04/21/2021 09:52 PM GMT
-        - jobId: 15c1e737-9512-4d5d-a67f-0c6b8db24745
-          requestId: 16189645482190022RX-311
-          userKey: '{USER_ID}'
-          action: access
-          status: complete
-          submittedBy: '{USER_ID}'
-          createdDate: 04/21/2021 12:22 AM GMT
-          lastModifiedDate: 04/21/2021 09:52 PM GMT
-        - jobId: cb8aab65-ba38-4703-ab8f-d035156fbaa9
-          requestId: 16189644965236664RX-029
-          userKey: '{USER_ID}'
-          action: access
-          status: complete
-          submittedBy: '{USER_ID}'
-          createdDate: 04/21/2021 12:21 AM GMT
-          lastModifiedDate: 04/21/2021 09:52 PM GMT
-    PrivacyJobCreateDetails:
-      type: object
-      properties:
-        jobId:
-          type: string
-          description: A unique, system-generated ID for the job.
-        customer:
-          type: object
-          properties:
-            user:
-              type: object
-              description: Contains information about the customer whose data is being processed by the job.
-              allOf:
-              - $ref: '#/components/schemas/PrivacyUserDetails'
-          description: Contains a single `user` object which captures information about the customer whose data is being processed by the job.
     PrivacyProductResponseDetails:
       type: object
       properties:

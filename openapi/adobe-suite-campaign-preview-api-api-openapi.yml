@@ -37,48 +37,25 @@ paths:
         404:
           $ref: '#/components/responses/404'
 components:
-  parameters:
-    CampaignIdParam:
-      name: campaignId
-      in: path
-      description: Campaign Id
-      required: true
-      schema:
-        type: string
-        example: 8fd4b5e2-e559-425b-bd89-389b007d32d5
-    APIKeyParam:
-      name: x-api-key
-      in: header
-      description: API Key located in Adobe Developer Console
-      required: true
-      schema:
-        type: string
-        example: 829495afa589475ab56850a702359cf9
-    AuthorizationParam:
-      name: Authorization
-      in: header
-      description: Authorization token
-      required: true
-      schema:
-        type: string
-        example: Bearer {{token}}
-    SandboxNameParam:
-      name: x-sandbox-name
-      in: header
-      description: Filter on platform sandbox name
-      required: true
-      schema:
-        type: string
-        example: prod
-    ImsOrgIdParam:
-      name: x-gw-ims-org-id
-      in: header
-      description: Your Identity Management Services (IMS) Organization id
-      required: true
-      schema:
-        type: string
-        example: 0A7F574EBB4C6E1423973F52@AdobeOrg
   schemas:
+    push-android-specific-properties:
+      type: object
+      properties:
+        media:
+          type: object
+          minProperties: 1
+          properties:
+            uri:
+              $ref: '#/components/schemas/push-media-uri'
+            iconUri:
+              $ref: '#/components/schemas/push-media-uri'
+    Channel:
+      type: object
+      description: channel
+      enum:
+      - email
+      - push
+      - sms
     PreviewRequestItem:
       type: object
       properties:
@@ -99,6 +76,15 @@ components:
       required:
       - userId
       - namespace
+    push-ios-specific-properties:
+      type: object
+      properties:
+        media:
+          type: object
+          minProperties: 1
+          properties:
+            uri:
+              $ref: '#/components/schemas/push-media-uri'
     push-media-uri:
       type: string
       description: External Link OR Adobe Asset ID
@@ -139,15 +125,21 @@ components:
           enum:
           - sms
           - mms
-    push-ios-specific-properties:
+    email-preview:
       type: object
       properties:
-        media:
+        subject:
+          type: string
+          title: Subject
+          description: Subject of Mail
+          example: Your test score
+        html:
           type: object
-          minProperties: 1
           properties:
-            uri:
-              $ref: '#/components/schemas/push-media-uri'
+            body:
+              type: string
+              description: HTML/Text body string
+              example: <html>Hello John </html>
     push-preview:
       type: object
       properties:
@@ -172,28 +164,6 @@ components:
           description: Properties specific to Android devices only
           allOf:
           - $ref: '#/components/schemas/push-android-specific-properties'
-    email-preview:
-      type: object
-      properties:
-        subject:
-          type: string
-          title: Subject
-          description: Subject of Mail
-          example: Your test score
-        html:
-          type: object
-          properties:
-            body:
-              type: string
-              description: HTML/Text body string
-              example: <html>Hello John </html>
-    Channel:
-      type: object
-      description: channel
-      enum:
-      - email
-      - push
-      - sms
     CampaignPreviewRequest:
       type: object
       properties:
@@ -203,24 +173,47 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PreviewRequestItem'
-    push-android-specific-properties:
-      type: object
-      properties:
-        media:
-          type: object
-          minProperties: 1
-          properties:
-            uri:
-              $ref: '#/components/schemas/push-media-uri'
-            iconUri:
-              $ref: '#/components/schemas/push-media-uri'
-  responses:
-    CampaignPreviewResponse:
-      description: Success Response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CampaignPreviewResponseBody'
+  parameters:
+    AuthorizationParam:
+      name: Authorization
+      in: header
+      description: Authorization token
+      required: true
+      schema:
+        type: string
+        example: Bearer {{token}}
+    SandboxNameParam:
+      name: x-sandbox-name
+      in: header
+      description: Filter on platform sandbox name
+      required: true
+      schema:
+        type: string
+        example: prod
+    ImsOrgIdParam:
+      name: x-gw-ims-org-id
+      in: header
+      description: Your Identity Management Services (IMS) Organization id
+      required: true
+      schema:
+        type: string
+        example: 0A7F574EBB4C6E1423973F52@AdobeOrg
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key located in Adobe Developer Console
+      required: true
+      schema:
+        type: string
+        example: 829495afa589475ab56850a702359cf9
+    CampaignIdParam:
+      name: campaignId
+      in: path
+      description: Campaign Id
+      required: true
+      schema:
+        type: string
+        example: 8fd4b5e2-e559-425b-bd89-389b007d32d5
   requestBodies:
     CampaignPreviewRequest:
       description: Campaign Preview Request
@@ -229,6 +222,13 @@ components:
           schema:
             allOf:
             - $ref: '#/components/schemas/CampaignPreviewRequest'
+  responses:
+    CampaignPreviewResponse:
+      description: Success Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CampaignPreviewResponseBody'
   securitySchemes:
     imsUserToken:
       type: http

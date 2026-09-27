@@ -206,33 +206,129 @@ paths:
                     locale: en-US
                     layer: seasonal-winter-2024
 components:
-  parameters:
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
   schemas:
+    ProductExternalId:
+      title: External Ids
+      type: object
+      required:
+      - id
+      - origin
+      properties:
+        id:
+          type: string
+          description: External ID of the product.
+        origin:
+          type: string
+          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    FeedProductLayerDelete:
+      title: Catalog Product Layer delete payload
+      type: object
+      required:
+      - sku
+      - source
+      properties:
+        sku:
+          type: string
+          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
+          example: red-pants
+        source:
+          $ref: '#/components/schemas/SourceLayer'
+    SourceLayer:
+      title: Catalog layer source
+      description: "Identifies the source context for a product layer, combining locale and layer name to create \na unique layer identifier. This allows for precise targeting of content overrides.\n"
+      type: object
+      required:
+      - layer
+      properties:
+        locale:
+          type: string
+          description: "ISO locale code (for example, \"en-US\", \"fr-FR\", \"de-DE\") that specifies the target market or language. \nWhen omitted, the layer applies globally across all locales. Use for market-specific customizations.\n"
+          example: en-US
+        layer:
+          type: string
+          description: "Unique identifier for the layer within the product's layer hierarchy. Use descriptive names \nthat indicate the layer's purpose (for example, \"seasonal-winter-2024\", \"promotional-black-friday\", \"a-b-test-variant\").\n"
+          example: seasonal-winter-2024
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    ProductLink:
+      title: Links
+      required:
+      - type
+      - sku
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'Product link type. Merchants can define custom types in addition to the predefined values.
+
+            - `VARIANT_OF` link type must be specified to establish a connection to the configurable product SKU.
+
+            - `IN_BUNDLE` link type must be specified to establish a connection to the bundle product SKU.
+
+            '
+        sku:
+          type: string
+          description: Product SKU
+      description: Product association
     ProductAttribute:
       title: Product Attribute
       type: object
@@ -260,21 +356,8 @@ components:
             A variant reference ID can be specified only for a product that represents a variant of a configurable product.
 
             '
-    ProductExternalId:
-      title: External Ids
-      type: object
-      required:
-      - id
-      - origin
-      properties:
-        id:
-          type: string
-          description: External ID of the product.
-        origin:
-          type: string
-          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
-    403Response:
-      title: 403 Forbidden
+    401Response:
+      title: 401 Unauthorized
       type: object
       properties:
         title:
@@ -290,48 +373,10 @@ components:
           type: string
           description: Error message
       example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
-    ProductImage:
-      title: Product Image
-      type: object
-      required:
-      - url
-      properties:
-        url:
-          type: string
-          description: Media resource URL
-        label:
-          type: string
-          description: Media resource label
-        roles:
-          type: array
-          description: 'Roles associated with this image that determine how the image is used on the storefront.
-
-            - `BASE`: Product image is visible as a main image on the Product Detail Page.
-
-            - `SMALL`: Product image is visible as a main image on the Category or search result page or other product listing pages.
-
-            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
-
-            - `SWATCH`: A swatch can be used to illustrate the color, pattern, or texture.
-
-            '
-          items:
-            enum:
-            - BASE
-            - SMALL
-            - THUMBNAIL
-            - SWATCH
-        customRoles:
-          type: array
-          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
-
-            '
-          items:
-            type: string
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
     FeedProductLayer:
       title: Catalog Product Layer payload
       type: object
@@ -383,100 +428,60 @@ components:
           description: External system identifiers that will be merged with base product external IDs. Use to add layer-specific tracking codes, campaign IDs, or integration references.
           items:
             $ref: '#/components/schemas/ProductExternalId'
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
-      type: object
-      properties:
-        code:
-          type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
-          type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
-    SourceLayer:
-      title: Catalog layer source
-      description: "Identifies the source context for a product layer, combining locale and layer name to create \na unique layer identifier. This allows for precise targeting of content overrides.\n"
-      type: object
-      required:
-      - layer
-      properties:
-        locale:
-          type: string
-          description: "ISO locale code (for example, \"en-US\", \"fr-FR\", \"de-DE\") that specifies the target market or language. \nWhen omitted, the layer applies globally across all locales. Use for market-specific customizations.\n"
-          example: en-US
-        layer:
-          type: string
-          description: "Unique identifier for the layer within the product's layer hierarchy. Use descriptive names \nthat indicate the layer's purpose (for example, \"seasonal-winter-2024\", \"promotional-black-friday\", \"a-b-test-variant\").\n"
-          example: seasonal-winter-2024
-    FeedProductLayerDelete:
-      title: Catalog Product Layer delete payload
-      type: object
-      required:
-      - sku
-      - source
-      properties:
-        sku:
-          type: string
-          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
-          example: red-pants
-        source:
-          $ref: '#/components/schemas/SourceLayer'
-    401Response:
-      title: 401 Unauthorized
+    ProductMetaAttribute:
+      title: Meta Attributes
+      description: Meta attributes that are specified in <meta> tags.
       type: object
       properties:
         title:
           type: string
-          description: Error title
-        status:
+          description: A meta title
+        keywords:
+          type: array
+          description: A meta keywords
+          items:
+            type: string
+        description:
           type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrInvalidOauthToken
-        status: '401'
-        error_code: '401013'
-        message: Oauth token is not valid
-    ProductLink:
-      title: Links
-      required:
-      - type
-      - sku
+          description: A meta description
+    ProductImage:
+      title: Product Image
       type: object
+      required:
+      - url
       properties:
-        type:
+        url:
           type: string
-          description: 'Product link type. Merchants can define custom types in addition to the predefined values.
+          description: Media resource URL
+        label:
+          type: string
+          description: Media resource label
+        roles:
+          type: array
+          description: 'Roles associated with this image that determine how the image is used on the storefront.
 
-            - `VARIANT_OF` link type must be specified to establish a connection to the configurable product SKU.
+            - `BASE`: Product image is visible as a main image on the Product Detail Page.
 
-            - `IN_BUNDLE` link type must be specified to establish a connection to the bundle product SKU.
+            - `SMALL`: Product image is visible as a main image on the Category or search result page or other product listing pages.
+
+            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
+
+            - `SWATCH`: A swatch can be used to illustrate the color, pattern, or texture.
 
             '
-        sku:
-          type: string
-          description: Product SKU
-      description: Product association
+          items:
+            enum:
+            - BASE
+            - SMALL
+            - THUMBNAIL
+            - SWATCH
+        customRoles:
+          type: array
+          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
+
+            '
+          items:
+            type: string
     400ProcessFeedResponse:
       title: Response payload
       type: object
@@ -505,49 +510,33 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
-    ProductMetaAttribute:
-      title: Meta Attributes
-      description: Meta attributes that are specified in <meta> tags.
-      type: object
-      properties:
-        title:
-          type: string
-          description: A meta title
-        keywords:
-          type: array
-          description: A meta keywords
-          items:
-            type: string
-        description:
-          type: string
-          description: A meta description
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
   responses:
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
     AcceptedResponse:
       x-summary: All items accepted
       description: 'All items accepted and will be processed asynchronously
@@ -557,15 +546,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -595,6 +575,17 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
     ForbiddenResponse:
       x-summary: Forbidden request
       description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
@@ -604,6 +595,15 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/403Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

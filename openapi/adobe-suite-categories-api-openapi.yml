@@ -260,159 +260,33 @@ paths:
                   source:
                     locale: en-US
 components:
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
   schemas:
-    FeedCategoryDelete:
-      title: Delete category
-      description: Delete category information for removing categories from the catalog.
-      required:
-      - slug
-      - source
-      type: object
-      properties:
-        slug:
-          type: string
-          minLength: 1
-          maxLength: 1024
-          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
-          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
-
-            Must use only lowercase letters, numbers, and hyphens.
-
-            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
-
-            '
-          example: men/clothing/pants
-        source:
-          $ref: '#/components/schemas/Source'
-      additionalProperties: false
-    FeedCategory:
-      title: FeedCategory
-      description: Category information for organizing products with hierarchical structure and localization support.
-      required:
-      - slug
-      - source
-      - name
-      type: object
-      properties:
-        slug:
-          type: string
-          minLength: 1
-          maxLength: 1024
-          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
-          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
-
-            String can contain only lowercase letters, numbers, and hyphens.
-
-            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
-
-            '
-          example: men/clothing/pants
-        source:
-          $ref: '#/components/schemas/Source'
-        name:
-          type: string
-          minLength: 1
-          maxLength: 128
-          description: Display name of the category
-          example: Men's Pants
-        description:
-          type:
-          - string
-          - 'null'
-          description: Full-text description of the category.
-          example: Men's clothing, shoes, and accessories
-        families:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: 'Optional array of product family identifiers that this category is associated with.
-
-            Used for enhanced product organization and filtering.
-
-            '
-          example:
-          - apparel
-          - clothing
-        position:
-          type: integer
-          format: int32
-          description: Sort order for the category
-        metaTags:
-          $ref: '#/components/schemas/CategoryMetaAttribute'
-        attributes:
-          type: array
-          description: A list of category attributes.
-          items:
-            $ref: '#/components/schemas/CategoryAttribute'
-        images:
-          type: array
-          description: A list of category images.
-          items:
-            $ref: '#/components/schemas/CategoryImage'
-      additionalProperties: false
-    CategoryAttribute:
-      title: Category Attribute
-      type: object
-      required:
-      - code
-      - values
-      properties:
-        code:
-          type: string
-          description: Category Attribute Code
-        values:
-          type: array
-          description: A list of value(s) associated with a specified attribute code.
-          items:
-            type: string
-    403Response:
-      title: 403 Forbidden
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
-      type: object
-      properties:
-        code:
-          type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
-          type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
     CategoryImage:
       title: Category Image
       type: object
@@ -445,38 +319,6 @@ components:
             '
           items:
             type: string
-    401Response:
-      title: 401 Unauthorized
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrInvalidOauthToken
-        status: '401'
-        error_code: '401013'
-        message: Oauth token is not valid
-    Source:
-      title: Catalog source
-      description: Source of the entity, for example, "en-US" for US English.
-      type: object
-      required:
-      - locale
-      properties:
-        locale:
-          type: string
-          description: A single value that represents content locale, for example, English.
-          example: English
     FeedCategoryUpdate:
       title: FeedCategoryUpdate
       description: Category information for updating existing categories.
@@ -547,6 +389,173 @@ components:
           items:
             $ref: '#/components/schemas/CategoryImage'
       additionalProperties: false
+    FeedCategory:
+      title: FeedCategory
+      description: Category information for organizing products with hierarchical structure and localization support.
+      required:
+      - slug
+      - source
+      - name
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
+          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
+
+            String can contain only lowercase letters, numbers, and hyphens.
+
+            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
+
+            '
+          example: men/clothing/pants
+        source:
+          $ref: '#/components/schemas/Source'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Display name of the category
+          example: Men's Pants
+        description:
+          type:
+          - string
+          - 'null'
+          description: Full-text description of the category.
+          example: Men's clothing, shoes, and accessories
+        families:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: 'Optional array of product family identifiers that this category is associated with.
+
+            Used for enhanced product organization and filtering.
+
+            '
+          example:
+          - apparel
+          - clothing
+        position:
+          type: integer
+          format: int32
+          description: Sort order for the category
+        metaTags:
+          $ref: '#/components/schemas/CategoryMetaAttribute'
+        attributes:
+          type: array
+          description: A list of category attributes.
+          items:
+            $ref: '#/components/schemas/CategoryAttribute'
+        images:
+          type: array
+          description: A list of category images.
+          items:
+            $ref: '#/components/schemas/CategoryImage'
+      additionalProperties: false
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    FeedCategoryDelete:
+      title: Delete category
+      description: Delete category information for removing categories from the catalog.
+      required:
+      - slug
+      - source
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
+          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
+
+            Must use only lowercase letters, numbers, and hyphens.
+
+            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
+
+            '
+          example: men/clothing/pants
+        source:
+          $ref: '#/components/schemas/Source'
+      additionalProperties: false
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    CategoryAttribute:
+      title: Category Attribute
+      type: object
+      required:
+      - code
+      - values
+      properties:
+        code:
+          type: string
+          description: Category Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
     CategoryMetaAttribute:
       title: Meta Attributes
       description: Meta attributes that are specified in <meta> tags.
@@ -563,6 +572,38 @@ components:
         description:
           type: string
           description: A meta description
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
+      type: object
+      required:
+      - locale
+      properties:
+        locale:
+          type: string
+          description: A single value that represents content locale, for example, English.
+          example: English
     400ProcessFeedResponse:
       title: Response payload
       type: object
@@ -591,59 +632,7 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
-  parameters:
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
   responses:
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
     AcceptedResponse:
       x-summary: All items accepted
       description: 'All items accepted and will be processed asynchronously
@@ -653,15 +642,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -691,6 +671,17 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
     ForbiddenResponse:
       x-summary: Forbidden request
       description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
@@ -700,6 +691,15 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/403Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

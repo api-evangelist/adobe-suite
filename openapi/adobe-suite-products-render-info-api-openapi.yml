@@ -83,11 +83,6 @@ paths:
       summary: products-render-info
 components:
   schemas:
-    error-errors:
-      type: array
-      description: Errors list
-      items:
-        $ref: '#/components/schemas/error-errors-item'
     catalog-data-product-render-formatted-price-info-interface:
       type: object
       description: 'Formatted Price interface. Aggregate formatted html with price representations. E.g.: <span class="price">$9.00</span> Consider currency, rounding and html'
@@ -123,30 +118,26 @@ components:
       - minimal_regular_price
       - special_price
       - regular_price
-    error-parameters:
-      type: array
-      description: Error parameters list
-      items:
-        $ref: '#/components/schemas/error-parameters-item'
-    catalog-data-product-render-button-interface:
+    catalog-data-product-render-search-results-interface:
       type: object
-      description: 'Button interface. This interface represents all manner of product buttons: add to cart, add to compare, etc... The buttons describes by this interface should have interaction with backend'
+      description: Dto that holds render information about products
       properties:
-        post_data:
-          type: string
-          description: Post data
-        url:
-          type: string
-          description: Url, needed to add product to cart
-        required_options:
-          type: boolean
-          description: Flag whether a product has options or not
-        extension_attributes:
-          $ref: '#/components/schemas/catalog-data-product-render-button-extension-interface'
+        items:
+          type: array
+          description: List of products rendered information
+          items:
+            $ref: '#/components/schemas/catalog-data-product-render-interface'
       required:
-      - post_data
-      - url
-      - required_options
+      - items
+    error-errors-item:
+      type: object
+      description: Error details
+      properties:
+        message:
+          type: string
+          description: Error message
+        parameters:
+          $ref: '#/components/schemas/error-parameters'
     msrp-data-product-render-msrp-price-info-interface:
       type: object
       description: Price interface.
@@ -169,25 +160,24 @@ components:
       - is_shown_price_on_gesture
       - msrp_message
       - explanation_message
-    catalog-data-product-render-extension-interface:
+    error-parameters:
+      type: array
+      description: Error parameters list
+      items:
+        $ref: '#/components/schemas/error-parameters-item'
+    error-parameters-item:
       type: object
-      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRenderInterface
+      description: Error parameters item
       properties:
-        wishlist_button:
-          $ref: '#/components/schemas/catalog-data-product-render-button-interface'
-        review_html:
+        resources:
           type: string
-    catalog-data-product-render-search-results-interface:
-      type: object
-      description: Dto that holds render information about products
-      properties:
-        items:
-          type: array
-          description: List of products rendered information
-          items:
-            $ref: '#/components/schemas/catalog-data-product-render-interface'
-      required:
-      - items
+          description: ACL resource
+        fieldName:
+          type: string
+          description: Missing or invalid field name
+        fieldValue:
+          type: string
+          description: Incorrect field value
     catalog-data-product-render-interface:
       type: object
       description: Represents Data Object which holds enough information to render product This information is put into part as Add To Cart or Add to Compare Data or Price Data
@@ -239,18 +229,29 @@ components:
       - store_id
       - currency_code
       - extension_attributes
-    error-errors-item:
+    error-response:
       type: object
-      description: Error details
       properties:
         message:
           type: string
           description: Error message
+        errors:
+          $ref: '#/components/schemas/error-errors'
+        code:
+          type: integer
+          description: Error code
         parameters:
           $ref: '#/components/schemas/error-parameters'
-    catalog-data-product-render-formatted-price-info-extension-interface:
-      type: object
-      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\FormattedPriceInfoInterface
+        trace:
+          type: string
+          description: Stack trace
+      required:
+      - message
+    error-errors:
+      type: array
+      description: Errors list
+      items:
+        $ref: '#/components/schemas/error-errors-item'
     catalog-data-product-render-image-interface:
       type: object
       description: Product Render image interface. Represents physical characteristics of image, that can be used in product listing or product view
@@ -286,91 +287,39 @@ components:
       - label
       - resized_width
       - resized_height
-    weee-data-product-render-weee-adjustment-attribute-interface:
-      type: object
-      description: List of all weee attributes, their amounts, etc.., that product has
-      properties:
-        amount:
-          type: string
-          description: Weee attribute amount
-        tax_amount:
-          type: string
-          description: Tax which is calculated to fixed product tax attribute
-        tax_amount_incl_tax:
-          type: string
-          description: Tax amount of weee attribute
-        amount_excl_tax:
-          type: string
-          description: Product amount exclude tax
-        attribute_code:
-          type: string
-          description: Weee attribute code
-        extension_attributes:
-          $ref: '#/components/schemas/weee-data-product-render-weee-adjustment-attribute-extension-interface'
-      required:
-      - amount
-      - tax_amount
-      - tax_amount_incl_tax
-      - amount_excl_tax
-      - attribute_code
-      - extension_attributes
-    msrp-data-product-render-msrp-price-info-extension-interface:
-      type: object
-      description: ExtensionInterface class for @see \Magento\Msrp\Api\Data\ProductRender\MsrpPriceInfoInterface
-    error-parameters-item:
-      type: object
-      description: Error parameters item
-      properties:
-        resources:
-          type: string
-          description: ACL resource
-        fieldName:
-          type: string
-          description: Missing or invalid field name
-        fieldValue:
-          type: string
-          description: Incorrect field value
-    catalog-data-product-render-price-info-extension-interface:
-      type: object
-      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\PriceInfoInterface
-      properties:
-        msrp:
-          $ref: '#/components/schemas/msrp-data-product-render-msrp-price-info-interface'
-        tax_adjustments:
-          $ref: '#/components/schemas/catalog-data-product-render-price-info-interface'
-        weee_attributes:
-          type: array
-          items:
-            $ref: '#/components/schemas/weee-data-product-render-weee-adjustment-attribute-interface'
-        weee_adjustment:
-          type: string
     catalog-data-product-render-button-extension-interface:
       type: object
       description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\ButtonInterface
-    catalog-data-product-render-image-extension-interface:
-      type: object
-      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\ImageInterface
     weee-data-product-render-weee-adjustment-attribute-extension-interface:
       type: object
       description: ExtensionInterface class for @see \Magento\Weee\Api\Data\ProductRender\WeeeAdjustmentAttributeInterface
-    error-response:
+    catalog-data-product-render-extension-interface:
       type: object
+      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRenderInterface
       properties:
-        message:
+        wishlist_button:
+          $ref: '#/components/schemas/catalog-data-product-render-button-interface'
+        review_html:
           type: string
-          description: Error message
-        errors:
-          $ref: '#/components/schemas/error-errors'
-        code:
-          type: integer
-          description: Error code
-        parameters:
-          $ref: '#/components/schemas/error-parameters'
-        trace:
+    catalog-data-product-render-button-interface:
+      type: object
+      description: 'Button interface. This interface represents all manner of product buttons: add to cart, add to compare, etc... The buttons describes by this interface should have interaction with backend'
+      properties:
+        post_data:
           type: string
-          description: Stack trace
+          description: Post data
+        url:
+          type: string
+          description: Url, needed to add product to cart
+        required_options:
+          type: boolean
+          description: Flag whether a product has options or not
+        extension_attributes:
+          $ref: '#/components/schemas/catalog-data-product-render-button-extension-interface'
       required:
-      - message
+      - post_data
+      - url
+      - required_options
     catalog-data-product-render-price-info-interface:
       type: object
       description: Price interface.
@@ -409,6 +358,57 @@ components:
       - minimal_price
       - regular_price
       - formatted_prices
+    msrp-data-product-render-msrp-price-info-extension-interface:
+      type: object
+      description: ExtensionInterface class for @see \Magento\Msrp\Api\Data\ProductRender\MsrpPriceInfoInterface
+    catalog-data-product-render-image-extension-interface:
+      type: object
+      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\ImageInterface
+    weee-data-product-render-weee-adjustment-attribute-interface:
+      type: object
+      description: List of all weee attributes, their amounts, etc.., that product has
+      properties:
+        amount:
+          type: string
+          description: Weee attribute amount
+        tax_amount:
+          type: string
+          description: Tax which is calculated to fixed product tax attribute
+        tax_amount_incl_tax:
+          type: string
+          description: Tax amount of weee attribute
+        amount_excl_tax:
+          type: string
+          description: Product amount exclude tax
+        attribute_code:
+          type: string
+          description: Weee attribute code
+        extension_attributes:
+          $ref: '#/components/schemas/weee-data-product-render-weee-adjustment-attribute-extension-interface'
+      required:
+      - amount
+      - tax_amount
+      - tax_amount_incl_tax
+      - amount_excl_tax
+      - attribute_code
+      - extension_attributes
+    catalog-data-product-render-price-info-extension-interface:
+      type: object
+      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\PriceInfoInterface
+      properties:
+        msrp:
+          $ref: '#/components/schemas/msrp-data-product-render-msrp-price-info-interface'
+        tax_adjustments:
+          $ref: '#/components/schemas/catalog-data-product-render-price-info-interface'
+        weee_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/weee-data-product-render-weee-adjustment-attribute-interface'
+        weee_adjustment:
+          type: string
+    catalog-data-product-render-formatted-price-info-extension-interface:
+      type: object
+      description: ExtensionInterface class for @see \Magento\Catalog\Api\Data\ProductRender\FormattedPriceInfoInterface
   securitySchemes:
     api_key:
       type: apiKey

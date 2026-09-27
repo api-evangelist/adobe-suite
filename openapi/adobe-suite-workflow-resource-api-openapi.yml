@@ -67,6 +67,80 @@ paths:
       - AdobeUserToken: []
 components:
   schemas:
+    Campaign_Error_Chain:
+      type: object
+      properties:
+        serviceId:
+          type: string
+        errorCode:
+          type: string
+        invokingServiceId:
+          type: string
+        unixTimeStampMs:
+          type: integer
+          format: int64
+      readOnly: true
+    Activity_Invocation:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        klass:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        outcome:
+          type: string
+          readOnly: true
+          enum:
+          - success
+          - client_error
+          - service_error
+          - upstream_error
+          - unknown
+        exceptionName:
+          type: string
+          readOnly: true
+        exceptionMessage:
+          type: string
+          readOnly: true
+        duration:
+          type: integer
+          format: int64
+          readOnly: true
+      readOnly: true
+    Validation_Model:
+      type: object
+      properties:
+        errorLevel:
+          type: string
+          enum:
+          - ERROR
+          - WARNING
+        errorMessage:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Campaign_Notifications'
+      description: filterable
+      readOnly: true
+    Error_Details:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        detail:
+          type: object
+          additionalProperties:
+            type: object
+      readOnly: true
+      deprecated: true
     Pes_Details_Model:
       required:
       - empty
@@ -86,47 +160,56 @@ components:
             type: string
         empty:
           type: boolean
-    Campaign_Notification_Model:
+    Link_details:
       type: object
       properties:
+        href:
+          type: string
         type:
           type: string
-          description: sortable
-          readOnly: true
+        templated:
+          type: boolean
+        method:
+          type: string
         title:
           type: string
-          description: sortable
-          readOnly: true
-        message:
+        hrefLang:
           type: string
-          description: sortable
-          readOnly: true
-        status:
-          type: integer
-          description: sortable
-          format: int32
-          readOnly: true
-        report:
-          $ref: '#/components/schemas/Campaign_Report_Model'
-        error-chain:
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/Campaign_Error_Chain'
-        error:
-          $ref: '#/components/schemas/Error_Details'
-    Campaign_Error_Chain:
+    Campaign_Notification_Additional_Context:
       type: object
       properties:
-        serviceId:
+        source:
           type: string
-        errorCode:
+        sourceId:
           type: string
-        invokingServiceId:
+        errorLevel:
           type: string
-        unixTimeStampMs:
-          type: integer
-          format: int64
+        variantId:
+          type: string
+        channel:
+          type: string
+        parameters:
+          type: object
+          additionalProperties:
+            type: object
+    Pes_option:
+      type: object
+      properties:
+        id:
+          type: string
+        contentType:
+          type: string
+        schemaPath:
+          type: string
+    Campaign_Report_Model:
+      type: object
+      properties:
+        tenantInfo:
+          type: object
+          additionalProperties:
+            type: string
+        additionalContext:
+          $ref: '#/components/schemas/Campaign_Notification_Additional_Context'
       readOnly: true
     Campaign_Notifications:
       type: object
@@ -160,37 +243,50 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/Link_details'
           readOnly: true
-    Link_details:
+    Result_Model:
       type: object
       properties:
-        href:
-          type: string
         type:
           type: string
-        templated:
-          type: boolean
-        method:
+          description: sortable, filterable
+          readOnly: true
+        id:
           type: string
-        title:
+          description: sortable, filterable
+          readOnly: true
+        ref:
           type: string
-        hrefLang:
-          type: string
-    Validation_Model:
+          readOnly: true
+      readOnly: true
+    Campaign_Notification_Model:
       type: object
       properties:
-        errorLevel:
+        type:
           type: string
-          enum:
-          - ERROR
-          - WARNING
-        errorMessage:
+          description: sortable
+          readOnly: true
+        title:
           type: string
-        results:
+          description: sortable
+          readOnly: true
+        message:
+          type: string
+          description: sortable
+          readOnly: true
+        status:
+          type: integer
+          description: sortable
+          format: int32
+          readOnly: true
+        report:
+          $ref: '#/components/schemas/Campaign_Report_Model'
+        error-chain:
           type: array
+          readOnly: true
           items:
-            $ref: '#/components/schemas/Campaign_Notifications'
-      description: filterable
-      readOnly: true
+            $ref: '#/components/schemas/Campaign_Error_Chain'
+        error:
+          $ref: '#/components/schemas/Error_Details'
     Workflow_Model:
       type: object
       properties:
@@ -293,15 +389,6 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/Link_details'
           readOnly: true
-    Pes_option:
-      type: object
-      properties:
-        id:
-          type: string
-        contentType:
-          type: string
-        schemaPath:
-          type: string
     Pes_parent:
       type: object
       properties:
@@ -311,93 +398,6 @@ components:
           type: string
         namespace:
           type: string
-    Error_Details:
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        detail:
-          type: object
-          additionalProperties:
-            type: object
-      readOnly: true
-      deprecated: true
-    Campaign_Report_Model:
-      type: object
-      properties:
-        tenantInfo:
-          type: object
-          additionalProperties:
-            type: string
-        additionalContext:
-          $ref: '#/components/schemas/Campaign_Notification_Additional_Context'
-      readOnly: true
-    Activity_Invocation:
-      type: object
-      properties:
-        id:
-          type: string
-          readOnly: true
-        klass:
-          type: string
-          readOnly: true
-        name:
-          type: string
-          readOnly: true
-        outcome:
-          type: string
-          readOnly: true
-          enum:
-          - success
-          - client_error
-          - service_error
-          - upstream_error
-          - unknown
-        exceptionName:
-          type: string
-          readOnly: true
-        exceptionMessage:
-          type: string
-          readOnly: true
-        duration:
-          type: integer
-          format: int64
-          readOnly: true
-      readOnly: true
-    Result_Model:
-      type: object
-      properties:
-        type:
-          type: string
-          description: sortable, filterable
-          readOnly: true
-        id:
-          type: string
-          description: sortable, filterable
-          readOnly: true
-        ref:
-          type: string
-          readOnly: true
-      readOnly: true
-    Campaign_Notification_Additional_Context:
-      type: object
-      properties:
-        source:
-          type: string
-        sourceId:
-          type: string
-        errorLevel:
-          type: string
-        variantId:
-          type: string
-        channel:
-          type: string
-        parameters:
-          type: object
-          additionalProperties:
-            type: object
   securitySchemes:
     x-api-key:
       type: apiKey

@@ -363,9 +363,40 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
+    GraphRequestXids:
+      allOf:
+      - type: object
+        properties:
+          xids:
+            type: array
+            items:
+              $ref: '#/components/schemas/Id'
+            minItems: 1
+            maxItems: 1000
+      - $ref: '#/components/schemas/GraphRequestBase'
+    GraphRequestCompositeXids:
+      allOf:
+      - type: object
+        properties:
+          composite_xids:
+            type: array
+            items:
+              $ref: '#/components/schemas/GraphResponseCompositeXid'
+            minItems: 1
+            maxItems: 1000
+      - $ref: '#/components/schemas/GraphRequestBase'
     Id:
       type: string
       description: Identity string as returned by /identity/identity GET api.
+    GraphResponseVerticle:
+      type: object
+      properties:
+        last_updated_ts:
+          type: integer
+        composite_xid:
+          $ref: '#/components/schemas/GraphResponseCompositeXid'
+        xid:
+          $ref: '#/components/schemas/Id'
     GraphResponseEdge:
       type: object
       properties:
@@ -395,22 +426,6 @@ components:
             '
           items:
             type: string
-    GraphResponseVerticle:
-      type: object
-      properties:
-        last_updated_ts:
-          type: integer
-        composite_xid:
-          $ref: '#/components/schemas/GraphResponseCompositeXid'
-        xid:
-          $ref: '#/components/schemas/Id'
-    GraphRequestTraverse:
-      type: object
-      properties:
-        predicate:
-          type: array
-          items:
-            $ref: '#/components/schemas/GraphPredicate'
     GraphRequestBase:
       type: object
       properties:
@@ -447,17 +462,6 @@ components:
             It will only apply if the requested projection_type is graph.
 
             '
-    GraphRequestXids:
-      allOf:
-      - type: object
-        properties:
-          xids:
-            type: array
-            items:
-              $ref: '#/components/schemas/Id'
-            minItems: 1
-            maxItems: 1000
-      - $ref: '#/components/schemas/GraphRequestBase'
     GraphRequestFilter:
       type: object
       properties:
@@ -469,17 +473,6 @@ components:
           type: string
         limit:
           type: string
-    GraphRequestCompositeXids:
-      allOf:
-      - type: object
-        properties:
-          composite_xids:
-            type: array
-            items:
-              $ref: '#/components/schemas/GraphResponseCompositeXid'
-            minItems: 1
-            maxItems: 1000
-      - $ref: '#/components/schemas/GraphRequestBase'
     GraphResponseCompositeXid:
       type: object
       properties:
@@ -492,6 +485,61 @@ components:
         ns:
           description: Namespace code
           type: string
+    GraphResponse:
+      type: object
+      properties:
+        version:
+          type: string
+        graphs:
+          type: object
+          properties:
+            vertices:
+              type: array
+              description: 'This field is returned for requests with projection_type: graph <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                $ref: '#/components/schemas/GraphResponseVerticle'
+            edges:
+              type: array
+              description: 'This field is returned for requests with projection_type: graph <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                $ref: '#/components/schemas/GraphResponseEdge'
+            members:
+              type: array
+              description: 'This field is returned for requests with projection_type: set <br/><br/>
+
+                The returned identities are formatted to match the request (composite_xid/xid)
+
+                '
+              items:
+                oneOf:
+                - $ref: '#/components/schemas/GraphResponseCompositeXid'
+                - $ref: '#/components/schemas/Id'
+            datasources:
+              type: array
+              items:
+                $ref: '#/components/schemas/GraphResponseDataSources'
+        unprocessed_composite_xids:
+          type: array
+          description: 'This field is returned when the requested identity is formatted as composite_xid
+
+            '
+          items:
+            $ref: '#/components/schemas/GraphResponseCompositeXid'
+        unprocessed_xids:
+          type: array
+          description: 'This field is returned when the requested identity is formatted as xid
+
+            '
+          items:
+            $ref: '#/components/schemas/Id'
     ServiceErrorStatus:
       type: object
       properties:
@@ -556,72 +604,13 @@ components:
                     type: string
                   unixTimeStampMs:
                     type: integer
-    GraphResponse:
+    GraphRequestTraverse:
       type: object
       properties:
-        version:
-          type: string
-        graphs:
-          type: object
-          properties:
-            vertices:
-              type: array
-              description: 'This field is returned for requests with projection_type: graph <br/><br/>
-
-                The returned identities are formatted to match the request (composite_xid/xid)
-
-                '
-              items:
-                $ref: '#/components/schemas/GraphResponseVerticle'
-            edges:
-              type: array
-              description: 'This field is returned for requests with projection_type: graph <br/><br/>
-
-                The returned identities are formatted to match the request (composite_xid/xid)
-
-                '
-              items:
-                $ref: '#/components/schemas/GraphResponseEdge'
-            members:
-              type: array
-              description: 'This field is returned for requests with projection_type: set <br/><br/>
-
-                The returned identities are formatted to match the request (composite_xid/xid)
-
-                '
-              items:
-                oneOf:
-                - $ref: '#/components/schemas/GraphResponseCompositeXid'
-                - $ref: '#/components/schemas/Id'
-            datasources:
-              type: array
-              items:
-                $ref: '#/components/schemas/GraphResponseDataSources'
-        unprocessed_composite_xids:
-          type: array
-          description: 'This field is returned when the requested identity is formatted as composite_xid
-
-            '
-          items:
-            $ref: '#/components/schemas/GraphResponseCompositeXid'
-        unprocessed_xids:
-          type: array
-          description: 'This field is returned when the requested identity is formatted as xid
-
-            '
-          items:
-            $ref: '#/components/schemas/Id'
-    GraphResponseDataSources:
-      type: object
-      properties:
-        composite_xid:
-          $ref: '#/components/schemas/GraphResponseCompositeXid'
-        xid:
-          $ref: '#/components/schemas/Id'
-        ds_ids:
+        predicate:
           type: array
           items:
-            type: integer
+            $ref: '#/components/schemas/GraphPredicate'
     GraphPredicate:
       type: object
       properties:
@@ -633,39 +622,18 @@ components:
           type: string
         value:
           type: string
+    GraphResponseDataSources:
+      type: object
+      properties:
+        composite_xid:
+          $ref: '#/components/schemas/GraphResponseCompositeXid'
+        xid:
+          $ref: '#/components/schemas/Id'
+        ds_ids:
+          type: array
+          items:
+            type: integer
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: 'The API key which can be copied from your Experience Platform
-
-        integration. For more information on how to obtain this value, visit the
-
-        [authentication
-
-        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-
-        '
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the request. Use 'application/json'.
-      required: true
-      schema:
-        type: string
-        default: application/json
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-
-        '
-      schema:
-        type: string
-        example: prod
     authorization:
       name: Authorization
       in: header
@@ -687,6 +655,30 @@ components:
       description: Request id to be used for tracing this request.
       schema:
         type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+
+        '
+      schema:
+        type: string
+        example: prod
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: 'The API key which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -702,4 +694,12 @@ components:
       required: true
       schema:
         type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the request. Use 'application/json'.
+      required: true
+      schema:
+        type: string
+        default: application/json
 x-original-swagger-version: '2.0'

@@ -223,10 +223,30 @@ paths:
                 MaintenanceError:
                   $ref: '#/components/examples/MaintenanceErrorExample'
 components:
-  responses:
-    Unauthorized:
-      description: The request failed due to missing or invalid authentication token.
   schemas:
+    max1024CharacterString:
+      maxLength: 1024
+      minLength: 1
+      type: string
+    utcDateTime:
+      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
+      type: string
+      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
+    MaintenanceError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - MaintenanceError
+        description:
+          type: string
+          enum:
+          - Service is unavailable
+        subtype:
+          type: string
+          enum:
+          - MaintenanceError
     ServiceUnavailable:
       type: object
       properties:
@@ -238,6 +258,20 @@ components:
           type: string
           enum:
           - Service is temporarily unavailable
+    uuid:
+      pattern: ^[a-f0-9]{32}$
+      type: string
+    AccessForbiddenAccountStateError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4301
+        description:
+          type: string
+          enum:
+          - Access forbidden due to account state of resource owner
     EntitlementExpiredError:
       type: object
       description: Returned when the resource owner's account entitlement has expired (for example, an account whose subscription has lapsed).
@@ -264,21 +298,6 @@ components:
                 type: string
                 enum:
                 - not allowed
-    MaintenanceError:
-      type: object
-      properties:
-        code:
-          type: string
-          enum:
-          - MaintenanceError
-        description:
-          type: string
-          enum:
-          - Service is unavailable
-        subtype:
-          type: string
-          enum:
-          - MaintenanceError
     NotFound:
       type: object
       properties:
@@ -299,6 +318,17 @@ components:
           type: string
           enum:
           - Resource not found
+    AccessForbiddenError:
+      type: object
+      properties:
+        code:
+          type: integer
+          enum:
+          - 4300
+        description:
+          type: string
+          enum:
+          - Access is forbidden
     InvalidAPIKeyError:
       type: object
       properties:
@@ -310,21 +340,6 @@ components:
           type: string
           enum:
           - API Key is invalid
-    max1024CharacterString:
-      maxLength: 1024
-      minLength: 1
-      type: string
-    AccessForbiddenAccountStateError:
-      type: object
-      properties:
-        code:
-          type: integer
-          enum:
-          - 4301
-        description:
-          type: string
-          enum:
-          - Access forbidden due to account state of resource owner
     UnexpectedEntitlementError:
       type: object
       description: Returned when the resource owner's account is in an unexpected entitlement state for the requested operation (for example, a partner request on behalf of an account that is not an active subscriber).
@@ -351,40 +366,39 @@ components:
                 type: string
                 enum:
                 - not allowed
-    uuid:
-      pattern: ^[a-f0-9]{32}$
-      type: string
-    AccessForbiddenError:
-      type: object
-      properties:
-        code:
-          type: integer
-          enum:
-          - 4300
-        description:
-          type: string
-          enum:
-          - Access is forbidden
-    utcDateTime:
-      pattern: ^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]|[0-9][1-9][0-9]{2}|[1-9][0-9]{3})-((02-([1-2][0-9]|0[1-9]))|((01|03|05|07|08|10|12)-(3[0-1]|[1-2][0-9]|0[1-9]))|((04|06|09|11)-(30|[1-2][0-9]|0[1-9])))T(2[0-3]|[0-1][0-9]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?Z$
-      type: string
-      description: datetime in RFC-3339 format (subset of ISO-8601) requiring a UTC time ending with Z (so -00:00 or +00-00 suffix NOT allowed). The datetime must have date and time, including seconds, e.g. 2016-01-15T09:23:34Z.
   examples:
-    MaintenanceErrorExample:
-      summary: MaintenanceError
-      value:
-        code: MaintenanceError
-        description: Service is unavailable
-    ForbiddenKeyExample:
-      summary: Invalid API Key
-      value:
-        code: 403003
-        description: API Key is invalid
     AccessForbiddenExample:
       summary: Access Forbidden
       value:
         code: 4300
         description: Access is forbidden
+    MaintenanceErrorExample:
+      summary: MaintenanceError
+      value:
+        code: MaintenanceError
+        description: Service is unavailable
+    CatalogNotFoundExample:
+      summary: ResourceNotFoundError
+      value:
+        errors:
+          catalog:
+          - does not exist
+        code: 1000
+        description: Resource not found
+    EntitlementExpiredExample:
+      summary: Entitlement Expired (string code)
+      value:
+        code: EntitlementExpiredError
+        description: Resources unavailable because owner account entitlement has expired
+        errors:
+          catalog:
+          - not allowed
+        subtype: EntitlementExpiredError
+    ServiceUnavailableExample:
+      summary: ServiceUnavailable
+      value:
+        code: 9999
+        description: Service is temporarily unavailable
     UnexpectedEntitlementExample:
       summary: Unexpected Entitlement (string code)
       value:
@@ -399,28 +413,14 @@ components:
       value:
         code: 4301
         description: Access forbidden due to account state of resource owner
-    CatalogNotFoundExample:
-      summary: ResourceNotFoundError
+    ForbiddenKeyExample:
+      summary: Invalid API Key
       value:
-        errors:
-          catalog:
-          - does not exist
-        code: 1000
-        description: Resource not found
-    ServiceUnavailableExample:
-      summary: ServiceUnavailable
-      value:
-        code: 9999
-        description: Service is temporarily unavailable
-    EntitlementExpiredExample:
-      summary: Entitlement Expired (string code)
-      value:
-        code: EntitlementExpiredError
-        description: Resources unavailable because owner account entitlement has expired
-        errors:
-          catalog:
-          - not allowed
-        subtype: EntitlementExpiredError
+        code: 403003
+        description: API Key is invalid
+  responses:
+    Unauthorized:
+      description: The request failed due to missing or invalid authentication token.
 externalDocs:
   description: Find out more about Lightroom
   url: https://www.adobe.com/products/photoshop-lightroom.html

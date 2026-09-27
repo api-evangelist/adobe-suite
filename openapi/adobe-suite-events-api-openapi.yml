@@ -615,21 +615,6 @@ paths:
     servers:
     - url: https://status.adobe.io/
 components:
-  parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
-      required: true
-      schema:
-        type: string
   schemas:
     UploadedFileInfo:
       type: object
@@ -705,13 +690,6 @@ components:
           type: string
           example: File is valid
           description: A success message for validation requests
-    ApiUnauthorizedError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Invalid token (1)
-          description: Error during authentication
     ApiError:
       type: object
       properties:
@@ -719,6 +697,13 @@ components:
           type: string
           example: Request is missing required header 'x-adobe-vgid'
           description: General request error is encountered
+    ApiUnauthorizedError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid token (1)
+          description: Error during authentication
     Event:
       title: Event
       type: object
@@ -731,6 +716,95 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MaintenanceDto'
+    IncidentDto:
+      title: IncidentDto
+      type: object
+      properties:
+        clouds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventCloud'
+        environment:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEnvironment'
+        id:
+          type: string
+        offering:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventOfferingDto'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentProductDto'
+        region:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegion'
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventServices'
+    EventEnvironment:
+      title: EventEnvironment
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    LocationImpact:
+      title: LocationImpact
+      type: object
+      properties:
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        serviceRegions:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    ImpactedServices:
+      title: ImpactedServices
+      type: object
+      properties:
+        productCapabilities:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productOfferings:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    EventCloud:
+      title: EventCloud
+      type: object
+      properties:
+        cloudProducts:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        name:
+          type: string
     MaintenanceDto:
       title: MaintenanceDto
       type: object
@@ -787,6 +861,19 @@ components:
           - Empty
           - Scheduled
           - Started
+    EventOfferingDto:
+      title: EventOfferingDto
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
     MaintenanceProductDto:
       title: MaintenanceProductDto
       type: object
@@ -799,36 +886,73 @@ components:
           type: string
         name:
           type: string
-    IncidentDto:
-      title: IncidentDto
+    EventServices:
+      title: EventServices
       type: object
       properties:
-        clouds:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventCloud'
-        environment:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventEnvironment'
         id:
           type: string
-        offering:
+        name:
+          type: string
+        serviceEnvironments:
+          uniqueItems: true
           type: array
           items:
-            $ref: '#/components/schemas/EventOfferingDto'
-        products:
-          type: array
-          items:
-            $ref: '#/components/schemas/IncidentProductDto'
-        region:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventRegion'
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventServices'
+            type: string
+    MaintenanceHistoryEvent:
+      title: MaintenanceHistoryEvent
+      required:
+      - customerImpact
+      - messageType
+      - operationsImpact
+      - showEnvironment
+      - status
+      type: object
+      properties:
+        customerImpact:
+          type: string
+          enum:
+          - Most
+          - None
+          - Some
+          - Unknown
+        id:
+          type: string
+        locationImpact:
+          $ref: '#/components/schemas/LocationImpact'
+        messageTime:
+          minimum: 1
+          type: integer
+          format: int64
+        messageToken:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - Canned
+          - Custom
+        operationsImpact:
+          type: string
+          enum:
+          - Availability
+          - None
+          - Performance
+          - Unknown
+        serviceImpact:
+          $ref: '#/components/schemas/ImpactedServices'
+        showEnvironment:
+          type: boolean
+        status:
+          type: string
+          enum:
+          - Cancelled
+          - Completed
+          - Empty
+          - Scheduled
+          - Started
+          - Updated
+        titleToken:
+          type: string
     IncidentProductDto:
       title: IncidentProductDto
       type: object
@@ -859,51 +983,14 @@ components:
           - Closed
           - Empty
           - Opened
-    EventEnvironment:
-      title: EventEnvironment
+    EventRegion:
+      title: EventRegion
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        serviceRegions:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    EventOfferingDto:
-      title: EventOfferingDto
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        productServices:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    ImpactedServices:
-      title: ImpactedServices
-      type: object
-      properties:
-        productCapabilities:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productOfferings:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productServices:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
     IncidentHistoryEventDto:
       title: IncidentHistoryEventDto
       type: object
@@ -965,108 +1052,21 @@ components:
           - Opened
         titleToken:
           type: string
-    MaintenanceHistoryEvent:
-      title: MaintenanceHistoryEvent
-      required:
-      - customerImpact
-      - messageType
-      - operationsImpact
-      - showEnvironment
-      - status
-      type: object
-      properties:
-        customerImpact:
-          type: string
-          enum:
-          - Most
-          - None
-          - Some
-          - Unknown
-        id:
-          type: string
-        locationImpact:
-          $ref: '#/components/schemas/LocationImpact'
-        messageTime:
-          minimum: 1
-          type: integer
-          format: int64
-        messageToken:
-          type: string
-        messageType:
-          type: string
-          enum:
-          - Canned
-          - Custom
-        operationsImpact:
-          type: string
-          enum:
-          - Availability
-          - None
-          - Performance
-          - Unknown
-        serviceImpact:
-          $ref: '#/components/schemas/ImpactedServices'
-        showEnvironment:
-          type: boolean
-        status:
-          type: string
-          enum:
-          - Cancelled
-          - Completed
-          - Empty
-          - Scheduled
-          - Started
-          - Updated
-        titleToken:
-          type: string
-    EventCloud:
-      title: EventCloud
-      type: object
-      properties:
-        cloudProducts:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        id:
-          type: string
-        name:
-          type: string
-    EventServices:
-      title: EventServices
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        serviceEnvironments:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    EventRegion:
-      title: EventRegion
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-    LocationImpact:
-      title: LocationImpact
-      type: object
-      properties:
-        serviceEnvironments:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        serviceRegions:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string
   securitySchemes:
     Authorization:
       description: '[To generate OAuth Authorization token](https://developer.adobe.com/developer-console/docs/guides/authentication/ServerToServerAuthentication/implementation/)'

@@ -237,52 +237,135 @@ components:
         meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
         meta:sandboxType: production
         meta:tenantNamespace: _{TENANT_ID}
-    allOfRef:
+    xdmTypeToSchema:
       type: object
       properties:
-        $ref:
-          type: string
-          description: The `$id` of the XDM resource.
-        type:
-          type: string
-          description: The resource type (typically `object`).
         meta:xdmType:
           type: string
           description: The XDM resource type (typically `object`).
-    singleClassResponse:
-      allOf:
-      - $ref: '#/components/schemas/singleBehaviorResponse'
-      example:
-        $id: https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journey
-        meta:altId: _experience.journeyOrchestration.stepEvents.journey
-        meta:resourceType: classes
-        version: 1.27.4
-        title: Journey Orchestration Class
+        meta:status:
+          type: string
+          description: (For `global` resources only) The status of the resource.
+        $schema:
+          type: string
+          description: The JSON schema definition that this resource is based on.
+    lookupResourceCore:
+      type: object
+      properties:
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:resourceType:
+          type: string
+          description: The type of XDM resource.
+          example: schemas
+        version:
+          type: string
+          description: The current version of the resource.
+          example: 1.4
+        title:
+          type: string
+          description: The title of the resource.
+          example: Hotels
+        type:
+          type: string
+          description: The JSON Schema element type that represents the XDM resource (typically `object`).
+          example: object
+        description:
+          type: string
+          description: A description for the resource.
+    record:
+      type: string
+      example: '#/definitions/record'
+    patchSchema:
+      type: array
+      description: A list of JSON Patch operation objects. Each object contains information about the action to be performed and the attribute to perform it on.
+      items:
         type: object
-        description: A Record based Journey class for Journey orchestration contains common journey fields
-        definitions:
-          journeyClass:
-            properties: {}
+        properties:
+          op:
+            type: string
+            example: add
+            description: The JSON Patch operation to be performed.
+          path:
+            type: string
+            example: /meta:immutableTags-
+            description: The path to the field that the operation should be performed on.
+          value:
+            type: string
+            example: union
+            description: If adding or updating an attribute, this property indicates the value that should be set for that property.
+        required:
+        - op
+        - path
+    createClass:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The JSON Schema data type for the payload. Must be set to `object`.
+          example: object
+        title:
+          type: string
+          description: A title for the class.
+          example: New Class
+        description:
+          type: string
+          description: A description for the class.
+          example: Description of the new class.
         allOf:
-        - '$ref ': https://ns.adobe.com/xdm/data/record
+          type: array
+          description: Lists the behavior that the class inherits along with any additional class-level fields.
+          items:
+            type: object
+            properties:
+              '$ref ':
+                type: string
+                description: The `$id` of the referenced XDM resource.
+                example: https://ns.adobe.com/xdm/data/record
+      required:
+      - type
+      - title
+      - description
+      - allOf
+    errorBasic:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The XDM error code.
+        title:
+          type: string
+          description: The error code title.
+        status:
+          type: integer
+          description: The HTTP status code for the error.
+        report:
           type: object
-          meta:xdmType: object
-        - '$ref ': '#/definitions/journeyClass'
-          type: object
-          meta:xdmType: object
-        auditable: true
-        meta:extensible: true
-        meta:abstract: true
-        meta:extends:
-        - https://ns.adobe.com/xdm/data/record
-        meta:xdmType: object
-        meta:status: stable
-        $schema: http://json-schema.org/draft-06/schema#
-        meta:registryMetadata:
-          repo:createdDate: 1635361814823
-          repo:lastModifiedDate: 1635361814823
-          eTag: 351d2457ea40413a486ed6f328eb7f9384e63ded16019c7223e2586badf5a60a
-          meta:globalLibVersion: 1.27.4
+          description: Contains registry information about the error.
+          properties:
+            registryRequestId:
+              type: string
+              description: A unique ID for the report.
+            timestamp:
+              type: string
+              description: A timestamp of when the error occurred.
+            detailed-message:
+              type: string
+              description: A detailed message about what caused the error.
+            sub-errors:
+              type: array
+              description: Contains details about other errors that this error is a parent of.
+              items:
+                $ref: '#/components/schemas/errorBasic'
+        detail:
+          type: string
+          description: A detailed message about what caused the error.
     lookupClassResponse:
       allOf:
       - $ref: '#/components/schemas/singleSchemaResponse'
@@ -317,76 +400,115 @@ components:
         meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
         meta:sandboxType: production
         meta:tenantNamespace: _{TENANT_ID}
-    createClass:
+    listResponseItem:
       type: object
       properties:
-        type:
-          type: string
-          description: The JSON Schema data type for the payload. Must be set to `object`.
-          example: object
         title:
           type: string
-          description: A title for the class.
-          example: New Class
-        description:
+          description: The title of the XDM resource.
+          example: Tenant Data Schema
+        $id:
           type: string
-          description: A description for the class.
-          example: Description of the new class.
-        allOf:
-          type: array
-          description: Lists the behavior that the class inherits along with any additional class-level fields.
-          items:
-            type: object
-            properties:
-              '$ref ':
-                type: string
-                description: The `$id` of the referenced XDM resource.
-                example: https://ns.adobe.com/xdm/data/record
-      required:
-      - type
-      - title
-      - description
-      - allOf
-    singleBehaviorResponse:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
-      - $ref: '#/components/schemas/xdmTypeToSchema'
-      - $ref: '#/components/schemas/metaRegistryMetadata'
-      example:
-        $id: https://ns.adobe.com/xdm/data/record
-        meta:altId: _xdm.data.record
-        meta:resourceType: behaviors
-        version: 1.16.4
-        title: Record Schema
-        type: object
-        description: Used to indicate the behavior of record data semantic when composed into data schemas.
-        definitions:
-          record:
-            properties:
-              _id:
-                title: Identifier
-                type: string
-                format: uri-reference
-                description: A unique identifier for the record.
-                meta:xdmType: string
-                meta:xdmField: '@id'
-        allOf:
-        - $ref: '#/components/schemas/record'
-          type: object
-          meta:xdmType: object
-        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
-          type: object
-          meta:xdmType: object
-        meta:extensible: true
-        meta:abstract: true
-        meta:xdmType: object
-        meta:status: stable
-        $schema: http://json-schema.org/draft-06/schema#
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
+    linksBasic:
+      type: object
+      description: Contains various links related to the response.
+      properties:
+        next:
+          type: string
+          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
+          example: null
+    metaRegistryMetadata:
+      type: object
+      properties:
         meta:registryMetadata:
-          repo:createdDate: 1606266789446
-          repo:lastModifiedDate: 1606266789446
-          eTag: 2cc114a54949a9668fe2ad046ccece59192e1bfa28f14e5ac7c893acb7820ba2
-          meta:globalLibVersion: 1.16.4
+          $ref: '#/components/schemas/registryMetadata'
+    listResponse:
+      allOf:
+      - $ref: '#/components/schemas/listResponseBasic'
+      - properties:
+          _links:
+            $ref: '#/components/schemas/linksBasic'
+    patchClass:
+      allOf:
+      - $ref: '#/components/schemas/patchSchema'
+      example:
+      - op: replace
+        path: description
+        value: A PATCH-updated description for the class.
+    listResponseItemWithVersion:
+      allOf:
+      - $ref: '#/components/schemas/listResponseItem'
+      - properties:
+          version:
+            type: string
+            description: The current version of the XDM resource.
+            example: '1.1'
+    lookupResourceWithDefinitions:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceCore'
+      - properties:
+          definitions:
+            type: object
+            description: Contains definitions for the unique attributes provided by the resource.
+          allOf:
+            type: array
+            description: A list of objects that refer to the common definitions and fields that the resource inherits.
+            items:
+              $ref: '#/components/schemas/allOfRef'
+          meta:extensible:
+            type: boolean
+            description: Indicates whether this resource is extensible or not.
+          meta:abstract:
+            type: boolean
+            description: Indicates whether this resource is abstract or not.
+    registryMetadata:
+      type: object
+      description: Contains registry-specific metadata about the XDM resource.
+      properties:
+        repo:createdDate:
+          type: integer
+          description: A Unix timestamp of when the resource was created.
+        repo:lastModifiedDate:
+          type: integer
+          description: A Unix timestamp of when the resource was last modified.
+        xdm:createdClientId:
+          type: string
+          description: The ID of the client that created the resource.
+        xdm:lastModifiedClientId:
+          type: string
+          description: The ID of the client that last modified the resource.
+        xdm:createdUserId:
+          type: string
+          description: The ID of the user that created the resource.
+        xdm:lastModifiedUserId:
+          type: string
+          description: The ID of the user that last modified the resource.
+        etag:
+          type: string
+          description: An HTTP entity tag (ETag) for the resource.
+        meta:globalLibVersion:
+          type: string
+          description: The current global library version of the resource.
+        meta:usageCount:
+          type: integer
+          description: The number of instances where this resource is referenced by other XDM resources.
+    replaceClass:
+      allOf:
+      - $ref: '#/components/schemas/createClass'
+      - properties:
+          description:
+            example: Updated description of the new class.
+          allOf:
+            items:
+              properties:
+                '$ref ':
+                  example: https://ns.adobe.com/xdm/data/time-series
     listClassesResponse:
       allOf:
       - $ref: '#/components/schemas/listResponse'
@@ -477,46 +599,80 @@ components:
           count: 2
         _links:
           next: null
-    patchSchema:
-      type: array
-      description: A list of JSON Patch operation objects. Each object contains information about the action to be performed and the attribute to perform it on.
-      items:
-        type: object
-        properties:
-          op:
-            type: string
-            example: add
-            description: The JSON Patch operation to be performed.
-          path:
-            type: string
-            example: /meta:immutableTags-
-            description: The path to the field that the operation should be performed on.
-          value:
-            type: string
-            example: union
-            description: If adding or updating an attribute, this property indicates the value that should be set for that property.
-        required:
-        - op
-        - path
-    replaceClass:
+    singleBehaviorResponse:
       allOf:
-      - $ref: '#/components/schemas/createClass'
-      - properties:
-          description:
-            example: Updated description of the new class.
-          allOf:
-            items:
-              properties:
-                '$ref ':
-                  example: https://ns.adobe.com/xdm/data/time-series
-    linksBasic:
-      type: object
-      description: Contains various links related to the response.
-      properties:
-        next:
-          type: string
-          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
-          example: null
+      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
+      - $ref: '#/components/schemas/xdmTypeToSchema'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        $id: https://ns.adobe.com/xdm/data/record
+        meta:altId: _xdm.data.record
+        meta:resourceType: behaviors
+        version: 1.16.4
+        title: Record Schema
+        type: object
+        description: Used to indicate the behavior of record data semantic when composed into data schemas.
+        definitions:
+          record:
+            properties:
+              _id:
+                title: Identifier
+                type: string
+                format: uri-reference
+                description: A unique identifier for the record.
+                meta:xdmType: string
+                meta:xdmField: '@id'
+        allOf:
+        - $ref: '#/components/schemas/record'
+          type: object
+          meta:xdmType: object
+        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
+          type: object
+          meta:xdmType: object
+        meta:extensible: true
+        meta:abstract: true
+        meta:xdmType: object
+        meta:status: stable
+        $schema: http://json-schema.org/draft-06/schema#
+        meta:registryMetadata:
+          repo:createdDate: 1606266789446
+          repo:lastModifiedDate: 1606266789446
+          eTag: 2cc114a54949a9668fe2ad046ccece59192e1bfa28f14e5ac7c893acb7820ba2
+          meta:globalLibVersion: 1.16.4
+    singleClassResponse:
+      allOf:
+      - $ref: '#/components/schemas/singleBehaviorResponse'
+      example:
+        $id: https://ns.adobe.com/experience/journeyOrchestration/stepEvents/journey
+        meta:altId: _experience.journeyOrchestration.stepEvents.journey
+        meta:resourceType: classes
+        version: 1.27.4
+        title: Journey Orchestration Class
+        type: object
+        description: A Record based Journey class for Journey orchestration contains common journey fields
+        definitions:
+          journeyClass:
+            properties: {}
+        allOf:
+        - '$ref ': https://ns.adobe.com/xdm/data/record
+          type: object
+          meta:xdmType: object
+        - '$ref ': '#/definitions/journeyClass'
+          type: object
+          meta:xdmType: object
+        auditable: true
+        meta:extensible: true
+        meta:abstract: true
+        meta:extends:
+        - https://ns.adobe.com/xdm/data/record
+        meta:xdmType: object
+        meta:status: stable
+        $schema: http://json-schema.org/draft-06/schema#
+        meta:registryMetadata:
+          repo:createdDate: 1635361814823
+          repo:lastModifiedDate: 1635361814823
+          eTag: 351d2457ea40413a486ed6f328eb7f9384e63ded16019c7223e2586badf5a60a
+          meta:globalLibVersion: 1.27.4
     resourceContainers:
       type: object
       properties:
@@ -529,70 +685,96 @@ components:
         meta:sandboxType:
           type: string
           description: The type of Platform sandbox that contains the schema, either `production` or `development`.
-    registryMetadata:
+    patchClassResponse:
+      allOf:
+      - $ref: '#/components/schemas/lookupClassResponse'
+      example:
+        $id: https://ns.adobe.com/{TENANT_ID}/classes/9731ca27f72801dc6e9d6a170df94745
+        meta:altId: _{TENANT_ID}.classes.9731ca27f72801dc6e9d6a170df94745
+        meta:resourceType: classes
+        version: '1.0'
+        title: New Class
+        type: object
+        description: A PATCH-updated description of the new class.
+        allOf:
+        - '$ref ': https://ns.adobe.com/xdm/data/record
+        imsOrg: '{IMS_ORG}'
+        meta:extensible: true
+        meta:abstract: true
+        meta:extends:
+        - https://ns.adobe.com/xdm/data/record
+        meta:xdmType: object
+        meta:registryMetadata:
+          repo:createdDate: 1569014354925
+          repo:lastModifiedDate: 1569014354925
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 3afbb3e8e4ea2ce02a2ba2fa31727a59a7a6d7d1ec70b62ca711058c26829761
+          meta:globalLibVersion: 1.27.4
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
+        meta:tenantNamespace: _{TENANT_ID}
+    singleSchemaResponse:
       type: object
-      description: Contains registry-specific metadata about the XDM resource.
-      properties:
-        repo:createdDate:
-          type: integer
-          description: A Unix timestamp of when the resource was created.
-        repo:lastModifiedDate:
-          type: integer
-          description: A Unix timestamp of when the resource was last modified.
-        xdm:createdClientId:
-          type: string
-          description: The ID of the client that created the resource.
-        xdm:lastModifiedClientId:
-          type: string
-          description: The ID of the client that last modified the resource.
-        xdm:createdUserId:
-          type: string
-          description: The ID of the user that created the resource.
-        xdm:lastModifiedUserId:
-          type: string
-          description: The ID of the user that last modified the resource.
-        etag:
-          type: string
-          description: An HTTP entity tag (ETag) for the resource.
-        meta:globalLibVersion:
-          type: string
-          description: The current global library version of the resource.
-        meta:usageCount:
-          type: integer
-          description: The number of instances where this resource is referenced by other XDM resources.
-    xdmTypeToSchema:
-      type: object
-      properties:
-        meta:xdmType:
-          type: string
-          description: The XDM resource type (typically `object`).
-        meta:status:
-          type: string
-          description: (For `global` resources only) The status of the resource.
-        $schema:
-          type: string
-          description: The JSON schema definition that this resource is based on.
-    record:
-      type: string
-      example: '#/definitions/record'
-    lookupResourceWithDefinitions:
       allOf:
       - $ref: '#/components/schemas/lookupResourceCore'
       - properties:
-          definitions:
-            type: object
-            description: Contains definitions for the unique attributes provided by the resource.
           allOf:
             type: array
-            description: A list of objects that refer to the common definitions and fields that the resource inherits.
+            description: A list of objects that refer to other classes, field groups, or data types whose properties are inherited by this XDM resource.
             items:
-              $ref: '#/components/schemas/allOfRef'
+              type: object
+              properties:
+                '$ref ':
+                  type: string
+                  description: The URI `$id` of the referenced XDM resource.
+          imsOrg:
+            type: string
+            description: The ID of the IMS Org that owns this resource.
           meta:extensible:
             type: boolean
             description: Indicates whether this resource is extensible or not.
           meta:abstract:
             type: boolean
-            description: Indicates whether this resource is abstract or not.
+            description: Indicates whether this is an abstract resource.
+          meta:extends:
+            type: array
+            description: A list of URI `$id`s for the XDM objects that this resource extends.
+            items:
+              type: string
+          meta:xdmType:
+            type: string
+            description: The type of JSON Schema element that the XDM resource represents (typically `object`).
+          meta:registryMetadata:
+            $ref: '#/components/schemas/registryMetadata'
+    acceptErrorLookup:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1007-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
+          timestamp: 11-02-2021 07:42:43
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+    allOfRef:
+      type: object
+      properties:
+        $ref:
+          type: string
+          description: The `$id` of the XDM resource.
+        type:
+          type: string
+          description: The resource type (typically `object`).
+        meta:xdmType:
+          type: string
+          description: The XDM resource type (typically `object`).
     listResponseBasic:
       type: object
       properties:
@@ -637,38 +819,19 @@ components:
           next: null
           global_schemas:
             href: https://platform.adobe.io/data/foundation/schemaregistry/global/schemas
-    patchClassResponse:
+    acceptErrorList:
       allOf:
-      - $ref: '#/components/schemas/lookupClassResponse'
+      - $ref: '#/components/schemas/errorBasic'
       example:
-        $id: https://ns.adobe.com/{TENANT_ID}/classes/9731ca27f72801dc6e9d6a170df94745
-        meta:altId: _{TENANT_ID}.classes.9731ca27f72801dc6e9d6a170df94745
-        meta:resourceType: classes
-        version: '1.0'
-        title: New Class
-        type: object
-        description: A PATCH-updated description of the new class.
-        allOf:
-        - '$ref ': https://ns.adobe.com/xdm/data/record
-        imsOrg: '{IMS_ORG}'
-        meta:extensible: true
-        meta:abstract: true
-        meta:extends:
-        - https://ns.adobe.com/xdm/data/record
-        meta:xdmType: object
-        meta:registryMetadata:
-          repo:createdDate: 1569014354925
-          repo:lastModifiedDate: 1569014354925
-          xdm:createdClientId: '{CLIENT_ID}'
-          xdm:lastModifiedClientId: '{CLIENT_ID}'
-          xdm:createdUserId: '{USER_ID}'
-          xdm:lastModifiedUserId: '{USER_ID}'
-          eTag: 3afbb3e8e4ea2ce02a2ba2fa31727a59a7a6d7d1ec70b62ca711058c26829761
-          meta:globalLibVersion: 1.27.4
-        meta:containerId: tenant
-        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
-        meta:sandboxType: production
-        meta:tenantNamespace: _{TENANT_ID}
+        type: http://ns.adobe.com/aep/errors/XDM-1006-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: d2550d48-95f5-43ee-adb7-1035bf9d3258
+          timestamp: 11-25-2020 07:56:25
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
     updateClassResponse:
       allOf:
       - $ref: '#/components/schemas/lookupClassResponse'
@@ -707,169 +870,6 @@ components:
         meta:tenantNamespace:
           type: string
           description: 'The namespace that all custom fields that the schema employs can be found under. Takes the form of your organization''s tenant ID prepended with an underscore: `_{TENANT_ID}`.'
-    errorBasic:
-      type: object
-      properties:
-        type:
-          type: string
-          description: The XDM error code.
-        title:
-          type: string
-          description: The error code title.
-        status:
-          type: integer
-          description: The HTTP status code for the error.
-        report:
-          type: object
-          description: Contains registry information about the error.
-          properties:
-            registryRequestId:
-              type: string
-              description: A unique ID for the report.
-            timestamp:
-              type: string
-              description: A timestamp of when the error occurred.
-            detailed-message:
-              type: string
-              description: A detailed message about what caused the error.
-            sub-errors:
-              type: array
-              description: Contains details about other errors that this error is a parent of.
-              items:
-                $ref: '#/components/schemas/errorBasic'
-        detail:
-          type: string
-          description: A detailed message about what caused the error.
-    metaRegistryMetadata:
-      type: object
-      properties:
-        meta:registryMetadata:
-          $ref: '#/components/schemas/registryMetadata'
-    acceptErrorLookup:
-      allOf:
-      - $ref: '#/components/schemas/errorBasic'
-      example:
-        type: http://ns.adobe.com/aep/errors/XDM-1007-400
-        title: Accept header invalid
-        status: 400
-        report:
-          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
-          timestamp: 11-02-2021 07:42:43
-          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-          sub-errors: []
-        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-    singleSchemaResponse:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceCore'
-      - properties:
-          allOf:
-            type: array
-            description: A list of objects that refer to other classes, field groups, or data types whose properties are inherited by this XDM resource.
-            items:
-              type: object
-              properties:
-                '$ref ':
-                  type: string
-                  description: The URI `$id` of the referenced XDM resource.
-          imsOrg:
-            type: string
-            description: The ID of the IMS Org that owns this resource.
-          meta:extensible:
-            type: boolean
-            description: Indicates whether this resource is extensible or not.
-          meta:abstract:
-            type: boolean
-            description: Indicates whether this is an abstract resource.
-          meta:extends:
-            type: array
-            description: A list of URI `$id`s for the XDM objects that this resource extends.
-            items:
-              type: string
-          meta:xdmType:
-            type: string
-            description: The type of JSON Schema element that the XDM resource represents (typically `object`).
-          meta:registryMetadata:
-            $ref: '#/components/schemas/registryMetadata'
-    lookupResourceCore:
-      type: object
-      properties:
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:resourceType:
-          type: string
-          description: The type of XDM resource.
-          example: schemas
-        version:
-          type: string
-          description: The current version of the resource.
-          example: 1.4
-        title:
-          type: string
-          description: The title of the resource.
-          example: Hotels
-        type:
-          type: string
-          description: The JSON Schema element type that represents the XDM resource (typically `object`).
-          example: object
-        description:
-          type: string
-          description: A description for the resource.
-    patchClass:
-      allOf:
-      - $ref: '#/components/schemas/patchSchema'
-      example:
-      - op: replace
-        path: description
-        value: A PATCH-updated description for the class.
-    listResponse:
-      allOf:
-      - $ref: '#/components/schemas/listResponseBasic'
-      - properties:
-          _links:
-            $ref: '#/components/schemas/linksBasic'
-    listResponseItemWithVersion:
-      allOf:
-      - $ref: '#/components/schemas/listResponseItem'
-      - properties:
-          version:
-            type: string
-            description: The current version of the XDM resource.
-            example: '1.1'
-    listResponseItem:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The title of the XDM resource.
-          example: Tenant Data Schema
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
-    acceptErrorList:
-      allOf:
-      - $ref: '#/components/schemas/errorBasic'
-      example:
-        type: http://ns.adobe.com/aep/errors/XDM-1006-400
-        title: Accept header invalid
-        status: 400
-        report:
-          registryRequestId: d2550d48-95f5-43ee-adb7-1035bf9d3258
-          timestamp: 11-25-2020 07:56:25
-          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
-          sub-errors: []
-        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
   parameters:
     limit:
       name: limit
@@ -881,16 +881,16 @@ components:
       in: query
       schema:
         type: number
-    containerIdList:
-      name: CONTAINER_ID
-      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
-      required: true
-      in: path
+    orderBy:
+      name: orderby
+      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
+      required: false
+      in: query
       schema:
         type: string
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+    content-type:
+      name: Content-Type
+      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
       required: true
       in: header
       schema:
@@ -902,6 +902,13 @@ components:
       in: header
       schema:
         type: string
+    createClassPayload:
+      name: body
+      description: The request payload must include an `allOf` attribute referencing either 'https://ns.adobe.com/xdm/data/record' or 'https://ns.adobe.com/xdm/data/time-series'. This value represents the data behavior upon which the class is based. `allOf` may also optionally include field groups or custom fields that will be included each time the class is used.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/createClass'
     start:
       name: start
       description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
@@ -915,20 +922,20 @@ components:
       in: query
       schema:
         type: string
-    content-type:
-      name: Content-Type
-      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       in: header
       schema:
         type: string
-    patchClassPayload:
+    replaceClassPayload:
       name: body
-      description: The request body accepts a JSON Patch payload.
+      description: The JSON payload must include all of the fields that were originally required for creating the class, but with updated values. This includes an `allOf` attribute referencing the behavior of the class.
       required: true
       in: body
       schema:
-        $ref: '#/components/schemas/patchClass'
+        $ref: '#/components/schemas/replaceClass'
     accept:
       name: Accept
       description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
@@ -936,6 +943,13 @@ components:
         <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
       required: true
       in: header
+      schema:
+        type: string
+    containerIdLookup:
+      name: CONTAINER_ID
+      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      required: true
+      in: path
       schema:
         type: string
     property:
@@ -952,25 +966,18 @@ components:
       in: header
       schema:
         type: string
-    createClassPayload:
+    patchClassPayload:
       name: body
-      description: The request payload must include an `allOf` attribute referencing either 'https://ns.adobe.com/xdm/data/record' or 'https://ns.adobe.com/xdm/data/time-series'. This value represents the data behavior upon which the class is based. `allOf` may also optionally include field groups or custom fields that will be included each time the class is used.
+      description: The request body accepts a JSON Patch payload.
       required: true
       in: body
       schema:
-        $ref: '#/components/schemas/createClass'
-    authorization:
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+        $ref: '#/components/schemas/patchClass'
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       in: header
-      schema:
-        type: string
-    orderBy:
-      name: orderby
-      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
-      required: false
-      in: query
       schema:
         type: string
     x-gw-ims-org-id:
@@ -980,16 +987,9 @@ components:
       in: header
       schema:
         type: string
-    replaceClassPayload:
-      name: body
-      description: The JSON payload must include all of the fields that were originally required for creating the class, but with updated values. This includes an `allOf` attribute referencing the behavior of the class.
-      required: true
-      in: body
-      schema:
-        $ref: '#/components/schemas/replaceClass'
-    containerIdLookup:
+    containerIdList:
       name: CONTAINER_ID
-      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
       required: true
       in: path
       schema:

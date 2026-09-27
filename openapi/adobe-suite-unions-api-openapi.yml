@@ -71,40 +71,96 @@ paths:
               schema:
                 $ref: '#/components/schemas/acceptErrorLookup'
 components:
+  parameters:
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    property:
+      name: property
+      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
+      in: query
+      required: false
+      schema:
+        type: string
+    limit:
+      name: limit
+      description: 'When used in conjunction with an `orderby` parameter, `limit` restricts the maximum number of items that should be returned for a given request. This parameter cannot be used without an `orderby` parameter present.
+
+
+        The `limit` parameter specifies a positive integer (between `0` and `500`) as a *hint* as to the maximum number of items that should be returned. For example, `limit=5` returns only five resources in the list. However, this value is not strictly honored. The actual response size may be smaller or larger as constrained by the need to provide the reliable operation of the `start` parameter, if one is provided.'
+      required: false
+      in: query
+      schema:
+        type: number
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string
+    start:
+      name: start
+      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
+
+
+        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
+
+
+        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
+      required: false
+      in: query
+      schema:
+        type: string
+    orderBy:
+      name: orderby
+      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
+      required: false
+      in: query
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    acceptListing:
+      name: Accept
+      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
+      required: true
+      in: header
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    UNION_ID:
+      name: UNION_ID
+      description: The `meta:altId` or URL-encoded `$id` of the union schema in question.
+      required: true
+      in: path
+      schema:
+        type: string
   schemas:
-    errorBasic:
-      type: object
-      properties:
-        type:
-          type: string
-          description: The XDM error code.
-        title:
-          type: string
-          description: The error code title.
-        status:
-          type: integer
-          description: The HTTP status code for the error.
-        report:
-          type: object
-          description: Contains registry information about the error.
-          properties:
-            registryRequestId:
-              type: string
-              description: A unique ID for the report.
-            timestamp:
-              type: string
-              description: A timestamp of when the error occurred.
-            detailed-message:
-              type: string
-              description: A detailed message about what caused the error.
-            sub-errors:
-              type: array
-              description: Contains details about other errors that this error is a parent of.
-              items:
-                $ref: '#/components/schemas/errorBasic'
-        detail:
-          type: string
-          description: A detailed message about what caused the error.
     unionBasic:
       allOf:
       - $ref: '#/components/schemas/lookupResourceCore'
@@ -241,6 +297,159 @@ components:
           meta:globalLibVersion: 1.27.4
         meta:class: https://ns.adobe.com/xdm/context/profile
         meta:containerId: tenant
+    acceptErrorLookup:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1007-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
+          timestamp: 11-02-2021 07:42:43
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+    lookupResourceCore:
+      type: object
+      properties:
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:resourceType:
+          type: string
+          description: The type of XDM resource.
+          example: schemas
+        version:
+          type: string
+          description: The current version of the resource.
+          example: 1.4
+        title:
+          type: string
+          description: The title of the resource.
+          example: Hotels
+        type:
+          type: string
+          description: The JSON Schema element type that represents the XDM resource (typically `object`).
+          example: object
+        description:
+          type: string
+          description: A description for the resource.
+    lookupUnionResponse:
+      allOf:
+      - $ref: '#/components/schemas/unionBasic'
+      - properties:
+          meta:sandboxId:
+            type: string
+            description: The ID of the sandbox this union is contained in.
+          meta:sandboxType:
+            type: string
+            description: The type of sandbox this union is contained in, either `production` or `development`.
+      example:
+        $id: https://ns.adobe.com/xdm/context/profile__union
+        meta:altId: _xdm.context.profile__union
+        meta:resourceType: unions
+        version: '1.0'
+        title: XDM Individual Profile
+        type: object
+        description: An XDM Individual Profile forms a singular representation of the attributes and interests of both identified and partially-identified individuals. Less-identified profiles may contain only anonymous behavioral signals, such as browser cookies, while highly-identified profiles may contain detailed personal information such as name, date of birth, location, and email address. As a profile grows, it becomes a robust repository of personal information, identification information, contact details, and communication preferences for an individual.
+        allOf:
+        - {}
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-test-profile
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+        - '$ref ': https://ns.adobe.com/xdm/mixins/profile-consents
+        - '$ref ': https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-person-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-privacy
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+        - '$ref ': https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+        - '$ref ': https://ns.adobe.com/experience/campaign/profile-all
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-personal-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+        - '$ref ': https://ns.adobe.com/experience/profile-edgeregion
+        - '$ref ': https://ns.adobe.com/xdm/context/profile
+        - '$ref ': https://ns.adobe.com/xdm/context/identitymap
+        - '$ref ': https://ns.adobe.com/experience/profile/profile-all
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-segmentation
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-preferences-details
+        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+        - '$ref ': https://ns.adobe.com/xdm/context/profile-work-details
+        imsOrg: '{IMS_ORG}'
+        meta:extends:
+        - https://ns.adobe.com/{TENANT_ID}/schemas/7c92ae0a47db946ba5d7d47b1cfbca4b
+        - https://ns.adobe.com/xdm/common/extensible
+        - https://ns.adobe.com/{TENANT_ID}/schemas/5d70026f5522fc60b3c81f6523b83c86
+        - https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
+        - https://ns.adobe.com/xdm/mixins/profile-consents
+        - https://ns.adobe.com/{TENANT_ID}/schemas/c447e8716f1d4598be9e36dcd64cd55a
+        - https://ns.adobe.com/xdm/common/external-source-system-audit-details
+        - https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
+        - https://ns.adobe.com/{TENANT_ID}/schemas/653e53eb04341d09453c9b6a5fb43d1b4ca9526ec274856d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/c65ddf08cf2d4a2fe94bd06113bf4bc4c855e12a936410d5
+        - https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ea2208ffef6dc12851f938e54bc723f2b6aa1a7bcb9b9535
+        - https://ns.adobe.com/experience/profile/profile-all
+        - https://ns.adobe.com/xdm/context/profile-work-details
+        - https://ns.adobe.com/{TENANT_ID}/schemas/a938858fbe085db9cc0d7b17ca7da28d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e5c13b941fc87d3614f742528e8c30693baae7c41af01fc2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b67de72ed55dcafec654ec9818eb55a4
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
+        - https://ns.adobe.com/{TENANT_ID}/schemas/afb2da1c042e4413de24f4096157c9f6a72cc43b57ee1a
+        - https://ns.adobe.com/experience/campaign/profile-all
+        - https://ns.adobe.com/xdm/context/profile
+        - https://ns.adobe.com/xdm/context/profile-segmentation
+        - https://ns.adobe.com/xdm/context/profile-preferences-details
+        - https://ns.adobe.com/{TENANT_ID}/schemas/36966a17ce64bcee6544df170f7299759d3dce41c8cbee6
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b29ba32d98a8b1f00388c6c6eceff4db6917fd174eab4c55
+        - https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
+        - https://ns.adobe.com/{TENANT_ID}/schemas/456bdc7d1216fb96fa42495a449f39c2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/579a2817c2342751afb9241015da9741
+        - https://ns.adobe.com/{TENANT_ID}/schemas/be9f753fc193a23baa8893bbe7679afe
+        - https://ns.adobe.com/xdm/common/auditable
+        - https://ns.adobe.com/{TENANT_ID}/schemas/f09963a76904b524f6419a50c19dd4318061d82d8b04638
+        - https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
+        - https://ns.adobe.com/{TENANT_ID}/schemas/b1e6dd903c29dc7aea408ecd1ed040f0c161df7961fc50b2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/d29a200b5deb6cfb55d3b865ef627f33
+        - https://ns.adobe.com/xdm/context/profile-person-details
+        - https://ns.adobe.com/xdm/context/profile-privacy
+        - https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
+        - https://ns.adobe.com/{TENANT_ID}/schemas/e348088f36cb2dc90d14737de6832aa35c7a7f1a116e1dbe
+        - https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
+        - https://ns.adobe.com/xdm/context/profile-personal-details
+        - https://ns.adobe.com/xdm/data/record
+        - https://ns.adobe.com/experience/profile-edgeregion
+        - https://ns.adobe.com/xdm/context/identitymap
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ebbbb87cb534798841d760ea2c5d861d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3494225dfbfb0d9ac346b00a1142c3a1c0751aff9dbbf5ef
+        - https://ns.adobe.com/{TENANT_ID}/schemas/6fd18629565e429e5379c77c2755618b
+        - https://ns.adobe.com/xdm/context/profile-test-profile
+        - https://ns.adobe.com/{TENANT_ID}/schemas/4fcf5778706905d53c138b1ed4d94c6c
+        - https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
+        - https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/ac95d88f11b47688ef2f24f55fe5f3a9a607bb2c4325e68d
+        - https://ns.adobe.com/{TENANT_ID}/schemas/70e3226d662a19800837b7dd7cfc3ef6
+        - https://ns.adobe.com/{TENANT_ID}/schemas/5df4f4cc39462136cbbead3481f878a878420025282a53b8
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3a1859ec31ba93153050f92d981aec5d97b350d22cf960d5
+        - https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
+        - https://ns.adobe.com/{TENANT_ID}/schemas/3d569c62921ac9371ad148afbaec3891547aca2a49575cef
+        meta:xdmType: object
+        meta:registryMetadata:
+          eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
+          meta:globalLibVersion: 1.28.1
+        meta:class: https://ns.adobe.com/xdm/context/profile
+        meta:containerId: tenant
+        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
+        meta:sandboxType: production
     listUnionsResponse:
       type: object
       properties:
@@ -424,159 +633,6 @@ components:
             meta:globalLibVersion: 1.28.1
           meta:class: https://ns.adobe.com/xdm/context/segmentdefinition
           meta:containerId: tenant
-    acceptErrorLookup:
-      allOf:
-      - $ref: '#/components/schemas/errorBasic'
-      example:
-        type: http://ns.adobe.com/aep/errors/XDM-1007-400
-        title: Accept header invalid
-        status: 400
-        report:
-          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
-          timestamp: 11-02-2021 07:42:43
-          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-          sub-errors: []
-        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-    lookupResourceCore:
-      type: object
-      properties:
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:resourceType:
-          type: string
-          description: The type of XDM resource.
-          example: schemas
-        version:
-          type: string
-          description: The current version of the resource.
-          example: 1.4
-        title:
-          type: string
-          description: The title of the resource.
-          example: Hotels
-        type:
-          type: string
-          description: The JSON Schema element type that represents the XDM resource (typically `object`).
-          example: object
-        description:
-          type: string
-          description: A description for the resource.
-    lookupUnionResponse:
-      allOf:
-      - $ref: '#/components/schemas/unionBasic'
-      - properties:
-          meta:sandboxId:
-            type: string
-            description: The ID of the sandbox this union is contained in.
-          meta:sandboxType:
-            type: string
-            description: The type of sandbox this union is contained in, either `production` or `development`.
-      example:
-        $id: https://ns.adobe.com/xdm/context/profile__union
-        meta:altId: _xdm.context.profile__union
-        meta:resourceType: unions
-        version: '1.0'
-        title: XDM Individual Profile
-        type: object
-        description: An XDM Individual Profile forms a singular representation of the attributes and interests of both identified and partially-identified individuals. Less-identified profiles may contain only anonymous behavioral signals, such as browser cookies, while highly-identified profiles may contain detailed personal information such as name, date of birth, location, and email address. As a profile grows, it becomes a robust repository of personal information, identification information, contact details, and communication preferences for an individual.
-        allOf:
-        - {}
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-test-profile
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
-        - '$ref ': https://ns.adobe.com/xdm/mixins/profile-consents
-        - '$ref ': https://ns.adobe.com/xdm/common/external-source-system-audit-details
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-person-details
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-privacy
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
-        - '$ref ': https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
-        - '$ref ': https://ns.adobe.com/experience/campaign/profile-all
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-personal-details
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
-        - '$ref ': https://ns.adobe.com/experience/profile-edgeregion
-        - '$ref ': https://ns.adobe.com/xdm/context/profile
-        - '$ref ': https://ns.adobe.com/xdm/context/identitymap
-        - '$ref ': https://ns.adobe.com/experience/profile/profile-all
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-segmentation
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-preferences-details
-        - '$ref ': https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
-        - '$ref ': https://ns.adobe.com/xdm/context/profile-work-details
-        imsOrg: '{IMS_ORG}'
-        meta:extends:
-        - https://ns.adobe.com/{TENANT_ID}/schemas/7c92ae0a47db946ba5d7d47b1cfbca4b
-        - https://ns.adobe.com/xdm/common/extensible
-        - https://ns.adobe.com/{TENANT_ID}/schemas/5d70026f5522fc60b3c81f6523b83c86
-        - https://ns.adobe.com/{TENANT_ID}/mixins/5a55c7ba8bfe66d1ec0fd5b7e6a2a280c45c6e3312c259ef
-        - https://ns.adobe.com/xdm/mixins/profile-consents
-        - https://ns.adobe.com/{TENANT_ID}/schemas/c447e8716f1d4598be9e36dcd64cd55a
-        - https://ns.adobe.com/xdm/common/external-source-system-audit-details
-        - https://ns.adobe.com/{TENANT_ID}/mixins/d0b9284f0610076e97f57dfadf78b3de
-        - https://ns.adobe.com/{TENANT_ID}/schemas/653e53eb04341d09453c9b6a5fb43d1b4ca9526ec274856d
-        - https://ns.adobe.com/{TENANT_ID}/schemas/c65ddf08cf2d4a2fe94bd06113bf4bc4c855e12a936410d5
-        - https://ns.adobe.com/{TENANT_ID}/mixins/811a7c6627d5af6680cdfebf81c101c2
-        - https://ns.adobe.com/{TENANT_ID}/schemas/ea2208ffef6dc12851f938e54bc723f2b6aa1a7bcb9b9535
-        - https://ns.adobe.com/experience/profile/profile-all
-        - https://ns.adobe.com/xdm/context/profile-work-details
-        - https://ns.adobe.com/{TENANT_ID}/schemas/a938858fbe085db9cc0d7b17ca7da28d
-        - https://ns.adobe.com/{TENANT_ID}/schemas/e5c13b941fc87d3614f742528e8c30693baae7c41af01fc2
-        - https://ns.adobe.com/{TENANT_ID}/schemas/b67de72ed55dcafec654ec9818eb55a4
-        - https://ns.adobe.com/{TENANT_ID}/schemas/e7bc97acfaf14832fd666cbd6b3629e1
-        - https://ns.adobe.com/{TENANT_ID}/schemas/afb2da1c042e4413de24f4096157c9f6a72cc43b57ee1a
-        - https://ns.adobe.com/experience/campaign/profile-all
-        - https://ns.adobe.com/xdm/context/profile
-        - https://ns.adobe.com/xdm/context/profile-segmentation
-        - https://ns.adobe.com/xdm/context/profile-preferences-details
-        - https://ns.adobe.com/{TENANT_ID}/schemas/36966a17ce64bcee6544df170f7299759d3dce41c8cbee6
-        - https://ns.adobe.com/{TENANT_ID}/schemas/b29ba32d98a8b1f00388c6c6eceff4db6917fd174eab4c55
-        - https://ns.adobe.com/{TENANT_ID}/mixins/5e903c020e4cd4ef65ec4b3ebcc0a1df9ab2c064f303e377
-        - https://ns.adobe.com/{TENANT_ID}/schemas/456bdc7d1216fb96fa42495a449f39c2
-        - https://ns.adobe.com/{TENANT_ID}/schemas/579a2817c2342751afb9241015da9741
-        - https://ns.adobe.com/{TENANT_ID}/schemas/be9f753fc193a23baa8893bbe7679afe
-        - https://ns.adobe.com/xdm/common/auditable
-        - https://ns.adobe.com/{TENANT_ID}/schemas/f09963a76904b524f6419a50c19dd4318061d82d8b04638
-        - https://ns.adobe.com/{TENANT_ID}/mixins/e16d03cd4f0f1cd0f837ceada0aa478e
-        - https://ns.adobe.com/{TENANT_ID}/schemas/b1e6dd903c29dc7aea408ecd1ed040f0c161df7961fc50b2
-        - https://ns.adobe.com/{TENANT_ID}/schemas/d29a200b5deb6cfb55d3b865ef627f33
-        - https://ns.adobe.com/xdm/context/profile-person-details
-        - https://ns.adobe.com/xdm/context/profile-privacy
-        - https://ns.adobe.com/{TENANT_ID}/mixins/44850059caa530684c4507d0e01647e9
-        - https://ns.adobe.com/{TENANT_ID}/schemas/e348088f36cb2dc90d14737de6832aa35c7a7f1a116e1dbe
-        - https://ns.adobe.com/xdm/mixins/profile/profile-loyalty-details
-        - https://ns.adobe.com/xdm/context/profile-personal-details
-        - https://ns.adobe.com/xdm/data/record
-        - https://ns.adobe.com/experience/profile-edgeregion
-        - https://ns.adobe.com/xdm/context/identitymap
-        - https://ns.adobe.com/{TENANT_ID}/schemas/ebbbb87cb534798841d760ea2c5d861d
-        - https://ns.adobe.com/{TENANT_ID}/schemas/3494225dfbfb0d9ac346b00a1142c3a1c0751aff9dbbf5ef
-        - https://ns.adobe.com/{TENANT_ID}/schemas/6fd18629565e429e5379c77c2755618b
-        - https://ns.adobe.com/xdm/context/profile-test-profile
-        - https://ns.adobe.com/{TENANT_ID}/schemas/4fcf5778706905d53c138b1ed4d94c6c
-        - https://ns.adobe.com/{TENANT_ID}/mixins/03a07059cad2a4d772385bcf8105750f
-        - https://ns.adobe.com/{TENANT_ID}/mixins/6287e6dfaf504f1eb47842492431255d
-        - https://ns.adobe.com/{TENANT_ID}/schemas/ac95d88f11b47688ef2f24f55fe5f3a9a607bb2c4325e68d
-        - https://ns.adobe.com/{TENANT_ID}/schemas/70e3226d662a19800837b7dd7cfc3ef6
-        - https://ns.adobe.com/{TENANT_ID}/schemas/5df4f4cc39462136cbbead3481f878a878420025282a53b8
-        - https://ns.adobe.com/{TENANT_ID}/schemas/3a1859ec31ba93153050f92d981aec5d97b350d22cf960d5
-        - https://ns.adobe.com/{TENANT_ID}/mixins/1e9576c98a5d2a67ac90da1a271f5eb2
-        - https://ns.adobe.com/{TENANT_ID}/schemas/3d569c62921ac9371ad148afbaec3891547aca2a49575cef
-        meta:xdmType: object
-        meta:registryMetadata:
-          eTag: e4655a460374dec4dd7c32d3075a4ffc8249146b4d9c6ae09682da51266a78da
-          meta:globalLibVersion: 1.28.1
-        meta:class: https://ns.adobe.com/xdm/context/profile
-        meta:containerId: tenant
-        meta:sandboxId: 28e74200-e3de-11e9-8f5d-7f27416c5f0d
-        meta:sandboxType: production
     acceptErrorList:
       allOf:
       - $ref: '#/components/schemas/errorBasic'
@@ -590,92 +646,36 @@ components:
           detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
           sub-errors: []
         detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
-  parameters:
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    acceptListing:
-      name: Accept
-      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
-      required: true
-      in: header
-      schema:
-        type: string
-    start:
-      name: start
-      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
-
-
-        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
-
-
-        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
-      required: false
-      in: query
-      schema:
-        type: string
-    orderBy:
-      name: orderby
-      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
-      required: false
-      in: query
-      schema:
-        type: string
-    limit:
-      name: limit
-      description: 'When used in conjunction with an `orderby` parameter, `limit` restricts the maximum number of items that should be returned for a given request. This parameter cannot be used without an `orderby` parameter present.
-
-
-        The `limit` parameter specifies a positive integer (between `0` and `500`) as a *hint* as to the maximum number of items that should be returned. For example, `limit=5` returns only five resources in the list. However, this value is not strictly honored. The actual response size may be smaller or larger as constrained by the need to provide the reliable operation of the `start` parameter, if one is provided.'
-      required: false
-      in: query
-      schema:
-        type: number
-    accept:
-      name: Accept
-      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
-
-        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
-      required: true
-      in: header
-      schema:
-        type: string
-    property:
-      name: property
-      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
-      in: query
-      required: false
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      in: header
-      schema:
-        type: string
-    UNION_ID:
-      name: UNION_ID
-      description: The `meta:altId` or URL-encoded `$id` of the union schema in question.
-      required: true
-      in: path
-      schema:
-        type: string
+    errorBasic:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The XDM error code.
+        title:
+          type: string
+          description: The error code title.
+        status:
+          type: integer
+          description: The HTTP status code for the error.
+        report:
+          type: object
+          description: Contains registry information about the error.
+          properties:
+            registryRequestId:
+              type: string
+              description: A unique ID for the report.
+            timestamp:
+              type: string
+              description: A timestamp of when the error occurred.
+            detailed-message:
+              type: string
+              description: A detailed message about what caused the error.
+            sub-errors:
+              type: array
+              description: Contains details about other errors that this error is a parent of.
+              items:
+                $ref: '#/components/schemas/errorBasic'
+        detail:
+          type: string
+          description: A detailed message about what caused the error.

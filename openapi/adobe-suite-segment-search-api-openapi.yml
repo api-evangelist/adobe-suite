@@ -191,24 +191,10 @@ paths:
           content: {}
 components:
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
       description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string
@@ -219,64 +205,21 @@ components:
       required: true
       schema:
         type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
   schemas:
-    TaxonomySearchValue:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of the searchable object.
-        base64EncodedSourceId:
-          type: string
-          description: The base64 encoded version of the source ID.
-        name:
-          type: string
-          description: The name of the searchable object.
-        parentFolderId:
-          type: string
-          description: The ID of the parent folder.
-    SearchNamespaceObject:
-      type: object
-      properties:
-        namespace:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the namespace.
-              count:
-                type: number
-                description: The number of objects within the namespace.
-    TaxonomySearchObject:
-      type: object
-      properties:
-        taxonomy:
-          type: array
-          description: List of folder IDs and names. This list starts at the root folder and then traverses through the subfolders until it reaches the folder that contains the search object specified by the entityId.
-          example:
-          - id: carTraits
-            base64EncodedSourceId: RFVGamdpRk1BZy01ZTY4MzBmYzM5N2I0NTE4YWFhMWEwOGY1
-            name: AAMTraits for Cars
-            parentFolderId: root
-          - id: fastCarsFolder
-            base64EncodedSourceId: RFVGZ01BLTVlNjgzMGZjMzk3YjQ1MThhYWExYTA4Zg2
-            name: Fast Cars
-            parentFolderId: carTraits
-          - id: porsche
-            base64EncodedSourceId: REFGZ01CLTVlNjczMGZjMzk3YjQ1MThhZGIxYTA4Zg==
-            name: Porshe
-            parentFolderId: redCarsFolderId
-          items:
-            $ref: '#/components/schemas/TaxonomySearchValue'
-        status:
-          type: object
-          properties:
-            message:
-              type: string
-              description: Extra information about the search status.
-              example: Cannot find entityId redcarsFolderId.
     SearchNamespaceList:
       type: object
       properties:
@@ -337,6 +280,51 @@ components:
           description: A description attached to the search object.
           example: Under development, targeting east coast millionaires that buy red cars.
       description: An individual search result after issuing a full text search.
+    TaxonomySearchObject:
+      type: object
+      properties:
+        taxonomy:
+          type: array
+          description: List of folder IDs and names. This list starts at the root folder and then traverses through the subfolders until it reaches the folder that contains the search object specified by the entityId.
+          example:
+          - id: carTraits
+            base64EncodedSourceId: RFVGamdpRk1BZy01ZTY4MzBmYzM5N2I0NTE4YWFhMWEwOGY1
+            name: AAMTraits for Cars
+            parentFolderId: root
+          - id: fastCarsFolder
+            base64EncodedSourceId: RFVGZ01BLTVlNjgzMGZjMzk3YjQ1MThhYWExYTA4Zg2
+            name: Fast Cars
+            parentFolderId: carTraits
+          - id: porsche
+            base64EncodedSourceId: REFGZ01CLTVlNjczMGZjMzk3YjQ1MThhZGIxYTA4Zg==
+            name: Porshe
+            parentFolderId: redCarsFolderId
+          items:
+            $ref: '#/components/schemas/TaxonomySearchValue'
+        status:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Extra information about the search status.
+              example: Cannot find entityId redcarsFolderId.
+    SearchEntityList:
+      type: object
+      properties:
+        entities:
+          type: array
+          description: A list of namespaces and the number of search objects resulting from the search for each entity.
+          items:
+            $ref: '#/components/schemas/SearchEntityObject'
+        page:
+          $ref: '#/components/schemas/SearchResultsPageObject'
+        status:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Extra information about the search status.
+              example: Search system is not setup correctly.
     SearchResultsPageObject:
       type: object
       properties:
@@ -359,20 +347,32 @@ components:
           description: The total number of search objects on this page.
           format: int32
           example: 10
-    SearchEntityList:
+    SearchNamespaceObject:
       type: object
       properties:
-        entities:
+        namespace:
           type: array
-          description: A list of namespaces and the number of search objects resulting from the search for each entity.
           items:
-            $ref: '#/components/schemas/SearchEntityObject'
-        page:
-          $ref: '#/components/schemas/SearchResultsPageObject'
-        status:
-          type: object
-          properties:
-            message:
-              type: string
-              description: Extra information about the search status.
-              example: Search system is not setup correctly.
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the namespace.
+              count:
+                type: number
+                description: The number of objects within the namespace.
+    TaxonomySearchValue:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the searchable object.
+        base64EncodedSourceId:
+          type: string
+          description: The base64 encoded version of the source ID.
+        name:
+          type: string
+          description: The name of the searchable object.
+        parentFolderId:
+          type: string
+          description: The ID of the parent folder.

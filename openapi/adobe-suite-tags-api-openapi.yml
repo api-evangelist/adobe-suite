@@ -80,7 +80,7 @@ paths:
       tags:
       - Tags
       summary: Retrieve tags
-      operationId: listTags
+      operationId: getUnifiedtagsTags
       parameters:
       - $ref: '#/components/parameters/start'
       - $ref: '#/components/parameters/limitTags'
@@ -99,6 +99,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/tagsList'
+      x-operation-id-source: normalized
+      x-operation-id-original: listTags
     post:
       tags:
       - Tags
@@ -219,31 +221,11 @@ paths:
     - url: https://experience.adobe.io
 components:
   parameters:
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
       description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    accept-encoding:
-      name: accept-encoding
-      in: header
-      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
       schema:
         type: string
     x-sandbox-name:
@@ -253,17 +235,36 @@ components:
       required: true
       schema:
         type: string
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
     sortOrderTags:
       name: sortOrder
       in: query
       description: The direction in which the tags are sorted by. Supported values include `asc` and `desc`.
       schema:
         type: string
-    authorization_2:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
+    propertyTags:
+      name: property
+      in: query
+      description: The attribute you want to filter by when retrieving tags. Supported values include `name`, `archived`, and `tagCategoryId`.
       schema:
         type: string
     tag-id:
@@ -279,10 +280,11 @@ components:
       description: The location where the list of results starts from. You can use this to indicate the starting index for pagination of results.
       schema:
         type: string
-    sortByTags:
-      name: sortBy
-      in: query
-      description: The attribute that is used to determine the sort order for the tags. Supported values include `name`, `createdAt`, and `modifiedAt`.
+    authorization_2:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
       schema:
         type: string
     content-type:
@@ -292,16 +294,16 @@ components:
       required: true
       schema:
         type: string
+    sortByTags:
+      name: sortBy
+      in: query
+      description: The attribute that is used to determine the sort order for the tags. Supported values include `name`, `createdAt`, and `modifiedAt`.
+      schema:
+        type: string
     limitTags:
       name: limit
       in: query
       description: The number of tags you want displayed per page.
-      schema:
-        type: string
-    propertyTags:
-      name: property
-      in: query
-      description: The attribute you want to filter by when retrieving tags. Supported values include `name`, `archived`, and `tagCategoryId`.
       schema:
         type: string
   schemas:
@@ -321,41 +323,19 @@ components:
           description: An array of aggregated values for input tagNamespace
           items:
             type: string
-    updateTagBody:
+    createTagBody:
       type: object
+      required:
+      - name
       properties:
-        op:
+        name:
           type: string
-          description: The operation for the PATCH call. Only `replace` is supported.
-          example: replace
-        path:
-          type: string
-          description: The path of the field you want to update. Supported values include `/name`, `archived`, and `/tagCategoryId`.
-          example: name
-        value:
-          type: string
-          description: The updated value of the field you want to update.
-          example: newSampleTag
-        from:
-          type: string
-          description: The original value of the field you want to update.
+          description: The name that you want to give the tag.
           example: sampleTag
-    validateTagsBody:
-      type: object
-      properties:
-        ids:
-          type: array
-          description: The list of IDs that you're trying to validate.
-          items:
-            type: string
-          example:
-          - 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
-          - d113f40c-0097-4626-8d5f-6d5017694453
-          - invalid-tag
-        entity:
+        tagCategoryId:
           type: string
-          description: The entity that is requesting the validation of the tags.
-          example: '{API_KEY}'
+          description: The ID of the tag category that you want the tag to belong to. If not specified, the tag will be created as part of the Uncategorized category.
+          example: e2b7c656-067b-4413-a366-adde0401df50
     validateTagsResponse:
       type: object
       properties:
@@ -380,6 +360,40 @@ components:
           example:
           - id: d113f40c-0097-4626-8d5f-6d5017694453
           - id: 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
+    updatedTag:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/tag'
+      - type: object
+        properties:
+          name:
+            type: string
+            description: The updated name of the tag.
+            example: updatedSampleTag
+    tagsList:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of tags that match the query given.
+              example: 166
+            limit:
+              type: integer
+              description: The maximum number of tags that appear per page.
+              example: 10
+            next:
+              type: string
+              description: The string that lets you visit the next page of results.
+              example: eyJjb21wb3NpdGVUb2tlbiI6IntcInRva2VuXCI6XCIrUklEOn52a0owQUp3WDRrVko1d0FBQUFBQUFBPT0jUlQ6MiNUUkM6MjAjUlREOnVDTmQyWlAvWjV6TGdvUGVGR1JHQk1KNVExVmR6Mnc9I0lTVjoyI0lFTzo2NTU2NyNRQ0Y6OCNGUEM6QWdFQ0J3TG1BQ1NmQnNBQ0JBb0FBQVFBQ0FBQUNJQVlnQWVBRElBTmdBWEFFTUJCUUVBQUFBQkFRQkdBSElBR2dBQ0FENEFId0FKUkRFQUNBZ2dBUUJnQUVBQUlIb0FaZ0FDQUJNQUFRVUFBUUFCQVFScUFBc0FTQUFBRUxvQU9nQWFBQmNBQVlBQUFHSUlCUUFDQU1vQUlnQWlBQk1DQUFRQUFnZ0FnQUM2QURZQTNnQWlBR1lBQWdCZUFBY0FCZ0JlQUM4QURBQUlBQWdBQVFBQ0FBRUZBQVFFQUFBRWdBQ0FBSjRCR2dBeUFCSUFPZ0F5QU13QVNRQ0FBQUVBdGdCRUFBR0FkZ0FuQUFDZ0NBQUFBQ0lCQUFDSkFnQUJBRUFDQUg0QUhnQWFBQllBVUFFQUNCQUFFQUFRQUF4QUFzUnJBQUlFQUFBYkxoQklIQVBBQUhnUUVBTEVxQUE4RkNBQVFtcUVBd0FBTWd3Y09BSFdIa1FBZ0JGT0FTNEN4QVE0QVwiLFwicmFuZ2VcIjp7XCJtaW5cIjpcIlwiLFwibWF4XCI6XCJGRlwifX0iLCJvcmRlckJ5SXRlbXMiOlt7Iml0ZW0iOjE2OTQ0ODg2MDMwMDB9XSwicmlkIjoidmtKMEFKd1g0a1hHV2dFQUFBQUFBQT09IiwiaW5jbHVzaXZlIjp0cnVlfQ"
+            property:
+              type: array
+              items:
+                type: string
+                description: The query that limits the tags retrieved.
+                example: tagCategoryId=e2b7c656-067b-4413-a366-adde0401df50
     tag:
       type: object
       properties:
@@ -423,53 +437,41 @@ components:
           type: string
           description: The name of the tag category that the tag belongs to.
           example: Test Category
-    createTagBody:
+    validateTagsBody:
       type: object
-      required:
-      - name
       properties:
-        name:
-          type: string
-          description: The name that you want to give the tag.
-          example: sampleTag
-        tagCategoryId:
-          type: string
-          description: The ID of the tag category that you want the tag to belong to. If not specified, the tag will be created as part of the Uncategorized category.
-          example: e2b7c656-067b-4413-a366-adde0401df50
-    updatedTag:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/tag'
-      - type: object
-        properties:
-          name:
+        ids:
+          type: array
+          description: The list of IDs that you're trying to validate.
+          items:
             type: string
-            description: The updated name of the tag.
-            example: updatedSampleTag
-    tagsList:
+          example:
+          - 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
+          - d113f40c-0097-4626-8d5f-6d5017694453
+          - invalid-tag
+        entity:
+          type: string
+          description: The entity that is requesting the validation of the tags.
+          example: '{API_KEY}'
+    updateTagBody:
       type: object
       properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of tags that match the query given.
-              example: 166
-            limit:
-              type: integer
-              description: The maximum number of tags that appear per page.
-              example: 10
-            next:
-              type: string
-              description: The string that lets you visit the next page of results.
-              example: eyJjb21wb3NpdGVUb2tlbiI6IntcInRva2VuXCI6XCIrUklEOn52a0owQUp3WDRrVko1d0FBQUFBQUFBPT0jUlQ6MiNUUkM6MjAjUlREOnVDTmQyWlAvWjV6TGdvUGVGR1JHQk1KNVExVmR6Mnc9I0lTVjoyI0lFTzo2NTU2NyNRQ0Y6OCNGUEM6QWdFQ0J3TG1BQ1NmQnNBQ0JBb0FBQVFBQ0FBQUNJQVlnQWVBRElBTmdBWEFFTUJCUUVBQUFBQkFRQkdBSElBR2dBQ0FENEFId0FKUkRFQUNBZ2dBUUJnQUVBQUlIb0FaZ0FDQUJNQUFRVUFBUUFCQVFScUFBc0FTQUFBRUxvQU9nQWFBQmNBQVlBQUFHSUlCUUFDQU1vQUlnQWlBQk1DQUFRQUFnZ0FnQUM2QURZQTNnQWlBR1lBQWdCZUFBY0FCZ0JlQUM4QURBQUlBQWdBQVFBQ0FBRUZBQVFFQUFBRWdBQ0FBSjRCR2dBeUFCSUFPZ0F5QU13QVNRQ0FBQUVBdGdCRUFBR0FkZ0FuQUFDZ0NBQUFBQ0lCQUFDSkFnQUJBRUFDQUg0QUhnQWFBQllBVUFFQUNCQUFFQUFRQUF4QUFzUnJBQUlFQUFBYkxoQklIQVBBQUhnUUVBTEVxQUE4RkNBQVFtcUVBd0FBTWd3Y09BSFdIa1FBZ0JGT0FTNEN4QVE0QVwiLFwicmFuZ2VcIjp7XCJtaW5cIjpcIlwiLFwibWF4XCI6XCJGRlwifX0iLCJvcmRlckJ5SXRlbXMiOlt7Iml0ZW0iOjE2OTQ0ODg2MDMwMDB9XSwicmlkIjoidmtKMEFKd1g0a1hHV2dFQUFBQUFBQT09IiwiaW5jbHVzaXZlIjp0cnVlfQ"
-            property:
-              type: array
-              items:
-                type: string
-                description: The query that limits the tags retrieved.
-                example: tagCategoryId=e2b7c656-067b-4413-a366-adde0401df50
+        op:
+          type: string
+          description: The operation for the PATCH call. Only `replace` is supported.
+          example: replace
+        path:
+          type: string
+          description: The path of the field you want to update. Supported values include `/name`, `archived`, and `/tagCategoryId`.
+          example: name
+        value:
+          type: string
+          description: The updated value of the field you want to update.
+          example: newSampleTag
+        from:
+          type: string
+          description: The original value of the field you want to update.
+          example: sampleTag
 x-refined-from:
 - adobe-suite-aep-catalog-openapi.yaml
 - adobe-suite-aep-unified-tags-openapi.yaml

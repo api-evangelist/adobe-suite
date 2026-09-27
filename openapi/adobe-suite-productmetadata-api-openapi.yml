@@ -264,46 +264,82 @@ paths:
                     locale: en-US
 components:
   schemas:
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    401Response:
-      title: 401 Unauthorized
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrInvalidOauthToken
-        status: '401'
-        error_code: '401013'
-        message: Oauth token is not valid
-    Source:
-      title: Catalog source
-      description: Source of the entity, for example, "en-US" for US English.
-      type: object
+    FeedProductMetadataUpdate:
+      title: Update product metadata attribute
+      description: Metadata information for a product attribute.
       required:
-      - locale
+      - code
+      - source
+      type: object
       properties:
-        locale:
+        code:
           type: string
-          description: A single value that represents content locale, for example, English.
-          example: English
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+        visibleIn:
+          type: array
+          description: 'Determines how the attribute is used on the storefront.
+
+            * `PRODUCT_DETAIL`: Product attribute is visible on the Product Detail Page.
+
+            * `PRODUCT_LISTING`: Product attribute is visible on Product Listing Page.
+
+            * `SEARCH_RESULTS`: Product attribute is visible on Search Results Page.
+
+            * `PRODUCT_COMPARE`: Product attribute is visible on Product Compare Page.
+
+            '
+          items:
+            enum:
+            - PRODUCT_DETAIL
+            - PRODUCT_LISTING
+            - SEARCH_RESULTS
+            - PRODUCT_COMPARE
+        label:
+          type: string
+          description: Label for the attribute that is displayed in user interfaces.
+          example: Attribute Name
+        dataType:
+          type: string
+          description: Data type
+          example: TEXT
+          enum:
+          - TEXT
+          - DECIMAL
+          - INTEGER
+          - BOOLEAN
+        filterable:
+          type: boolean
+          description: Indicates whether the attribute can be used to filter products.
+          example: true
+        sortable:
+          type: boolean
+          description: Indicates whether the attribute can be used to sort products.
+          example: true
+        searchable:
+          type: boolean
+          description: Indicates whether the attribute value can be used in search queries to filter results.
+          example: true
+        searchWeight:
+          type: number
+          description: 'The weight associated with a searchable attribute.
+
+            Attributes with a greater weight are returned before attributes with a lower weight.
+
+            '
+          format: float
+        searchTypes:
+          type: array
+          description: 'Search types associated with this attribute, for example: `autocomplete`, `starts_with`, and so on.
+
+            '
+          items:
+            type: string
+            enum:
+            - AUTOCOMPLETE
+            - CONTAINS
+            - STARTS_WITH
     FeedProductMetadata:
       title: Create or update product metadata attribute
       description: Metadata information for a product attribute.
@@ -382,6 +418,19 @@ components:
             - AUTOCOMPLETE
             - CONTAINS
             - STARTS_WITH
+    FeedProductMetadataDelete:
+      title: Delete product metadata attribute
+      description: Delete metadata information for a product attribute.
+      required:
+      - code
+      - source
+      type: object
+      properties:
+        code:
+          type: string
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
     403Response:
       title: 403 Forbidden
       type: object
@@ -403,6 +452,46 @@ components:
         status: '403'
         error_code: '403010'
         message: Oauth token is missing
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
+      type: object
+      required:
+      - locale
+      properties:
+        locale:
+          type: string
+          description: A single value that represents content locale, for example, English.
+          example: English
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
     FeedItemFailedValidationResult:
       title: FeedItemFailedValidationResult
       type: object
@@ -420,19 +509,6 @@ components:
         value:
           type: string
           description: Original value passed in the request.
-    FeedProductMetadataDelete:
-      title: Delete product metadata attribute
-      description: Delete metadata information for a product attribute.
-      required:
-      - code
-      - source
-      type: object
-      properties:
-        code:
-          type: string
-          description: Attribute code
-        source:
-          $ref: '#/components/schemas/Source'
     400ProcessFeedResponse:
       title: Response payload
       type: object
@@ -476,83 +552,16 @@ components:
       example:
         status: ACCEPTED
         acceptedCount: 4
-    FeedProductMetadataUpdate:
-      title: Update product metadata attribute
-      description: Metadata information for a product attribute.
-      required:
-      - code
-      - source
-      type: object
-      properties:
-        code:
-          type: string
-          description: Attribute code
-        source:
-          $ref: '#/components/schemas/Source'
-        visibleIn:
-          type: array
-          description: 'Determines how the attribute is used on the storefront.
-
-            * `PRODUCT_DETAIL`: Product attribute is visible on the Product Detail Page.
-
-            * `PRODUCT_LISTING`: Product attribute is visible on Product Listing Page.
-
-            * `SEARCH_RESULTS`: Product attribute is visible on Search Results Page.
-
-            * `PRODUCT_COMPARE`: Product attribute is visible on Product Compare Page.
-
-            '
-          items:
-            enum:
-            - PRODUCT_DETAIL
-            - PRODUCT_LISTING
-            - SEARCH_RESULTS
-            - PRODUCT_COMPARE
-        label:
-          type: string
-          description: Label for the attribute that is displayed in user interfaces.
-          example: Attribute Name
-        dataType:
-          type: string
-          description: Data type
-          example: TEXT
-          enum:
-          - TEXT
-          - DECIMAL
-          - INTEGER
-          - BOOLEAN
-        filterable:
-          type: boolean
-          description: Indicates whether the attribute can be used to filter products.
-          example: true
-        sortable:
-          type: boolean
-          description: Indicates whether the attribute can be used to sort products.
-          example: true
-        searchable:
-          type: boolean
-          description: Indicates whether the attribute value can be used in search queries to filter results.
-          example: true
-        searchWeight:
-          type: number
-          description: 'The weight associated with a searchable attribute.
-
-            Attributes with a greater weight are returned before attributes with a lower weight.
-
-            '
-          format: float
-        searchTypes:
-          type: array
-          description: 'Search types associated with this attribute, for example: `autocomplete`, `starts_with`, and so on.
-
-            '
-          items:
-            type: string
-            enum:
-            - AUTOCOMPLETE
-            - CONTAINS
-            - STARTS_WITH
   parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
     Authorization:
       name: Authorization
       in: header
@@ -569,16 +578,16 @@ components:
         enum:
         - gzip
       description: Use this header if the payload is compressed with gzip.
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
   responses:
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
     UnauthorizedResponse:
       x-summary: Unauthorized request
       description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
@@ -588,6 +597,26 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/401Response'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -617,35 +646,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
-    AcceptedResponse:
-      x-summary: All items accepted
-      description: 'All items accepted and will be processed asynchronously
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/ProcessFeedResponse'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

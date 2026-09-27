@@ -87,7 +87,7 @@ paths:
   /v2/status/{jobId}:
     get:
       description: Retrieves the current status and details of a specific job including metadata, outputs, and processing information. Use this endpoint to poll jobs submitted to Photoshop v2 operations and POST /v1/auto-crop.
-      operationId: getJobStatus
+      operationId: getV2StatusByJobId
       parameters:
       - description: Unique identifier for the job to retrieve status information
         example: 550e8400-e29b-41d4-a716-446655440000
@@ -127,11 +127,76 @@ paths:
       security:
       - Authorization: []
         X-Api-Key: []
+      x-operation-id-source: normalized
+      x-operation-id-original: getJobStatus
     servers:
     - url: https://photoshop-api.adobe.io
       description: Prod server.
 components:
   schemas:
+    failedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job is in a failed state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - failed
+          errors:
+            type: array
+            description: A list of errors that caused the job to fail.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the failure.
+                message:
+                  type: string
+                  description: The error message for the failure
+                source:
+                  type: string
+                  description: The source file of the error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the failure(if any), if applicable.
+    succeededEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - succeeded
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the generated assets.
+    runningEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: Job is in running state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - running
+          message:
+            type: string
+            description: A description of the current running state.
     BaseEvent:
       type: object
       description: The job event response object.
@@ -139,6 +204,27 @@ components:
         jobId:
           description: The GUID for the job.
           type: string
+    notstartedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The status when a job is in queued state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - not_started
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     partialSuccessEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
@@ -177,100 +263,6 @@ components:
                 url:
                   type: string
                   description: A URL related to an asset causing the partial failure(if any), if applicable.
-    failedEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The job is in a failed state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - failed
-          errors:
-            type: array
-            description: A list of errors that caused the job to fail.
-            items:
-              type: object
-              properties:
-                error_code:
-                  type: string
-                  description: The error code for the failure.
-                message:
-                  type: string
-                  description: The error message for the failure
-                source:
-                  type: string
-                  description: The source file of the error, if applicable.
-                url:
-                  type: string
-                  description: A URL related to an asset causing the failure(if any), if applicable.
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
-      required:
-      - message
-      - error_code
-    runningEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: Job is in running state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - running
-          message:
-            type: string
-            description: A description of the current running state.
-    notstartedEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The status when a job is in queued state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - not_started
-    succeededEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The job has succeeded.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - succeeded
-          data:
-            type: object
-            description: The output response from the current state of the job.
-          dataURL:
-            type: string
-            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
-          outputs:
-            type: object
-            description: A list of URLs for all the generated assets.
-    ValidationError:
-      type: object
-      properties:
-        error_code:
-          type: string
-          description: The error code for this specific validation error
-        message:
-          type: string
-          description: Human-readable string describing this specific validation error
-      description: Represents a single validation error with error code and message
     Result:
       type: object
       properties:
@@ -280,13 +272,6 @@ components:
             type: object
         outputs:
           type: object
-    ErrorDetails:
-      type: object
-      properties:
-        errorCode:
-          type: string
-        message:
-          type: string
     ErrorResponse:
       type: object
       properties:
@@ -347,6 +332,16 @@ components:
         | invalid_json                  | The request payload is having invalid JSON (fallback) |
 
         '
+    ValidationError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code for this specific validation error
+        message:
+          type: string
+          description: Human-readable string describing this specific validation error
+      description: Represents a single validation error with error code and message
     JobStatusResponse:
       type: object
       properties:
@@ -366,6 +361,13 @@ components:
           $ref: '#/components/schemas/Result'
         status:
           type: string
+    ErrorDetails:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
   responses:
     Unauthorized:
       description: Unauthorized
@@ -382,6 +384,45 @@ components:
           schema:
             type: integer
           description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The format of the content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Retry-After:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
         Access-Control-Allow-Origin:
           schema:
             type: string
@@ -437,8 +478,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    BadParams:
-      description: Bad Parameter
+    NotFound:
+      description: Not Found
       content:
         application/json:
           schema:
@@ -507,47 +548,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    TooManyRequests:
-      description: Too Many Requests
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The format of the content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Retry-After:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
+    BadParams:
+      description: Bad Parameter
       content:
         application/json:
           schema:

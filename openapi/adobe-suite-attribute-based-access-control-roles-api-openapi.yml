@@ -215,10 +215,10 @@ paths:
                 $ref: '#/components/schemas/subjectsByRoleId'
 components:
   parameters:
-    x-api-key:
-      name: x-api-key
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
       in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string
@@ -238,37 +238,100 @@ components:
         type: string
         enum:
         - application/json
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
+    x-api-key:
+      name: x-api-key
       in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string
   schemas:
-    roleUpdateById:
-      required:
-      - name
-      - description
-      - roleType
+    createNewRoleRequestBody:
       type: object
       properties:
         name:
           type: string
-          description: The updated name of a role.
-          example: Administrator Role
+          example: People who ordered in the last 30 days
+          description: The name of your role.
         description:
           type: string
-          description: The updated description of a role.
           example: Role for administrator type of responsibilities and access.
+          description: A descriptive value that you can include to provide more information on your role.
         roleType:
           type: string
-          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
           example: user-defined
           enum:
           - user-defined
           - system-defined
-      description: Put operation.
+          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
+    subjectsByRoleId:
+      type: object
+      properties:
+        subjects:
+          type: array
+          description: A list of subjects associated with the queried role ID, including the corresponding subject ID and subject type.
+          items:
+            $ref: '#/components/schemas/subjectsForRole'
+        _page:
+          type: object
+          description: An object that shows what page the list is on.
+          properties:
+            limit:
+              type: integer
+              example: 1
+              description: Limit the response to a specific number of objects. This must be a positive number. For example, `limit=10`.
+            count:
+              type: integer
+              example: 1
+              description: The number of results returned per page.
+        _links:
+          type: object
+          description: Contains the URL for the currently displayed response page.
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects
+                  description: The URL for the currently displayed response page.
+                templated:
+                  type: boolean
+                  example: true
+                  description: Indicates if the `href` property is a template.
+            page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects?limit={limit}&start={start}&orderBy={orderBy}&property={property}
+                  description: The URL for the currently displayed response page.
+                templated:
+                  type: boolean
+                  example: true
+                  description: Indicates if the `href` property is a template.
+    subjects:
+      type: object
+      properties:
+        roleId:
+          type: string
+          description: The ID of the role.
+        subjectType:
+          type: string
+          description: The type of queried subject.
+        subjectId:
+          type: string
+          description: The ID that corresponds with the queried subject.
+      example:
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: PIRJ7WE5T3QT9Z4TCLVH86DE@AdobeID
+      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+        subjectType: user
+        subjectId: WHPWE00MC26SHZ7AKBFG403D@AdobeID
     rolesResponse:
       type: object
       properties:
@@ -345,7 +408,30 @@ components:
                   type: string
                   example: null
                   description: The HTTP method used for the link.
-    subjects:
+    roleUpdateById:
+      required:
+      - name
+      - description
+      - roleType
+      type: object
+      properties:
+        name:
+          type: string
+          description: The updated name of a role.
+          example: Administrator Role
+        description:
+          type: string
+          description: The updated description of a role.
+          example: Role for administrator type of responsibilities and access.
+        roleType:
+          type: string
+          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
+          example: user-defined
+          enum:
+          - user-defined
+          - system-defined
+      description: Put operation.
+    subjectsForRole:
       type: object
       properties:
         roleId:
@@ -358,61 +444,8 @@ components:
           type: string
           description: The ID that corresponds with the queried subject.
       example:
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
+      - subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
         subjectType: user
-        subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
-        subjectType: user
-        subjectId: PIRJ7WE5T3QT9Z4TCLVH86DE@AdobeID
-      - roleId: 3dfa045d-de58-4dfd-8ea9-e4e2c1b6d809
-        subjectType: user
-        subjectId: WHPWE00MC26SHZ7AKBFG403D@AdobeID
-    subjectsByRoleId:
-      type: object
-      properties:
-        subjects:
-          type: array
-          description: A list of subjects associated with the queried role ID, including the corresponding subject ID and subject type.
-          items:
-            $ref: '#/components/schemas/subjectsForRole'
-        _page:
-          type: object
-          description: An object that shows what page the list is on.
-          properties:
-            limit:
-              type: integer
-              example: 1
-              description: Limit the response to a specific number of objects. This must be a positive number. For example, `limit=10`.
-            count:
-              type: integer
-              example: 1
-              description: The number of results returned per page.
-        _links:
-          type: object
-          description: Contains the URL for the currently displayed response page.
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects
-                  description: The URL for the currently displayed response page.
-                templated:
-                  type: boolean
-                  example: true
-                  description: Indicates if the `href` property is a template.
-            page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/access-control/administration/roles/{ROLE_ID}/subjects?limit={limit}&start={start}&orderBy={orderBy}&property={property}
-                  description: The URL for the currently displayed response page.
-                templated:
-                  type: boolean
-                  example: true
-                  description: Indicates if the `href` property is a template.
     retrieveSubjects:
       type: object
       properties:
@@ -483,39 +516,6 @@ components:
           description: The new value you want to update your parameter with.
           example: Role for administrator type of responsibilities and access.
       description: Patch operation.
-    subjectsForRole:
-      type: object
-      properties:
-        roleId:
-          type: string
-          description: The ID of the role.
-        subjectType:
-          type: string
-          description: The type of queried subject.
-        subjectId:
-          type: string
-          description: The ID that corresponds with the queried subject.
-      example:
-      - subjectId: 03Z07HFQCCUF3TUHAX274206@AdobeID
-        subjectType: user
-    createNewRoleRequestBody:
-      type: object
-      properties:
-        name:
-          type: string
-          example: People who ordered in the last 30 days
-          description: The name of your role.
-        description:
-          type: string
-          example: Role for administrator type of responsibilities and access.
-          description: A descriptive value that you can include to provide more information on your role.
-        roleType:
-          type: string
-          example: user-defined
-          enum:
-          - user-defined
-          - system-defined
-          description: The designated type of the role. The possible values for role type are user-defined and system-defined.
     subjectPatchOperation:
       required:
       - op

@@ -182,6 +182,70 @@ paths:
           x-summary: Resource Not Found
 components:
   schemas:
+    getSampleProfileResponse:
+      type: object
+      properties:
+        segmentMembership:
+          description: A map object which describes the individual’s segment memberships. For more information on `segmentMembership`, read [Segment Membership Details](https://experienceleague.adobe.com/docs/experience-platform/xdm/field-groups/profile/segmentation.html?lang=en).
+          type: object
+          example:
+            ups:
+              03fb9938-8537-4b4c-87f9-9c4d413a0ee5:
+                lastQualificationTime: '2021-06-30T18:40:07.591378Z'
+                status: realized
+              27e05542-d6a3-46c7-9c8e-d59d50229530:
+                lastQualificationTime: '2021-06-30T18:40:07.591380Z'
+                status: realized
+          properties:
+            ups:
+              description: Indicates the segments that the profile is a member of.
+              example: 03fb9938-8537-4b4c-87f9-9c4d413a0ee5
+              type: object
+              properties:
+                lastQualificationTime:
+                  description: A timestamp of the last time this profile qualified for the segment.
+                  example: '2021-06-30T18:40:07.591378Z'
+                  type: string
+                status:
+                  description: 'Indicates whether the segment membership has been realized as part of the current request. The following values are accepted: <ul><li>`existing`: The profile was already part of the segment prior to the request, and continues to maintain its membership.</li><li>`realized`: The profile is entering the segment as part of the current request.</li><li>`exited`: The profile is exiting the segment as part of the current request.</li></ul>'
+                  example: realized
+                  type: string
+        attributes:
+          description: Attributes present on the profile.
+          example:
+            personalEmail:
+              address: john.smith@abc.com
+          items:
+            type: string
+        identityMap:
+          description: A map-type field that describes the various identity values for an individual, along with their associated namespaces. For more information on `identityMap`, read [Basis of schema composition](https://experienceleague.adobe.com/docs/experience-platform/xdm/schema/composition.html?lang=en#identityMap).
+          type: array
+          example:
+            ECID:
+            - id: ECID-7VEsJ
+          items:
+            type: string
+    IrisResponse:
+      type: object
+      properties:
+        body:
+          type: string
+          example: '{ "attributes": [  { "external_id": "external_id-h29Fq"  , "AdobeExperiencePlatformSegments": { "add": [  "Nirvana fans" ,  "RHCP fans"   ], "remove": [  ] }  ,  "key":  "string"    }  ] }'
+          description: The body returned by the destination endpoint in response to the test call made by Experience Platform.
+        code:
+          type: string
+          example: 200
+          description: The code returned by the destination endpoint in response to the test call made by Experience Platform.
+        headers:
+          type: string
+          example:
+          - Connection: keep-alive
+          - Content-Type: application/json
+          - Server: nginx
+          - Vary: Origin,Accept-Encoding
+          - transfer-encoding: chunked
+          description: The headers returned by the destination endpoint in response to the test call made by Experience Platform.
+      title: IrisResponse
     InputProfileList:
       type: object
       properties:
@@ -209,6 +273,30 @@ components:
             $ref: '#/components/schemas/JsonNode'
     JsonNode:
       type: object
+    DestinationTestingRequest:
+      type: object
+      properties:
+        body:
+          type: string
+        headers:
+          $ref: '#/components/schemas/JsonNode'
+        method:
+          type: string
+        uri:
+          type: string
+      title: DestinationTestingRequest
+    DestinationTestingProcessResult:
+      type: object
+      description: A summary of the HTTP call to the destination endpoint and the request received back from the endpoint.
+      properties:
+        traceId:
+          type: string
+          description: An ID used for debugging purposes, that Experience Platform adds to the response received from the destination.
+        request:
+          $ref: '#/components/schemas/DestinationTestingRequest'
+        response:
+          $ref: '#/components/schemas/IrisResponse'
+      title: DestinationTestingProcessResult
     DestinationTestingProcessResultList:
       type: object
       properties:
@@ -257,39 +345,6 @@ components:
           description: Optionally, you can add profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api#generate-sample-profiles-source-schema).
           items:
             $ref: '#/components/schemas/getSampleProfileResponse'
-    IrisResponse:
-      type: object
-      properties:
-        body:
-          type: string
-          example: '{ "attributes": [  { "external_id": "external_id-h29Fq"  , "AdobeExperiencePlatformSegments": { "add": [  "Nirvana fans" ,  "RHCP fans"   ], "remove": [  ] }  ,  "key":  "string"    }  ] }'
-          description: The body returned by the destination endpoint in response to the test call made by Experience Platform.
-        code:
-          type: string
-          example: 200
-          description: The code returned by the destination endpoint in response to the test call made by Experience Platform.
-        headers:
-          type: string
-          example:
-          - Connection: keep-alive
-          - Content-Type: application/json
-          - Server: nginx
-          - Vary: Origin,Accept-Encoding
-          - transfer-encoding: chunked
-          description: The headers returned by the destination endpoint in response to the test call made by Experience Platform.
-      title: IrisResponse
-    DestinationTestingProcessResult:
-      type: object
-      description: A summary of the HTTP call to the destination endpoint and the request received back from the endpoint.
-      properties:
-        traceId:
-          type: string
-          description: An ID used for debugging purposes, that Experience Platform adds to the response received from the destination.
-        request:
-          $ref: '#/components/schemas/DestinationTestingRequest'
-        response:
-          $ref: '#/components/schemas/IrisResponse'
-      title: DestinationTestingProcessResult
     DestinationTestingResponse:
       type: object
       properties:
@@ -320,72 +375,17 @@ components:
           items:
             $ref: '#/components/schemas/getSampleProfileResponse'
       title: DestinationTestingResponse
-    DestinationTestingRequest:
-      type: object
-      properties:
-        body:
-          type: string
-        headers:
-          $ref: '#/components/schemas/JsonNode'
-        method:
-          type: string
-        uri:
-          type: string
-      title: DestinationTestingRequest
-    getSampleProfileResponse:
-      type: object
-      properties:
-        segmentMembership:
-          description: A map object which describes the individual’s segment memberships. For more information on `segmentMembership`, read [Segment Membership Details](https://experienceleague.adobe.com/docs/experience-platform/xdm/field-groups/profile/segmentation.html?lang=en).
-          type: object
-          example:
-            ups:
-              03fb9938-8537-4b4c-87f9-9c4d413a0ee5:
-                lastQualificationTime: '2021-06-30T18:40:07.591378Z'
-                status: realized
-              27e05542-d6a3-46c7-9c8e-d59d50229530:
-                lastQualificationTime: '2021-06-30T18:40:07.591380Z'
-                status: realized
-          properties:
-            ups:
-              description: Indicates the segments that the profile is a member of.
-              example: 03fb9938-8537-4b4c-87f9-9c4d413a0ee5
-              type: object
-              properties:
-                lastQualificationTime:
-                  description: A timestamp of the last time this profile qualified for the segment.
-                  example: '2021-06-30T18:40:07.591378Z'
-                  type: string
-                status:
-                  description: 'Indicates whether the segment membership has been realized as part of the current request. The following values are accepted: <ul><li>`existing`: The profile was already part of the segment prior to the request, and continues to maintain its membership.</li><li>`realized`: The profile is entering the segment as part of the current request.</li><li>`exited`: The profile is exiting the segment as part of the current request.</li></ul>'
-                  example: realized
-                  type: string
-        attributes:
-          description: Attributes present on the profile.
-          example:
-            personalEmail:
-              address: john.smith@abc.com
-          items:
-            type: string
-        identityMap:
-          description: A map-type field that describes the various identity values for an individual, along with their associated namespaces. For more information on `identityMap`, read [Basis of schema composition](https://experienceleague.adobe.com/docs/experience-platform/xdm/schema/composition.html?lang=en#identityMap).
-          type: array
-          example:
-            ECID:
-            - id: ECID-7VEsJ
-          items:
-            type: string
   parameters:
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
       required: true
       schema:
         type: string
       in: header
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
       required: true
       schema:
         type: string
@@ -397,9 +397,9 @@ components:
       schema:
         type: string
       in: header
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
       required: true
       schema:
         type: string

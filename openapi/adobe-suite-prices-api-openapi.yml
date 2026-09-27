@@ -294,6 +294,15 @@ paths:
                   priceBookId: dealer-north
 components:
   parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
     Authorization:
       name: Authorization
       in: header
@@ -310,15 +319,6 @@ components:
         enum:
         - gzip
       description: Use this header if the payload is compressed with gzip.
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
   schemas:
     DiscountsPercentage:
       title: Percentage Discount
@@ -421,27 +421,6 @@ components:
             percentage: 10
           - qty: 10
             price: 25.0
-    403Response:
-      title: 403 Forbidden
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
     TierPercentage:
       title: Tier Percentage Discount
       description: 'Percentage discount applied to the regular price when purchasing at or above a specific quantity threshold.
@@ -472,6 +451,42 @@ components:
 
             '
           example: 20.0
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
     TierFinalPrice:
       title: Tier Final Price
       description: 'Final price offered for bulk purchases at a specific quantity threshold.
@@ -527,6 +542,49 @@ components:
         value:
           type: string
           description: Original value passed in the request.
+    DiscountsFinalPrice:
+      title: Fixed Amount Discount
+      description: 'Fixed amount discount that reduces the regular price by a specific monetary value.
+
+        Example: $100 regular price with a $10 fixed discount results in $90 final price.
+
+        '
+      type: object
+      required:
+      - code
+      - price
+      properties:
+        code:
+          type: string
+          description: 'Unique identifier for the discount. Must be unique within the price record.
+
+            Use descriptive codes for easier management (e.g., "loyalty_discount", "holiday_sale").
+
+            '
+          example: loyalty_discount
+        price:
+          type: number
+          format: float
+          description: 'Fixed discount amount in the same currency as the price book.
+
+            Must be a positive number less than the regular price.
+
+            '
+          example: 10.0
+    FeedPricesDelete:
+      title: FeedPricesDelete
+      description: Delete product price information.
+      required:
+      - sku
+      - priceBookId
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Product SKU
+        priceBookId:
+          type: string
+          description: Price book id
     FeedPricesUpdate:
       title: FeedPrices
       description: Product price information.
@@ -559,49 +617,6 @@ components:
             anyOf:
             - $ref: '#/components/schemas/TierFinalPrice'
             - $ref: '#/components/schemas/TierPercentage'
-    FeedPricesDelete:
-      title: FeedPricesDelete
-      description: Delete product price information.
-      required:
-      - sku
-      - priceBookId
-      type: object
-      properties:
-        sku:
-          type: string
-          description: Product SKU
-        priceBookId:
-          type: string
-          description: Price book id
-    DiscountsFinalPrice:
-      title: Fixed Amount Discount
-      description: 'Fixed amount discount that reduces the regular price by a specific monetary value.
-
-        Example: $100 regular price with a $10 fixed discount results in $90 final price.
-
-        '
-      type: object
-      required:
-      - code
-      - price
-      properties:
-        code:
-          type: string
-          description: 'Unique identifier for the discount. Must be unique within the price record.
-
-            Use descriptive codes for easier management (e.g., "loyalty_discount", "holiday_sale").
-
-            '
-          example: loyalty_discount
-        price:
-          type: number
-          format: float
-          description: 'Fixed discount amount in the same currency as the price book.
-
-            Must be a positive number less than the regular price.
-
-            '
-          example: 10.0
     401Response:
       title: 401 Unauthorized
       type: object
@@ -651,33 +666,7 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
   responses:
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
     AcceptedResponse:
       x-summary: All items accepted
       description: 'All items accepted and will be processed asynchronously
@@ -687,15 +676,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -725,6 +705,17 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
     ForbiddenResponse:
       x-summary: Forbidden request
       description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
@@ -734,6 +725,15 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/403Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

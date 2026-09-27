@@ -325,79 +325,10 @@ paths:
           description: The request has been accepted and will be completed asynchronously
 components:
   schemas:
-    addDomain:
-      type: object
-      required:
-      - entity
-      properties:
-        entity:
-          properties:
-            type:
-              type: string
-              example: domain
-            entityValue:
-              type: string
-              description: A domain
-              example: baddomain.com
-        comment:
-          type: string
-          example: Known bad domain
-        user:
-          type: string
-          example: myusername@corp.com
-    client:
-      type: object
-      properties:
-        imsOrgId:
-          type: string
-          description: The IMS Org id of the calling client
-        sandboxId:
-          type: string
-          description: The sandbox name of the calling client
-    domainEntityObject:
-      type: object
-      required:
-      - id
-      - entity
-      - suppressed
-      - creationDate
-      - lastModifiedDate
-      - status
-      - listType
-      - client
-      properties:
-        id:
-          type: string
-          description: The identifier of entity.
-          format: uuid
-          example: 91acd0b4-753b-4366-8893-d5440c4d9b15
-        entity:
-          properties:
-            type:
-              type: string
-              example: domain
-            entityValue:
-              type: string
-              description: An email domain
-              example: baddomain.com
-        suppressed:
-          $ref: '#/components/schemas/suppressed'
-        creationDate:
-          type: number
-          example: '1631739725150'
-        lastModifiedDate:
-          type: number
-          example: '1631739725150'
-        status:
-          $ref: '#/components/schemas/status'
-        listType:
-          $ref: '#/components/schemas/listType'
-        client:
-          $ref: '#/components/schemas/client'
-    domainSuppressionListResponse:
+    uploadListResponse:
       type: object
       allOf:
-      - $ref: '#/components/schemas/domainEntityObject'
+      - $ref: '#/components/schemas/uploads'
     entityObject:
       type: object
       required:
@@ -441,11 +372,18 @@ components:
           $ref: '#/components/schemas/client'
         bounceState:
           $ref: '#/components/schemas/bounceState'
-    uploadListResponse:
+    bounceState:
       type: object
-      allOf:
-      - $ref: '#/components/schemas/uploads'
-    addEmailAddress:
+      properties:
+        softCount:
+          type: integer
+          description: The current soft bounce count
+          example: 1
+        bounceEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/bounceEvents'
+    addDomain:
       type: object
       required:
       - entity
@@ -454,67 +392,17 @@ components:
           properties:
             type:
               type: string
-              example: email
+              example: domain
             entityValue:
               type: string
-              description: An email address
-              example: bademailaddress@domain.com
+              description: A domain
+              example: baddomain.com
         comment:
           type: string
-          example: Known bad email address
+          example: Known bad domain
         user:
           type: string
           example: myusername@corp.com
-    addEntityObject:
-      type: object
-      required:
-      - id
-      - entity
-      - suppressed
-      - creationDate
-      - lastModifiedDate
-      - status
-      - listType
-      - client
-      properties:
-        id:
-          type: string
-          description: The identifier of entity.
-          format: uuid
-          example: 91acd0b4-753b-4366-8893-d5440c4d9b15
-        entity:
-          properties:
-            type:
-              type: string
-              example: email
-            entityValue:
-              type: string
-              description: An email address
-              example: bademailaddress@domain.com
-        suppressed:
-          $ref: '#/components/schemas/suppressed'
-        creationDate:
-          type: number
-          example: '1631739725150'
-        lastModifiedDate:
-          type: number
-          example: '1631739725150'
-        status:
-          $ref: '#/components/schemas/status'
-        listType:
-          $ref: '#/components/schemas/listType'
-        client:
-          $ref: '#/components/schemas/client'
-    uploadPost:
-      type: object
-      properties:
-        success:
-          type: object
-          properties:
-            jobId:
-              type: string
-              example: 6caaed1b-d7bd-4065-a745-185e9af3b63a
-              description: Unique job identifier.
     page:
       type: object
       properties:
@@ -535,63 +423,6 @@ components:
         count:
           type: integer
           example: 1
-    listType:
-      type: string
-      enum:
-      - client
-      - allowed
-    type:
-      type: string
-      enum:
-      - MANUAL
-      - HARD
-      - SOFT
-    suppressionListAddResponse:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/addEntityObject'
-    status:
-      type: string
-      enum:
-      - active
-      - deleted
-    hRefLink:
-      type: object
-      required:
-      - href
-      properties:
-        href:
-          type: string
-    uploadStatus:
-      description: 'The current state of the upload.  Can be one of the following:
-
-
-        _Accepted: The file has been accepted and a jobId has ben created.
-
-
-        '
-      type: string
-      enum:
-      - ACCEPTED
-      - PENDING,
-      - COMPLETE
-      - CANCELED
-      - ERROR
-    bounceEvents:
-      properties:
-        messageId:
-          type: string
-          description: The message Id associated with the message execution send attempt.
-        date:
-          type: string
-          format: date-time
-          example: '2016-08-29T19:12:33.001Z'
-        message:
-          type: string
-          example: Mailbox is full
-        bounceType:
-          type: string
-          example: SOFT
     uploads:
       type: object
       properties:
@@ -635,74 +466,11 @@ components:
           description: Numebr of records that failed to be imported.  These records are provided for an individual jobId when requesting a single jobId using /upload/{jobId}
           type: number
           example: 17
-    suppressed:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        user:
-          type: string
-          description: The name or email address of the user that created the suppression
-          example: myemail@myemail.com
-        comment:
-          type: string
-          description: An optional comment about the suppression
-          example: deemed to be a fake
-        date:
-          type: number
-          example: '1631739725150'
-    suppressionListResponse:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/entityObject'
-    failedRecord:
-      type: object
-      properties:
-        type:
-          description: The entity type.  This is value provided in the user's data
-          type: string
-          example: Email
-        value:
-          description: The value of the entity. This is value provided in the user's data
-          type: string
-          example: examplegmail@com
-        comments:
-          description: The comments associated with the failed record. This is value provided in the user's data.
-          type: string
-          example: This is a known bad email address
-        failureReason:
-          description: This is the reason the recdord could not be ingested.  This is provided buy the service itself
-          type: string
-          example: 'Invalid format for the entry: examplegmail@com'
-    uploadListLink:
-      type: object
-      required:
-      - self
-      properties:
-        self:
-          $ref: '#/components/schemas/hRefLink'
-        next:
-          $ref: '#/components/schemas/hRefLink'
-      example:
-        self:
-          href: /upload/jobs?limit=1&orderby=-createtime
-        next:
-          href: /upload/jobs?limit=1&start=1639983247&orderby=-createtime
-    uploadJob:
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/uploads'
-      properties:
-        imsOrgId:
-          type: string
-          example: 225F37C35E4B776E0A49421B@AdobeOrg
-        sandboxId:
-          type: string
-          example: 70f22060-5d47-11ea-bdff-a5384333ff34
-        failedRecords:
-          type: array
-          items:
-            $ref: '#/components/schemas/failedRecord'
+    listType:
+      type: string
+      enum:
+      - client
+      - allowed
     uploadPage:
       type: object
       properties:
@@ -727,17 +495,45 @@ components:
         count:
           type: integer
           example: 1
-    bounceState:
+    addEmailAddress:
+      type: object
+      required:
+      - entity
+      properties:
+        entity:
+          properties:
+            type:
+              type: string
+              example: email
+            entityValue:
+              type: string
+              description: An email address
+              example: bademailaddress@domain.com
+        comment:
+          type: string
+          example: Known bad email address
+        user:
+          type: string
+          example: myusername@corp.com
+    failedRecord:
       type: object
       properties:
-        softCount:
-          type: integer
-          description: The current soft bounce count
-          example: 1
-        bounceEvents:
-          type: array
-          items:
-            $ref: '#/components/schemas/bounceEvents'
+        type:
+          description: The entity type.  This is value provided in the user's data
+          type: string
+          example: Email
+        value:
+          description: The value of the entity. This is value provided in the user's data
+          type: string
+          example: examplegmail@com
+        comments:
+          description: The comments associated with the failed record. This is value provided in the user's data.
+          type: string
+          example: This is a known bad email address
+        failureReason:
+          description: This is the reason the recdord could not be ingested.  This is provided buy the service itself
+          type: string
+          example: 'Invalid format for the entry: examplegmail@com'
     suppressionListLink:
       type: object
       required:
@@ -752,6 +548,210 @@ components:
           href: /config/suppression/addresses?type=CLIENT&limit=20&orderby=entityvalue
         next:
           href: /config/suppression/addresses?type=CLIENT&limit=20&start=bademailtest10013@bademail.com&orderby=entityvalue
+    uploadStatus:
+      description: 'The current state of the upload.  Can be one of the following:
+
+
+        _Accepted: The file has been accepted and a jobId has ben created.
+
+
+        '
+      type: string
+      enum:
+      - ACCEPTED
+      - PENDING,
+      - COMPLETE
+      - CANCELED
+      - ERROR
+    type:
+      type: string
+      enum:
+      - MANUAL
+      - HARD
+      - SOFT
+    suppressed:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        user:
+          type: string
+          description: The name or email address of the user that created the suppression
+          example: myemail@myemail.com
+        comment:
+          type: string
+          description: An optional comment about the suppression
+          example: deemed to be a fake
+        date:
+          type: number
+          example: '1631739725150'
+    uploadPost:
+      type: object
+      properties:
+        success:
+          type: object
+          properties:
+            jobId:
+              type: string
+              example: 6caaed1b-d7bd-4065-a745-185e9af3b63a
+              description: Unique job identifier.
+    uploadJob:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/uploads'
+      properties:
+        imsOrgId:
+          type: string
+          example: 225F37C35E4B776E0A49421B@AdobeOrg
+        sandboxId:
+          type: string
+          example: 70f22060-5d47-11ea-bdff-a5384333ff34
+        failedRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/failedRecord'
+    status:
+      type: string
+      enum:
+      - active
+      - deleted
+    suppressionListResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/entityObject'
+    hRefLink:
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
+    addEntityObject:
+      type: object
+      required:
+      - id
+      - entity
+      - suppressed
+      - creationDate
+      - lastModifiedDate
+      - status
+      - listType
+      - client
+      properties:
+        id:
+          type: string
+          description: The identifier of entity.
+          format: uuid
+          example: 91acd0b4-753b-4366-8893-d5440c4d9b15
+        entity:
+          properties:
+            type:
+              type: string
+              example: email
+            entityValue:
+              type: string
+              description: An email address
+              example: bademailaddress@domain.com
+        suppressed:
+          $ref: '#/components/schemas/suppressed'
+        creationDate:
+          type: number
+          example: '1631739725150'
+        lastModifiedDate:
+          type: number
+          example: '1631739725150'
+        status:
+          $ref: '#/components/schemas/status'
+        listType:
+          $ref: '#/components/schemas/listType'
+        client:
+          $ref: '#/components/schemas/client'
+    suppressionListAddResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/addEntityObject'
+    domainSuppressionListResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/domainEntityObject'
+    domainEntityObject:
+      type: object
+      required:
+      - id
+      - entity
+      - suppressed
+      - creationDate
+      - lastModifiedDate
+      - status
+      - listType
+      - client
+      properties:
+        id:
+          type: string
+          description: The identifier of entity.
+          format: uuid
+          example: 91acd0b4-753b-4366-8893-d5440c4d9b15
+        entity:
+          properties:
+            type:
+              type: string
+              example: domain
+            entityValue:
+              type: string
+              description: An email domain
+              example: baddomain.com
+        suppressed:
+          $ref: '#/components/schemas/suppressed'
+        creationDate:
+          type: number
+          example: '1631739725150'
+        lastModifiedDate:
+          type: number
+          example: '1631739725150'
+        status:
+          $ref: '#/components/schemas/status'
+        listType:
+          $ref: '#/components/schemas/listType'
+        client:
+          $ref: '#/components/schemas/client'
+    client:
+      type: object
+      properties:
+        imsOrgId:
+          type: string
+          description: The IMS Org id of the calling client
+        sandboxId:
+          type: string
+          description: The sandbox name of the calling client
+    uploadListLink:
+      type: object
+      required:
+      - self
+      properties:
+        self:
+          $ref: '#/components/schemas/hRefLink'
+        next:
+          $ref: '#/components/schemas/hRefLink'
+      example:
+        self:
+          href: /upload/jobs?limit=1&orderby=-createtime
+        next:
+          href: /upload/jobs?limit=1&start=1639983247&orderby=-createtime
+    bounceEvents:
+      properties:
+        messageId:
+          type: string
+          description: The message Id associated with the message execution send attempt.
+        date:
+          type: string
+          format: date-time
+          example: '2016-08-29T19:12:33.001Z'
+        message:
+          type: string
+          example: Mailbox is full
+        bounceType:
+          type: string
+          example: SOFT
   parameters:
     limit:
       name: limit
@@ -761,9 +761,54 @@ components:
         type: integer
         default: 20
       required: false
+    orderby:
+      name: orderby
+      description: Sort parameter and direction for sorting the response. Add the `-` prefix to sort the responding in descending order. If unspecified, the response will be sorted in ascending order. Ex. orderby=creationdate.
+      in: query
+      schema:
+        type: string
+        default: -creationdate
+      required: false
+    start:
+      name: start
+      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderby. Ex. start=1631739725150.
+      in: query
+      schema:
+        type: string
+      required: false
+    x-request-id:
+      name: x-request-id
+      description: A unique id generated by Adobe.io.
+      required: false
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: Provides the platform Sandbox Name
+      required: true
+      in: header
+      schema:
+        type: string
+    property:
+      name: property
+      description: '<p>Optional property filters. Please refer to <a href="https://git.corp.adobe.com/pages/experience-platform/api-guidelines/5-sorting_paging_and_filtering.html#533-filtering-by-property">api guidelines</a> for filtering support in APIs. Filtering is supported on the following properties: creationdate, channel Ex. property=creationdate<1631739725150</p>'
+      in: query
+      schema:
+        items:
+          type: string
+        type: array
+      required: false
     x-api-key:
       name: x-api-key
       description: The API key belonging to the calling client.
+      required: true
+      in: header
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The ims org id for which the action is being taken.
       required: true
       in: header
       schema:
@@ -777,51 +822,6 @@ components:
         enum:
         - client
         - allowed
-    start:
-      name: start
-      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderby. Ex. start=1631739725150.
-      in: query
-      schema:
-        type: string
-      required: false
-    property:
-      name: property
-      description: '<p>Optional property filters. Please refer to <a href="https://git.corp.adobe.com/pages/experience-platform/api-guidelines/5-sorting_paging_and_filtering.html#533-filtering-by-property">api guidelines</a> for filtering support in APIs. Filtering is supported on the following properties: creationdate, channel Ex. property=creationdate<1631739725150</p>'
-      in: query
-      schema:
-        items:
-          type: string
-        type: array
-      required: false
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: Provides the platform Sandbox Name
-      required: true
-      in: header
-      schema:
-        type: string
-    x-request-id:
-      name: x-request-id
-      description: A unique id generated by Adobe.io.
-      required: false
-      in: header
-      schema:
-        type: string
-    orderby:
-      name: orderby
-      description: Sort parameter and direction for sorting the response. Add the `-` prefix to sort the responding in descending order. If unspecified, the response will be sorted in ascending order. Ex. orderby=creationdate.
-      in: query
-      schema:
-        type: string
-        default: -creationdate
-      required: false
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The ims org id for which the action is being taken.
-      required: true
-      in: header
-      schema:
-        type: string
   securitySchemes:
     BearerAuth:
       type: http

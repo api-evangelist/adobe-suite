@@ -482,153 +482,14 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    CustomMarketingActionNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
-          type: string
-          detail: https://platform.adobe.io:443/marketingActions/custom/marketingActionName not found
-    LabelsConstraints:
+    LabelsConstraintsCustom:
       type: object
       properties:
         violatedPolicies:
           type: array
           description: The list of policies that would be violated by attempting the given marketing action in the presence of the given set of data usage labels
           items:
-            $ref: '#/components/schemas/PolicyResponse'
-    CoreMarketingActionNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
-          type: string
-          detail: https://platform.adobe.io:443/marketingActions/core/marketingActionName not found
-    DatasetConstraints:
-      type: object
-      properties:
-        discoveredLabels:
-          type: array
-          description: The list of data usage labels discovered from the dataset or fields.
-          items:
-            $ref: '#/components/schemas/DiscoveredLabels'
-        violatedPolicies:
-          type: array
-          description: The list of policies that would be violated by attempting the given marketing action in the presence of the given set of data usage labels
-          items:
-            $ref: '#/components/schemas/PolicyResponse'
-    CoreMarketingActionConstraints:
-      allOf:
-      - $ref: '#/components/schemas/MarketingActionConstraints'
-      - type: object
-        properties:
-          marketingActionRef:
-            type: string
-            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
-    Error:
-      type: object
-      properties:
-        type:
-          type: string
-          description: A placeholder value for the error type.
-          example: /placeholder/type/uri
-        status:
-          type: integer
-          description: The HTTP status associated with the error.
-          format: int32
-        title:
-          type: string
-          description: The error title.
-        detail:
-          type: string
-          description: A description of the error.
-    MarketingActionConstraints:
-      type: object
-      properties:
-        timestamp:
-          type: integer
-          description: A timestamp when the response was generated.
-          format: int64
-          example: 1529699072556
-        clientId:
-          type: string
-          description: The ID of the client that requested the evaluation.
-          example: '{CLIENT_ID}'
-        userId:
-          type: string
-          description: The ID the user that requested the evaluation.
-          example: '{USER_ID}'
-        imsOrg:
-          type: string
-          description: The ID of the IMS Org that generated the evaluation.
-          example: '{IMS_ORG}'
-        sandboxName:
-          type: string
-          description: The name of the sandbox that the evaluation took place in.
-          example: prod
-        marketingActionRef:
-          type: string
-          description: The marketing action to which the evaluation applies.
-          format: uri
-        duleLabels:
-          type: array
-          description: List of data usage labels either specified in request (if using the GET method) or discovered from a provided dataset ID and optional fields (if using the POST method).
-          example:
-          - C1
-          - C3
-          items:
-            type: string
-    EntityTypeAndId:
-      required:
-      - entityId
-      - entityType
-      type: object
-      properties:
-        entityType:
-          type: string
-          description: The type of entity on which to discover labels. Currently only `dataSet` is supported.
-          example: dataSet
-          enum:
-          - dataSet
-        entityId:
-          type: string
-          description: The ID of the dataset.
-          example: 5b1e3c867e6d2600003d5b49
-    NotFoundError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
-      - type: object
-        example:
-          type: /placeholder/type/uri
-          status: 404
-          title: NotFound
-    CustomDatasetConstraints:
-      allOf:
-      - $ref: '#/components/schemas/DatasetConstraints'
-      - type: object
-        properties:
-          violatedPolicies:
-            type: array
-          marketingActionRef:
-            type: string
-            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
-    EntityLabelRequest:
-      allOf:
-      - $ref: '#/components/schemas/EntityTypeAndId'
-      - type: object
-        properties:
-          entityMeta:
-            type: object
-            properties:
-              fields:
-                type: array
-                description: A list of optional fields to run the evaluation on.
-                example:
-                - emailAddress
-                - fullName
-                items:
-                  type: string
-            description: Provides additional metadata about the dataset entity. You can use this field to list optional fields to run the evaluation on.
+            $ref: '#/components/schemas/PolicyResponseCustomEval'
     PolicyResponseCustomEval:
       allOf:
       - $ref: '#/components/schemas/PolicyResponse'
@@ -646,6 +507,174 @@ components:
                   href:
                     type: string
                     example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
+    CoreLabelsConstraints:
+      allOf:
+      - $ref: '#/components/schemas/CoreMarketingActionConstraints'
+      - $ref: '#/components/schemas/LabelsConstraints'
+    MarketingActionConstraintsError:
+      allOf:
+      - $ref: '#/components/schemas/BadRequestError'
+      - type: object
+        example:
+          type: string
+          detail: Constraints request must specify either duleLabels, or dataSetId (with optional fields), but not both
+    CoreDatasetConstraintResponse:
+      allOf:
+      - $ref: '#/components/schemas/CoreMarketingActionConstraints'
+      - $ref: '#/components/schemas/CustomDatasetConstraints'
+      - type: object
+        properties:
+          marketingActionRef:
+            type: string
+            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+          duleLabels:
+            type: array
+            example: []
+    NotFoundError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 404
+          title: NotFound
+    BulkEntityLabelRequest:
+      type: array
+      example:
+      - entityType: dataSet
+        entityId: 5b1e3c867e6d2600003d5b49
+        entityMeta:
+          fields:
+          - emailAddress
+          - fullName
+      - entityType: dataSet
+        entityId: 5b67f4dd9f6e710000ea9da4
+        entityMeta:
+          fields:
+          - ECID
+      items:
+        $ref: '#/components/schemas/EntityLabelRequest'
+    CoreMarketingActionNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/marketingActions/core/marketingActionName not found
+    DataSetLabels:
+      required:
+      - connection
+      - dataSet
+      - fields
+      type: object
+      properties:
+        connection:
+          type: object
+          description: Connection-level fields discovered from the dataset.
+          example:
+          - C1
+          allOf:
+          - $ref: '#/components/schemas/DuleLabelsList'
+        dataSet:
+          type: object
+          description: Dataset-level fields discovered from the dataset.
+          example:
+          - C1
+          - C3
+          allOf:
+          - $ref: '#/components/schemas/DuleLabelsList'
+        fields:
+          type: array
+          description: An array listing the paths to individual fields in the dataset and the labels that were discovered from them.
+          example:
+          - path: /emailAddress
+            labels:
+            - C1
+            - C3
+            - C7
+          - path: /fullName
+            labels:
+            - C1
+            - C3
+          items:
+            $ref: '#/components/schemas/FieldsLabels'
+    CustomDatasetConstraints:
+      allOf:
+      - $ref: '#/components/schemas/DatasetConstraints'
+      - type: object
+        properties:
+          violatedPolicies:
+            type: array
+          marketingActionRef:
+            type: string
+            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
+    BulkEvalRequest:
+      required:
+      - evalRef
+      type: object
+      properties:
+        evalRef:
+          type: string
+          description: The constraints URL to be evaluated. Should be of the form `../marketingActions/core/{MARKETING_ACTION_NAME}/constraints`.  This evalRef provides a way to specify the marketing action name as well as whether it is a core or custom marketing action. Only the portion of this URL after the `/marketingActions` component is significant; any prefix to this is ignored.
+          example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting/constraints
+        includeDraft:
+          type: boolean
+          description: If true, the system checks for policy violations among policies with "DRAFT" status as well as "ENABLED" status. Otherwise, only "ENABLED" policies are checked.
+          default: false
+        labels:
+          type: array
+          description: List of labels to evaluate against the constraints. Any one request may contain either `labels` or `entityList`, not both.
+          example:
+          - C1
+          - C2
+          - C3
+          items:
+            type: string
+        entityList:
+          type: array
+          description: List of entities on which to retrieve labels in order to perform this evaluation. Any one request may contain either `labels` or `entityList`, not both.
+          items:
+            $ref: '#/components/schemas/BulkEntityLabelRequest'
+      description: An individual request to perform policy evaluation as part of a bulk of such requests.
+    CustomMarketingActionNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/marketingActions/custom/marketingActionName not found
+    LabelsConstraints:
+      type: object
+      properties:
+        violatedPolicies:
+          type: array
+          description: The list of policies that would be violated by attempting the given marketing action in the presence of the given set of data usage labels
+          items:
+            $ref: '#/components/schemas/PolicyResponse'
+    CoreMarketingActionConstraints:
+      allOf:
+      - $ref: '#/components/schemas/MarketingActionConstraints'
+      - type: object
+        properties:
+          marketingActionRef:
+            type: string
+            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+    BadRequestError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
+    CustomMarketingActionConstraints:
+      allOf:
+      - $ref: '#/components/schemas/MarketingActionConstraints'
+      - type: object
+        properties:
+          marketingActionRef:
+            type: string
+            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
     BulkEvalResponse:
       required:
       - status
@@ -659,18 +688,58 @@ components:
         error:
           $ref: '#/components/schemas/Error'
       description: A response element to a bulk request. Each response element corresponds to a request element in the same order within the bulk request. A response element represents either a successful evaluation or some sort of error. For a successful evaluation, the status will be 200, and the body property will contain the MarketingActionConstraints describing the results of the evaluation. For an error, the status will be either a 4xx or 5xx code, and the error property will contain details about the error.
-    CoreDatasetConstraintResponse:
+    ServiceProperties:
+      properties:
+        imsOrg:
+          type: string
+          description: The ID of the IMS Organization which maintains this resource. If the resource is a core resource (defined by Adobe), this value is set to "core".
+          example: '{IMS_ORG}'
+        sandboxName:
+          type: string
+          description: The name of the Platform sandbox that contains the resource.
+          example: prod
+        created:
+          type: integer
+          description: A timestamp in milliseconds when this resource was originally created.
+          format: int64
+          example: 1529696681413
+        createdClient:
+          type: string
+          description: The ID of the client that originally created this resource.
+          example: '{CLIENT_ID}'
+        createdUser:
+          type: string
+          description: The user that originally created this resource.
+          example: '{USER_ID}'
+        updated:
+          type: integer
+          description: A timestamp when this resource was last updated.
+          format: int64
+          example: 1529697651972
+        updatedClient:
+          type: string
+          description: The ID of the client that last updated this resource.
+          example: '{CLIENT_ID}'
+        updatedUser:
+          type: string
+          description: The ID of the user that last updated this resource.
+          example: '{USER_ID}'
       allOf:
-      - $ref: '#/components/schemas/CoreMarketingActionConstraints'
-      - $ref: '#/components/schemas/CustomDatasetConstraints'
-      - type: object
-        properties:
-          marketingActionRef:
+      - $ref: '#/components/schemas/_links'
+    DuleLabelsList:
+      required:
+      - labels
+      type: object
+      properties:
+        labels:
+          type: array
+          description: A list of data usage labels discovered from the entity.
+          example:
+          - C1
+          - C3
+          - C7
+          items:
             type: string
-            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
-          duleLabels:
-            type: array
-            example: []
     DiscoveredLabels:
       allOf:
       - $ref: '#/components/schemas/EntityTypeAndId'
@@ -678,14 +747,32 @@ components:
         properties:
           dataSetLabels:
             $ref: '#/components/schemas/DataSetLabels'
-    CustomMarketingActionConstraints:
+    PolicyResponse:
       allOf:
-      - $ref: '#/components/schemas/MarketingActionConstraints'
       - type: object
         properties:
-          marketingActionRef:
+          id:
             type: string
-            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
+            description: The unique ID for this policy resource, as assigned by the service.
+            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/ServiceProperties'
+    EntityTypeAndId:
+      required:
+      - entityId
+      - entityType
+      type: object
+      properties:
+        entityType:
+          type: string
+          description: The type of entity on which to discover labels. Currently only `dataSet` is supported.
+          example: dataSet
+          enum:
+          - dataSet
+        entityId:
+          type: string
+          description: The ID of the dataset.
+          example: 5b1e3c867e6d2600003d5b49
     _links:
       type: object
       properties:
@@ -701,57 +788,35 @@ components:
                   format: uri
                   example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
           description: Contains the URI reference that clients may use to obtain this resource.
-    BadRequestError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
-      - type: object
-        example:
-          type: /placeholder/type/uri
-          status: 400
-          title: BadRequest
-    PolicyBody:
+    Error:
       type: object
       properties:
-        name:
+        type:
           type: string
-          description: The name of the policy
-          example: Email Policy
+          description: A placeholder value for the error type.
+          example: /placeholder/type/uri
         status:
+          type: integer
+          description: The HTTP status associated with the error.
+          format: int32
+        title:
           type: string
-          description: The status of the policy
-          example: ENABLED
-          enum:
-          - DRAFT
-          - ENABLED
-          - DISABLED
-        marketingActionRefs:
-          type: array
-          description: List of marketing action URI references to which this policy applies.
-          example:
-          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
-          items:
-            type: string
-            format: uri
-        description:
+          description: The error title.
+        detail:
           type: string
-          description: A description of what this policy enforces. Specifically, the reasoning behind the denial of these marketing actions in the presence of the data usage labels.
-          example: Conditions under which we won't send marketing-based email
-        deny:
-          $ref: '#/components/schemas/PolicyExpression'
-    DuleLabelsList:
-      required:
-      - labels
-      type: object
-      properties:
-        labels:
-          type: array
-          description: A list of data usage labels discovered from the entity.
-          example:
-          - C1
-          - C3
-          - C7
-          items:
+          description: A description of the error.
+    CustomDatasetConstraintResponse:
+      allOf:
+      - $ref: '#/components/schemas/CustomMarketingActionConstraints'
+      - $ref: '#/components/schemas/CustomDatasetConstraints'
+      - type: object
+        properties:
+          marketingActionRef:
             type: string
+            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
+          duleLabels:
+            type: array
+            example: []
     FieldsLabels:
       allOf:
       - required:
@@ -794,168 +859,103 @@ components:
           operands:
           - label: C3
           - label: C7
-    DataSetLabels:
-      required:
-      - connection
-      - dataSet
-      - fields
+    PolicyBody:
       type: object
       properties:
-        connection:
-          type: object
-          description: Connection-level fields discovered from the dataset.
+        name:
+          type: string
+          description: The name of the policy
+          example: Email Policy
+        status:
+          type: string
+          description: The status of the policy
+          example: ENABLED
+          enum:
+          - DRAFT
+          - ENABLED
+          - DISABLED
+        marketingActionRefs:
+          type: array
+          description: List of marketing action URI references to which this policy applies.
           example:
-          - C1
-          allOf:
-          - $ref: '#/components/schemas/DuleLabelsList'
-        dataSet:
-          type: object
-          description: Dataset-level fields discovered from the dataset.
+          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+          items:
+            type: string
+            format: uri
+        description:
+          type: string
+          description: A description of what this policy enforces. Specifically, the reasoning behind the denial of these marketing actions in the presence of the data usage labels.
+          example: Conditions under which we won't send marketing-based email
+        deny:
+          $ref: '#/components/schemas/PolicyExpression'
+    MarketingActionConstraints:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          description: A timestamp when the response was generated.
+          format: int64
+          example: 1529699072556
+        clientId:
+          type: string
+          description: The ID of the client that requested the evaluation.
+          example: '{CLIENT_ID}'
+        userId:
+          type: string
+          description: The ID the user that requested the evaluation.
+          example: '{USER_ID}'
+        imsOrg:
+          type: string
+          description: The ID of the IMS Org that generated the evaluation.
+          example: '{IMS_ORG}'
+        sandboxName:
+          type: string
+          description: The name of the sandbox that the evaluation took place in.
+          example: prod
+        marketingActionRef:
+          type: string
+          description: The marketing action to which the evaluation applies.
+          format: uri
+        duleLabels:
+          type: array
+          description: List of data usage labels either specified in request (if using the GET method) or discovered from a provided dataset ID and optional fields (if using the POST method).
           example:
           - C1
           - C3
-          allOf:
-          - $ref: '#/components/schemas/DuleLabelsList'
-        fields:
-          type: array
-          description: An array listing the paths to individual fields in the dataset and the labels that were discovered from them.
-          example:
-          - path: /emailAddress
-            labels:
-            - C1
-            - C3
-            - C7
-          - path: /fullName
-            labels:
-            - C1
-            - C3
           items:
-            $ref: '#/components/schemas/FieldsLabels'
-    LabelsConstraintsCustom:
+            type: string
+    DatasetConstraints:
       type: object
       properties:
+        discoveredLabels:
+          type: array
+          description: The list of data usage labels discovered from the dataset or fields.
+          items:
+            $ref: '#/components/schemas/DiscoveredLabels'
         violatedPolicies:
           type: array
           description: The list of policies that would be violated by attempting the given marketing action in the presence of the given set of data usage labels
           items:
-            $ref: '#/components/schemas/PolicyResponseCustomEval'
-    BulkEvalRequest:
-      required:
-      - evalRef
-      type: object
-      properties:
-        evalRef:
-          type: string
-          description: The constraints URL to be evaluated. Should be of the form `../marketingActions/core/{MARKETING_ACTION_NAME}/constraints`.  This evalRef provides a way to specify the marketing action name as well as whether it is a core or custom marketing action. Only the portion of this URL after the `/marketingActions` component is significant; any prefix to this is ignored.
-          example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting/constraints
-        includeDraft:
-          type: boolean
-          description: If true, the system checks for policy violations among policies with "DRAFT" status as well as "ENABLED" status. Otherwise, only "ENABLED" policies are checked.
-          default: false
-        labels:
-          type: array
-          description: List of labels to evaluate against the constraints. Any one request may contain either `labels` or `entityList`, not both.
-          example:
-          - C1
-          - C2
-          - C3
-          items:
-            type: string
-        entityList:
-          type: array
-          description: List of entities on which to retrieve labels in order to perform this evaluation. Any one request may contain either `labels` or `entityList`, not both.
-          items:
-            $ref: '#/components/schemas/BulkEntityLabelRequest'
-      description: An individual request to perform policy evaluation as part of a bulk of such requests.
+            $ref: '#/components/schemas/PolicyResponse'
+    EntityLabelRequest:
+      allOf:
+      - $ref: '#/components/schemas/EntityTypeAndId'
+      - type: object
+        properties:
+          entityMeta:
+            type: object
+            properties:
+              fields:
+                type: array
+                description: A list of optional fields to run the evaluation on.
+                example:
+                - emailAddress
+                - fullName
+                items:
+                  type: string
+            description: Provides additional metadata about the dataset entity. You can use this field to list optional fields to run the evaluation on.
     CustomLabelsConstraints:
       allOf:
       - $ref: '#/components/schemas/CustomMarketingActionConstraints'
       - $ref: '#/components/schemas/LabelsConstraintsCustom'
-    BulkEntityLabelRequest:
-      type: array
-      example:
-      - entityType: dataSet
-        entityId: 5b1e3c867e6d2600003d5b49
-        entityMeta:
-          fields:
-          - emailAddress
-          - fullName
-      - entityType: dataSet
-        entityId: 5b67f4dd9f6e710000ea9da4
-        entityMeta:
-          fields:
-          - ECID
-      items:
-        $ref: '#/components/schemas/EntityLabelRequest'
-    CoreLabelsConstraints:
-      allOf:
-      - $ref: '#/components/schemas/CoreMarketingActionConstraints'
-      - $ref: '#/components/schemas/LabelsConstraints'
-    ServiceProperties:
-      properties:
-        imsOrg:
-          type: string
-          description: The ID of the IMS Organization which maintains this resource. If the resource is a core resource (defined by Adobe), this value is set to "core".
-          example: '{IMS_ORG}'
-        sandboxName:
-          type: string
-          description: The name of the Platform sandbox that contains the resource.
-          example: prod
-        created:
-          type: integer
-          description: A timestamp in milliseconds when this resource was originally created.
-          format: int64
-          example: 1529696681413
-        createdClient:
-          type: string
-          description: The ID of the client that originally created this resource.
-          example: '{CLIENT_ID}'
-        createdUser:
-          type: string
-          description: The user that originally created this resource.
-          example: '{USER_ID}'
-        updated:
-          type: integer
-          description: A timestamp when this resource was last updated.
-          format: int64
-          example: 1529697651972
-        updatedClient:
-          type: string
-          description: The ID of the client that last updated this resource.
-          example: '{CLIENT_ID}'
-        updatedUser:
-          type: string
-          description: The ID of the user that last updated this resource.
-          example: '{USER_ID}'
-      allOf:
-      - $ref: '#/components/schemas/_links'
-    CustomDatasetConstraintResponse:
-      allOf:
-      - $ref: '#/components/schemas/CustomMarketingActionConstraints'
-      - $ref: '#/components/schemas/CustomDatasetConstraints'
-      - type: object
-        properties:
-          marketingActionRef:
-            type: string
-            example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
-          duleLabels:
-            type: array
-            example: []
-    PolicyResponse:
-      allOf:
-      - type: object
-        properties:
-          id:
-            type: string
-            description: The unique ID for this policy resource, as assigned by the service.
-            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
-      - $ref: '#/components/schemas/PolicyBody'
-      - $ref: '#/components/schemas/ServiceProperties'
-    MarketingActionConstraintsError:
-      allOf:
-      - $ref: '#/components/schemas/BadRequestError'
-      - type: object
-        example:
-          type: string
-          detail: Constraints request must specify either duleLabels, or dataSetId (with optional fields), but not both
 x-original-swagger-version: '2.0'

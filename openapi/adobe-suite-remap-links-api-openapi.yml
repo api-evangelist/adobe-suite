@@ -51,6 +51,55 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   responses:
+    Accepted:
+      description: The job has been accepted for processing.
+      content:
+        application/json:
+          schema:
+            properties:
+              jobId:
+                type: string
+                description: The job ID.
+              statusUrl:
+                type: string
+                description: The status URL.
+      headers:
+        link:
+          schema:
+            type: string
+          description: The status URL for a retry.
+        retry-after:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content that is returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
     Unauthorized:
       description: Unauthorized
       content:
@@ -121,8 +170,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    BadParams:
-      description: Bad Parameter
+    NotFound:
+      description: Not Found
       content:
         application/json:
           schema:
@@ -144,55 +193,6 @@ components:
           schema:
             type: string
           description: This header indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    Accepted:
-      description: The job has been accepted for processing.
-      content:
-        application/json:
-          schema:
-            properties:
-              jobId:
-                type: string
-                description: The job ID.
-              statusUrl:
-                type: string
-                description: The status URL.
-      headers:
-        link:
-          schema:
-            type: string
-          description: The status URL for a retry.
-        retry-after:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content that is returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
         Access-Control-Allow-Headers:
           schema:
             type: string
@@ -240,8 +240,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
+    BadParams:
+      description: Bad Parameter
       content:
         application/json:
           schema:
@@ -276,31 +276,16 @@ components:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
   schemas:
-    OutputAsset:
-      description: The URL where the output assets are to be posted after the job is processed.
+    Error:
       type: object
-      required:
-      - destination
-      - source
       properties:
-        destination:
-          type: object
-          required:
-          - url
-          properties:
-            url:
-              type: string
-              description: The URL of the asset.
-            storageType:
-              type: string
-              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
-              enum:
-              - Azure
-              - Dropbox
-              - AWS
-        source:
+        message:
           type: string
-          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     RemapLinksRequest:
       description: Inputs for the link remapping request.
       type: object
@@ -344,16 +329,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OutputAsset'
-    Error:
+    OutputAsset:
+      description: The URL where the output assets are to be posted after the job is processed.
       type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
       required:
-      - message
-      - error_code
+      - destination
+      - source
+      properties:
+        destination:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The URL of the asset.
+            storageType:
+              type: string
+              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
+              enum:
+              - Azure
+              - Dropbox
+              - AWS
+        source:
+          type: string
+          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
     InputAsset:
       type: object
       description: The URL where the asset will be fetched.
