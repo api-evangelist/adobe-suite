@@ -134,6 +134,16 @@ paths:
       description: Prod server.
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     failedEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
@@ -163,68 +173,6 @@ components:
                 url:
                   type: string
                   description: A URL related to an asset causing the failure(if any), if applicable.
-    succeededEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The job has succeeded.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - succeeded
-          data:
-            type: object
-            description: The output response from the current state of the job.
-          dataURL:
-            type: string
-            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
-          outputs:
-            type: object
-            description: A list of URLs for all the generated assets.
-    runningEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: Job is in running state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - running
-          message:
-            type: string
-            description: A description of the current running state.
-    BaseEvent:
-      type: object
-      description: The job event response object.
-      properties:
-        jobId:
-          description: The GUID for the job.
-          type: string
-    notstartedEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The status when a job is in queued state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - not_started
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
-      required:
-      - message
-      - error_code
     partialSuccessEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
@@ -263,15 +211,87 @@ components:
                 url:
                   type: string
                   description: A URL related to an asset causing the partial failure(if any), if applicable.
-    Result:
+    BaseEvent:
+      type: object
+      description: The job event response object.
+      properties:
+        jobId:
+          description: The GUID for the job.
+          type: string
+    succeededEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - succeeded
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the generated assets.
+    runningEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: Job is in running state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - running
+          message:
+            type: string
+            description: A description of the current running state.
+    notstartedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The status when a job is in queued state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - not_started
+    ValidationError:
       type: object
       properties:
-        additionalFields:
-          type: object
-          additionalProperties:
-            type: object
-        outputs:
-          type: object
+        error_code:
+          type: string
+          description: The error code for this specific validation error
+        message:
+          type: string
+          description: Human-readable string describing this specific validation error
+      description: Represents a single validation error with error code and message
+    JobStatusResponse:
+      type: object
+      properties:
+        createdTime:
+          type: string
+          format: date-time
+        errorDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetails'
+        jobId:
+          type: string
+        modifiedTime:
+          type: string
+          format: date-time
+        result:
+          $ref: '#/components/schemas/Result'
+        status:
+          type: string
     ErrorResponse:
       type: object
       properties:
@@ -332,35 +352,15 @@ components:
         | invalid_json                  | The request payload is having invalid JSON (fallback) |
 
         '
-    ValidationError:
+    Result:
       type: object
       properties:
-        error_code:
-          type: string
-          description: The error code for this specific validation error
-        message:
-          type: string
-          description: Human-readable string describing this specific validation error
-      description: Represents a single validation error with error code and message
-    JobStatusResponse:
-      type: object
-      properties:
-        createdTime:
-          type: string
-          format: date-time
-        errorDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/ErrorDetails'
-        jobId:
-          type: string
-        modifiedTime:
-          type: string
-          format: date-time
-        result:
-          $ref: '#/components/schemas/Result'
-        status:
-          type: string
+        additionalFields:
+          type: object
+          additionalProperties:
+            type: object
+        outputs:
+          type: object
     ErrorDetails:
       type: object
       properties:
@@ -369,41 +369,6 @@ components:
         message:
           type: string
   responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
     TooManyRequests:
       description: Too Many Requests
       content:
@@ -443,8 +408,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    Forbidden:
-      description: Forbidden
+    NotFound:
+      description: Not Found
       content:
         application/json:
           schema:
@@ -478,8 +443,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
+    BadParams:
+      description: Bad Parameter
       content:
         application/json:
           schema:
@@ -548,8 +513,43 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    BadParams:
-      description: Bad Parameter
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Forbidden:
+      description: Forbidden
       content:
         application/json:
           schema:

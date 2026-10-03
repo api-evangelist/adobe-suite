@@ -616,6 +616,13 @@ paths:
     - url: https://status.adobe.io/
 components:
   schemas:
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Request is missing required header 'x-adobe-vgid'
+          description: General request error is encountered
     UploadedFileInfo:
       type: object
       properties:
@@ -690,13 +697,6 @@ components:
           type: string
           example: File is valid
           description: A success message for validation requests
-    ApiError:
-      type: object
-      properties:
-        error:
-          type: string
-          example: Request is missing required header 'x-adobe-vgid'
-          description: General request error is encountered
     ApiUnauthorizedError:
       type: object
       properties:
@@ -704,18 +704,31 @@ components:
           type: string
           example: Invalid token (1)
           description: Error during authentication
-    Event:
-      title: Event
+    EventCloud:
+      title: EventCloud
       type: object
       properties:
-        incidents:
+        cloudProducts:
+          uniqueItems: true
           type: array
           items:
-            $ref: '#/components/schemas/IncidentDto'
-        maintenances:
+            type: string
+        id:
+          type: string
+        name:
+          type: string
+    MaintenanceProductDto:
+      title: MaintenanceProductDto
+      type: object
+      properties:
+        history:
           type: array
           items:
-            $ref: '#/components/schemas/MaintenanceDto'
+            $ref: '#/components/schemas/MaintenanceHistoryEvent'
+        id:
+          type: string
+        name:
+          type: string
     IncidentDto:
       title: IncidentDto
       type: object
@@ -746,15 +759,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventServices'
-    EventEnvironment:
-      title: EventEnvironment
+    EventOfferingDto:
+      title: EventOfferingDto
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        serviceRegions:
+        productServices:
           uniqueItems: true
           type: array
           items:
@@ -773,132 +786,31 @@ components:
           type: array
           items:
             type: string
-    ImpactedServices:
-      title: ImpactedServices
-      type: object
-      properties:
-        productCapabilities:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productOfferings:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        productServices:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-    EventCloud:
-      title: EventCloud
-      type: object
-      properties:
-        cloudProducts:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        id:
-          type: string
-        name:
-          type: string
-    MaintenanceDto:
-      title: MaintenanceDto
-      type: object
-      properties:
-        clouds:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventCloud'
-        completedOn:
-          type: string
-        environment:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventEnvironment'
-        id:
-          type: string
-        maintenanceType:
-          type: string
-          enum:
-          - Empty
-          - Normal
-          - Scheduled
-          - Urgent
-        offering:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventOfferingDto'
-        products:
-          type: array
-          items:
-            $ref: '#/components/schemas/MaintenanceProductDto'
-        region:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventRegion'
-        reminderDate:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-        scheduledDate:
-          type: string
-        services:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventServices'
-        startedOn:
-          type: string
-        status:
-          type: string
-          enum:
-          - Canceled
-          - Completed
-          - Empty
-          - Scheduled
-          - Started
-    EventOfferingDto:
-      title: EventOfferingDto
+    EventEnvironment:
+      title: EventEnvironment
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        productServices:
+        serviceRegions:
           uniqueItems: true
           type: array
           items:
             type: string
-    MaintenanceProductDto:
-      title: MaintenanceProductDto
+    Event:
+      title: Event
       type: object
       properties:
-        history:
+        incidents:
           type: array
           items:
-            $ref: '#/components/schemas/MaintenanceHistoryEvent'
-        id:
-          type: string
-        name:
-          type: string
-    EventServices:
-      title: EventServices
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        serviceEnvironments:
-          uniqueItems: true
+            $ref: '#/components/schemas/IncidentDto'
+        maintenances:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/MaintenanceDto'
     MaintenanceHistoryEvent:
       title: MaintenanceHistoryEvent
       required:
@@ -953,44 +865,25 @@ components:
           - Updated
         titleToken:
           type: string
-    IncidentProductDto:
-      title: IncidentProductDto
+    ImpactedServices:
+      title: ImpactedServices
       type: object
       properties:
-        endedOn:
-          type: string
-        history:
+        productCapabilities:
+          uniqueItems: true
           type: array
           items:
-            $ref: '#/components/schemas/IncidentHistoryEventDto'
-        id:
-          type: string
-        name:
-          type: string
-        severity:
-          type: string
-          enum:
-          - Major
-          - Minor
-          - None
-          - Potential
-          - Trivial
-        startedOn:
-          type: string
-        status:
-          type: string
-          enum:
-          - Closed
-          - Empty
-          - Opened
-    EventRegion:
-      title: EventRegion
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
+            type: string
+        productOfferings:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        productServices:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
     IncidentHistoryEventDto:
       title: IncidentHistoryEventDto
       type: object
@@ -1051,6 +944,113 @@ components:
           - None
           - Opened
         titleToken:
+          type: string
+    MaintenanceDto:
+      title: MaintenanceDto
+      type: object
+      properties:
+        clouds:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventCloud'
+        completedOn:
+          type: string
+        environment:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventEnvironment'
+        id:
+          type: string
+        maintenanceType:
+          type: string
+          enum:
+          - Empty
+          - Normal
+          - Scheduled
+          - Urgent
+        offering:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventOfferingDto'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/MaintenanceProductDto'
+        region:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegion'
+        reminderDate:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        scheduledDate:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventServices'
+        startedOn:
+          type: string
+        status:
+          type: string
+          enum:
+          - Canceled
+          - Completed
+          - Empty
+          - Scheduled
+          - Started
+    IncidentProductDto:
+      title: IncidentProductDto
+      type: object
+      properties:
+        endedOn:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentHistoryEventDto'
+        id:
+          type: string
+        name:
+          type: string
+        severity:
+          type: string
+          enum:
+          - Major
+          - Minor
+          - None
+          - Potential
+          - Trivial
+        startedOn:
+          type: string
+        status:
+          type: string
+          enum:
+          - Closed
+          - Empty
+          - Opened
+    EventServices:
+      title: EventServices
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        serviceEnvironments:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    EventRegion:
+      title: EventRegion
+      type: object
+      properties:
+        id:
+          type: string
+        name:
           type: string
   parameters:
     authorization:

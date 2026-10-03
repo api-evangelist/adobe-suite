@@ -532,90 +532,54 @@ paths:
                       '
       x-codegen-request-body-name: body
 components:
-  parameters:
-    accept:
-      name: Accept
-      in: header
-      description: The version of the resource's representation.
-      schema:
-        type: string
-        default: application/json
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: 'The Organization ID which can be copied from your Experience Platform
-
-        integration. For more information on how to obtain this value, visit the
-
-        [authentication
-
-        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-
-        '
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-
-        '
-      schema:
-        type: string
-        example: prod
-    x-uis-cst-ctx:
-      name: x-uis-cst-ctx
-      in: header
-      description: Customer context to be used for stub response.
-      schema:
-        type: string
-        example: stub
-    authorization:
-      name: Authorization
-      in: header
-      description: 'The access token which can be copied from your Experience Platform
-
-        integration, prefixed with "Bearer ". For more information on how to
-
-        obtain this value, visit the [authentication
-
-        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-
-        '
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the request. Use 'application/json'.
-      required: true
-      schema:
-        type: string
-        default: application/json
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: 'The API key which can be copied from your Experience Platform
-
-        integration. For more information on how to obtain this value, visit the
-
-        [authentication
-
-        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-
-        '
-      required: true
-      schema:
-        type: string
-    x-request-id:
-      name: x-request-id
-      in: header
-      description: Request id to be used for tracing this request.
-      schema:
-        type: string
   schemas:
+    ListOfIdentity:
+      type: object
+      properties:
+        xids:
+          type: array
+          description: Primary parameter for the list of IDs to query.
+          items:
+            $ref: '#/components/schemas/Id'
+        compositeXids:
+          type: array
+          description: 'Secondary parameter for the list of IDs to query. Is ignored if xids is also present in the request.
+
+            '
+          items:
+            type: object
+            properties:
+              nsid:
+                type: string
+                description: namespace id
+                example: 411
+              id:
+                type: string
+                description: Id in given namespace
+                example: '2521328045094711779817'
+        compositeXidsWithNamespace:
+          type: array
+          description: 'Tertiary parameter for the list of IDs to query. Is ignored if either xids or compositeXids are also present in the request.
+
+            '
+          items:
+            type: object
+            properties:
+              namespace:
+                type: string
+                description: namespace code
+                example: adcloud
+              id:
+                type: string
+                description: Id in given namespace
+                example: '2521328045094711779817'
+        graph-type:
+          type: string
+        version:
+          type: string
+    Id:
+      type: string
+      description: Identity string as returned by /identity/identity GET api.
     ServiceErrorStatus:
       type: object
       properties:
@@ -680,50 +644,19 @@ components:
                     type: string
                   unixTimeStampMs:
                     type: integer
-    ListOfIdentity:
+    Cluster:
       type: object
       properties:
-        xids:
+        xid:
+          $ref: '#/components/schemas/Id'
+        compositeXid:
+          $ref: '#/components/schemas/CompositeXid'
+        members:
           type: array
-          description: Primary parameter for the list of IDs to query.
           items:
-            $ref: '#/components/schemas/Id'
-        compositeXids:
-          type: array
-          description: 'Secondary parameter for the list of IDs to query. Is ignored if xids is also present in the request.
-
-            '
-          items:
-            type: object
-            properties:
-              nsid:
-                type: string
-                description: namespace id
-                example: 411
-              id:
-                type: string
-                description: Id in given namespace
-                example: '2521328045094711779817'
-        compositeXidsWithNamespace:
-          type: array
-          description: 'Tertiary parameter for the list of IDs to query. Is ignored if either xids or compositeXids are also present in the request.
-
-            '
-          items:
-            type: object
-            properties:
-              namespace:
-                type: string
-                description: namespace code
-                example: adcloud
-              id:
-                type: string
-                description: Id in given namespace
-                example: '2521328045094711779817'
-        graph-type:
-          type: string
-        version:
-          type: string
+            oneOf:
+            - $ref: '#/components/schemas/Id'
+            - $ref: '#/components/schemas/CompositeXid'
     ClusterMembers:
       type: object
       properties:
@@ -739,9 +672,6 @@ components:
             - $ref: '#/components/schemas/CompositeXid'
         version:
           type: string
-    Id:
-      type: string
-      description: Identity string as returned by /identity/identity GET api.
     CompositeXid:
       type: object
       properties:
@@ -754,17 +684,87 @@ components:
         id:
           type: string
           description: Id in given namespace
-    Cluster:
-      type: object
-      properties:
-        xid:
-          $ref: '#/components/schemas/Id'
-        compositeXid:
-          $ref: '#/components/schemas/CompositeXid'
-        members:
-          type: array
-          items:
-            oneOf:
-            - $ref: '#/components/schemas/Id'
-            - $ref: '#/components/schemas/CompositeXid'
+  parameters:
+    x-request-id:
+      name: x-request-id
+      in: header
+      description: Request id to be used for tracing this request.
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: 'The Organization ID which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: 'The access token which can be copied from your Experience Platform
+
+        integration, prefixed with "Bearer ". For more information on how to
+
+        obtain this value, visit the [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: 'The the all-lowercase name of the sandbox the operation will take place in. If unspecified, falls back to the default production sandbox (usually "prod"). See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+
+        '
+      schema:
+        type: string
+        example: prod
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: 'The API key which can be copied from your Experience Platform
+
+        integration. For more information on how to obtain this value, visit the
+
+        [authentication
+
+        tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+
+        '
+      required: true
+      schema:
+        type: string
+    accept:
+      name: Accept
+      in: header
+      description: The version of the resource's representation.
+      schema:
+        type: string
+        default: application/json
+    x-uis-cst-ctx:
+      name: x-uis-cst-ctx
+      in: header
+      description: Customer context to be used for stub response.
+      schema:
+        type: string
+        example: stub
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the request. Use 'application/json'.
+      required: true
+      schema:
+        type: string
+        default: application/json
 x-original-swagger-version: '2.0'

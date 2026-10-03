@@ -77,118 +77,58 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
-    BaseJobRequestWithOutput:
-      allOf:
-      - $ref: '#/components/schemas/BaseJobRequest'
-      - description: The base job request for any job with the option to specify output URLs.
-        type: object
-        properties:
-          outputs:
-            type: array
-            items:
-              $ref: '#/components/schemas/OutputAsset'
-    HyphenationLanguage:
-      type: string
-      description: Supported hyphenation dictionary languages.
-      enum:
-      - Arabic
-      - Bengali (India)
-      - Bulgarian
-      - Burmese (Myanmar [Burma])
-      - Catalan
-      - Croatian
-      - Czech
-      - Danish
-      - 'Dutch: 2005 Reform'
-      - 'Dutch: Old Rules'
-      - 'English: Canadian'
-      - 'English: UK'
-      - 'English: USA'
-      - 'English: USA Legal'
-      - 'English: USA Medical'
-      - Estonian
-      - Finnish
-      - French
-      - 'French: Canadian'
-      - 'German: 1996 Reform'
-      - 'German: 2006 Reform'
-      - 'German: Austria 2006 Reform'
-      - 'German: Old Rules'
-      - 'German: Swiss'
-      - 'German: Swiss 2006 Reform'
-      - Greek
-      - Gujarati (India)
-      - Hebrew
-      - Hindi (India)
-      - Hungarian
-      - Indonesian (Indonesia)
-      - Italian
-      - Kannada (India)
-      - Khmer (Cambodia)
-      - Lao (Laos)
-      - Latvian
-      - Lithuanian
-      - Malayalam (India)
-      - Marathi (India)
-      - 'Norwegian: Bokmål'
-      - 'Norwegian: Nynorsk'
-      - Oriya (India)
-      - Polish
-      - Portuguese
-      - 'Portuguese: Brazilian'
-      - 'Portuguese: Orthographic Agreement'
-      - Punjabi (India)
-      - Romanian
-      - Russian
-      - Sinhala (Sri Lanka)
-      - Slovak
-      - Slovenian
-      - Spanish
-      - Swedish
-      - Tamil (India)
-      - Telugu (India)
-      - Thai
-      - Turkish
-      - Ukrainian
-      - Vietnamese
-    MergeDataTagsRequest:
-      allOf:
-      - $ref: '#/components/schemas/BaseJobRequest'
-      - description: Filters according to which the information related to data merge tags would be retrieved.
-        type: object
-        required:
-        - params
-        properties:
-          params:
-            type: object
-            required:
-            - targetDocument
-            properties:
-              targetDocument:
-                description: The target document that will have its tags extracted.
-                type: string
-              dataSource:
-                description: The data source file to be used for extracting and matching the tags.
-                type: string
-              filter:
-                description: The filter applied for tags. Accepts multiple values.
-                type: array
-                example:
-                - text
-                - image
-                default:
-                - all
-                items:
-                  type: string
-                  enum:
-                  - all
-                  - text
-                  - image
-                  - qr
-              includePageItemIdentifiers:
-                type: boolean
-                description: If true, the information for associated page items is added to the tags extracted from the document.
-                default: false
+    InputAsset:
+      type: object
+      description: The URL where the asset will be fetched.
+      required:
+      - source
+      properties:
+        source:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The pre-signed URL of the input asset. This is the URL of the asset that will be downloaded and acted upon during the job.
+        destination:
+          type: string
+          description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
+    OutputAsset:
+      description: The URL where the output assets are to be posted after the job is processed.
+      type: object
+      required:
+      - destination
+      - source
+      properties:
+        destination:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The URL of the asset.
+            storageType:
+              type: string
+              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
+              enum:
+              - Azure
+              - Dropbox
+              - AWS
+        source:
+          type: string
+          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     BaseJobRequest:
       description: The base job request for any job.
       required:
@@ -462,108 +402,119 @@ components:
                 type: string
                 description: The path of the output folder.
                 default: A unique temporary folder name would be created.
-    OutputAsset:
-      description: The URL where the output assets are to be posted after the job is processed.
-      type: object
-      required:
-      - destination
-      - source
-      properties:
-        destination:
-          type: object
-          required:
-          - url
-          properties:
-            url:
-              type: string
-              description: The URL of the asset.
-            storageType:
-              type: string
-              description: This is an optional parameter, however IT IS RECOMMENDED to provide this information.
-              enum:
-              - Azure
-              - Dropbox
-              - AWS
-        source:
-          type: string
-          description: This provides a path relative of the output where the resource would be generated. It cannot go up using '..' or '/'. Should be a valid file name.
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
-      required:
-      - message
-      - error_code
-    InputAsset:
-      type: object
-      description: The URL where the asset will be fetched.
-      required:
-      - source
-      properties:
-        source:
-          type: object
-          required:
-          - url
-          properties:
-            url:
-              type: string
-              description: The pre-signed URL of the input asset. This is the URL of the asset that will be downloaded and acted upon during the job.
-        destination:
-          type: string
-          description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
-  responses:
-    Accepted:
-      description: The job has been accepted for processing.
-      content:
-        application/json:
-          schema:
+    BaseJobRequestWithOutput:
+      allOf:
+      - $ref: '#/components/schemas/BaseJobRequest'
+      - description: The base job request for any job with the option to specify output URLs.
+        type: object
+        properties:
+          outputs:
+            type: array
+            items:
+              $ref: '#/components/schemas/OutputAsset'
+    HyphenationLanguage:
+      type: string
+      description: Supported hyphenation dictionary languages.
+      enum:
+      - Arabic
+      - Bengali (India)
+      - Bulgarian
+      - Burmese (Myanmar [Burma])
+      - Catalan
+      - Croatian
+      - Czech
+      - Danish
+      - 'Dutch: 2005 Reform'
+      - 'Dutch: Old Rules'
+      - 'English: Canadian'
+      - 'English: UK'
+      - 'English: USA'
+      - 'English: USA Legal'
+      - 'English: USA Medical'
+      - Estonian
+      - Finnish
+      - French
+      - 'French: Canadian'
+      - 'German: 1996 Reform'
+      - 'German: 2006 Reform'
+      - 'German: Austria 2006 Reform'
+      - 'German: Old Rules'
+      - 'German: Swiss'
+      - 'German: Swiss 2006 Reform'
+      - Greek
+      - Gujarati (India)
+      - Hebrew
+      - Hindi (India)
+      - Hungarian
+      - Indonesian (Indonesia)
+      - Italian
+      - Kannada (India)
+      - Khmer (Cambodia)
+      - Lao (Laos)
+      - Latvian
+      - Lithuanian
+      - Malayalam (India)
+      - Marathi (India)
+      - 'Norwegian: Bokmål'
+      - 'Norwegian: Nynorsk'
+      - Oriya (India)
+      - Polish
+      - Portuguese
+      - 'Portuguese: Brazilian'
+      - 'Portuguese: Orthographic Agreement'
+      - Punjabi (India)
+      - Romanian
+      - Russian
+      - Sinhala (Sri Lanka)
+      - Slovak
+      - Slovenian
+      - Spanish
+      - Swedish
+      - Tamil (India)
+      - Telugu (India)
+      - Thai
+      - Turkish
+      - Ukrainian
+      - Vietnamese
+    MergeDataTagsRequest:
+      allOf:
+      - $ref: '#/components/schemas/BaseJobRequest'
+      - description: Filters according to which the information related to data merge tags would be retrieved.
+        type: object
+        required:
+        - params
+        properties:
+          params:
+            type: object
+            required:
+            - targetDocument
             properties:
-              jobId:
+              targetDocument:
+                description: The target document that will have its tags extracted.
                 type: string
-                description: The job ID.
-              statusUrl:
+              dataSource:
+                description: The data source file to be used for extracting and matching the tags.
                 type: string
-                description: The status URL.
-      headers:
-        link:
-          schema:
-            type: string
-          description: The status URL for a retry.
-        retry-after:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content that is returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
+              filter:
+                description: The filter applied for tags. Accepts multiple values.
+                type: array
+                example:
+                - text
+                - image
+                default:
+                - all
+                items:
+                  type: string
+                  enum:
+                  - all
+                  - text
+                  - image
+                  - qr
+              includePageItemIdentifiers:
+                type: boolean
+                description: If true, the information for associated page items is added to the tags extracted from the document.
+                default: false
+  responses:
     TooManyRequests:
       description: Too Many Requests
       content:
@@ -591,6 +542,111 @@ components:
           schema:
             type: string
           description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    BadParams:
+      description: Bad Parameter
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
         Access-Control-Allow-Headers:
           schema:
             type: string
@@ -673,17 +729,31 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    InternalServerError:
-      description: Internal Server Error
+    Accepted:
+      description: The job has been accepted for processing.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            properties:
+              jobId:
+                type: string
+                description: The job ID.
+              statusUrl:
+                type: string
+                description: The status URL.
       headers:
+        link:
+          schema:
+            type: string
+          description: The status URL for a retry.
+        retry-after:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
         Content-Type:
           schema:
             type: string
-          description: The type of content returned (e.g., `application/json`).
+          description: The type of content that is returned (e.g., `application/json`).
         Content-Length:
           schema:
             type: integer
@@ -695,77 +765,7 @@ components:
         Access-Control-Allow-Methods:
           schema:
             type: string
-          description: This header indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    BadParams:
-      description: Bad Parameter
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This header indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This header indicates what HTTP methods are allowed.
+          description: This indicates what HTTP methods are allowed.
         Access-Control-Allow-Headers:
           schema:
             type: string

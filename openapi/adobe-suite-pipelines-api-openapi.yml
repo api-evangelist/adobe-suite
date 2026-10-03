@@ -255,6 +255,15 @@ paths:
           description: successful operation
 components:
   schemas:
+    PipelineUpdate:
+      type: object
+      description: Describe an update to a pipeline
+      properties:
+        phases:
+          type: array
+          description: Pipeline phases to update
+          items:
+            $ref: '#/components/schemas/PipelinePhaseUpdate'
     PipelinePhase:
       type: object
       required:
@@ -296,15 +305,20 @@ components:
           items:
             $ref: '#/components/schemas/PipelineStep'
       description: Describes a phase of a pipeline
-    PipelineUpdate:
+    PipelineStepUpdate:
       type: object
-      description: Describe an update to a pipeline
+      required:
+      - type
+      description: Describes an update to a phase of a pipeline
       properties:
-        phases:
-          type: array
-          description: Pipeline phases to update
-          items:
-            $ref: '#/components/schemas/PipelinePhaseUpdate'
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepUpdateOptions'
     HalLink:
       type: object
       properties:
@@ -325,51 +339,19 @@ components:
           type: string
         name:
           type: string
-    PipelinePhaseUpdate:
+    PipelineStepUpdateOptions:
       type: object
-      required:
-      - type
-      description: Describes an update to a phase of a pipeline
       properties:
-        name:
-          type: string
-          example: BUILD_1
-          description: Name of the phase
-        type:
-          type: string
-          example: BUILD
-          description: Type of the phase
-          enum:
-          - BUILD
-          - DEPLOY
-        repositoryId:
-          type: string
-          description: For BUILD phase type. Identifier of the source repository. The code from this repository will be build at the start of this phase. If not provided, the current value is retained.
-        branch:
-          type: string
-          description: For BUILD phase type. Name of the tracked branch or a fully qualified git tag (e.g. refs/tags/v1). If not provided, the current value is retained.
-        environmentId:
-          type: string
-          description: For DEPLOY phase type. Identifier of the target environment.
-        steps:
+        dispatcherCacheInvalidationPaths:
           type: array
-          description: Steps to update within the phase.
           items:
-            $ref: '#/components/schemas/PipelineStepUpdate'
-    PipelineStepUpdate:
-      type: object
-      required:
-      - type
-      description: Describes an update to a phase of a pipeline
-      properties:
-        name:
-          type: string
-          example: deploy
-          description: Name of the step
-        options:
-          type: object
-          description: Map of option parameters for the step
-          $ref: '#/components/schemas/PipelineStepUpdateOptions'
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
+        dispatcherCacheFlushPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
     PipelineStepOptions:
       type: object
       description: Options for a pipeline step. Will vary based on step action and platform.
@@ -413,6 +395,51 @@ components:
           type: integer
           format: int32
           description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test PDF files.
+    PipelineStep:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepOptions'
+      description: Describes a step from a phase of a pipeline
+    PipelinePhaseUpdate:
+      type: object
+      required:
+      - type
+      description: Describes an update to a phase of a pipeline
+      properties:
+        name:
+          type: string
+          example: BUILD_1
+          description: Name of the phase
+        type:
+          type: string
+          example: BUILD
+          description: Type of the phase
+          enum:
+          - BUILD
+          - DEPLOY
+        repositoryId:
+          type: string
+          description: For BUILD phase type. Identifier of the source repository. The code from this repository will be build at the start of this phase. If not provided, the current value is retained.
+        branch:
+          type: string
+          description: For BUILD phase type. Name of the tracked branch or a fully qualified git tag (e.g. refs/tags/v1). If not provided, the current value is retained.
+        environmentId:
+          type: string
+          description: For DEPLOY phase type. Identifier of the target environment.
+        steps:
+          type: array
+          description: Steps to update within the phase.
+          items:
+            $ref: '#/components/schemas/PipelineStepUpdate'
     RequestedPageDetails:
       type: object
       properties:
@@ -573,30 +600,3 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of a CI/CD Pipeline
-    PipelineStepUpdateOptions:
-      type: object
-      properties:
-        dispatcherCacheInvalidationPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
-        dispatcherCacheFlushPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
-    PipelineStep:
-      type: object
-      required:
-      - name
-      properties:
-        name:
-          type: string
-          example: deploy
-          description: Name of the step
-        options:
-          type: object
-          description: Map of option parameters for the step
-          $ref: '#/components/schemas/PipelineStepOptions'
-      description: Describes a step from a phase of a pipeline

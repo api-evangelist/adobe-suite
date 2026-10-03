@@ -228,23 +228,17 @@ components:
       required: true
       schema:
         type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      schema:
-        type: string
-    accept-encoding:
-      name: accept-encoding
-      in: header
-      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
-      schema:
-        type: string
     authorization:
       name: Authorization
       in: header
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
       required: true
       schema:
         type: string
@@ -255,23 +249,10 @@ components:
       required: true
       schema:
         type: string
-    sortOrderTags:
-      name: sortOrder
-      in: query
-      description: The direction in which the tags are sorted by. Supported values include `asc` and `desc`.
-      schema:
-        type: string
-    propertyTags:
-      name: property
-      in: query
-      description: The attribute you want to filter by when retrieving tags. Supported values include `name`, `archived`, and `tagCategoryId`.
-      schema:
-        type: string
-    tag-id:
-      name: TAG_ID
-      in: path
-      description: The ID of the tag.
-      required: true
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
       schema:
         type: string
     start:
@@ -287,6 +268,31 @@ components:
       required: true
       schema:
         type: string
+    limitTags:
+      name: limit
+      in: query
+      description: The number of tags you want displayed per page.
+      schema:
+        type: string
+    tag-id:
+      name: TAG_ID
+      in: path
+      description: The ID of the tag.
+      required: true
+      schema:
+        type: string
+    propertyTags:
+      name: property
+      in: query
+      description: The attribute you want to filter by when retrieving tags. Supported values include `name`, `archived`, and `tagCategoryId`.
+      schema:
+        type: string
+    sortOrderTags:
+      name: sortOrder
+      in: query
+      description: The direction in which the tags are sorted by. Supported values include `asc` and `desc`.
+      schema:
+        type: string
     content-type:
       name: Content-Type
       in: header
@@ -298,12 +304,6 @@ components:
       name: sortBy
       in: query
       description: The attribute that is used to determine the sort order for the tags. Supported values include `name`, `createdAt`, and `modifiedAt`.
-      schema:
-        type: string
-    limitTags:
-      name: limit
-      in: query
-      description: The number of tags you want displayed per page.
       schema:
         type: string
   schemas:
@@ -323,43 +323,22 @@ components:
           description: An array of aggregated values for input tagNamespace
           items:
             type: string
-    createTagBody:
-      type: object
-      required:
-      - name
-      properties:
-        name:
-          type: string
-          description: The name that you want to give the tag.
-          example: sampleTag
-        tagCategoryId:
-          type: string
-          description: The ID of the tag category that you want the tag to belong to. If not specified, the tag will be created as part of the Uncategorized category.
-          example: e2b7c656-067b-4413-a366-adde0401df50
-    validateTagsResponse:
+    validateTagsBody:
       type: object
       properties:
-        invalidTags:
+        ids:
           type: array
-          description: An array listing the invalid tags.
+          description: The list of IDs that you're trying to validate.
           items:
-            type: object
-            properties:
-              id:
-                type: string
-                example: invalid-tag
-        validTags:
-          type: array
-          items:
-            type: object
-            description: An array listing the valid tags.
-            properties:
-              id:
-                type: string
-                example: d113f40c-0097-4626-8d5f-6d5017694453
+            type: string
           example:
-          - id: d113f40c-0097-4626-8d5f-6d5017694453
-          - id: 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
+          - 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
+          - d113f40c-0097-4626-8d5f-6d5017694453
+          - invalid-tag
+        entity:
+          type: string
+          description: The entity that is requesting the validation of the tags.
+          example: '{API_KEY}'
     updatedTag:
       type: object
       allOf:
@@ -370,30 +349,6 @@ components:
             type: string
             description: The updated name of the tag.
             example: updatedSampleTag
-    tagsList:
-      type: object
-      properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of tags that match the query given.
-              example: 166
-            limit:
-              type: integer
-              description: The maximum number of tags that appear per page.
-              example: 10
-            next:
-              type: string
-              description: The string that lets you visit the next page of results.
-              example: eyJjb21wb3NpdGVUb2tlbiI6IntcInRva2VuXCI6XCIrUklEOn52a0owQUp3WDRrVko1d0FBQUFBQUFBPT0jUlQ6MiNUUkM6MjAjUlREOnVDTmQyWlAvWjV6TGdvUGVGR1JHQk1KNVExVmR6Mnc9I0lTVjoyI0lFTzo2NTU2NyNRQ0Y6OCNGUEM6QWdFQ0J3TG1BQ1NmQnNBQ0JBb0FBQVFBQ0FBQUNJQVlnQWVBRElBTmdBWEFFTUJCUUVBQUFBQkFRQkdBSElBR2dBQ0FENEFId0FKUkRFQUNBZ2dBUUJnQUVBQUlIb0FaZ0FDQUJNQUFRVUFBUUFCQVFScUFBc0FTQUFBRUxvQU9nQWFBQmNBQVlBQUFHSUlCUUFDQU1vQUlnQWlBQk1DQUFRQUFnZ0FnQUM2QURZQTNnQWlBR1lBQWdCZUFBY0FCZ0JlQUM4QURBQUlBQWdBQVFBQ0FBRUZBQVFFQUFBRWdBQ0FBSjRCR2dBeUFCSUFPZ0F5QU13QVNRQ0FBQUVBdGdCRUFBR0FkZ0FuQUFDZ0NBQUFBQ0lCQUFDSkFnQUJBRUFDQUg0QUhnQWFBQllBVUFFQUNCQUFFQUFRQUF4QUFzUnJBQUlFQUFBYkxoQklIQVBBQUhnUUVBTEVxQUE4RkNBQVFtcUVBd0FBTWd3Y09BSFdIa1FBZ0JGT0FTNEN4QVE0QVwiLFwicmFuZ2VcIjp7XCJtaW5cIjpcIlwiLFwibWF4XCI6XCJGRlwifX0iLCJvcmRlckJ5SXRlbXMiOlt7Iml0ZW0iOjE2OTQ0ODg2MDMwMDB9XSwicmlkIjoidmtKMEFKd1g0a1hHV2dFQUFBQUFBQT09IiwiaW5jbHVzaXZlIjp0cnVlfQ"
-            property:
-              type: array
-              items:
-                type: string
-                description: The query that limits the tags retrieved.
-                example: tagCategoryId=e2b7c656-067b-4413-a366-adde0401df50
     tag:
       type: object
       properties:
@@ -437,22 +392,30 @@ components:
           type: string
           description: The name of the tag category that the tag belongs to.
           example: Test Category
-    validateTagsBody:
+    validateTagsResponse:
       type: object
       properties:
-        ids:
+        invalidTags:
           type: array
-          description: The list of IDs that you're trying to validate.
+          description: An array listing the invalid tags.
           items:
-            type: string
+            type: object
+            properties:
+              id:
+                type: string
+                example: invalid-tag
+        validTags:
+          type: array
+          items:
+            type: object
+            description: An array listing the valid tags.
+            properties:
+              id:
+                type: string
+                example: d113f40c-0097-4626-8d5f-6d5017694453
           example:
-          - 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
-          - d113f40c-0097-4626-8d5f-6d5017694453
-          - invalid-tag
-        entity:
-          type: string
-          description: The entity that is requesting the validation of the tags.
-          example: '{API_KEY}'
+          - id: d113f40c-0097-4626-8d5f-6d5017694453
+          - id: 2bd5ddd9-7284-4767-81d9-c75b122f2a6a
     updateTagBody:
       type: object
       properties:
@@ -472,6 +435,43 @@ components:
           type: string
           description: The original value of the field you want to update.
           example: sampleTag
+    createTagBody:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The name that you want to give the tag.
+          example: sampleTag
+        tagCategoryId:
+          type: string
+          description: The ID of the tag category that you want the tag to belong to. If not specified, the tag will be created as part of the Uncategorized category.
+          example: e2b7c656-067b-4413-a366-adde0401df50
+    tagsList:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of tags that match the query given.
+              example: 166
+            limit:
+              type: integer
+              description: The maximum number of tags that appear per page.
+              example: 10
+            next:
+              type: string
+              description: The string that lets you visit the next page of results.
+              example: eyJjb21wb3NpdGVUb2tlbiI6IntcInRva2VuXCI6XCIrUklEOn52a0owQUp3WDRrVko1d0FBQUFBQUFBPT0jUlQ6MiNUUkM6MjAjUlREOnVDTmQyWlAvWjV6TGdvUGVGR1JHQk1KNVExVmR6Mnc9I0lTVjoyI0lFTzo2NTU2NyNRQ0Y6OCNGUEM6QWdFQ0J3TG1BQ1NmQnNBQ0JBb0FBQVFBQ0FBQUNJQVlnQWVBRElBTmdBWEFFTUJCUUVBQUFBQkFRQkdBSElBR2dBQ0FENEFId0FKUkRFQUNBZ2dBUUJnQUVBQUlIb0FaZ0FDQUJNQUFRVUFBUUFCQVFScUFBc0FTQUFBRUxvQU9nQWFBQmNBQVlBQUFHSUlCUUFDQU1vQUlnQWlBQk1DQUFRQUFnZ0FnQUM2QURZQTNnQWlBR1lBQWdCZUFBY0FCZ0JlQUM4QURBQUlBQWdBQVFBQ0FBRUZBQVFFQUFBRWdBQ0FBSjRCR2dBeUFCSUFPZ0F5QU13QVNRQ0FBQUVBdGdCRUFBR0FkZ0FuQUFDZ0NBQUFBQ0lCQUFDSkFnQUJBRUFDQUg0QUhnQWFBQllBVUFFQUNCQUFFQUFRQUF4QUFzUnJBQUlFQUFBYkxoQklIQVBBQUhnUUVBTEVxQUE4RkNBQVFtcUVBd0FBTWd3Y09BSFdIa1FBZ0JGT0FTNEN4QVE0QVwiLFwicmFuZ2VcIjp7XCJtaW5cIjpcIlwiLFwibWF4XCI6XCJGRlwifX0iLCJvcmRlckJ5SXRlbXMiOlt7Iml0ZW0iOjE2OTQ0ODg2MDMwMDB9XSwicmlkIjoidmtKMEFKd1g0a1hHV2dFQUFBQUFBQT09IiwiaW5jbHVzaXZlIjp0cnVlfQ"
+            property:
+              type: array
+              items:
+                type: string
+                description: The query that limits the tags retrieved.
+                example: tagCategoryId=e2b7c656-067b-4413-a366-adde0401df50
 x-refined-from:
 - adobe-suite-aep-catalog-openapi.yaml
 - adobe-suite-aep-unified-tags-openapi.yaml

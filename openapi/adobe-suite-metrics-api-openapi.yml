@@ -301,9 +301,44 @@ paths:
     - url: https://analytics.adobe.io/api
 components:
   schemas:
-    linksResponse:
+    pageResponse:
       type: string
-      description: If the response is paginated, includes URL paths to the current and next page in the response. Returns null in the case of no pagination.
+      description: If the response is paginated, indicates the current pagination value. Returns null in the case of no pagination.
+    metricObjectResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+          example: timeseries.ingestion.dataset.recordsuccess.count
+        filters:
+          type: array
+          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
+          items:
+            $ref: '#/components/schemas/filterObject'
+        datapoints:
+          type: array
+          description: An array whose objects represent the results of the specified metric and filters. The number of objects in the array depends on the filter options provided in the request. If no filters were provided, the array will only contain a single object that represents all datasets.
+          items:
+            $ref: '#/components/schemas/datapointObject'
+        granularity:
+          $ref: '#/components/schemas/granularity'
+    metricObject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the metric.
+          example: timeseries.ingestion.dataset.recordsuccess.count
+        filters:
+          type: array
+          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
+          items:
+            $ref: '#/components/schemas/filterObject'
+        aggregator:
+          type: string
+          description: Specifies the aggregation function that should be used to group multiple times-series records into single results. For detailed information on available aggregators, refer to the [OpenTSDB documentation](http://opentsdb.net/docs/build/html/user_guide/query/aggregators.html).
+          example: sum
     metricsResponses:
       type: array
       description: An array that contains the returned metrics.
@@ -359,10 +394,124 @@ components:
         granularity: DAY
       items:
         $ref: '#/components/schemas/metricObjectResponse'
+    linksResponse:
+      type: string
+      description: If the response is paginated, includes URL paths to the current and next page in the response. Returns null in the case of no pagination.
+    timeSeriesResponse:
+      type: object
+      properties:
+        granularity:
+          $ref: '#/components/schemas/granularity'
+        items:
+          $ref: '#/components/schemas/itemsResponse'
+        _page:
+          $ref: '#/components/schemas/pageResponse'
+        _links:
+          $ref: '#/components/schemas/linksResponse'
+      description: An object containing time-series metrics exposed by the API.
+    400error:
+      allOf:
+      - $ref: '#/components/schemas/error'
+    itemsResponse:
+      type: array
+      description: A list of returned metrics.
+      example:
+      - timestamp: 2020-08-17 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 102.3
+      - timestamp: 2020-08-16 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 502.0
+      - timestamp: 2020-08-15 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 19.2
+      - timestamp: 2020-08-14 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 1003.5
+      - timestamp: 2020-08-13 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 248.7
+      - timestamp: 2020-08-12 00:00:00+00:00
+        metrics:
+          timeseries.ingestion.dataset.size: 175.5
+      items:
+        type: object
+        properties:
+          timestamp:
+            type: string
+            description: An ISO 8601 timestamp for the metrics provided in the sibling `metrics` property.
+            format: date-time
+          metrics:
+            type: object
+            properties: {}
+            description: An object containing the queried metric data for the associated `timestamp`.
+    filterObject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The type of entity to filter metrics against. Currently, only `dataSetID` is supported.
+          example: dataSetId
+        value:
+          type: string
+          description: The ID of one or more datasets. Multiple dataset IDs can be provided as a single string, with each ID separated by vertical bar characters (`|`).
+          example: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
+        groupBy:
+          type: boolean
+          description: If multiple datasets were specified in the `filters` property for a metric and this this property to true in the request, the response object will contain the ID of the dataset that the corresponding `dps` property applies to. If excluded or set to false, the corresponding `dps` response property applies to all datasets provided in the `filters` array (or all datasets in Platform if no filters were provided).
+          example: true
     granularity:
       type: string
       description: The time interval that the returned metric data is divided by. For example, a value of `DAY` returns metrics for each day between the start and end date, whereas a value of `MONTH` would group metric results by month instead.
       example: DAY
+    metricsRequest:
+      type: object
+      properties:
+        start:
+          type: string
+          description: An ISO 8601 timestamp that represents the start of the date range to return metrics from.
+          example: 2020-07-14 00:00:00+00:00
+        end:
+          type: string
+          description: An ISO 8601 timestamp that represents the end of the date range to return metrics from.
+          example: 2020-07-22 00:00:00+00:00
+        granularity:
+          type: string
+          description: The time interval that the returned metric data is divided by. For example, a value of `DAY` returns metrics for each day between the start and end date, whereas a value of `MONTH` would group metric results by month instead.
+          example: DAY
+        metrics:
+          type: array
+          description: A list of metrics to query for.
+          example:
+          - name: timeseries.ingestion.dataset.recordsuccess.count
+            filters:
+            - name: dataSetId
+              value: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
+              groupBy: true
+            aggregator: sum
+          - name: timeseries.ingestion.dataset.dailysize
+            filters:
+            - name: dataSetId
+              value: 5eddb21420f516191b7a8dad
+              groupBy: false
+            aggregator: sum
+          items:
+            $ref: '#/components/schemas/metricObject'
+    error:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: The error code from Observability Insights.
+        httpStatus:
+          type: integer
+          description: The HTTP status code of the error.
+        title:
+          type: string
+          description: A short summary of the problem type.
+        details:
+          type: string
+          description: An explanation of the problem that occurred.
     v1Response:
       type: object
       properties:
@@ -398,166 +547,6 @@ components:
           type: object
           properties: {}
           description: A collection of datapoints for the specified metric, keyed by timestamp.
-    error:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: The error code from Observability Insights.
-        httpStatus:
-          type: integer
-          description: The HTTP status code of the error.
-        title:
-          type: string
-          description: A short summary of the problem type.
-        details:
-          type: string
-          description: An explanation of the problem that occurred.
-    pageResponse:
-      type: string
-      description: If the response is paginated, indicates the current pagination value. Returns null in the case of no pagination.
-    filterObject:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The type of entity to filter metrics against. Currently, only `dataSetID` is supported.
-          example: dataSetId
-        value:
-          type: string
-          description: The ID of one or more datasets. Multiple dataset IDs can be provided as a single string, with each ID separated by vertical bar characters (`|`).
-          example: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
-        groupBy:
-          type: boolean
-          description: If multiple datasets were specified in the `filters` property for a metric and this this property to true in the request, the response object will contain the ID of the dataset that the corresponding `dps` property applies to. If excluded or set to false, the corresponding `dps` response property applies to all datasets provided in the `filters` array (or all datasets in Platform if no filters were provided).
-          example: true
-    metricsRequest:
-      type: object
-      properties:
-        start:
-          type: string
-          description: An ISO 8601 timestamp that represents the start of the date range to return metrics from.
-          example: 2020-07-14 00:00:00+00:00
-        end:
-          type: string
-          description: An ISO 8601 timestamp that represents the end of the date range to return metrics from.
-          example: 2020-07-22 00:00:00+00:00
-        granularity:
-          type: string
-          description: The time interval that the returned metric data is divided by. For example, a value of `DAY` returns metrics for each day between the start and end date, whereas a value of `MONTH` would group metric results by month instead.
-          example: DAY
-        metrics:
-          type: array
-          description: A list of metrics to query for.
-          example:
-          - name: timeseries.ingestion.dataset.recordsuccess.count
-            filters:
-            - name: dataSetId
-              value: 5edcfb2fbb642119194c7d94|5eddb21420f516191b7a8dad
-              groupBy: true
-            aggregator: sum
-          - name: timeseries.ingestion.dataset.dailysize
-            filters:
-            - name: dataSetId
-              value: 5eddb21420f516191b7a8dad
-              groupBy: false
-            aggregator: sum
-          items:
-            $ref: '#/components/schemas/metricObject'
-    400error:
-      allOf:
-      - $ref: '#/components/schemas/error'
-    metricObjectResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the metric.
-          example: timeseries.ingestion.dataset.recordsuccess.count
-        filters:
-          type: array
-          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
-          items:
-            $ref: '#/components/schemas/filterObject'
-        datapoints:
-          type: array
-          description: An array whose objects represent the results of the specified metric and filters. The number of objects in the array depends on the filter options provided in the request. If no filters were provided, the array will only contain a single object that represents all datasets.
-          items:
-            $ref: '#/components/schemas/datapointObject'
-        granularity:
-          $ref: '#/components/schemas/granularity'
-    itemsResponse:
-      type: array
-      description: A list of returned metrics.
-      example:
-      - timestamp: 2020-08-17 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 102.3
-      - timestamp: 2020-08-16 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 502.0
-      - timestamp: 2020-08-15 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 19.2
-      - timestamp: 2020-08-14 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 1003.5
-      - timestamp: 2020-08-13 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 248.7
-      - timestamp: 2020-08-12 00:00:00+00:00
-        metrics:
-          timeseries.ingestion.dataset.size: 175.5
-      items:
-        type: object
-        properties:
-          timestamp:
-            type: string
-            description: An ISO 8601 timestamp for the metrics provided in the sibling `metrics` property.
-            format: date-time
-          metrics:
-            type: object
-            properties: {}
-            description: An object containing the queried metric data for the associated `timestamp`.
-    timeSeriesResponse:
-      type: object
-      properties:
-        granularity:
-          $ref: '#/components/schemas/granularity'
-        items:
-          $ref: '#/components/schemas/itemsResponse'
-        _page:
-          $ref: '#/components/schemas/pageResponse'
-        _links:
-          $ref: '#/components/schemas/linksResponse'
-      description: An object containing time-series metrics exposed by the API.
-    metricObject:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the metric.
-          example: timeseries.ingestion.dataset.recordsuccess.count
-        filters:
-          type: array
-          description: An optional field that filters metrics by specific datasets. Takes the form of an array of objects (one for each filter).
-          items:
-            $ref: '#/components/schemas/filterObject'
-        aggregator:
-          type: string
-          description: Specifies the aggregation function that should be used to group multiple times-series records into single results. For detailed information on available aggregators, refer to the [OpenTSDB documentation](http://opentsdb.net/docs/build/html/user_guide/query/aggregators.html).
-          example: sum
-    TaggedComponent:
-      type: object
-      properties:
-        componentType:
-          type: string
-        componentId:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
     AnalyticsMetric:
       type: object
       properties:
@@ -634,6 +623,17 @@ components:
           items:
             $ref: '#/components/schemas/TaggedComponent'
       description: Tag Model
+    TaggedComponent:
+      type: object
+      properties:
+        componentType:
+          type: string
+        componentId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
   parameters:
     authorization:
       name: Authorization

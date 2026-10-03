@@ -293,60 +293,76 @@ paths:
                 - sku: red-pants
                   priceBookId: dealer-north
 components:
-  parameters:
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
   schemas:
-    DiscountsPercentage:
-      title: Percentage Discount
-      description: 'Percentage discount that reduces the regular price by a specified percentage.
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
 
-        Example: $100 regular price with a 20% discount results in $80 final price.
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    DiscountsFinalPrice:
+      title: Fixed Amount Discount
+      description: 'Fixed amount discount that reduces the regular price by a specific monetary value.
+
+        Example: $100 regular price with a $10 fixed discount results in $90 final price.
 
         '
       type: object
       required:
       - code
-      - percentage
+      - price
       properties:
         code:
           type: string
           description: 'Unique identifier for the discount. Must be unique within the price record.
 
-            Use descriptive codes for easier management (e.g., "seasonal_sale", "vip_member").
+            Use descriptive codes for easier management (e.g., "loyalty_discount", "holiday_sale").
 
             '
-          example: seasonal_sale
-        percentage:
+          example: loyalty_discount
+        price:
           type: number
           format: float
-          description: 'Discount percentage as a positive number. Valid range is 0.01 to 99.99 (1% to 99.99%).
+          description: 'Fixed discount amount in the same currency as the price book.
+
+            Must be a positive number less than the regular price.
 
             '
-          example: 15.5
+          example: 10.0
+    FeedPricesUpdate:
+      title: FeedPrices
+      description: Product price information.
+      required:
+      - sku
+      - priceBookId
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Product SKU
+        priceBookId:
+          type: string
+          description: Price book id
+        regular:
+          type: number
+          format: float
+          description: Regular price
+        discounts:
+          type: array
+          description: Active discounts
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/DiscountsFinalPrice'
+            - $ref: '#/components/schemas/DiscountsPercentage'
+        tierPrices:
+          type: array
+          description: Tier prices for quantities greater-than one
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/TierFinalPrice'
+            - $ref: '#/components/schemas/TierPercentage'
     FeedPrices:
       title: FeedPrices
       description: 'Product price information with support for regular pricing, discounts, and tiered pricing.
@@ -421,36 +437,23 @@ components:
             percentage: 10
           - qty: 10
             price: 25.0
-    TierPercentage:
-      title: Tier Percentage Discount
-      description: 'Percentage discount applied to the regular price when purchasing at or above a specific quantity threshold.
-
-        Example: $100 regular price with 20% discount for quantity of 10 or more.
-
-        '
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
       type: object
-      required:
-      - qty
-      - percentage
       properties:
-        qty:
-          type: number
-          format: float
-          description: 'Minimum quantity required to qualify for this tier discount.
-
-            Must be greater than 1.
-
-            '
-          example: 10
-        percentage:
-          type: number
-          format: float
-          description: 'Discount percentage applied to the specified quantity threshold.
-
-            Valid range is 0.01 to 99.99 (1% to 99.99%).
-
-            '
-          example: 20.0
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
     ProcessFeedResponse:
       title: Response payload
       type: object
@@ -466,27 +469,6 @@ components:
       example:
         status: ACCEPTED
         acceptedCount: 4
-    403Response:
-      title: 403 Forbidden
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
     TierFinalPrice:
       title: Tier Final Price
       description: 'Final price offered for bulk purchases at a specific quantity threshold.
@@ -517,106 +499,33 @@ components:
 
             '
           example: 80.0
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+    DiscountsPercentage:
+      title: Percentage Discount
+      description: 'Percentage discount that reduces the regular price by a specified percentage.
 
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
-      type: object
-      properties:
-        code:
-          type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
-          type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
-    DiscountsFinalPrice:
-      title: Fixed Amount Discount
-      description: 'Fixed amount discount that reduces the regular price by a specific monetary value.
-
-        Example: $100 regular price with a $10 fixed discount results in $90 final price.
+        Example: $100 regular price with a 20% discount results in $80 final price.
 
         '
       type: object
       required:
       - code
-      - price
+      - percentage
       properties:
         code:
           type: string
           description: 'Unique identifier for the discount. Must be unique within the price record.
 
-            Use descriptive codes for easier management (e.g., "loyalty_discount", "holiday_sale").
+            Use descriptive codes for easier management (e.g., "seasonal_sale", "vip_member").
 
             '
-          example: loyalty_discount
-        price:
+          example: seasonal_sale
+        percentage:
           type: number
           format: float
-          description: 'Fixed discount amount in the same currency as the price book.
-
-            Must be a positive number less than the regular price.
+          description: 'Discount percentage as a positive number. Valid range is 0.01 to 99.99 (1% to 99.99%).
 
             '
-          example: 10.0
-    FeedPricesDelete:
-      title: FeedPricesDelete
-      description: Delete product price information.
-      required:
-      - sku
-      - priceBookId
-      type: object
-      properties:
-        sku:
-          type: string
-          description: Product SKU
-        priceBookId:
-          type: string
-          description: Price book id
-    FeedPricesUpdate:
-      title: FeedPrices
-      description: Product price information.
-      required:
-      - sku
-      - priceBookId
-      type: object
-      properties:
-        sku:
-          type: string
-          description: Product SKU
-        priceBookId:
-          type: string
-          description: Price book id
-        regular:
-          type: number
-          format: float
-          description: Regular price
-        discounts:
-          type: array
-          description: Active discounts
-          items:
-            anyOf:
-            - $ref: '#/components/schemas/DiscountsFinalPrice'
-            - $ref: '#/components/schemas/DiscountsPercentage'
-        tierPrices:
-          type: array
-          description: Tier prices for quantities greater-than one
-          items:
-            anyOf:
-            - $ref: '#/components/schemas/TierFinalPrice'
-            - $ref: '#/components/schemas/TierPercentage'
+          example: 15.5
     401Response:
       title: 401 Unauthorized
       type: object
@@ -638,6 +547,36 @@ components:
         status: '401'
         error_code: '401013'
         message: Oauth token is not valid
+    TierPercentage:
+      title: Tier Percentage Discount
+      description: 'Percentage discount applied to the regular price when purchasing at or above a specific quantity threshold.
+
+        Example: $100 regular price with 20% discount for quantity of 10 or more.
+
+        '
+      type: object
+      required:
+      - qty
+      - percentage
+      properties:
+        qty:
+          type: number
+          format: float
+          description: 'Minimum quantity required to qualify for this tier discount.
+
+            Must be greater than 1.
+
+            '
+          example: 10
+        percentage:
+          type: number
+          format: float
+          description: 'Discount percentage applied to the specified quantity threshold.
+
+            Valid range is 0.01 to 99.99 (1% to 99.99%).
+
+            '
+          example: 20.0
     400ProcessFeedResponse:
       title: Response payload
       type: object
@@ -666,6 +605,67 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
+    FeedPricesDelete:
+      title: FeedPricesDelete
+      description: Delete product price information.
+      required:
+      - sku
+      - priceBookId
+      type: object
+      properties:
+        sku:
+          type: string
+          description: Product SKU
+        priceBookId:
+          type: string
+          description: Price book id
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
   responses:
     AcceptedResponse:
       x-summary: All items accepted
@@ -676,6 +676,35 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -705,35 +734,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

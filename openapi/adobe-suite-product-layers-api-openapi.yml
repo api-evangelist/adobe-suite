@@ -207,47 +207,6 @@ paths:
                     layer: seasonal-winter-2024
 components:
   schemas:
-    ProductExternalId:
-      title: External Ids
-      type: object
-      required:
-      - id
-      - origin
-      properties:
-        id:
-          type: string
-          description: External ID of the product.
-        origin:
-          type: string
-          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
-    FeedProductLayerDelete:
-      title: Catalog Product Layer delete payload
-      type: object
-      required:
-      - sku
-      - source
-      properties:
-        sku:
-          type: string
-          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
-          example: red-pants
-        source:
-          $ref: '#/components/schemas/SourceLayer'
     SourceLayer:
       title: Catalog layer source
       description: "Identifies the source context for a product layer, combining locale and layer name to create \na unique layer identifier. This allows for precise targeting of content overrides.\n"
@@ -263,27 +222,6 @@ components:
           type: string
           description: "Unique identifier for the layer within the product's layer hierarchy. Use descriptive names \nthat indicate the layer's purpose (for example, \"seasonal-winter-2024\", \"promotional-black-friday\", \"a-b-test-variant\").\n"
           example: seasonal-winter-2024
-    403Response:
-      title: 403 Forbidden
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
     429Response:
       title: 429 Too Many Requests
       description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
@@ -309,53 +247,21 @@ components:
         value:
           type: string
           description: Original value passed in the request.
-    ProductLink:
-      title: Links
-      required:
-      - type
-      - sku
+    ProcessFeedResponse:
+      title: Response payload
       type: object
       properties:
-        type:
+        status:
           type: string
-          description: 'Product link type. Merchants can define custom types in addition to the predefined values.
-
-            - `VARIANT_OF` link type must be specified to establish a connection to the configurable product SKU.
-
-            - `IN_BUNDLE` link type must be specified to establish a connection to the bundle product SKU.
-
-            '
-        sku:
-          type: string
-          description: Product SKU
-      description: Product association
-    ProductAttribute:
-      title: Product Attribute
-      type: object
-      required:
-      - code
-      - values
-      properties:
-        code:
-          type: string
-          description: Product Attribute Code
-        values:
-          type: array
-          description: A list of value(s) associated with a specified attribute code.
-          items:
-            type: string
-        variantReferenceId:
-          type:
-          - string
-          - 'null'
-          description: 'The variant reference ID establishes a link between a product variant and the corresponding
-
-            [Option Value ID](#operation/createProducts!path=options/values/id&t=request) in a configurable product.
-
-
-            A variant reference ID can be specified only for a product that represents a variant of a configurable product.
-
-            '
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
     401Response:
       title: 401 Unauthorized
       type: object
@@ -377,6 +283,139 @@ components:
         status: '401'
         error_code: '401013'
         message: Oauth token is not valid
+    400ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: FAILED
+        message:
+          type: string
+          description: Error summary.
+        errors:
+          type: array
+          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
+          items:
+            $ref: '#/components/schemas/FeedItemFailedValidationResult'
+      example:
+        status: FAILED
+        message: Items validation failed for 2 items
+        errors:
+        - itemIndex: 0
+          code: status
+          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
+          value: active
+        - itemIndex: 1
+          code: source
+          message: required property 'source' not found
+          value: ''
+    ProductExternalId:
+      title: External Ids
+      type: object
+      required:
+      - id
+      - origin
+      properties:
+        id:
+          type: string
+          description: External ID of the product.
+        origin:
+          type: string
+          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
+    FeedProductLayerDelete:
+      title: Catalog Product Layer delete payload
+      type: object
+      required:
+      - sku
+      - source
+      properties:
+        sku:
+          type: string
+          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
+          example: red-pants
+        source:
+          $ref: '#/components/schemas/SourceLayer'
+    ProductLink:
+      title: Links
+      required:
+      - type
+      - sku
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'Product link type. Merchants can define custom types in addition to the predefined values.
+
+            - `VARIANT_OF` link type must be specified to establish a connection to the configurable product SKU.
+
+            - `IN_BUNDLE` link type must be specified to establish a connection to the bundle product SKU.
+
+            '
+        sku:
+          type: string
+          description: Product SKU
+      description: Product association
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
+    ProductImage:
+      title: Product Image
+      type: object
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          description: Media resource URL
+        label:
+          type: string
+          description: Media resource label
+        roles:
+          type: array
+          description: 'Roles associated with this image that determine how the image is used on the storefront.
+
+            - `BASE`: Product image is visible as a main image on the Product Detail Page.
+
+            - `SMALL`: Product image is visible as a main image on the Category or search result page or other product listing pages.
+
+            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
+
+            - `SWATCH`: A swatch can be used to illustrate the color, pattern, or texture.
+
+            '
+          items:
+            enum:
+            - BASE
+            - SMALL
+            - THUMBNAIL
+            - SWATCH
+        customRoles:
+          type: array
+          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
+
+            '
+          items:
+            type: string
     FeedProductLayer:
       title: Catalog Product Layer payload
       type: object
@@ -428,6 +467,33 @@ components:
           description: External system identifiers that will be merged with base product external IDs. Use to add layer-specific tracking codes, campaign IDs, or integration references.
           items:
             $ref: '#/components/schemas/ProductExternalId'
+    ProductAttribute:
+      title: Product Attribute
+      type: object
+      required:
+      - code
+      - values
+      properties:
+        code:
+          type: string
+          description: Product Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
+        variantReferenceId:
+          type:
+          - string
+          - 'null'
+          description: 'The variant reference ID establishes a link between a product variant and the corresponding
+
+            [Option Value ID](#operation/createProducts!path=options/values/id&t=request) in a configurable product.
+
+
+            A variant reference ID can be specified only for a product that represents a variant of a configurable product.
+
+            '
     ProductMetaAttribute:
       title: Meta Attributes
       description: Meta attributes that are specified in <meta> tags.
@@ -444,72 +510,6 @@ components:
         description:
           type: string
           description: A meta description
-    ProductImage:
-      title: Product Image
-      type: object
-      required:
-      - url
-      properties:
-        url:
-          type: string
-          description: Media resource URL
-        label:
-          type: string
-          description: Media resource label
-        roles:
-          type: array
-          description: 'Roles associated with this image that determine how the image is used on the storefront.
-
-            - `BASE`: Product image is visible as a main image on the Product Detail Page.
-
-            - `SMALL`: Product image is visible as a main image on the Category or search result page or other product listing pages.
-
-            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
-
-            - `SWATCH`: A swatch can be used to illustrate the color, pattern, or texture.
-
-            '
-          items:
-            enum:
-            - BASE
-            - SMALL
-            - THUMBNAIL
-            - SWATCH
-        customRoles:
-          type: array
-          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
-
-            '
-          items:
-            type: string
-    400ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: FAILED
-        message:
-          type: string
-          description: Error summary.
-        errors:
-          type: array
-          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
-          items:
-            $ref: '#/components/schemas/FeedItemFailedValidationResult'
-      example:
-        status: FAILED
-        message: Items validation failed for 2 items
-        errors:
-        - itemIndex: 0
-          code: status
-          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
-          value: active
-        - itemIndex: 1
-          code: source
-          message: required property 'source' not found
-          value: ''
   parameters:
     ContentType:
       name: Content-Type
@@ -520,13 +520,6 @@ components:
         enum:
         - application/json
         default: application/json
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
     ContentEncoding:
       name: Content-Encoding
       in: header
@@ -536,6 +529,13 @@ components:
         enum:
         - gzip
       description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
   responses:
     AcceptedResponse:
       x-summary: All items accepted
@@ -546,6 +546,35 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -575,35 +604,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

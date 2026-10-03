@@ -190,65 +190,86 @@ paths:
           description: The service is unavailable.
           content: {}
 components:
-  parameters:
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
   schemas:
-    SearchNamespaceList:
+    TaxonomySearchValue:
       type: object
       properties:
-        namespaces:
-          type: array
-          description: A list of namespaces and the number of search objects resulting from the search for each namespace.
-          example:
-          - namespace: AAMTraits
-            displayName: AAMTraits
-            count: 45
-          - namespace: AAMSegments
-            displayName: AAMSegments
-            count: 10
-          - namespace: SegmentsAISegments
-            displayName: SegmentsAISegments
-            count: 3
-          items:
-            $ref: '#/components/schemas/SearchNamespaceObject'
-        totalCount:
+        id:
           type: string
-          description: The total number of namespaces returned.
-          example: '3'
+          description: The ID of the searchable object.
+        base64EncodedSourceId:
+          type: string
+          description: The base64 encoded version of the source ID.
+        name:
+          type: string
+          description: The name of the searchable object.
+        parentFolderId:
+          type: string
+          description: The ID of the parent folder.
+    SearchResultsPageObject:
+      type: object
+      properties:
+        totalCount:
+          type: number
+          description: The number of search objects found.
+          example: 20323.0
+        totalPages:
+          type: integer
+          description: The total number of pages resulting from your search.
+          format: int32
+          example: 100
+        pageOffset:
+          type: integer
+          description: The current page offset. The first page has a value of 0.
+          format: int32
+          example: 0
+        pageSize:
+          type: integer
+          description: The total number of search objects on this page.
+          format: int32
+          example: 10
+    TaxonomySearchObject:
+      type: object
+      properties:
+        taxonomy:
+          type: array
+          description: List of folder IDs and names. This list starts at the root folder and then traverses through the subfolders until it reaches the folder that contains the search object specified by the entityId.
+          example:
+          - id: carTraits
+            base64EncodedSourceId: RFVGamdpRk1BZy01ZTY4MzBmYzM5N2I0NTE4YWFhMWEwOGY1
+            name: AAMTraits for Cars
+            parentFolderId: root
+          - id: fastCarsFolder
+            base64EncodedSourceId: RFVGZ01BLTVlNjgzMGZjMzk3YjQ1MThhYWExYTA4Zg2
+            name: Fast Cars
+            parentFolderId: carTraits
+          - id: porsche
+            base64EncodedSourceId: REFGZ01CLTVlNjczMGZjMzk3YjQ1MThhZGIxYTA4Zg==
+            name: Porshe
+            parentFolderId: redCarsFolderId
+          items:
+            $ref: '#/components/schemas/TaxonomySearchValue'
         status:
           type: object
           properties:
             message:
               type: string
               description: Extra information about the search status.
-              example: Success
+              example: Cannot find entityId redcarsFolderId.
+    SearchNamespaceObject:
+      type: object
+      properties:
+        namespace:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: The name of the namespace.
+              count:
+                type: number
+                description: The number of objects within the namespace.
     SearchEntityObject:
       type: object
       properties:
@@ -280,34 +301,35 @@ components:
           description: A description attached to the search object.
           example: Under development, targeting east coast millionaires that buy red cars.
       description: An individual search result after issuing a full text search.
-    TaxonomySearchObject:
+    SearchNamespaceList:
       type: object
       properties:
-        taxonomy:
+        namespaces:
           type: array
-          description: List of folder IDs and names. This list starts at the root folder and then traverses through the subfolders until it reaches the folder that contains the search object specified by the entityId.
+          description: A list of namespaces and the number of search objects resulting from the search for each namespace.
           example:
-          - id: carTraits
-            base64EncodedSourceId: RFVGamdpRk1BZy01ZTY4MzBmYzM5N2I0NTE4YWFhMWEwOGY1
-            name: AAMTraits for Cars
-            parentFolderId: root
-          - id: fastCarsFolder
-            base64EncodedSourceId: RFVGZ01BLTVlNjgzMGZjMzk3YjQ1MThhYWExYTA4Zg2
-            name: Fast Cars
-            parentFolderId: carTraits
-          - id: porsche
-            base64EncodedSourceId: REFGZ01CLTVlNjczMGZjMzk3YjQ1MThhZGIxYTA4Zg==
-            name: Porshe
-            parentFolderId: redCarsFolderId
+          - namespace: AAMTraits
+            displayName: AAMTraits
+            count: 45
+          - namespace: AAMSegments
+            displayName: AAMSegments
+            count: 10
+          - namespace: SegmentsAISegments
+            displayName: SegmentsAISegments
+            count: 3
           items:
-            $ref: '#/components/schemas/TaxonomySearchValue'
+            $ref: '#/components/schemas/SearchNamespaceObject'
+        totalCount:
+          type: string
+          description: The total number of namespaces returned.
+          example: '3'
         status:
           type: object
           properties:
             message:
               type: string
               description: Extra information about the search status.
-              example: Cannot find entityId redcarsFolderId.
+              example: Success
     SearchEntityList:
       type: object
       properties:
@@ -325,54 +347,32 @@ components:
               type: string
               description: Extra information about the search status.
               example: Search system is not setup correctly.
-    SearchResultsPageObject:
-      type: object
-      properties:
-        totalCount:
-          type: number
-          description: The number of search objects found.
-          example: 20323.0
-        totalPages:
-          type: integer
-          description: The total number of pages resulting from your search.
-          format: int32
-          example: 100
-        pageOffset:
-          type: integer
-          description: The current page offset. The first page has a value of 0.
-          format: int32
-          example: 0
-        pageSize:
-          type: integer
-          description: The total number of search objects on this page.
-          format: int32
-          example: 10
-    SearchNamespaceObject:
-      type: object
-      properties:
-        namespace:
-          type: array
-          items:
-            type: object
-            properties:
-              name:
-                type: string
-                description: The name of the namespace.
-              count:
-                type: number
-                description: The number of objects within the namespace.
-    TaxonomySearchValue:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of the searchable object.
-        base64EncodedSourceId:
-          type: string
-          description: The base64 encoded version of the source ID.
-        name:
-          type: string
-          description: The name of the searchable object.
-        parentFolderId:
-          type: string
-          description: The ID of the parent folder.
+  parameters:
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string

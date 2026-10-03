@@ -796,35 +796,6 @@ paths:
           - platform-stage
 components:
   schemas:
-    AuthCreateBaseDTO:
-      type: object
-      properties:
-        accessKeyId:
-          type: string
-          example: GOOGMG1234ABCDEFGHIJKLMN
-        secretAccessKey:
-          type: string
-          example: xxxx
-    ConnectionListResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConnectionItemDTO'
-    ConnectionFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
     StateActionDTO:
       type: object
       properties:
@@ -837,33 +808,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FlowRecordTypeDTO'
-    CreateConnectionRequest:
-      required:
-      - connectionSpec
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the base connection.
-          example: Google Cloud Storage Base Connection
-        description:
-          type: string
-          description: An optional description that can be added to provide further context on the connection.
-          example: Google Cloud Storage base connection for customer data
-        auth:
-          $ref: '#/components/schemas/AuthInfoDTO'
-        connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
-    FlowRecordTypeDTO:
-      type: object
-      required:
-      - extensions
-      - type
-      properties:
-        type:
-          type: string
-        extensions:
-          type: object
     PatchInstruction:
       required:
       - op
@@ -887,6 +831,38 @@ components:
               type: string
               description: The new description value you want to add.
               example: A new description to provide further context on a specified connection or flow.
+    ExploreConnectionResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            description: The type of file that corresponds with the queried data. Data directories can either be `folder` or `table`.
+            example: folder
+          name:
+            type: string
+            description: The name of the folder.
+            example: acme-customers
+          path:
+            type: string
+            description: The path to the folder.
+            example: /acme-customers/
+          canPreview:
+            type: boolean
+            description: A boolean value indicating whether the file can be previewed.
+            example: false
+          canFetchSchema:
+            type: boolean
+            description: A boolean value indicating whether the schema can be fetched.
+            example: false
+    ConnectionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionItemDTO'
     ConnectionItemDTO:
       type: object
       properties:
@@ -956,31 +932,42 @@ components:
           type: string
           description: The unique eTag returned by the HTTP response. The eTag value updates with every successful update of a base connection.
           example: '"6802064a-0000-0200-0000-6387c6b90000"'
-    ExploreConnectionResponse:
-      type: array
-      items:
-        type: object
-        properties:
-          type:
-            type: string
-            description: The type of file that corresponds with the queried data. Data directories can either be `folder` or `table`.
-            example: folder
-          name:
-            type: string
-            description: The name of the folder.
-            example: acme-customers
-          path:
-            type: string
-            description: The path to the folder.
-            example: /acme-customers/
-          canPreview:
-            type: boolean
-            description: A boolean value indicating whether the file can be previewed.
-            example: false
-          canFetchSchema:
-            type: boolean
-            description: A boolean value indicating whether the schema can be fetched.
-            example: false
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
+    CreateConnectionRequest:
+      required:
+      - connectionSpec
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the base connection.
+          example: Google Cloud Storage Base Connection
+        description:
+          type: string
+          description: An optional description that can be added to provide further context on the connection.
+          example: Google Cloud Storage base connection for customer data
+        auth:
+          $ref: '#/components/schemas/AuthInfoDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
     StatusDTO:
       type: object
       properties:
@@ -1001,17 +988,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatusErrorDTO'
-    AuthInfoDTO:
-      required:
-      - specName
+    ConnectionFilterRequest:
       type: object
       properties:
-        specName:
+        queryString:
           type: string
-          description: Specifies the type of authentication a specific source is using to connect.
-          example: Basic Authentication for google-cloud
-        params:
-          $ref: '#/components/schemas/AuthCreateBaseDTO'
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+    AuthCreateBaseDTO:
+      type: object
+      properties:
+        accessKeyId:
+          type: string
+          example: GOOGMG1234ABCDEFGHIJKLMN
+        secretAccessKey:
+          type: string
+          example: xxxx
     CreateConnectionResponse:
       type: object
       properties:
@@ -1024,15 +1022,17 @@ components:
           description: The eTag assigned to the base connection ID.
           example: '"6802064a-0000-0200-0000-6387c6b90000"'
       description: The location of the newly created connection instance.
-    StatusErrorDTO:
+    AuthInfoDTO:
+      required:
+      - specName
       type: object
       properties:
-        message:
+        specName:
           type: string
-        code:
-          type: string
-        details:
-          type: object
+          description: Specifies the type of authentication a specific source is using to connect.
+          example: Basic Authentication for google-cloud
+        params:
+          $ref: '#/components/schemas/AuthCreateBaseDTO'
     SpecInfoDTO:
       required:
       - id

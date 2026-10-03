@@ -260,65 +260,42 @@ paths:
                   source:
                     locale: en-US
 components:
-  parameters:
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
   schemas:
-    CategoryImage:
-      title: Category Image
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
       type: object
       required:
-      - url
+      - locale
       properties:
-        url:
+        locale:
           type: string
-          description: Media resource URL
-        label:
+          description: A single value that represents content locale, for example, English.
+          example: English
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
+    CategoryMetaAttribute:
+      title: Meta Attributes
+      description: Meta attributes that are specified in <meta> tags.
+      type: object
+      properties:
+        title:
           type: string
-          description: Media resource label
-        roles:
+          description: A meta title
+        keywords:
           type: array
-          description: 'Roles associated with this image that determine how the image is used on the storefront.
-
-            - `BASE`: Category image is visible as a main image on the Category Detail Page.
-
-            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
-
-            '
-          items:
-            enum:
-            - BASE
-            - THUMBNAIL
-        customRoles:
-          type: array
-          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
-
-            '
+          description: A meta keywords
           items:
             type: string
+        description:
+          type: string
+          description: A meta description
     FeedCategoryUpdate:
       title: FeedCategoryUpdate
       description: Category information for updating existing categories.
@@ -389,6 +366,123 @@ components:
           items:
             $ref: '#/components/schemas/CategoryImage'
       additionalProperties: false
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
+    400ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: FAILED
+        message:
+          type: string
+          description: Error summary.
+        errors:
+          type: array
+          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
+          items:
+            $ref: '#/components/schemas/FeedItemFailedValidationResult'
+      example:
+        status: FAILED
+        message: Items validation failed for 2 items
+        errors:
+        - itemIndex: 0
+          code: status
+          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
+          value: active
+        - itemIndex: 1
+          code: source
+          message: required property 'source' not found
+          value: ''
+    CategoryAttribute:
+      title: Category Attribute
+      type: object
+      required:
+      - code
+      - values
+      properties:
+        code:
+          type: string
+          description: Category Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
+    403Response:
+      title: 403 Forbidden
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
     FeedCategory:
       title: FeedCategory
       description: Category information for organizing products with hierarchical structure and localization support.
@@ -456,21 +550,6 @@ components:
           items:
             $ref: '#/components/schemas/CategoryImage'
       additionalProperties: false
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
     FeedCategoryDelete:
       title: Delete category
       description: Delete category information for removing categories from the catalog.
@@ -495,143 +574,64 @@ components:
         source:
           $ref: '#/components/schemas/Source'
       additionalProperties: false
-    403Response:
-      title: 403 Forbidden
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
-      type: object
-      properties:
-        code:
-          type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
-          type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
-    CategoryAttribute:
-      title: Category Attribute
+    CategoryImage:
+      title: Category Image
       type: object
       required:
-      - code
-      - values
+      - url
       properties:
-        code:
+        url:
           type: string
-          description: Category Attribute Code
-        values:
+          description: Media resource URL
+        label:
+          type: string
+          description: Media resource label
+        roles:
           type: array
-          description: A list of value(s) associated with a specified attribute code.
+          description: 'Roles associated with this image that determine how the image is used on the storefront.
+
+            - `BASE`: Category image is visible as a main image on the Category Detail Page.
+
+            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
+
+            '
+          items:
+            enum:
+            - BASE
+            - THUMBNAIL
+        customRoles:
+          type: array
+          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
+
+            '
           items:
             type: string
-    CategoryMetaAttribute:
-      title: Meta Attributes
-      description: Meta attributes that are specified in <meta> tags.
-      type: object
-      properties:
-        title:
-          type: string
-          description: A meta title
-        keywords:
-          type: array
-          description: A meta keywords
-          items:
-            type: string
-        description:
-          type: string
-          description: A meta description
-    401Response:
-      title: 401 Unauthorized
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrInvalidOauthToken
-        status: '401'
-        error_code: '401013'
-        message: Oauth token is not valid
-    Source:
-      title: Catalog source
-      description: Source of the entity, for example, "en-US" for US English.
-      type: object
-      required:
-      - locale
-      properties:
-        locale:
-          type: string
-          description: A single value that represents content locale, for example, English.
-          example: English
-    400ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: FAILED
-        message:
-          type: string
-          description: Error summary.
-        errors:
-          type: array
-          description: List of items that did not pass validation. Fix the payload for invalid items before resubmitting the request.
-          items:
-            $ref: '#/components/schemas/FeedItemFailedValidationResult'
-      example:
-        status: FAILED
-        message: Items validation failed for 2 items
-        errors:
-        - itemIndex: 0
-          code: status
-          message: 'status: does not have a value in the enumeration ["ENABLED", "DISABLED"]'
-          value: active
-        - itemIndex: 1
-          code: source
-          message: required property 'source' not found
-          value: ''
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
   responses:
     AcceptedResponse:
       x-summary: All items accepted
@@ -642,6 +642,35 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -671,35 +700,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

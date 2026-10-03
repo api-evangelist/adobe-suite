@@ -408,16 +408,207 @@ paths:
         required: true
 components:
   schemas:
-    ProgramCapabilities:
+    GoLiveDates:
       type: object
       properties:
-        sandbox:
+        plannedDate:
+          type: string
+          description: Date when go live is planned
+        actualDate:
+          type: string
+          description: Date when the program completed go live
+      description: Contains planned and actual go live dates of a program
+    NewRelicSub-AccountUser:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '42'
+          description: Identifier of the New Relic sub account User
+        firstName:
+          type: string
+          example: John
+          description: First name of the New Relic sub account User
+        lastName:
+          type: string
+          example: Doe
+          description: Last name of the New Relic sub account User
+        email:
+          type: string
+          example: foobar@newrelic.com
+          description: email of the New Relic sub account user
+        role:
+          type: string
+          example: admin
+          description: Role of the New Relic sub account user
+        owner:
           type: boolean
-          example: true
-          description: Indicator of a sandbox program.
-          readOnly: true
+          example: false
+          description: Owner detail of the New Relic sub account User
           default: false
-      description: Contains the program capabilities
+      description: Describes __New Relic Sub-Account User__
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
+    NewFeedback:
+      type: object
+      required:
+      - rating
+      - type
+      properties:
+        createdAt:
+          type: string
+          description: Created time
+        id:
+          type: integer
+          description: Identifier of the feedback. Unique within the space.
+        rating:
+          type: integer
+          description: Rating values from 1 to 5
+        comment:
+          type: string
+          description: Feedback comment
+        type:
+          type: string
+          description: Type of feedback
+          enum:
+          - GO_LIVE
+        options:
+          type: object
+          description: Optional information about the feedback
+      description: Describes feedback
+    EmbeddedProgram:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '14'
+          description: Identifier of the program. Unique within the space.
+          readOnly: true
+        name:
+          type: string
+          example: AcmeCorp Main Site
+          description: Name of the program
+          readOnly: true
+        enabled:
+          type: boolean
+          description: Whether this Program has been enabled for Cloud Manager usage
+          default: false
+          readOnly: true
+        tenantId:
+          type: string
+          example: acmeCorp
+          description: Tenant Id
+          readOnly: true
+        status:
+          type: string
+          description: Status of the program
+          enum:
+          - creating
+          - ready
+          - deleting
+          - deleted
+          - deleted_failed
+          - failed
+        createdAt:
+          type: string
+          format: date-time
+          description: Created time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date of last change
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/tenant:
+              description: The tenant this program belongs to
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A lightweight representation of a Program
+    NewRelicSubAccountUser:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '42'
+          description: Identifier of the New Relic sub account User
+        firstName:
+          type: string
+          example: John
+          description: First name of the New Relic sub account User
+        lastName:
+          type: string
+          example: Doe
+          description: Last name of the New Relic sub account User
+        email:
+          type: string
+          example: foobar@newrelic.com
+          description: email of the New Relic sub account user
+        role:
+          type: string
+          example: admin
+          description: Role of the New Relic sub account user
+        owner:
+          type: boolean
+          example: false
+          description: Owner detail of the New Relic sub account User
+          default: false
+      description: Describes __New Relic Sub-Account User__
+    ProgramList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            programs:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmbeddedProgram'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
     Program:
       type: object
       required:
@@ -508,264 +699,6 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of a Program
-    EmbeddedProgram:
-      type: object
-      properties:
-        id:
-          type: string
-          example: '14'
-          description: Identifier of the program. Unique within the space.
-          readOnly: true
-        name:
-          type: string
-          example: AcmeCorp Main Site
-          description: Name of the program
-          readOnly: true
-        enabled:
-          type: boolean
-          description: Whether this Program has been enabled for Cloud Manager usage
-          default: false
-          readOnly: true
-        tenantId:
-          type: string
-          example: acmeCorp
-          description: Tenant Id
-          readOnly: true
-        status:
-          type: string
-          description: Status of the program
-          enum:
-          - creating
-          - ready
-          - deleting
-          - deleted
-          - deleted_failed
-          - failed
-        createdAt:
-          type: string
-          format: date-time
-          description: Created time
-        updatedAt:
-          type: string
-          format: date-time
-          description: Date of last change
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/tenant:
-              description: The tenant this program belongs to
-              $ref: '#/components/schemas/HalLink'
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: A lightweight representation of a Program
-    HalLink:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-          default: false
-        type:
-          type: string
-        deprecation:
-          type: string
-        profile:
-          type: string
-        title:
-          type: string
-        hreflang:
-          type: string
-        name:
-          type: string
-    NewProgram:
-      type: object
-      required:
-      - name
-      - type
-      description: Description of a new program to be created
-      properties:
-        name:
-          type: string
-          description: New program name
-          minLength: 0
-          maxLength: 64
-        type:
-          type: string
-          enum:
-          - aem_cloud_service
-        capabilities:
-          $ref: '#/components/schemas/ProgramCapabilities'
-        solutionNames:
-          type: array
-          description: List of solutions to be enabled on the new program.
-          items:
-            type: string
-            enum:
-            - aemsites
-            - aemassets
-        goLive:
-          description: Go live dates
-          $ref: '#/components/schemas/GoLiveDates'
-    NewRelicSubAccountUser:
-      type: object
-      properties:
-        id:
-          type: string
-          example: '42'
-          description: Identifier of the New Relic sub account User
-        firstName:
-          type: string
-          example: John
-          description: First name of the New Relic sub account User
-        lastName:
-          type: string
-          example: Doe
-          description: Last name of the New Relic sub account User
-        email:
-          type: string
-          example: foobar@newrelic.com
-          description: email of the New Relic sub account user
-        role:
-          type: string
-          example: admin
-          description: Role of the New Relic sub account user
-        owner:
-          type: boolean
-          example: false
-          description: Owner detail of the New Relic sub account User
-          default: false
-      description: Describes __New Relic Sub-Account User__
-    NewRelicSub-AccountUser:
-      type: object
-      properties:
-        id:
-          type: string
-          example: '42'
-          description: Identifier of the New Relic sub account User
-        firstName:
-          type: string
-          example: John
-          description: First name of the New Relic sub account User
-        lastName:
-          type: string
-          example: Doe
-          description: Last name of the New Relic sub account User
-        email:
-          type: string
-          example: foobar@newrelic.com
-          description: email of the New Relic sub account user
-        role:
-          type: string
-          example: admin
-          description: Role of the New Relic sub account user
-        owner:
-          type: boolean
-          example: false
-          description: Owner detail of the New Relic sub account User
-          default: false
-      description: Describes __New Relic Sub-Account User__
-    NewFeedback:
-      type: object
-      required:
-      - rating
-      - type
-      properties:
-        createdAt:
-          type: string
-          description: Created time
-        id:
-          type: integer
-          description: Identifier of the feedback. Unique within the space.
-        rating:
-          type: integer
-          description: Rating values from 1 to 5
-        comment:
-          type: string
-          description: Feedback comment
-        type:
-          type: string
-          description: Type of feedback
-          enum:
-          - GO_LIVE
-        options:
-          type: object
-          description: Optional information about the feedback
-      description: Describes feedback
-    RequestedPageDetails:
-      type: object
-      properties:
-        start:
-          type: integer
-          format: int32
-          description: The start index for the current page of results
-        limit:
-          type: integer
-          format: int32
-          description: The item limit for the current page of results
-        next:
-          type: integer
-          format: int32
-          description: The start index for the next page of results
-        prev:
-          type: integer
-          format: int32
-          description: The start index for the previous page of results
-        orderBy:
-          type: string
-        property:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-      description: Filtering and sorting page details
-    ProgramList:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int32
-          description: The total number of embedded items
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            programs:
-              type: array
-              items:
-                $ref: '#/components/schemas/EmbeddedProgram'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-    GoLiveDates:
-      type: object
-      properties:
-        plannedDate:
-          type: string
-          description: Date when go live is planned
-        actualDate:
-          type: string
-          description: Date when the program completed go live
-      description: Contains planned and actual go live dates of a program
     NewRelicSubAccountUserlist:
       type: object
       properties:
@@ -798,3 +731,70 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: List of New Relic sub account users
+    ProgramCapabilities:
+      type: object
+      properties:
+        sandbox:
+          type: boolean
+          example: true
+          description: Indicator of a sandbox program.
+          readOnly: true
+          default: false
+      description: Contains the program capabilities
+    NewProgram:
+      type: object
+      required:
+      - name
+      - type
+      description: Description of a new program to be created
+      properties:
+        name:
+          type: string
+          description: New program name
+          minLength: 0
+          maxLength: 64
+        type:
+          type: string
+          enum:
+          - aem_cloud_service
+        capabilities:
+          $ref: '#/components/schemas/ProgramCapabilities'
+        solutionNames:
+          type: array
+          description: List of solutions to be enabled on the new program.
+          items:
+            type: string
+            enum:
+            - aemsites
+            - aemassets
+        goLive:
+          description: Go live dates
+          $ref: '#/components/schemas/GoLiveDates'
+    RequestedPageDetails:
+      type: object
+      properties:
+        start:
+          type: integer
+          format: int32
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
+          type: string
+        property:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+      description: Filtering and sorting page details

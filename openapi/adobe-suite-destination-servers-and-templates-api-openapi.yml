@@ -2010,8 +2010,8 @@ paths:
           x-summary: Resource not found
 components:
   schemas:
-    templateStringUrl:
-      description: Define any string in URLs as a Pebble template or use a constant value.
+    templateStringHeaders:
+      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
       properties:
         templatingStrategy:
           $ref: '#/components/schemas/templatingStrategy'
@@ -2019,7 +2019,38 @@ components:
           type: string
           example: https://api.moviestar.com/data/{{customerData.region}}/items
           title: value
-          description: 'Fill in the address of the API endpoint that Experience Platform should connect to. <ul><li>Use `PEBBLE_V1` if Experience Platform needs to transform the URL in the value field below. Use this option if you have an endpoint like: `https://api.moviestar.com/data/{{customerData.region}}/items`, where users must select the endpoint region from the Experience Platform UI.</li><li>Use `NONE` if no transformation is needed on the Adobe side, for example if you have an endpoint like: `https://api.moviestar.com/data/items`.</li></ul>'
+          description: Enter any headers that will be used in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
+    header:
+      type: object
+      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
+      properties:
+        header:
+          type: string
+          example: sample-header-requested-by-your-endpoint
+        value:
+          $ref: '#/components/schemas/templateStringHeaders'
+    templatingStrategy:
+      title: Template Transformation Type
+      example: PEBBLE_V1
+      description: If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value.
+      type: string
+      enum:
+      - PEBBLE_V1
+      - NONE
+    destinationServerResponse:
+      allOf:
+      - $ref: '#/components/schemas/response'
+      - $ref: '#/components/schemas/destinationServer'
+    templateStringBody:
+      description: Define any string in HTTP message bodies as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
+          type: string
+          example: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
+          title: value
+          description: ' This string is the character-escaped version that transforms the data of Platform customers to the format your service expects. <br><br> <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul> Use `PEBBLE_V1` and define the value in the respective template. If no message transformation is needed and customers can use the source XDM input schema as the final output to your destination, use `{{ input.profile | raw }}` as request body value. <br><br> '
     SFTP_Destination_Server_Request:
       type: object
       title: Create SFTP Destination Server
@@ -2162,23 +2193,16 @@ components:
                       $ref: '#/components/schemas/templatingStrategy'
                     value:
                       type: string
-    response:
+    templateStringUrl:
+      description: Define any string in URLs as a Pebble template or use a constant value.
       properties:
-        instanceId:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
+        value:
           type: string
-          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
-          title: Instance ID
-          description: The unique ID of an object.
-        createdDate:
-          type: string
-          example: '2020-11-17T06:49:24.331012Z'
-          title: Created date
-          description: Created date in UTC.
-        lastModifiedDate:
-          type: string
-          example: '2020-11-17T06:49:24.331012Z'
-          title: Last modified date
-          description: Last update date in UTC.
+          example: https://api.moviestar.com/data/{{customerData.region}}/items
+          title: value
+          description: 'Fill in the address of the API endpoint that Experience Platform should connect to. <ul><li>Use `PEBBLE_V1` if Experience Platform needs to transform the URL in the value field below. Use this option if you have an endpoint like: `https://api.moviestar.com/data/{{customerData.region}}/items`, where users must select the endpoint region from the Experience Platform UI.</li><li>Use `NONE` if no transformation is needed on the Adobe side, for example if you have an endpoint like: `https://api.moviestar.com/data/items`.</li></ul>'
     Amazon_S3_Destination_Server_Request:
       type: object
       title: Create Amazon S3 Destination Server
@@ -2452,15 +2476,340 @@ components:
                       $ref: '#/components/schemas/templatingStrategy'
                     value:
                       type: string
-    header:
+    Azure_Data_Lake_Storage_Gen2_Destination_Server_Request:
       type: object
-      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
+      title: Create Azure Data Lake Storage Gen2 Destination Server
+      description: Configuration for Azure Data Lake Storage Gen2 file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedAdlsGen2Destination
       properties:
-        header:
+        name:
           type: string
-          example: sample-header-requested-by-your-endpoint
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_ADLS_GEN2
+        fileBasedAdlsGen2Destination:
+          type: object
+          properties:
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    Streaming_Destination_Server_Request:
+      type: object
+      title: Create Streaming Destination Server
+      description: Configuration for API-based streaming destinations.
+      required:
+      - name
+      - destinationServerType
+      - urlBasedDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - URL_BASED
+        urlBasedDestination:
+          type: object
+          properties:
+            url:
+              $ref: '#/components/schemas/templateStringUrl'
+        httpTemplate:
+          type: object
+          properties:
+            requestBody:
+              $ref: '#/components/schemas/templateStringBody'
+            httpMethod:
+              type: string
+              enum:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - PATCH
+              - OPTIONS
+              - HEAD
+            contentType:
+              type: string
+    templateStringQueryParameters:
+      description: Define any string in HTTP query parameters as a Pebble template or use a constant value.
+      properties:
+        templatingStrategy:
+          $ref: '#/components/schemas/templatingStrategy'
         value:
-          $ref: '#/components/schemas/templateStringHeaders'
+          type: string
+          example: https://api.moviestar.com/data/{{customerData.region}}/items
+          title: value
+          description: Enter any query parameters that will be appended in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
+    Azure_Blob_Destination_Server_Request:
+      type: object
+      title: Create Azure Blob Storage Destination Server
+      description: Configuration for Azure Blob Storage file-based destinations.
+      required:
+      - name
+      - destinationServerType
+      - fileBasedAzureBlobDestination
+      properties:
+        name:
+          type: string
+          description: Represents a friendly name of your server, visible only to Adobe.
+        destinationServerType:
+          type: string
+          enum:
+          - FILE_BASED_AZURE_BLOB
+        fileBasedAzureBlobDestination:
+          type: object
+          properties:
+            path:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            container:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+        fileConfigurations:
+          type: object
+          description: File formatting options for exported files.
+          properties:
+            compression:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            fileType:
+              type: object
+              properties:
+                templatingStrategy:
+                  $ref: '#/components/schemas/templatingStrategy'
+                value:
+                  type: string
+            csvOptions:
+              type: object
+              properties:
+                quote:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                quoteAll:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escape:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                escapeQuotes:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                header:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreLeadingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                ignoreTrailingWhiteSpace:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                nullValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                dateFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                timestampFormat:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                charToEscapeQuoteEscaping:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+                emptyValue:
+                  type: object
+                  properties:
+                    templatingStrategy:
+                      $ref: '#/components/schemas/templatingStrategy'
+                    value:
+                      type: string
+    response:
+      properties:
+        instanceId:
+          type: string
+          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
+          title: Instance ID
+          description: The unique ID of an object.
+        createdDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Created date
+          description: Created date in UTC.
+        lastModifiedDate:
+          type: string
+          example: '2020-11-17T06:49:24.331012Z'
+          title: Last modified date
+          description: Last update date in UTC.
     Google_Cloud_Storage_Destination_Server_Request:
       type: object
       title: Create Google Cloud Storage Destination Server
@@ -2810,355 +3159,6 @@ components:
                 $ref: '#/components/schemas/header'
           required:
           - httpMethod
-    Azure_Data_Lake_Storage_Gen2_Destination_Server_Request:
-      type: object
-      title: Create Azure Data Lake Storage Gen2 Destination Server
-      description: Configuration for Azure Data Lake Storage Gen2 file-based destinations.
-      required:
-      - name
-      - destinationServerType
-      - fileBasedAdlsGen2Destination
-      properties:
-        name:
-          type: string
-          description: Represents a friendly name of your server, visible only to Adobe.
-        destinationServerType:
-          type: string
-          enum:
-          - FILE_BASED_ADLS_GEN2
-        fileBasedAdlsGen2Destination:
-          type: object
-          properties:
-            path:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-        fileConfigurations:
-          type: object
-          description: File formatting options for exported files.
-          properties:
-            compression:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-            fileType:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-            csvOptions:
-              type: object
-              properties:
-                quote:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                quoteAll:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                escape:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                escapeQuotes:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                header:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                ignoreLeadingWhiteSpace:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                ignoreTrailingWhiteSpace:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                nullValue:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                dateFormat:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                timestampFormat:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                charToEscapeQuoteEscaping:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                emptyValue:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-    Azure_Blob_Destination_Server_Request:
-      type: object
-      title: Create Azure Blob Storage Destination Server
-      description: Configuration for Azure Blob Storage file-based destinations.
-      required:
-      - name
-      - destinationServerType
-      - fileBasedAzureBlobDestination
-      properties:
-        name:
-          type: string
-          description: Represents a friendly name of your server, visible only to Adobe.
-        destinationServerType:
-          type: string
-          enum:
-          - FILE_BASED_AZURE_BLOB
-        fileBasedAzureBlobDestination:
-          type: object
-          properties:
-            path:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-            container:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-        fileConfigurations:
-          type: object
-          description: File formatting options for exported files.
-          properties:
-            compression:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-            fileType:
-              type: object
-              properties:
-                templatingStrategy:
-                  $ref: '#/components/schemas/templatingStrategy'
-                value:
-                  type: string
-            csvOptions:
-              type: object
-              properties:
-                quote:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                quoteAll:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                escape:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                escapeQuotes:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                header:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                ignoreLeadingWhiteSpace:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                ignoreTrailingWhiteSpace:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                nullValue:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                dateFormat:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                timestampFormat:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                charToEscapeQuoteEscaping:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-                emptyValue:
-                  type: object
-                  properties:
-                    templatingStrategy:
-                      $ref: '#/components/schemas/templatingStrategy'
-                    value:
-                      type: string
-    Streaming_Destination_Server_Request:
-      type: object
-      title: Create Streaming Destination Server
-      description: Configuration for API-based streaming destinations.
-      required:
-      - name
-      - destinationServerType
-      - urlBasedDestination
-      properties:
-        name:
-          type: string
-          description: Represents a friendly name of your server, visible only to Adobe.
-        destinationServerType:
-          type: string
-          enum:
-          - URL_BASED
-        urlBasedDestination:
-          type: object
-          properties:
-            url:
-              $ref: '#/components/schemas/templateStringUrl'
-        httpTemplate:
-          type: object
-          properties:
-            requestBody:
-              $ref: '#/components/schemas/templateStringBody'
-            httpMethod:
-              type: string
-              enum:
-              - GET
-              - PUT
-              - POST
-              - DELETE
-              - PATCH
-              - OPTIONS
-              - HEAD
-            contentType:
-              type: string
-    templateStringBody:
-      description: Define any string in HTTP message bodies as a Pebble template or use a constant value.
-      properties:
-        templatingStrategy:
-          $ref: '#/components/schemas/templatingStrategy'
-        value:
-          type: string
-          example: '{ "attributes": [ {% for ns in ["external_id", "yourdestination_id"] %} {% if input.profile.identityMap[ns] is not empty and first_namespace_encountered %} , {% endif %} {% set first_namespace_encountered = true %} {% for identity in input.profile.identityMap[ns]%} { "{{ ns }}": "{{ identity.id }}" {% if input.profile.segmentMembership.ups is not empty %} , "AEPSegments": { "add": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "realized" or segment.value.status == "existing" %} {% if added_segment_found %} , {% endif %} {% set added_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ], "remove": [ {% for segment in input.profile.segmentMembership.ups %} {% if segment.value.status == "exited" %} {% if removed_segment_found %} , {% endif %} {% set removed_segment_found = true %} "{{ destination.segmentAliases[segment.key] }}" {% endif %} {% endfor %} ] } {% set removed_segment_found = false %} {% set added_segment_found = false %} {% endif %} {% if input.profile.attributes is not empty %} , {% endif %} {% for attribute in input.profile.attributes %} "{{ attribute.key }}": {% if attribute.value is empty %} null {% else %} "{{ attribute.value.value }}" {% endif %} {% if not loop.last%} , {% endif %} {% endfor %} } {% if not loop.last %} , {% endif %} {% endfor %} {% endfor %} ] }'
-          title: value
-          description: ' This string is the character-escaped version that transforms the data of Platform customers to the format your service expects. <br><br> <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul> Use `PEBBLE_V1` and define the value in the respective template. If no message transformation is needed and customers can use the source XDM input schema as the final output to your destination, use `{{ input.profile | raw }}` as request body value. <br><br> '
-    templateStringQueryParameters:
-      description: Define any string in HTTP query parameters as a Pebble template or use a constant value.
-      properties:
-        templatingStrategy:
-          $ref: '#/components/schemas/templatingStrategy'
-        value:
-          type: string
-          example: https://api.moviestar.com/data/{{customerData.region}}/items
-          title: value
-          description: Enter any query parameters that will be appended in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
-    destinationServerResponse:
-      allOf:
-      - $ref: '#/components/schemas/response'
-      - $ref: '#/components/schemas/destinationServer'
-    templatingStrategy:
-      title: Template Transformation Type
-      example: PEBBLE_V1
-      description: If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value.
-      type: string
-      enum:
-      - PEBBLE_V1
-      - NONE
-    templateStringHeaders:
-      description: Define any string in HTTP message headers as a Pebble template or use a constant value.
-      properties:
-        templatingStrategy:
-          $ref: '#/components/schemas/templatingStrategy'
-        value:
-          type: string
-          example: https://api.moviestar.com/data/{{customerData.region}}/items
-          title: value
-          description: Enter any headers that will be used in the call to your destination server. If `templatingStrategy` is `PEBBLE_V1`, define the value in the respective template. If `templatingStrategy` is `NONE`, define a constant value. <br><br>  <ul><li> For information on how to write the template, read the [Using templating section](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#using-templating). </li><li> For more information about character escaping, refer to the [RFC JSON standard, section seven](https://tools.ietf.org/html/rfc8259#section-7). </li><li> For an example of a simple transformation, refer to the [Profile Attributes](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/functionality/destination-server/message-format#attributes) transformation. </li></ul>
   parameters:
     authorization:
       name: Authorization

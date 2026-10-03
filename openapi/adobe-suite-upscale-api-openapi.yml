@@ -130,6 +130,68 @@ components:
           items:
             $ref: '#/components/schemas/ValidationErrorDetail'
           description: List of field-level validation errors.
+    ApiErrorGeneric:
+      type: object
+      title: ApiErrorGeneric
+      description: The error within the error response for non-400 failure responses.
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+        message:
+          title: Message
+          description: A human-readable error message.
+          type: string
+    ValidationErrorDetail:
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - type: integer
+          description: Path to the field that caused the error.
+        msg:
+          type: string
+          description: Human-readable error message.
+        type:
+          type: string
+          description: Error type identifier.
+        ctx:
+          type: object
+          additionalProperties: true
+          description: Additional context about the error.
+    PreciseUpscaleAcceptResponseV3:
+      type: object
+      title: PreciseUpscaleAcceptResponseV3
+      description: Response for async upscale requests. Use links.result.href to poll for status and links.cancel.href to cancel.
+      required:
+      - links
+      properties:
+        links:
+          type: object
+          description: Links to cancel and to fetch the job status or result.
+          additionalProperties:
+            $ref: '#/components/schemas/PreciseUpscaleTaskLink'
+        progress:
+          type: number
+          description: Progress percentage when available (for example when polling status).
+    ValidationErrorCode422:
+      type: string
+      title: ValidationErrorCode422
+      description: Error code for HTTP 422 responses (request validation only).
+      enum:
+      - validation_error
+      - cai_assertion_violation_error
+    UpsampleFactor:
+      type: integer
+      enum:
+      - 2
+      - 3
+      - 4
+      - 6
+      description: Supported upscale factors. Output size equals input size multiplied by this factor.
     PreciseUpsamplerRequestV3:
       type: object
       title: PreciseUpsamplerRequestV3
@@ -153,50 +215,6 @@ components:
           description: The upscale factor (2, 3, 4, or 6). Output dimensions are input dimensions multiplied by this factor.
           allOf:
           - $ref: '#/components/schemas/UpsampleFactor'
-    PreciseUpscaleTaskLink:
-      type: object
-      title: PreciseUpscaleTaskLink
-      required:
-      - href
-      properties:
-        href:
-          type: string
-          description: URL for the cancel or result endpoint.
-    UpsampleFactor:
-      type: integer
-      enum:
-      - 2
-      - 3
-      - 4
-      - 6
-      description: Supported upscale factors. Output size equals input size multiplied by this factor.
-    ValidationErrorCode422:
-      type: string
-      title: ValidationErrorCode422
-      description: Error code for HTTP 422 responses (request validation only).
-      enum:
-      - validation_error
-      - cai_assertion_violation_error
-    ValidationErrorDetail:
-      type: object
-      properties:
-        loc:
-          type: array
-          items:
-            oneOf:
-            - type: string
-            - type: integer
-          description: Path to the field that caused the error.
-        msg:
-          type: string
-          description: Human-readable error message.
-        type:
-          type: string
-          description: Error type identifier.
-        ctx:
-          type: object
-          additionalProperties: true
-          description: Additional context about the error.
     BaseInputImageV3:
       properties:
         source:
@@ -206,21 +224,6 @@ components:
       - source
       title: BaseInputImageV3
       type: object
-    PreciseUpscaleAcceptResponseV3:
-      type: object
-      title: PreciseUpscaleAcceptResponseV3
-      description: Response for async upscale requests. Use links.result.href to poll for status and links.cancel.href to cancel.
-      required:
-      - links
-      properties:
-        links:
-          type: object
-          description: Links to cancel and to fetch the job status or result.
-          additionalProperties:
-            $ref: '#/components/schemas/PreciseUpscaleTaskLink'
-        progress:
-          type: number
-          description: Progress percentage when available (for example when polling status).
     PublicBinaryInputV3:
       properties:
         uploadId:
@@ -237,18 +240,15 @@ components:
           type: string
       title: PublicBinaryInputV3
       type: object
-    ApiErrorGeneric:
+    PreciseUpscaleTaskLink:
       type: object
-      title: ApiErrorGeneric
-      description: The error within the error response for non-400 failure responses.
+      title: PreciseUpscaleTaskLink
+      required:
+      - href
       properties:
-        error_code:
+        href:
           type: string
-          description: The error code.
-        message:
-          title: Message
-          description: A human-readable error message.
-          type: string
+          description: URL for the cancel or result endpoint.
   securitySchemes:
     AccessToken:
       type: http

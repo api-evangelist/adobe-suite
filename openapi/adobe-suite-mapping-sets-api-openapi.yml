@@ -617,68 +617,14 @@ paths:
       deprecated: false
 components:
   schemas:
-    MappingSet:
-      title: MappingSet
+    MappingValidationResponse:
+      title: MappingValidationResponse
       type: object
       properties:
-        allowNullValues:
-          type: boolean
-        createdBy:
-          type: string
-        createdDate:
-          type: string
-          format: date-time
-        id:
-          type: string
-        inputSchema:
-          $ref: '#/components/schemas/SchemaRepresentation'
-        mappings:
+        validationResponse:
           type: array
           items:
-            $ref: '#/components/schemas/MappingOperation'
-        modifiedBy:
-          type: string
-        modifiedDate:
-          type: string
-          format: date-time
-        name:
-          type: string
-        outputSchema:
-          $ref: '#/components/schemas/SchemaRepresentation'
-        supportVersion:
-          type: string
-        version:
-          type: integer
-          format: int32
-        tags:
-          type: array
-          items:
-            $ref: '#/components/schemas/Tags'
-      example:
-        mappings:
-        - sourceType: ATTRIBUTE
-          source: id
-          destination: _id
-          name: id
-          description: Identifier field
-        - sourceType: ATTRIBUTE
-          source: firstName
-          destination: person.name.firstName
-        - sourceType: ATTRIBUTE
-          source: lastName
-          destination: person.name.lastName
-        outputSchema:
-          schemaRef:
-            id: https://ns.adobe.com/{TENANT_ID}/schemas/89abc189258b1cb1a816d8f2b2341a6d98000ed8f4008305
-            contentType: application/vnd.adobe.xed-full+json;version=1
-    SchemaReference:
-      title: SchemaReference
-      type: object
-      properties:
-        contentType:
-          type: string
-        id:
-          type: string
+            $ref: '#/components/schemas/ValidationResponse'
     PageInfo:
       title: PageInfo
       type: object
@@ -689,6 +635,58 @@ components:
         limit:
           type: integer
           format: int32
+    SourceType:
+      title: SourceType
+      type: string
+      enum:
+      - ATTRIBUTE
+      - EXPRESSION
+      - STATIC
+    Link:
+      title: Link
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+    TransformErrorInfo:
+      title: TransformErrorInfo
+      type: object
+      properties:
+        destination:
+          type: string
+        exception:
+          type: string
+        source:
+          type: string
+        columnName:
+          type: string
+        sourceType:
+          $ref: '#/components/schemas/SourceType'
+    ValidationResponse:
+      title: ValidationResponse
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformErrorInfo'
+        status:
+          type: string
+          enum:
+          - SUCCESS
+          - FAILED
+    Tags:
+      title: Tags
+      type: object
+      properties:
+        name:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
     JsonNode:
       title: JsonNode
       type: object
@@ -747,127 +745,6 @@ components:
           type: boolean
         valueNode:
           type: boolean
-    PreviewRequest:
-      title: PreviewRequest
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/JsonNode'
-        mappingSet:
-          $ref: '#/components/schemas/MappingSet'
-      example:
-        data:
-          id: 1234
-          firstName: Jim
-          lastName: Seltzer
-        mappingSet:
-          outputSchema:
-            schemaRef:
-              id: https://ns.adobe.com/stardust/schemas/89abc189258b1cb1a816d8f2b2341a6d98000ed8f4008305
-              contentType: application/vnd.adobe.xed-full+json;version=1
-          mappings:
-          - sourceType: ATTRIBUTE
-            source: id
-            destination: _id
-            name: id
-            description: Identifier field
-          - sourceType: ATTRIBUTE
-            source: firstName
-            destination: person.name.firstName
-          - sourceType: ATTRIBUTE
-            source: lastName
-            destination: person.name.lastName
-    MappingValidationResponse:
-      title: MappingValidationResponse
-      type: object
-      properties:
-        validationResponse:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationResponse'
-    Tags:
-      title: Tags
-      type: object
-      properties:
-        name:
-          type: string
-        values:
-          type: array
-          items:
-            type: string
-    JsonSchema:
-      title: JsonSchema
-      type: object
-      properties:
-        _refId:
-          type: string
-        created:
-          type: string
-          format: date-time
-        default:
-          type: object
-          properties: {}
-        description:
-          type: string
-        enum:
-          type: array
-          items:
-            type: object
-            properties: {}
-        format:
-          type: string
-        id:
-          type: string
-        items:
-          $ref: '#/components/schemas/JsonSchema'
-        maximum:
-          type: object
-          properties: {}
-        minimum:
-          type: object
-          properties: {}
-        pattern:
-          type: string
-        properties:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/JsonSchema'
-        required:
-          type: array
-          items:
-            type: string
-        schema:
-          type: string
-        title:
-          type: string
-        type:
-          type: string
-        updated:
-          type: string
-          format: date-time
-        xdmVersion:
-          type: string
-    SimpleRepresentation:
-      title: SimpleRepresentation
-      type: object
-      properties:
-        createdBy:
-          type: string
-        createdDate:
-          type: string
-          format: date-time
-        id:
-          type: string
-        modifiedBy:
-          type: string
-        modifiedDate:
-          type: string
-          format: date-time
-        version:
-          type: integer
-          format: int32
     MappingOperation:
       title: MappingOperation
       type: object
@@ -920,19 +797,76 @@ components:
         functionVersion: 1
         sourceAttribute: firstName
         destinationXdmPath: person.name.firstName
-    ValidationResponse:
-      title: ValidationResponse
+    JsonSchema:
+      title: JsonSchema
       type: object
       properties:
+        _refId:
+          type: string
+        created:
+          type: string
+          format: date-time
+        default:
+          type: object
+          properties: {}
+        description:
+          type: string
+        enum:
+          type: array
+          items:
+            type: object
+            properties: {}
+        format:
+          type: string
+        id:
+          type: string
+        items:
+          $ref: '#/components/schemas/JsonSchema'
+        maximum:
+          type: object
+          properties: {}
+        minimum:
+          type: object
+          properties: {}
+        pattern:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/JsonSchema'
+        required:
+          type: array
+          items:
+            type: string
+        schema:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        updated:
+          type: string
+          format: date-time
+        xdmVersion:
+          type: string
+    PreviewResponse:
+      title: PreviewResponse
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
         errors:
           type: array
           items:
             $ref: '#/components/schemas/TransformErrorInfo'
-        status:
-          type: string
-          enum:
-          - SUCCESS
-          - FAILED
+      example:
+        data:
+          person:
+            name:
+              firstName: Jim
+              lastName: Seltzer
+          _id: '1234'
     MapperSetPage:
       title: MapperSetPage
       type: object
@@ -990,46 +924,46 @@ components:
             id: https://ns.adobe.com/xdm/context/profile__union
             contentType: '1.0'
           xdmSchema: https://ns.adobe.com/xdm/context/profile__union
-    PreviewResponse:
-      title: PreviewResponse
+    SchemaReference:
+      title: SchemaReference
+      type: object
+      properties:
+        contentType:
+          type: string
+        id:
+          type: string
+    PreviewRequest:
+      title: PreviewRequest
       type: object
       properties:
         data:
-          type: object
-          properties: {}
-        errors:
           type: array
           items:
-            $ref: '#/components/schemas/TransformErrorInfo'
+            $ref: '#/components/schemas/JsonNode'
+        mappingSet:
+          $ref: '#/components/schemas/MappingSet'
       example:
         data:
-          person:
-            name:
-              firstName: Jim
-              lastName: Seltzer
-          _id: '1234'
-    TransformErrorInfo:
-      title: TransformErrorInfo
-      type: object
-      properties:
-        destination:
-          type: string
-        exception:
-          type: string
-        source:
-          type: string
-        columnName:
-          type: string
-        sourceType:
-          $ref: '#/components/schemas/SourceType'
-    Link:
-      title: Link
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
+          id: 1234
+          firstName: Jim
+          lastName: Seltzer
+        mappingSet:
+          outputSchema:
+            schemaRef:
+              id: https://ns.adobe.com/stardust/schemas/89abc189258b1cb1a816d8f2b2341a6d98000ed8f4008305
+              contentType: application/vnd.adobe.xed-full+json;version=1
+          mappings:
+          - sourceType: ATTRIBUTE
+            source: id
+            destination: _id
+            name: id
+            description: Identifier field
+          - sourceType: ATTRIBUTE
+            source: firstName
+            destination: person.name.firstName
+          - sourceType: ATTRIBUTE
+            source: lastName
+            destination: person.name.lastName
     SchemaRepresentation:
       title: SchemaRepresentation
       type: object
@@ -1053,11 +987,77 @@ components:
         version:
           type: integer
           format: int32
-    SourceType:
-      title: SourceType
-      type: string
-      enum:
-      - ATTRIBUTE
-      - EXPRESSION
-      - STATIC
+    MappingSet:
+      title: MappingSet
+      type: object
+      properties:
+        allowNullValues:
+          type: boolean
+        createdBy:
+          type: string
+        createdDate:
+          type: string
+          format: date-time
+        id:
+          type: string
+        inputSchema:
+          $ref: '#/components/schemas/SchemaRepresentation'
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/MappingOperation'
+        modifiedBy:
+          type: string
+        modifiedDate:
+          type: string
+          format: date-time
+        name:
+          type: string
+        outputSchema:
+          $ref: '#/components/schemas/SchemaRepresentation'
+        supportVersion:
+          type: string
+        version:
+          type: integer
+          format: int32
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tags'
+      example:
+        mappings:
+        - sourceType: ATTRIBUTE
+          source: id
+          destination: _id
+          name: id
+          description: Identifier field
+        - sourceType: ATTRIBUTE
+          source: firstName
+          destination: person.name.firstName
+        - sourceType: ATTRIBUTE
+          source: lastName
+          destination: person.name.lastName
+        outputSchema:
+          schemaRef:
+            id: https://ns.adobe.com/{TENANT_ID}/schemas/89abc189258b1cb1a816d8f2b2341a6d98000ed8f4008305
+            contentType: application/vnd.adobe.xed-full+json;version=1
+    SimpleRepresentation:
+      title: SimpleRepresentation
+      type: object
+      properties:
+        createdBy:
+          type: string
+        createdDate:
+          type: string
+          format: date-time
+        id:
+          type: string
+        modifiedBy:
+          type: string
+        modifiedDate:
+          type: string
+          format: date-time
+        version:
+          type: integer
+          format: int32
 x-original-swagger-version: '2.0'
