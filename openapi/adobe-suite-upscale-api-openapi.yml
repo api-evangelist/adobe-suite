@@ -113,6 +113,22 @@ paths:
                 $ref: '#/components/schemas/ApiErrorGeneric'
 components:
   schemas:
+    PublicBinaryInputV3:
+      properties:
+        uploadId:
+          description: The `uploadId` from the storage API response.
+          format: uuid4
+          title: The upload ID
+          type: string
+        url:
+          description: 'The pre-signed URL of an uploaded file. Use a URL or an `uploadID` as the source for the image. Firefly only allows these listed domains in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
+          format: uri
+          maxLength: 2083
+          minLength: 1
+          title: The pre-signed URL
+          type: string
+      title: PublicBinaryInputV3
+      type: object
     ValidationErrorResponse:
       type: object
       title: ValidationErrorResponse
@@ -130,18 +146,6 @@ components:
           items:
             $ref: '#/components/schemas/ValidationErrorDetail'
           description: List of field-level validation errors.
-    ApiErrorGeneric:
-      type: object
-      title: ApiErrorGeneric
-      description: The error within the error response for non-400 failure responses.
-      properties:
-        error_code:
-          type: string
-          description: The error code.
-        message:
-          title: Message
-          description: A human-readable error message.
-          type: string
     ValidationErrorDetail:
       type: object
       properties:
@@ -162,36 +166,27 @@ components:
           type: object
           additionalProperties: true
           description: Additional context about the error.
-    PreciseUpscaleAcceptResponseV3:
+    PreciseUpscaleTaskLink:
       type: object
-      title: PreciseUpscaleAcceptResponseV3
-      description: Response for async upscale requests. Use links.result.href to poll for status and links.cancel.href to cancel.
+      title: PreciseUpscaleTaskLink
       required:
-      - links
+      - href
       properties:
-        links:
-          type: object
-          description: Links to cancel and to fetch the job status or result.
-          additionalProperties:
-            $ref: '#/components/schemas/PreciseUpscaleTaskLink'
-        progress:
-          type: number
-          description: Progress percentage when available (for example when polling status).
-    ValidationErrorCode422:
-      type: string
-      title: ValidationErrorCode422
-      description: Error code for HTTP 422 responses (request validation only).
-      enum:
-      - validation_error
-      - cai_assertion_violation_error
-    UpsampleFactor:
-      type: integer
-      enum:
-      - 2
-      - 3
-      - 4
-      - 6
-      description: Supported upscale factors. Output size equals input size multiplied by this factor.
+        href:
+          type: string
+          description: URL for the cancel or result endpoint.
+    ApiErrorGeneric:
+      type: object
+      title: ApiErrorGeneric
+      description: The error within the error response for non-400 failure responses.
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+        message:
+          title: Message
+          description: A human-readable error message.
+          type: string
     PreciseUpsamplerRequestV3:
       type: object
       title: PreciseUpsamplerRequestV3
@@ -215,6 +210,36 @@ components:
           description: The upscale factor (2, 3, 4, or 6). Output dimensions are input dimensions multiplied by this factor.
           allOf:
           - $ref: '#/components/schemas/UpsampleFactor'
+    ValidationErrorCode422:
+      type: string
+      title: ValidationErrorCode422
+      description: Error code for HTTP 422 responses (request validation only).
+      enum:
+      - validation_error
+      - cai_assertion_violation_error
+    PreciseUpscaleAcceptResponseV3:
+      type: object
+      title: PreciseUpscaleAcceptResponseV3
+      description: Response for async upscale requests. Use links.result.href to poll for status and links.cancel.href to cancel.
+      required:
+      - links
+      properties:
+        links:
+          type: object
+          description: Links to cancel and to fetch the job status or result.
+          additionalProperties:
+            $ref: '#/components/schemas/PreciseUpscaleTaskLink'
+        progress:
+          type: number
+          description: Progress percentage when available (for example when polling status).
+    UpsampleFactor:
+      type: integer
+      enum:
+      - 2
+      - 3
+      - 4
+      - 6
+      description: Supported upscale factors. Output size equals input size multiplied by this factor.
     BaseInputImageV3:
       properties:
         source:
@@ -224,31 +249,6 @@ components:
       - source
       title: BaseInputImageV3
       type: object
-    PublicBinaryInputV3:
-      properties:
-        uploadId:
-          description: The `uploadId` from the storage API response.
-          format: uuid4
-          title: The upload ID
-          type: string
-        url:
-          description: 'The pre-signed URL of an uploaded file. Use a URL or an `uploadID` as the source for the image. Firefly only allows these listed domains in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
-          format: uri
-          maxLength: 2083
-          minLength: 1
-          title: The pre-signed URL
-          type: string
-      title: PublicBinaryInputV3
-      type: object
-    PreciseUpscaleTaskLink:
-      type: object
-      title: PreciseUpscaleTaskLink
-      required:
-      - href
-      properties:
-        href:
-          type: string
-          description: URL for the cancel or result endpoint.
   securitySchemes:
     AccessToken:
       type: http

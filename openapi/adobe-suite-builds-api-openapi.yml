@@ -235,18 +235,32 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    buildsUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/buildsLookupResponse'
-    basicResourceProperties:
+    metaList:
       type: object
       properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
+        meta:
+          type: object
+          properties:
+            pagination:
+              type: object
+              properties:
+                current_page:
+                  type: integer
+                  description: The current page of the response.
+                next_page:
+                  type: integer
+                  description: The next page of the response.
+                prev_page:
+                  type: integer
+                  description: The previous page of the response.
+                total_pages:
+                  type: integer
+                  description: The total number of pages in the response.
+                total_count:
+                  type: integer
+                  description: The total number of results in the response.
+              description: Contains pagination information about the list response.
+          description: Contains a `pagination` object that provides pagination information about the list response.
     buildsUpdatePayload:
       required:
       - data
@@ -279,40 +293,13 @@ components:
           type: builds
           meta:
             action: republish
-    relatedExtensions:
+    dataLookup:
       type: object
       properties:
-        extensions:
+        data:
           type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
-          description: Contains a link to the related extensions for the resource.
-    buildsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/buildsEntity'
-    buildsCreateResponse:
-      allOf:
-      - $ref: '#/components/schemas/buildsLookupResponse'
-    buildsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
+          properties: {}
+          description: Contains the details of the resource.
     relatedDataElements:
       type: object
       properties:
@@ -327,6 +314,106 @@ components:
                   description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
               description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
           description: Contains a link to the related data elements for the resource.
+    relatedExtensions:
+      type: object
+      properties:
+        extensions:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
+          description: Contains a link to the related extensions for the resource.
+    relatedLibrary:
+      type: object
+      properties:
+        library:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the library.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the library.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the library.
+                type:
+                  type: string
+                  description: The resource type for the library (`libraries`).
+              description: Contains further information about the library.
+          description: Contains a link to the library that is assigned to this environment.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
+    relatedRules:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
+          description: Contains a link to the related rules for the resource.
+    buildsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsLookupResponse'
+    buildsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsLookupResponse'
+    relatedEnvironment:
+      type: object
+      properties:
+        environment:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environment.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the environment.
+                type:
+                  type: string
+                  description: The resource type for the environment (`environments`).
+              description: Contains further information about the related environment.
+          description: Contains information about the environment that this resource is active under.
     buildsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -390,110 +477,23 @@ components:
                 type: string
                 description: The host type for the environment that the build is  assigned to, either `akamai` for Adobe-managed hosting or `sftp`  for self hosting.
             description: Contains meta information about the build.
-    relatedEnvironment:
-      type: object
-      properties:
-        environment:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related environment.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the environment.
-                type:
-                  type: string
-                  description: The resource type for the environment (`environments`).
-              description: Contains further information about the related environment.
-          description: Contains information about the environment that this resource is active under.
-    relatedLibrary:
-      type: object
-      properties:
-        library:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the library.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the library.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the library.
-                type:
-                  type: string
-                  description: The resource type for the library (`libraries`).
-              description: Contains further information about the library.
-          description: Contains a link to the library that is assigned to this environment.
-    dataLookup:
-      type: object
-      properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
-    relatedRules:
-      type: object
-      properties:
-        rules:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
-          description: Contains a link to the related rules for the resource.
-    dataList:
-      type: object
-      properties:
-        data:
-          type: array
-          description: Contains the results from the listing call.
-          items:
+    buildsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    buildsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
             type: object
-            properties: {}
-    metaList:
-      type: object
-      properties:
-        meta:
-          type: object
-          properties:
-            pagination:
-              type: object
-              properties:
-                current_page:
-                  type: integer
-                  description: The current page of the response.
-                next_page:
-                  type: integer
-                  description: The next page of the response.
-                prev_page:
-                  type: integer
-                  description: The previous page of the response.
-                total_pages:
-                  type: integer
-                  description: The total number of pages in the response.
-                total_count:
-                  type: integer
-                  description: The total number of results in the response.
-              description: Contains pagination information about the list response.
-          description: Contains a `pagination` object that provides pagination information about the list response.
+            allOf:
+            - $ref: '#/components/schemas/buildsEntity'
     relatedProperty:
       type: object
       properties:

@@ -127,32 +127,652 @@ paths:
         '500':
           description: Internal server error
 components:
-  parameters:
-    SandboxNameParam:
-      name: x-sandbox-name
-      description: Provides the platform sandbox name.
-      required: true
-      in: header
-      schema:
-        type: string
-        example: prod
-    ImsOrgIdParam:
-      name: x-gw-ims-org-id
-      description: The IMS org id for which the action is being taken.
-      required: true
-      in: header
-      schema:
-        type: string
-        example: 0A7F574EBB4C6E1423973F52@AdobeOrg
-    APIKeyParam:
-      name: x-api-key
-      description: The API key belonging to the calling client. Use the client id from Developer Console.
-      required: true
-      in: header
-      schema:
-        type: string
-        example: 829495afa589475ab56850a702359cf9
   schemas:
+    RuleCondition:
+      type: object
+      properties:
+        definition:
+          $ref: '#/components/schemas/ConditionDefinition'
+        type:
+          type: string
+    ExperimentationSpec:
+      type: object
+      properties:
+        experimentId:
+          type: string
+        winnerTreatmentId:
+          type: string
+    CampaignAttributes:
+      type: object
+      properties:
+        profile:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeItem'
+        context:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeItem'
+        target:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeItem'
+        audience:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeItem'
+        unifiedDecisioning:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttributeItem'
+        pesLinks:
+          $ref: '#/components/schemas/PesLinks'
+        publicationPesDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicationPesDetail'
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        type:
+          type: string
+        templated:
+          type: boolean
+        method:
+          type: string
+        title:
+          type: string
+        hrefLang:
+          type: string
+    OfferUsage:
+      type: object
+      properties:
+        personalization:
+          type: boolean
+        rules:
+          type: boolean
+    Audience:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        forcedReentrance:
+          type: boolean
+        incrementalRead:
+          type: boolean
+        waitForAudience:
+          type: boolean
+        waitTime:
+          type: string
+    PackageExecution:
+      type: object
+      properties:
+        executionId:
+          type: string
+        resumeSpec:
+          $ref: '#/components/schemas/ResumeSpec'
+        type:
+          type: string
+    LabelObject:
+      type: object
+      properties:
+        labelId:
+          type: string
+        labelName:
+          type: string
+        labelCategory:
+          type: string
+    JourneyTimeouts:
+      type: object
+      properties:
+        actionExecution:
+          type: integer
+          format: int32
+        entityEnrichment:
+          type: integer
+          format: int32
+    PublicJourneyList:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicJourney'
+          default: []
+        page:
+          type: integer
+          default: 0
+          description: Current page number (0-based)
+        limit:
+          type: integer
+          default: 10
+          description: Number of items per page
+        pages:
+          type: integer
+          default: 1
+          description: Total number of pages
+      required:
+      - results
+      - page
+      - limit
+      - pages
+    JsonNode:
+      type: object
+    ChannelContext:
+      type: object
+      properties:
+        channelId:
+          type: string
+        channelVersion:
+          type: string
+    ConsentUsage:
+      type: object
+      properties:
+        filter:
+          type: boolean
+    ParamMapping:
+      type: object
+      properties:
+        label:
+          type: string
+        paramPath:
+          type: string
+        expression:
+          type: string
+    DecisionNode:
+      type: object
+      properties:
+        decisionNodeId:
+          type: string
+    JourneyNode:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        name:
+          type: string
+        correlationId:
+          type: string
+        transitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyNodeTransition'
+        campaign:
+          $ref: '#/components/schemas/PublicCampaign'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        surface:
+          $ref: '#/components/schemas/MessageSurface'
+        sendTimeOptimization:
+          $ref: '#/components/schemas/SendTimeOptimization'
+        audiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Audience'
+        identityNamespace:
+          type: string
+        throttlingRate:
+          type: integer
+          format: int32
+        useDelta:
+          type: boolean
+        verbs:
+          type: array
+          items:
+            type: string
+        delay:
+          type: string
+        fallbackOnTimeoutOrError:
+          type: boolean
+        expression:
+          type: string
+        description:
+          type: string
+        paramMappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParamMapping'
+    MessageExecution:
+      type: object
+      properties:
+        messagePublicationId:
+          type: string
+    MessageSurface:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        publicationId:
+          type: string
+        channelConfiguration:
+          $ref: '#/components/schemas/JsonNode'
+        status:
+          type: string
+        type:
+          type: string
+        channel:
+          type: string
+        createdAt:
+          type: string
+        createdBy:
+          type: string
+        modifiedAt:
+          type: string
+        modifiedBy:
+          type: string
+        version:
+          type: string
+    Channel:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+    PesParent:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        namespace:
+          type: string
+    JourneyNodeTransition:
+      type: object
+      properties:
+        targetNodeId:
+          type: string
+        targetName:
+          type: string
+        name:
+          type: string
+        expression:
+          type: string
+        conditionType:
+          type: string
+        dates:
+          type: array
+          items:
+            type: string
+        times:
+          type: array
+          items:
+            type: string
+        days:
+          type: array
+          items:
+            type: string
+        counterValue:
+          type: string
+    SendTimeOptimization:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        sendWithIn:
+          type: integer
+          format: int32
+        metric:
+          type: string
+    AttributeUsage:
+      type: object
+      properties:
+        content:
+          $ref: '#/components/schemas/ContentUsage'
+        offer:
+          $ref: '#/components/schemas/OfferUsage'
+        dispatch:
+          $ref: '#/components/schemas/DispatchUsage'
+        consent:
+          $ref: '#/components/schemas/ConsentUsage'
+    DecisionPolicyPlacement:
+      type: object
+      properties:
+        decisionPolicyId:
+          type: string
+        placementName:
+          type: string
+    ConditionDefinition:
+      type: object
+      properties:
+        conditions:
+          type: array
+          items:
+            type: object
+        searchType:
+          type: string
+        logic:
+          type: string
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+        key:
+          type: string
+        matcher:
+          type: string
+        value:
+          type: object
+        values:
+          type: array
+          items:
+            type: object
+        from:
+          type: integer
+          format: int32
+        to:
+          type: integer
+          format: int32
+    ContentUsage:
+      type: object
+      properties:
+        personalization:
+          type: boolean
+    Schedule:
+      type: object
+      properties:
+        startDate:
+          type: string
+        endDate:
+          type: string
+        timezone:
+          type: string
+        useProfileTimezone:
+          type: boolean
+        recurring:
+          type: boolean
+        type:
+          type: string
+    InboundSchedule:
+      type: object
+      properties:
+        range:
+          $ref: '#/components/schemas/ScheduleRange'
+    SelectionStrategy:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        type:
+          type: string
+        'on':
+          type: string
+        experimentationSpec:
+          $ref: '#/components/schemas/ExperimentationSpec'
+    Reentrance:
+      type: object
+      properties:
+        policy:
+          type: string
+        durationInSecs:
+          type: integer
+          format: int32
+    MessageAttributes:
+      type: object
+      properties:
+        decisionPolicies:
+          type: array
+          items:
+            type: string
+        decisionPolicyPlacements:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecisionPolicyPlacement'
+    DecisionPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+        enabled:
+          type: boolean
+        type:
+          type: string
+        entityIds:
+          type: array
+          items:
+            type: string
+        monitoredValue:
+          type: string
+    TriggerRule:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/RuleMeta'
+        condition:
+          $ref: '#/components/schemas/RuleCondition'
+    CampaignAction:
+      type: object
+      properties:
+        actionType:
+          type: string
+        actionName:
+          type: string
+        available:
+          type: boolean
+    PesOption:
+      type: object
+      properties:
+        id:
+          type: string
+        contentType:
+          type: string
+        schemaPath:
+          type: string
+    CampaignPackage:
+      type: object
+      properties:
+        packageId:
+          type: string
+        packageName:
+          type: string
+        status:
+          type: string
+        channel:
+          type: string
+        channelContext:
+          $ref: '#/components/schemas/ChannelContext'
+        enabled:
+          type: boolean
+        languageSettingId:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignMessage'
+        attributes:
+          $ref: '#/components/schemas/PackageAttributes'
+        _links:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Link'
+        execution:
+          $ref: '#/components/schemas/PackageExecution'
+    OutboundTrigger:
+      type: object
+      properties:
+        type:
+          type: string
+        startAt:
+          type: string
+        endAt:
+          type: string
+        timezone:
+          type: string
+        expression:
+          type: string
+        frequency:
+          $ref: '#/components/schemas/Frequency'
+        frequencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Frequency'
+        occurrences:
+          type: integer
+          format: int32
+        executeAt:
+          type: string
+    CampaignAudience:
+      type: object
+      properties:
+        audienceId:
+          type: string
+        audienceType:
+          type: string
+    CampaignTargets:
+      type: object
+      properties:
+        targetId:
+          type: string
+        secondarySchemaId:
+          type: string
+    PublicationPesDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        pesDetails:
+          $ref: '#/components/schemas/PesLinks'
+        pesDetailsEmpty:
+          type: boolean
+    ResumeSpec:
+      type: object
+      properties:
+        executionId:
+          type: string
+        resumableUntil:
+          type: string
+    PublicJourney:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the journey
+        name:
+          type: string
+          description: Human-readable name of the journey
+        description:
+          type: string
+          description: Detailed description of the journey
+        version:
+          type: string
+          description: Version of the journey
+        type:
+          type: string
+          enum:
+          - read_audience
+          - audience_qualification
+          - unitary
+          - business
+          - unspecified
+          description: Type of journey
+        status:
+          type: string
+          enum:
+          - Testing
+          - Draft
+          - In Review
+          - Deployed
+          - Redeployed
+          - Finished
+          - Stopped
+          - Dry Run
+          - Paused
+          - Unknown
+          description: Current status of the journey
+        imsOrgId:
+          type: string
+        sandboxName:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        timeouts:
+          $ref: '#/components/schemas/JourneyTimeouts'
+        priority:
+          type: integer
+          format: int32
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        reentrance:
+          $ref: '#/components/schemas/Reentrance'
+        labels:
+          type: array
+          items:
+            type: string
+        metrics:
+          type: array
+          items:
+            type: string
+        ruleset:
+          $ref: '#/components/schemas/Ruleset'
+        profileMergePolicyId:
+          type: string
+        startNodeId:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyNode'
+    TrackingOptions:
+      type: object
+      properties:
+        openTrackingEnabled:
+          type: boolean
+        clickTrackingEnabled:
+          type: boolean
+    RuleMeta:
+      type: object
+      properties:
+        ruleType:
+          type: string
+    CampaignMessage:
+      type: object
+      properties:
+        messageId:
+          type: string
+        treatmentId:
+          type: string
+        execution:
+          $ref: '#/components/schemas/MessageExecution'
+        messageAttributes:
+          $ref: '#/components/schemas/MessageAttributes'
+        decisionPolicyVariantId:
+          type: string
+        decisionNodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecisionNode'
+        decisionNodeId:
+          type: string
+    PesLinks:
+      type: object
+      properties:
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/PesOption'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PesParent'
+        enforcementRefs:
+          type: array
+          items:
+            type: string
+        empty:
+          type: boolean
     Trigger:
       type: object
       properties:
@@ -188,19 +808,77 @@ components:
         interval:
           type: integer
           format: int32
-    CampaignAction:
+    AttributeItem:
       type: object
       properties:
-        actionType:
+        name:
           type: string
-        actionName:
-          type: string
-        available:
+        messagePublicationIds:
+          type: array
+          items:
+            type: string
+        personalization:
           type: boolean
-    ConsentUsage:
+        usage:
+          $ref: '#/components/schemas/AttributeUsage'
+    CampaignMetadata:
       type: object
       properties:
-        filter:
+        sourceType:
+          type: string
+        sourceId:
+          type: string
+        sourceVersionId:
+          type: string
+        sourceActionId:
+          type: string
+        batchInstanceId:
+          type: string
+        isTestExecution:
+          type: boolean
+    DispatchUsage:
+      type: object
+      properties:
+        channels:
+          type: array
+          items:
+            type: string
+    PackageAttributes:
+      type: object
+      properties:
+        sendTimeOptimization:
+          type: boolean
+        burstSpeed:
+          type: boolean
+        inboundSchedule:
+          $ref: '#/components/schemas/InboundSchedule'
+        trigger:
+          $ref: '#/components/schemas/Trigger'
+        ruleset:
+          $ref: '#/components/schemas/Ruleset'
+        surface:
+          $ref: '#/components/schemas/MessageSurface'
+        trackingOptions:
+          $ref: '#/components/schemas/TrackingOptions'
+        ipWarmup:
+          type: boolean
+        sendTimeFor:
+          type: string
+        sendTimeWithin:
+          type: integer
+          format: int32
+        outboundTrigger:
+          $ref: '#/components/schemas/OutboundTrigger'
+    ScheduleRange:
+      type: object
+      properties:
+        startDate:
+          type: string
+        startDateEnabled:
+          type: boolean
+        endDate:
+          type: string
+        endDateEnabled:
           type: boolean
     PublicCampaign:
       type: object
@@ -313,261 +991,6 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Link'
-    CampaignMessage:
-      type: object
-      properties:
-        messageId:
-          type: string
-        treatmentId:
-          type: string
-        execution:
-          $ref: '#/components/schemas/MessageExecution'
-        messageAttributes:
-          $ref: '#/components/schemas/MessageAttributes'
-        decisionPolicyVariantId:
-          type: string
-        decisionNodes:
-          type: array
-          items:
-            $ref: '#/components/schemas/DecisionNode'
-        decisionNodeId:
-          type: string
-    PublicJourney:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the journey
-        name:
-          type: string
-          description: Human-readable name of the journey
-        description:
-          type: string
-          description: Detailed description of the journey
-        version:
-          type: string
-          description: Version of the journey
-        type:
-          type: string
-          enum:
-          - read_audience
-          - audience_qualification
-          - unitary
-          - business
-          - unspecified
-          description: Type of journey
-        status:
-          type: string
-          enum:
-          - Testing
-          - Draft
-          - In Review
-          - Deployed
-          - Redeployed
-          - Finished
-          - Stopped
-          - Dry Run
-          - Paused
-          - Unknown
-          description: Current status of the journey
-        imsOrgId:
-          type: string
-        sandboxName:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/Metadata'
-        timeouts:
-          $ref: '#/components/schemas/JourneyTimeouts'
-        priority:
-          type: integer
-          format: int32
-        schedule:
-          $ref: '#/components/schemas/Schedule'
-        reentrance:
-          $ref: '#/components/schemas/Reentrance'
-        labels:
-          type: array
-          items:
-            type: string
-        metrics:
-          type: array
-          items:
-            type: string
-        ruleset:
-          $ref: '#/components/schemas/Ruleset'
-        profileMergePolicyId:
-          type: string
-        startNodeId:
-          type: string
-        nodes:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNode'
-    ResumeSpec:
-      type: object
-      properties:
-        executionId:
-          type: string
-        resumableUntil:
-          type: string
-    CampaignMetadata:
-      type: object
-      properties:
-        sourceType:
-          type: string
-        sourceId:
-          type: string
-        sourceVersionId:
-          type: string
-        sourceActionId:
-          type: string
-        batchInstanceId:
-          type: string
-        isTestExecution:
-          type: boolean
-    ExperimentationSpec:
-      type: object
-      properties:
-        experimentId:
-          type: string
-        winnerTreatmentId:
-          type: string
-    AttributeUsage:
-      type: object
-      properties:
-        content:
-          $ref: '#/components/schemas/ContentUsage'
-        offer:
-          $ref: '#/components/schemas/OfferUsage'
-        dispatch:
-          $ref: '#/components/schemas/DispatchUsage'
-        consent:
-          $ref: '#/components/schemas/ConsentUsage'
-    Reentrance:
-      type: object
-      properties:
-        policy:
-          type: string
-        durationInSecs:
-          type: integer
-          format: int32
-    PublicJourneyList:
-      type: object
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicJourney'
-          default: []
-        page:
-          type: integer
-          default: 0
-          description: Current page number (0-based)
-        limit:
-          type: integer
-          default: 10
-          description: Number of items per page
-        pages:
-          type: integer
-          default: 1
-          description: Total number of pages
-      required:
-      - results
-      - page
-      - limit
-      - pages
-    JsonNode:
-      type: object
-    JourneyNode:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-        name:
-          type: string
-        correlationId:
-          type: string
-        transitions:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNodeTransition'
-        campaign:
-          $ref: '#/components/schemas/PublicCampaign'
-        channel:
-          $ref: '#/components/schemas/Channel'
-        surface:
-          $ref: '#/components/schemas/MessageSurface'
-        sendTimeOptimization:
-          $ref: '#/components/schemas/SendTimeOptimization'
-        audiences:
-          type: array
-          items:
-            $ref: '#/components/schemas/Audience'
-        identityNamespace:
-          type: string
-        throttlingRate:
-          type: integer
-          format: int32
-        useDelta:
-          type: boolean
-        verbs:
-          type: array
-          items:
-            type: string
-        delay:
-          type: string
-        fallbackOnTimeoutOrError:
-          type: boolean
-        expression:
-          type: string
-        description:
-          type: string
-        paramMappings:
-          type: array
-          items:
-            $ref: '#/components/schemas/ParamMapping'
-    AttributeItem:
-      type: object
-      properties:
-        name:
-          type: string
-        messagePublicationIds:
-          type: array
-          items:
-            type: string
-        personalization:
-          type: boolean
-        usage:
-          $ref: '#/components/schemas/AttributeUsage'
-    MessageExecution:
-      type: object
-      properties:
-        messagePublicationId:
-          type: string
-    TriggerRule:
-      type: object
-      properties:
-        meta:
-          $ref: '#/components/schemas/RuleMeta'
-        condition:
-          $ref: '#/components/schemas/RuleCondition'
-    Audience:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        forcedReentrance:
-          type: boolean
-        incrementalRead:
-          type: boolean
-        waitForAudience:
-          type: boolean
-        waitTime:
-          type: string
     CampaignRanking:
       type: object
       properties:
@@ -575,420 +998,6 @@ components:
           type: string
         value:
           type: string
-    PesOption:
-      type: object
-      properties:
-        id:
-          type: string
-        contentType:
-          type: string
-        schemaPath:
-          type: string
-    PackageExecution:
-      type: object
-      properties:
-        executionId:
-          type: string
-        resumeSpec:
-          $ref: '#/components/schemas/ResumeSpec'
-        type:
-          type: string
-    Channel:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-    CampaignAudience:
-      type: object
-      properties:
-        audienceId:
-          type: string
-        audienceType:
-          type: string
-    ConditionDefinition:
-      type: object
-      properties:
-        conditions:
-          type: array
-          items:
-            type: object
-        searchType:
-          type: string
-        logic:
-          type: string
-        events:
-          type: array
-          items:
-            type: object
-            additionalProperties:
-              type: string
-        key:
-          type: string
-        matcher:
-          type: string
-        value:
-          type: object
-        values:
-          type: array
-          items:
-            type: object
-        from:
-          type: integer
-          format: int32
-        to:
-          type: integer
-          format: int32
-    TrackingOptions:
-      type: object
-      properties:
-        openTrackingEnabled:
-          type: boolean
-        clickTrackingEnabled:
-          type: boolean
-    PackageAttributes:
-      type: object
-      properties:
-        sendTimeOptimization:
-          type: boolean
-        burstSpeed:
-          type: boolean
-        inboundSchedule:
-          $ref: '#/components/schemas/InboundSchedule'
-        trigger:
-          $ref: '#/components/schemas/Trigger'
-        ruleset:
-          $ref: '#/components/schemas/Ruleset'
-        surface:
-          $ref: '#/components/schemas/MessageSurface'
-        trackingOptions:
-          $ref: '#/components/schemas/TrackingOptions'
-        ipWarmup:
-          type: boolean
-        sendTimeFor:
-          type: string
-        sendTimeWithin:
-          type: integer
-          format: int32
-        outboundTrigger:
-          $ref: '#/components/schemas/OutboundTrigger'
-    JourneyNodeTransition:
-      type: object
-      properties:
-        targetNodeId:
-          type: string
-        targetName:
-          type: string
-        name:
-          type: string
-        expression:
-          type: string
-        conditionType:
-          type: string
-        dates:
-          type: array
-          items:
-            type: string
-        times:
-          type: array
-          items:
-            type: string
-        days:
-          type: array
-          items:
-            type: string
-        counterValue:
-          type: string
-    PesLinks:
-      type: object
-      properties:
-        options:
-          type: array
-          items:
-            $ref: '#/components/schemas/PesOption'
-        parents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PesParent'
-        enforcementRefs:
-          type: array
-          items:
-            type: string
-        empty:
-          type: boolean
-    CampaignAttributes:
-      type: object
-      properties:
-        profile:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeItem'
-        context:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeItem'
-        target:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeItem'
-        audience:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeItem'
-        unifiedDecisioning:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeItem'
-        pesLinks:
-          $ref: '#/components/schemas/PesLinks'
-        publicationPesDetails:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicationPesDetail'
-    RuleMeta:
-      type: object
-      properties:
-        ruleType:
-          type: string
-    CampaignSchedule:
-      type: object
-      properties:
-        startDate:
-          type: string
-        startDateEnabled:
-          type: boolean
-        endDate:
-          type: string
-        endDateEnabled:
-          type: boolean
-    Link:
-      type: object
-      properties:
-        href:
-          type: string
-        type:
-          type: string
-        templated:
-          type: boolean
-        method:
-          type: string
-        title:
-          type: string
-        hrefLang:
-          type: string
-    DecisionPolicyPlacement:
-      type: object
-      properties:
-        decisionPolicyId:
-          type: string
-        placementName:
-          type: string
-    SelectionStrategy:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-        type:
-          type: string
-        'on':
-          type: string
-        experimentationSpec:
-          $ref: '#/components/schemas/ExperimentationSpec'
-    ContentUsage:
-      type: object
-      properties:
-        personalization:
-          type: boolean
-    MessageSurface:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        publicationId:
-          type: string
-        channelConfiguration:
-          $ref: '#/components/schemas/JsonNode'
-        status:
-          type: string
-        type:
-          type: string
-        channel:
-          type: string
-        createdAt:
-          type: string
-        createdBy:
-          type: string
-        modifiedAt:
-          type: string
-        modifiedBy:
-          type: string
-        version:
-          type: string
-    DispatchUsage:
-      type: object
-      properties:
-        channels:
-          type: array
-          items:
-            type: string
-    ParamMapping:
-      type: object
-      properties:
-        label:
-          type: string
-        paramPath:
-          type: string
-        expression:
-          type: string
-    Schedule:
-      type: object
-      properties:
-        startDate:
-          type: string
-        endDate:
-          type: string
-        timezone:
-          type: string
-        useProfileTimezone:
-          type: boolean
-        recurring:
-          type: boolean
-        type:
-          type: string
-    ScheduleRange:
-      type: object
-      properties:
-        startDate:
-          type: string
-        startDateEnabled:
-          type: boolean
-        endDate:
-          type: string
-        endDateEnabled:
-          type: boolean
-    OutboundTrigger:
-      type: object
-      properties:
-        type:
-          type: string
-        startAt:
-          type: string
-        endAt:
-          type: string
-        timezone:
-          type: string
-        expression:
-          type: string
-        frequency:
-          $ref: '#/components/schemas/Frequency'
-        frequencies:
-          type: array
-          items:
-            $ref: '#/components/schemas/Frequency'
-        occurrences:
-          type: integer
-          format: int32
-        executeAt:
-          type: string
-    RuleCondition:
-      type: object
-      properties:
-        definition:
-          $ref: '#/components/schemas/ConditionDefinition'
-        type:
-          type: string
-    CampaignPackage:
-      type: object
-      properties:
-        packageId:
-          type: string
-        packageName:
-          type: string
-        status:
-          type: string
-        channel:
-          type: string
-        channelContext:
-          $ref: '#/components/schemas/ChannelContext'
-        enabled:
-          type: boolean
-        languageSettingId:
-          type: string
-        messages:
-          type: array
-          items:
-            $ref: '#/components/schemas/CampaignMessage'
-        attributes:
-          $ref: '#/components/schemas/PackageAttributes'
-        _links:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/Link'
-        execution:
-          $ref: '#/components/schemas/PackageExecution'
-    InboundSchedule:
-      type: object
-      properties:
-        range:
-          $ref: '#/components/schemas/ScheduleRange'
-    PesParent:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-        namespace:
-          type: string
-    OfferUsage:
-      type: object
-      properties:
-        personalization:
-          type: boolean
-        rules:
-          type: boolean
-    PublicationPesDetail:
-      type: object
-      properties:
-        id:
-          type: string
-        pesDetails:
-          $ref: '#/components/schemas/PesLinks'
-        pesDetailsEmpty:
-          type: boolean
-    DecisionNode:
-      type: object
-      properties:
-        decisionNodeId:
-          type: string
-    CampaignTargets:
-      type: object
-      properties:
-        targetId:
-          type: string
-        secondarySchemaId:
-          type: string
-    ChannelContext:
-      type: object
-      properties:
-        channelId:
-          type: string
-        channelVersion:
-          type: string
-    JourneyTimeouts:
-      type: object
-      properties:
-        actionExecution:
-          type: integer
-          format: int32
-        entityEnrichment:
-          type: integer
-          format: int32
     Metadata:
       type: object
       properties:
@@ -1016,21 +1025,6 @@ components:
           type: string
         firstDeployedAt:
           type: string
-    DecisionPolicy:
-      type: object
-      properties:
-        id:
-          type: string
-        enabled:
-          type: boolean
-        type:
-          type: string
-        entityIds:
-          type: array
-          items:
-            type: string
-        monitoredValue:
-          type: string
     Ruleset:
       type: object
       properties:
@@ -1054,36 +1048,42 @@ components:
           type: string
         modifiedBy:
           type: string
-    MessageAttributes:
+    CampaignSchedule:
       type: object
       properties:
-        decisionPolicies:
-          type: array
-          items:
-            type: string
-        decisionPolicyPlacements:
-          type: array
-          items:
-            $ref: '#/components/schemas/DecisionPolicyPlacement'
-    LabelObject:
-      type: object
-      properties:
-        labelId:
+        startDate:
           type: string
-        labelName:
-          type: string
-        labelCategory:
-          type: string
-    SendTimeOptimization:
-      type: object
-      properties:
-        enabled:
+        startDateEnabled:
           type: boolean
-        sendWithIn:
-          type: integer
-          format: int32
-        metric:
+        endDate:
           type: string
+        endDateEnabled:
+          type: boolean
+  parameters:
+    ImsOrgIdParam:
+      name: x-gw-ims-org-id
+      description: The IMS org id for which the action is being taken.
+      required: true
+      in: header
+      schema:
+        type: string
+        example: 0A7F574EBB4C6E1423973F52@AdobeOrg
+    APIKeyParam:
+      name: x-api-key
+      description: The API key belonging to the calling client. Use the client id from Developer Console.
+      required: true
+      in: header
+      schema:
+        type: string
+        example: 829495afa589475ab56850a702359cf9
+    SandboxNameParam:
+      name: x-sandbox-name
+      description: Provides the platform sandbox name.
+      required: true
+      in: header
+      schema:
+        type: string
+        example: prod
   securitySchemes:
     BearerAuth:
       type: http

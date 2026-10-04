@@ -1911,58 +1911,32 @@ paths:
               $ref: '#/components/schemas/USSSearchPayload'
 components:
   schemas:
-    AsyncResponsePayload:
+    ArchiveDeleteElementListPayload:
       type: object
       properties:
-        status:
-          type: string
-          enum:
-          - OK
-          - CREATED
-          - ACCEPTED
-          - NO_CONTENT
-          - MOVED_PERMANENTLY
-          - SEE_OTHER
-          - NOT_MODIFIED
-          - TEMPORARY_REDIRECT
-          - BAD_REQUEST
-          - UNAUTHORIZED
-          - FORBIDDEN
-          - NOT_FOUND
-          - NOT_ACCEPTABLE
-          - CONFLICT
-          - GONE
-          - PRECONDITION_FAILED
-          - UNSUPPORTED_MEDIA_TYPE
-          - INTERNAL_SERVER_ERROR
-          - SERVICE_UNAVAILABLE
-        message:
-          type: string
-    BatchPayload:
-      type: object
-      properties:
-        requests:
+        elements:
           type: array
+          readOnly: true
           items:
-            $ref: '#/components/schemas/BatchPayloadElement'
-    LibrariesInfo:
+            type: string
+    AsyncAcceptedResponse:
       type: object
       properties:
-        total_count:
+        id:
+          type: string
+        href:
+          type: string
+        retryAfter:
           type: integer
-          format: int32
-          description: Total results for query
-        libraries:
-          type: array
-          description: Libraries list
-          items:
-            $ref: '#/components/schemas/DbLibraryInfo'
-        _page:
-          description: List Page
-          $ref: '#/components/schemas/PageSpec'
-        _links:
-          description: List Links
-          $ref: '#/components/schemas/MelvilleHypermediaListLinks'
+          format: int64
+    DbLibraryElementRenditionData:
+      type: object
+      properties:
+        type:
+          type: string
+        rendition:
+          type: object
+          properties: {}
     DbLibraryGroup:
       type: object
       required:
@@ -1992,19 +1966,127 @@ components:
         parent_id:
           type: string
           description: Defines a relationship between nested groups.  If provided, and the specified parent group exists, this group will be the "child" of the parent group. If there is no group in the library that matches the supplied parentId the group will still be created or updated with an empty parentId.
-    DbLibraryInvitationData:
+    CreateLibraryPayload:
       type: object
       properties:
-        id:
+        name:
+          type: string
+          description: Human-readable name for library. *Required* for creating a new library (not for move/copy)
+        source:
+          type: string
+          description: URN or public library ID of the source library. *Required* for copy.
+        self:
+          type: string
+          description: URN or public library ID of the library to be moved. *Required* for move.
+    UpdateLibraryPayload:
+      type: object
+      properties:
+        name:
+          type: string
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+        name:
+          type: string
+        type:
+          type: string
+        deprecation:
+          type: string
+        mode:
+          type: string
+        additionalFields:
+          type: object
+          additionalProperties:
+            type: object
+            properties: {}
+    DbLibraryCollaborationData:
+      type: object
+      properties:
+        rootURN:
+          type: string
+        ownerId:
+          type: string
+        state:
+          type: string
+        collaborators:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryCollaboratorData'
+        invitations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryInvitationData'
+        public:
+          type: boolean
+        _fc:
+          type: boolean
+        directCollaborators:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryCollaboratorData'
+        hasAdmin:
+          type: boolean
+          readOnly: true
+    ClientDeviceInfoPayload:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        device:
+          type: string
+        app:
+          type: string
+    LinksSpec:
+      type: object
+      properties:
+        next:
+          description: Next Link
+          $ref: '#/components/schemas/JsonNode'
+        page:
+          description: Page Link
+          $ref: '#/components/schemas/JsonNode'
+    BatchResponse:
+      type: object
+      properties:
+        responses:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties: {}
+        requests:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/BatchPayloadElement'
+    DbLibraryElementDetailsCreatedModifiedData:
+      type: object
+      properties:
+        userId:
+          type: string
+        deviceId:
+          type: string
+        device:
+          type: string
+        app:
+          type: string
+        time:
+          type: integer
+          format: int64
+    DbLibraryCollaboratorData:
+      type: object
+      properties:
+        email:
           type: string
           readOnly: true
-        recipientEmail:
+        displayName:
           type: string
           readOnly: true
-        senderName:
-          type: string
-          readOnly: true
-        created:
+        collaborator:
           type: string
           readOnly: true
         role:
@@ -2016,6 +2098,471 @@ components:
         canShare:
           type: boolean
           readOnly: true
+    DbLibraryElementDetailData:
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+        created:
+          $ref: '#/components/schemas/DbLibraryElementDetailsCreatedModifiedData'
+        lastModified:
+          $ref: '#/components/schemas/DbLibraryElementDetailsCreatedModifiedData'
+        description:
+          type: string
+    AsyncResponsePayload:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - OK
+          - CREATED
+          - ACCEPTED
+          - NO_CONTENT
+          - MOVED_PERMANENTLY
+          - SEE_OTHER
+          - NOT_MODIFIED
+          - TEMPORARY_REDIRECT
+          - BAD_REQUEST
+          - UNAUTHORIZED
+          - FORBIDDEN
+          - NOT_FOUND
+          - NOT_ACCEPTABLE
+          - CONFLICT
+          - GONE
+          - PRECONDITION_FAILED
+          - UNSUPPORTED_MEDIA_TYPE
+          - INTERNAL_SERVER_ERROR
+          - SERVICE_UNAVAILABLE
+        message:
+          type: string
+    LibrariesInfo:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          format: int32
+          description: Total results for query
+        libraries:
+          type: array
+          description: Libraries list
+          items:
+            $ref: '#/components/schemas/DbLibraryInfo'
+        _page:
+          description: List Page
+          $ref: '#/components/schemas/PageSpec'
+        _links:
+          description: List Links
+          $ref: '#/components/schemas/MelvilleHypermediaListLinks'
+    BatchPayload:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchPayloadElement'
+    MelvilleHypermediaRepresentationLinks:
+      type: object
+      properties:
+        http://ns.adobe.com/melville/rel/primary:
+          description: Primary Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/path:
+          description: Path Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/id:
+          description: ID Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/policy:
+          description: Policy Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/check:
+          description: Check Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/effective:
+          description: Effective Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/describedBy:
+          description: Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/metadata/application:
+          description: Application Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/metadata/repository:
+          description: Repository Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/rendition:
+          description: Rendition Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/version-history:
+          description: Version History Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/manifest:
+          description: Manifest Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/component:
+          description: Component Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/elements:
+          description: Elements Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/element:
+          description: Element Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/groups:
+          description: Groups Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/representations:
+          description: Representations Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/raw:
+          description: Raw Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        page:
+          description: Page Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        next:
+          description: Next Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+    USSSearchResponse:
+      type: object
+      properties:
+        total_items:
+          type: integer
+          format: int32
+          readOnly: true
+        libraries:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryInfo'
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryElementData'
+    USSSearchPayload:
+      type: object
+      properties:
+        asset_type:
+          type: array
+          description: '`library` and/or `element`. Leaving this out of the request will get both by default, though element-only parameters like `library_id` or `archived` will isolate the result to elements.'
+          uniqueItems: true
+          items:
+            type: string
+        library_id:
+          type: string
+          description: 'Library ID (URN) to constrain an elements search to a single library (like "urn:aaid:sc:us:2f3268e9-039d-460f-8b07-8854f7677645"). Invalid if submitted with `"asset_type": ["library"]`.'
+        group:
+          type: string
+          description: 'Isolate element results to a single group. Invalid if submitted with `"asset_type": ["library"]`.'
+        name:
+          type: string
+          description: A name string to identify by library/asset name. Requires an exact match.
+        query_string:
+          type: string
+          description: A general query string to search for libraries/assets. Includes partial matches.
+        created_date:
+          type: array
+          description: Start & end dates in epoch time (ms since epoch).
+          items:
+            type: string
+            format: date-time
+        modified_date:
+          type: array
+          description: Start & end dates in epoch time (ms since epoch).
+          items:
+            type: string
+            format: date-time
+        type:
+          type: array
+          description: 'One or more types for elements, invalid if submitted with `"asset_type": ["library"]`.'
+          items:
+            type: string
+        archived:
+          type: boolean
+          description: 'Search specifically for archived elements (boolean `true`/`false` to isolate results to archived or non-archived). Invalid if submitted with `"asset_type": ["library"]`.'
+        orderBy:
+          type: string
+          description: defaults to `-modified_date`, also accepts `name`. Use a minus sign prefix to note descending.
+        start:
+          type: string
+          description: String value. For libraries lists, the requirement to integrate bookmarked responses requires us to use the field in a clever fashion beyond a simple positive integer.
+        limit:
+          type: integer
+          format: int32
+          description: Positive integer, defines the number of results to return for a paged response. Defaults to `10`. Max limit for library searches is `10`, max limit for element searches is `100`.
+        owner:
+          type: string
+          description: '`private` (default), `incoming`, `outgoing`, `public`, or `all`. `all` does not include `public` until bookmarks are integrated into the USS search results.'
+        selector:
+          type: string
+          description: Customize response for larger/smaller data sets. (`default` [base response], `rendition_grid`, `collaboration`, `details`, `full`).
+        has_stock_content:
+          type: boolean
+          description: Search for libraries that have stock content, or elements within a library that have stock content (boolean `true`/`false` to isolate results to stock content or all content).
+        stock_content_id:
+          type: string
+          description: 'Search for elements with a specific Stock Content ID. Invalid if submitted with `"asset_type": ["library"]` or `"has_stock_content": false`.'
+        spark_brand_urn:
+          type: string
+          description: Search for elements with a specific Spark tracking data brand_urn.
+        spark_creator_id:
+          type: string
+          description: Search for elements with a specific Spark tracking data creator_id.
+        spark_content_summary:
+          type: string
+          description: Search for elements with a partial match within the Spark tracking data content_summary.
+        source_ref:
+          type: string
+          description: Search for elements with a specific sourceRef.
+    EffectiveACL:
+      type: object
+      properties:
+        _links:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Link'
+        _fc:
+          type: boolean
+    DbLibraryRenditionData:
+      type: object
+      properties:
+        _fc:
+          type: boolean
+        main:
+          $ref: '#/components/schemas/DbLibraryElementRenditionData'
+        tiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbLibraryElementRenditionData'
+    ErrorResponse:
+      type: object
+      properties:
+        reason:
+          type: string
+        message:
+          type: string
+      xml:
+        name: error
+    LibraryElementsInfo:
+      type: object
+      properties:
+        total_count:
+          type: integer
+          format: int32
+          description: Total results for query
+        elements:
+          type: array
+          description: Elements list
+          items:
+            $ref: '#/components/schemas/DbLibraryElementData'
+        _page:
+          description: List Page
+          $ref: '#/components/schemas/PageSpec'
+        _links:
+          description: List Links
+          $ref: '#/components/schemas/LinksSpec'
+    DbLibraryBookmark:
+      type: object
+      required:
+      - id
+      properties:
+        type:
+          type: string
+          description: '`public`, or `collab`, with separate required fields as identified below'
+          enum:
+          - PUBLIC
+          - COLLAB
+        id:
+          type: string
+          description: Required, must match the library's `id`. Submissions with an existing ID are discarded.
+        url:
+          type: string
+          description: Required if `type` is `public`
+        urn:
+          type: string
+          description: Required if `type` is `collab`
+        role:
+          type: string
+          description: '''viewer''/''editor'' role of user''s sharing status on library.'
+        can_share:
+          type: boolean
+          description: Sharing permission for user's sharing status on library
+        can_comment:
+          type: boolean
+          description: Commenting permission for user's sharing status on library
+        created:
+          type: integer
+          format: int64
+          description: This parameter will be ignored, populated with the timestamp upon creation and immutable after
+        _fc:
+          type: boolean
+    DbLibraryElementRepresentationData:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        relationship:
+          type: string
+        path:
+          type: string
+        linkurl:
+          type: string
+        linktype:
+          type: string
+        is_full_size:
+          type: boolean
+        is_external_link:
+          type: boolean
+        width:
+          type: integer
+          format: int64
+        height:
+          type: integer
+          format: int64
+        content_length:
+          type: integer
+          format: int64
+        name:
+          type: string
+        asset_id:
+          type: string
+        version:
+          type: string
+        md5:
+          type: string
+        _links:
+          $ref: '#/components/schemas/MelvilleHypermediaRepresentationLinks'
+        etag:
+          type: string
+        storage_href:
+          type: string
+        representation_order:
+          type: integer
+          format: int32
+        is_preferred_thumbnail:
+          type: boolean
+        is_component:
+          type: boolean
+          readOnly: true
+    ElementListPayload:
+      type: object
+      required:
+      - elements
+      properties:
+        elements:
+          type: array
+          description: Array of elements to be copied to the targeted library
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/ElementListPayloadElement'
+        id:
+          type: string
+          description: URN of the source library, not required if copying elements within the same library
+          readOnly: true
+        elementIds:
+          type: array
+          items:
+            type: string
+    MelvilleHypermediaListLinks:
+      type: object
+      properties:
+        page:
+          description: Page Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        next:
+          description: Next Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+    MelvilleHypermediaLink:
+      type: object
+      properties:
+        href:
+          type: string
+        rel:
+          type: string
+        type:
+          type: string
+        templated:
+          type: boolean
+    DbLibraryDetail:
+      type: object
+      properties:
+        _fc:
+          type: boolean
+        etag:
+          type: string
+        state:
+          type: string
+        manifest_format_version:
+          type: string
+        num_elements:
+          type: integer
+          format: int32
+        num_archived_elements:
+          type: integer
+          format: int32
+        types:
+          type: array
+          items:
+            type: string
+        element_type_counts:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
+    PostLibraryElementsPayload:
+      type: object
+      required:
+      - client
+      - name
+      - type
+      properties:
+        id:
+          type: string
+          description: Ignored if submitted. The result will have a different ID.
+        description:
+          type: string
+          description: Description of new element
+        name:
+          type: string
+          description: Display name for new element
+        type:
+          type: string
+          description: Element type
+        client:
+          description: Client identification information
+          $ref: '#/components/schemas/ClientDeviceInfoPayload'
+        representations:
+          type: array
+          description: Add or associate existing content to the new element
+          items:
+            $ref: '#/components/schemas/DbLibraryElementRepresentationData'
+        sourceRef:
+          type: string
+          description: Reference other content as inspiration for this element
+        source:
+          description: Required if copying an element to this library.
+          $ref: '#/components/schemas/ElementListPayload'
+        self:
+          description: Required if moving an element to this library.
+          $ref: '#/components/schemas/ElementListPayload'
+    AsyncMonitorResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        href:
+          type: string
+        retryAfter:
+          type: integer
+          format: int64
+        _fc:
+          type: boolean
     DbLibraryInfo:
       type: object
       properties:
@@ -2114,48 +2661,115 @@ components:
           description: Library is searchable
         manifest_etag:
           type: string
-    ErrorResponse:
+    MelvilleHypermediaLibraryElementLinks:
       type: object
       properties:
-        reason:
-          type: string
-        message:
-          type: string
-      xml:
-        name: error
-    ElementListPayload:
+        http://ns.adobe.com/melville/rel/primary:
+          description: Primary Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/path:
+          description: Path Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/id:
+          description: ID Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/policy:
+          description: Policy Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/check:
+          description: Check Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/ac/effective:
+          description: Effective Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/describedBy:
+          description: Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/metadata/application:
+          description: Application Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/metadata/repository:
+          description: Repository Metadata Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/rendition:
+          description: Rendition Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/version-history:
+          description: Version History Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/manifest:
+          description: Manifest Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/component:
+          description: Component Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/elements:
+          description: Elements Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/element:
+          description: Element Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/groups:
+          description: Groups Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/representations:
+          description: Representations Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        http://ns.adobe.com/melville/rel/raw:
+          description: Raw Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        page:
+          description: Page Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+        next:
+          description: Next Link
+          $ref: '#/components/schemas/MelvilleHypermediaLink'
+    DbLibraryInvitationData:
       type: object
-      required:
-      - elements
       properties:
-        elements:
-          type: array
-          description: Array of elements to be copied to the targeted library
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/ElementListPayloadElement'
         id:
           type: string
-          description: URN of the source library, not required if copying elements within the same library
           readOnly: true
-        elementIds:
-          type: array
-          items:
-            type: string
-    BatchResponse:
+        recipientEmail:
+          type: string
+          readOnly: true
+        senderName:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        role:
+          type: string
+          readOnly: true
+        canComment:
+          type: boolean
+          readOnly: true
+        canShare:
+          type: boolean
+          readOnly: true
+    PageSpec:
       type: object
       properties:
-        responses:
-          type: array
-          readOnly: true
-          items:
-            type: object
-            properties: {}
-        requests:
-          type: array
-          readOnly: true
-          items:
-            $ref: '#/components/schemas/BatchPayloadElement'
+        orderBy:
+          type: string
+          description: List orderby
+        start:
+          type: string
+          description: List start position
+        next:
+          type: string
+          description: List next position
+        count:
+          type: integer
+          format: int32
+          description: List page size
+        type:
+          type: string
+          description: List page type
+        property:
+          type: string
+          description: List page property
     ElementListPayloadElement:
       type: object
       required:
@@ -2223,109 +2837,6 @@ components:
           type: string
         manifest_etag:
           type: string
-    MelvilleHypermediaRepresentationLinks:
-      type: object
-      properties:
-        http://ns.adobe.com/melville/rel/primary:
-          description: Primary Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/path:
-          description: Path Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/id:
-          description: ID Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/policy:
-          description: Policy Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/check:
-          description: Check Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/effective:
-          description: Effective Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/describedBy:
-          description: Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/metadata/application:
-          description: Application Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/metadata/repository:
-          description: Repository Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/rendition:
-          description: Rendition Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/version-history:
-          description: Version History Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/manifest:
-          description: Manifest Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/component:
-          description: Component Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/elements:
-          description: Elements Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/element:
-          description: Element Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/groups:
-          description: Groups Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/representations:
-          description: Representations Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/raw:
-          description: Raw Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        page:
-          description: Page Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        next:
-          description: Next Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-    PageSpec:
-      type: object
-      properties:
-        orderBy:
-          type: string
-          description: List orderby
-        start:
-          type: string
-          description: List start position
-        next:
-          type: string
-          description: List next position
-        count:
-          type: integer
-          format: int32
-          description: List page size
-        type:
-          type: string
-          description: List page type
-        property:
-          type: string
-          description: List page property
-    LibraryElementsInfo:
-      type: object
-      properties:
-        total_count:
-          type: integer
-          format: int32
-          description: Total results for query
-        elements:
-          type: array
-          description: Elements list
-          items:
-            $ref: '#/components/schemas/DbLibraryElementData'
-        _page:
-          description: List Page
-          $ref: '#/components/schemas/PageSpec'
-        _links:
-          description: List Links
-          $ref: '#/components/schemas/LinksSpec'
     JsonNode:
       type: object
       properties:
@@ -2381,284 +2892,6 @@ components:
           type: boolean
         boolean:
           type: boolean
-    DbLibraryRenditionData:
-      type: object
-      properties:
-        _fc:
-          type: boolean
-        main:
-          $ref: '#/components/schemas/DbLibraryElementRenditionData'
-        tiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryElementRenditionData'
-    DbLibraryElementRepresentationData:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-        relationship:
-          type: string
-        path:
-          type: string
-        linkurl:
-          type: string
-        linktype:
-          type: string
-        is_full_size:
-          type: boolean
-        is_external_link:
-          type: boolean
-        width:
-          type: integer
-          format: int64
-        height:
-          type: integer
-          format: int64
-        content_length:
-          type: integer
-          format: int64
-        name:
-          type: string
-        asset_id:
-          type: string
-        version:
-          type: string
-        md5:
-          type: string
-        _links:
-          $ref: '#/components/schemas/MelvilleHypermediaRepresentationLinks'
-        etag:
-          type: string
-        storage_href:
-          type: string
-        representation_order:
-          type: integer
-          format: int32
-        is_preferred_thumbnail:
-          type: boolean
-        is_component:
-          type: boolean
-          readOnly: true
-    DbLibraryCollaboratorData:
-      type: object
-      properties:
-        email:
-          type: string
-          readOnly: true
-        displayName:
-          type: string
-          readOnly: true
-        collaborator:
-          type: string
-          readOnly: true
-        role:
-          type: string
-          readOnly: true
-        canComment:
-          type: boolean
-          readOnly: true
-        canShare:
-          type: boolean
-          readOnly: true
-    DbLibraryCollaborationData:
-      type: object
-      properties:
-        rootURN:
-          type: string
-        ownerId:
-          type: string
-        state:
-          type: string
-        collaborators:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryCollaboratorData'
-        invitations:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryInvitationData'
-        public:
-          type: boolean
-        _fc:
-          type: boolean
-        directCollaborators:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryCollaboratorData'
-        hasAdmin:
-          type: boolean
-          readOnly: true
-    MelvilleHypermediaLibraryElementLinks:
-      type: object
-      properties:
-        http://ns.adobe.com/melville/rel/primary:
-          description: Primary Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/path:
-          description: Path Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/id:
-          description: ID Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/policy:
-          description: Policy Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/check:
-          description: Check Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/ac/effective:
-          description: Effective Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/describedBy:
-          description: Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/metadata/application:
-          description: Application Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/metadata/repository:
-          description: Repository Metadata Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/rendition:
-          description: Rendition Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/version-history:
-          description: Version History Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/manifest:
-          description: Manifest Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/component:
-          description: Component Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/elements:
-          description: Elements Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/element:
-          description: Element Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/groups:
-          description: Groups Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/representations:
-          description: Representations Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        http://ns.adobe.com/melville/rel/raw:
-          description: Raw Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        page:
-          description: Page Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        next:
-          description: Next Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-    DbLibraryElementDetailsCreatedModifiedData:
-      type: object
-      properties:
-        userId:
-          type: string
-        deviceId:
-          type: string
-        device:
-          type: string
-        app:
-          type: string
-        time:
-          type: integer
-          format: int64
-    DbLibraryElementRenditionData:
-      type: object
-      properties:
-        type:
-          type: string
-        rendition:
-          type: object
-          properties: {}
-    DbLibraryDetail:
-      type: object
-      properties:
-        _fc:
-          type: boolean
-        etag:
-          type: string
-        state:
-          type: string
-        manifest_format_version:
-          type: string
-        num_elements:
-          type: integer
-          format: int32
-        num_archived_elements:
-          type: integer
-          format: int32
-        types:
-          type: array
-          items:
-            type: string
-        element_type_counts:
-          type: object
-          additionalProperties:
-            type: integer
-            format: int32
-    UpdateLibraryPayload:
-      type: object
-      properties:
-        name:
-          type: string
-    DbLibraryElementDetailData:
-      type: object
-      properties:
-        tags:
-          type: array
-          items:
-            type: string
-        created:
-          $ref: '#/components/schemas/DbLibraryElementDetailsCreatedModifiedData'
-        lastModified:
-          $ref: '#/components/schemas/DbLibraryElementDetailsCreatedModifiedData'
-        description:
-          type: string
-    Link:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-        name:
-          type: string
-        type:
-          type: string
-        deprecation:
-          type: string
-        mode:
-          type: string
-        additionalFields:
-          type: object
-          additionalProperties:
-            type: object
-            properties: {}
-    AsyncAcceptedResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        href:
-          type: string
-        retryAfter:
-          type: integer
-          format: int64
-    ClientDeviceInfoPayload:
-      type: object
-      properties:
-        deviceId:
-          type: string
-        device:
-          type: string
-        app:
-          type: string
     BatchPayloadElement:
       type: object
       properties:
@@ -2671,204 +2904,6 @@ components:
           additionalProperties:
             type: object
             properties: {}
-    EffectiveACL:
-      type: object
-      properties:
-        _links:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/Link'
-        _fc:
-          type: boolean
-    CreateLibraryPayload:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Human-readable name for library. *Required* for creating a new library (not for move/copy)
-        source:
-          type: string
-          description: URN or public library ID of the source library. *Required* for copy.
-        self:
-          type: string
-          description: URN or public library ID of the library to be moved. *Required* for move.
-    PostLibraryElementsPayload:
-      type: object
-      required:
-      - client
-      - name
-      - type
-      properties:
-        id:
-          type: string
-          description: Ignored if submitted. The result will have a different ID.
-        description:
-          type: string
-          description: Description of new element
-        name:
-          type: string
-          description: Display name for new element
-        type:
-          type: string
-          description: Element type
-        client:
-          description: Client identification information
-          $ref: '#/components/schemas/ClientDeviceInfoPayload'
-        representations:
-          type: array
-          description: Add or associate existing content to the new element
-          items:
-            $ref: '#/components/schemas/DbLibraryElementRepresentationData'
-        sourceRef:
-          type: string
-          description: Reference other content as inspiration for this element
-        source:
-          description: Required if copying an element to this library.
-          $ref: '#/components/schemas/ElementListPayload'
-        self:
-          description: Required if moving an element to this library.
-          $ref: '#/components/schemas/ElementListPayload'
-    USSSearchPayload:
-      type: object
-      properties:
-        asset_type:
-          type: array
-          description: '`library` and/or `element`. Leaving this out of the request will get both by default, though element-only parameters like `library_id` or `archived` will isolate the result to elements.'
-          uniqueItems: true
-          items:
-            type: string
-        library_id:
-          type: string
-          description: 'Library ID (URN) to constrain an elements search to a single library (like "urn:aaid:sc:us:2f3268e9-039d-460f-8b07-8854f7677645"). Invalid if submitted with `"asset_type": ["library"]`.'
-        group:
-          type: string
-          description: 'Isolate element results to a single group. Invalid if submitted with `"asset_type": ["library"]`.'
-        name:
-          type: string
-          description: A name string to identify by library/asset name. Requires an exact match.
-        query_string:
-          type: string
-          description: A general query string to search for libraries/assets. Includes partial matches.
-        created_date:
-          type: array
-          description: Start & end dates in epoch time (ms since epoch).
-          items:
-            type: string
-            format: date-time
-        modified_date:
-          type: array
-          description: Start & end dates in epoch time (ms since epoch).
-          items:
-            type: string
-            format: date-time
-        type:
-          type: array
-          description: 'One or more types for elements, invalid if submitted with `"asset_type": ["library"]`.'
-          items:
-            type: string
-        archived:
-          type: boolean
-          description: 'Search specifically for archived elements (boolean `true`/`false` to isolate results to archived or non-archived). Invalid if submitted with `"asset_type": ["library"]`.'
-        orderBy:
-          type: string
-          description: defaults to `-modified_date`, also accepts `name`. Use a minus sign prefix to note descending.
-        start:
-          type: string
-          description: String value. For libraries lists, the requirement to integrate bookmarked responses requires us to use the field in a clever fashion beyond a simple positive integer.
-        limit:
-          type: integer
-          format: int32
-          description: Positive integer, defines the number of results to return for a paged response. Defaults to `10`. Max limit for library searches is `10`, max limit for element searches is `100`.
-        owner:
-          type: string
-          description: '`private` (default), `incoming`, `outgoing`, `public`, or `all`. `all` does not include `public` until bookmarks are integrated into the USS search results.'
-        selector:
-          type: string
-          description: Customize response for larger/smaller data sets. (`default` [base response], `rendition_grid`, `collaboration`, `details`, `full`).
-        has_stock_content:
-          type: boolean
-          description: Search for libraries that have stock content, or elements within a library that have stock content (boolean `true`/`false` to isolate results to stock content or all content).
-        stock_content_id:
-          type: string
-          description: 'Search for elements with a specific Stock Content ID. Invalid if submitted with `"asset_type": ["library"]` or `"has_stock_content": false`.'
-        spark_brand_urn:
-          type: string
-          description: Search for elements with a specific Spark tracking data brand_urn.
-        spark_creator_id:
-          type: string
-          description: Search for elements with a specific Spark tracking data creator_id.
-        spark_content_summary:
-          type: string
-          description: Search for elements with a partial match within the Spark tracking data content_summary.
-        source_ref:
-          type: string
-          description: Search for elements with a specific sourceRef.
-    MelvilleHypermediaLink:
-      type: object
-      properties:
-        href:
-          type: string
-        rel:
-          type: string
-        type:
-          type: string
-        templated:
-          type: boolean
-    MelvilleHypermediaListLinks:
-      type: object
-      properties:
-        page:
-          description: Page Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-        next:
-          description: Next Link
-          $ref: '#/components/schemas/MelvilleHypermediaLink'
-    ArchiveDeleteElementListPayload:
-      type: object
-      properties:
-        elements:
-          type: array
-          readOnly: true
-          items:
-            type: string
-    LinksSpec:
-      type: object
-      properties:
-        next:
-          description: Next Link
-          $ref: '#/components/schemas/JsonNode'
-        page:
-          description: Page Link
-          $ref: '#/components/schemas/JsonNode'
-    AsyncMonitorResponseDTO:
-      type: object
-      properties:
-        id:
-          type: string
-        href:
-          type: string
-        retryAfter:
-          type: integer
-          format: int64
-        _fc:
-          type: boolean
-    USSSearchResponse:
-      type: object
-      properties:
-        total_items:
-          type: integer
-          format: int32
-          readOnly: true
-        libraries:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryInfo'
-        elements:
-          type: array
-          items:
-            $ref: '#/components/schemas/DbLibraryElementData'
     MelvilleHypermediaLibraryLinks:
       type: object
       properties:
@@ -2932,38 +2967,3 @@ components:
         next:
           description: Next Link
           $ref: '#/components/schemas/MelvilleHypermediaLink'
-    DbLibraryBookmark:
-      type: object
-      required:
-      - id
-      properties:
-        type:
-          type: string
-          description: '`public`, or `collab`, with separate required fields as identified below'
-          enum:
-          - PUBLIC
-          - COLLAB
-        id:
-          type: string
-          description: Required, must match the library's `id`. Submissions with an existing ID are discarded.
-        url:
-          type: string
-          description: Required if `type` is `public`
-        urn:
-          type: string
-          description: Required if `type` is `collab`
-        role:
-          type: string
-          description: '''viewer''/''editor'' role of user''s sharing status on library.'
-        can_share:
-          type: boolean
-          description: Sharing permission for user's sharing status on library
-        can_comment:
-          type: boolean
-          description: Commenting permission for user's sharing status on library
-        created:
-          type: integer
-          format: int64
-          description: This parameter will be ignored, populated with the timestamp upon creation and immutable after
-        _fc:
-          type: boolean

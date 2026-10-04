@@ -166,6 +166,34 @@ paths:
           description: Resource not found
 components:
   schemas:
+    AdvancedNetworkingConfigurationList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            networkingConfigurations:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdvancedNetworkingConfiguration'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
     AdvancedNetworkingConfiguration:
       type: object
       properties:
@@ -209,18 +237,46 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: Describes the Advanced Networking configuration for an environment
-    LogOptionRepresentation:
+    PortForwardRepresentation:
       type: object
       required:
-      - name
-      - service
+      - portDest
+      - portOrig
       properties:
-        service:
-          type: string
-          description: 'Name of the service in environment. Example: author'
         name:
           type: string
-          description: 'Name of the log for service in environment. Example: aemerror'
+          example: smtp.example.com
+          description: Destination host
+          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+        portDest:
+          type: integer
+          format: int32
+          example: 443
+          description: Destination port
+          maximum: 65535
+        portOrig:
+          type: integer
+          format: int32
+          example: 30710
+          description: Origin port for tunnel. Must be unique and in 30000-31000 range.
+          minimum: 30000
+          maximum: 31000
+    EnableAdvancedNetworkingConfiguration:
+      type: object
+      properties:
+        nonProxyHosts:
+          type: array
+          description: A list of hosts that should be reached directly, bypassing the special VPN or egress routing. The patterns may start or end with a ''*'' for wildcards.
+          items:
+            type: string
+          example:
+          - '*.example.com'
+          - '*.example.net'
+        portForwards:
+          type: array
+          description: List of port forwarding rules
+          items:
+            $ref: '#/components/schemas/PortForwardRepresentation'
     HalLink:
       type: object
       properties:
@@ -331,71 +387,15 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of an Environment known to Cloud Manager.
-    EnableAdvancedNetworkingConfiguration:
-      type: object
-      properties:
-        nonProxyHosts:
-          type: array
-          description: A list of hosts that should be reached directly, bypassing the special VPN or egress routing. The patterns may start or end with a ''*'' for wildcards.
-          items:
-            type: string
-          example:
-          - '*.example.com'
-          - '*.example.net'
-        portForwards:
-          type: array
-          description: List of port forwarding rules
-          items:
-            $ref: '#/components/schemas/PortForwardRepresentation'
-    PortForwardRepresentation:
+    LogOptionRepresentation:
       type: object
       required:
-      - portDest
-      - portOrig
+      - name
+      - service
       properties:
+        service:
+          type: string
+          description: 'Name of the service in environment. Example: author'
         name:
           type: string
-          example: smtp.example.com
-          description: Destination host
-          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?([.][a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-        portDest:
-          type: integer
-          format: int32
-          example: 443
-          description: Destination port
-          maximum: 65535
-        portOrig:
-          type: integer
-          format: int32
-          example: 30710
-          description: Origin port for tunnel. Must be unique and in 30000-31000 range.
-          minimum: 30000
-          maximum: 31000
-    AdvancedNetworkingConfigurationList:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int32
-          description: The total number of embedded items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            networkingConfigurations:
-              type: array
-              items:
-                $ref: '#/components/schemas/AdvancedNetworkingConfiguration'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
+          description: 'Name of the log for service in environment. Example: aemerror'

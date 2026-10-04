@@ -474,62 +474,74 @@ paths:
           description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
 components:
   schemas:
-    StateActionDTO:
+    FlowMetaInfoDTO:
       type: object
       properties:
-        percentCompleted:
-          type: number
-          format: double
-        status:
-          $ref: '#/components/schemas/StatusDTO'
-        recordTypes:
+        sourceConnections:
           type: array
           items:
-            $ref: '#/components/schemas/FlowRecordTypeDTO'
-    FlowRecordTypeDTO:
+            $ref: '#/components/schemas/SourceConnectionMetaInfoDTOWrapper'
+        targetConnections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
+    FlowListResponse:
       type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowItemDTO'
+        _links:
+          $ref: '#/components/schemas/PageLinksResponse'
+        count:
+          type: integer
+          format: int64
+          example: 7
+    CreateFlowResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the flow.
+          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
+        etag:
+          type: string
+          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
+          example: '"7e05b480-0000-0200-0000-638e84a00000"'
+      description: Location of the newly created flow instance
+    PatchInstruction:
       required:
-      - extensions
-      - type
-      properties:
-        type:
-          type: string
-        extensions:
-          type: object
-    PageLinksResponse:
+      - op
+      - path
+      - value
       type: object
       properties:
-        next:
-          $ref: '#/components/schemas/PageLink'
-    StatusErrorDTO:
-      type: object
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-        details:
-          type: object
-    StatusDTO:
-      type: object
-      properties:
-        value:
+        op:
           type: string
           enum:
-          - IN_PROGRESS
-          - COMPLETED
-          - SUCCESS
-          - PARTIAL_SUCCESS
-          - FAILED
-          - PARTIAL_FAILURE
-          - QUEUED
-          - SCHEDULED
-        properties:
+          - ADD
+          - REPLACE
+          - REMOVE
+        path:
+          type: string
+          example: /auth/params
+        value:
           type: object
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/StatusErrorDTO'
+          properties:
+            description:
+              type: string
+              description: The new description value you want to add.
+              example: A new description to provide further context on a specified connection or flow.
+    TransformationSpecDTO:
+      type: object
+      properties:
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
     ScheduleSpecDTO:
       type: object
       properties:
@@ -550,15 +562,35 @@ components:
           type: boolean
           description: A boolean value that determines what data is initially ingested. If backfill is enabled, all current files in the specified path will be ingested during the first scheduled ingestion. If backfill is disabled, only the files that are loaded in between the first run of ingestion and the Start time will be ingested. Files loaded prior to Start time will not be ingested.
           example: true
-    TransformationSpecDTO:
+    StatusErrorDTO:
       type: object
       properties:
-        mappingId:
+        message:
           type: string
-          example: 97051e9e86184c7d88d6bf8104ad7765
-        mappingVersion:
+        code:
           type: string
-          example: '0'
+        details:
+          type: object
+    SourceConnectionMetaInfoDTOWrapper:
+      type: object
+      properties:
+        id:
+          type: string
+          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+        baseConnection:
+          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
+    FlowRecordTypeDTO:
+      type: object
+      required:
+      - extensions
+      - type
+      properties:
+        type:
+          type: string
+        extensions:
+          type: object
     CreateFlowRequest:
       required:
       - flowSpec
@@ -601,41 +633,34 @@ components:
             $ref: '#/components/schemas/FlowTransformationDTO'
         scheduleParams:
           $ref: '#/components/schemas/ScheduleSpecDTO'
-    FlowMetaInfoDTO:
+    PageLink:
       type: object
       properties:
-        sourceConnections:
-          type: array
-          items:
-            $ref: '#/components/schemas/SourceConnectionMetaInfoDTOWrapper'
-        targetConnections:
-          type: array
-          items:
-            $ref: '#/components/schemas/TargetConnectionMetaInfoDTOWrapper'
-    FlowTransformationDTO:
-      required:
-      - name
-      - params
-      type: object
-      properties:
-        name:
+        href:
           type: string
-          example: Mapping
-        params:
-          $ref: '#/components/schemas/TransformationSpecDTO'
-    FlowListResponse:
+          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
+    ConnectionMetaInfoDTO:
       type: object
       properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowItemDTO'
-        _links:
-          $ref: '#/components/schemas/PageLinksResponse'
-        count:
-          type: integer
-          format: int64
-          example: 7
+        id:
+          type: string
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    SpecInfoDTO:
+      required:
+      - id
+      - version
+      type: object
+      properties:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
     TargetConnectionMetaInfoDTOWrapper:
       type: object
       properties:
@@ -651,53 +676,54 @@ components:
             version:
               type: string
               example: '1.0'
-    SourceConnectionMetaInfoDTOWrapper:
+    StatusDTO:
       type: object
       properties:
-        id:
-          type: string
-          example: eb19c882-f19c-4d63-ad21-1d7ba9b21a85
-        connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
-        baseConnection:
-          $ref: '#/components/schemas/ConnectionMetaInfoDTO'
-    PatchInstruction:
-      required:
-      - op
-      - path
-      - value
-      type: object
-      properties:
-        op:
+        value:
           type: string
           enum:
-          - ADD
-          - REPLACE
-          - REMOVE
-        path:
-          type: string
-          example: /auth/params
-        value:
+          - IN_PROGRESS
+          - COMPLETED
+          - SUCCESS
+          - PARTIAL_SUCCESS
+          - FAILED
+          - PARTIAL_FAILURE
+          - QUEUED
+          - SCHEDULED
+        properties:
           type: object
-          properties:
-            description:
-              type: string
-              description: The new description value you want to add.
-              example: A new description to provide further context on a specified connection or flow.
-    PageLink:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusErrorDTO'
+    StateActionDTO:
       type: object
       properties:
-        href:
-          type: string
-          example: /connections?continuationToken=abcdefghijkLMNOPqrstupWXKYZ
-    ConnectionMetaInfoDTO:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    PageLinksResponse:
       type: object
       properties:
-        id:
+        next:
+          $ref: '#/components/schemas/PageLink'
+    FlowTransformationDTO:
+      required:
+      - name
+      - params
+      type: object
+      properties:
+        name:
           type: string
-          example: 69f188b6-af07-4587-8061-e94d34637b41
-        connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
+          example: Mapping
+        params:
+          $ref: '#/components/schemas/TransformationSpecDTO'
     FlowItemDTO:
       type: object
       properties:
@@ -840,30 +866,4 @@ components:
           type: boolean
         projectionFields:
           type: string
-    CreateFlowResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID of the flow.
-          example: 3d17a4ff-9e0a-4f7c-94bb-bc0b61a3a76d
-        etag:
-          type: string
-          description: The etag value generated and assigned to a flow after a flow is created. This value is updated after every successful update.
-          example: '"7e05b480-0000-0200-0000-638e84a00000"'
-      description: Location of the newly created flow instance
-    SpecInfoDTO:
-      required:
-      - id
-      - version
-      type: object
-      properties:
-        id:
-          type: string
-          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
-          example: 32e8f412-cdf7-464c-9885-78184cb113fd
-        version:
-          type: string
-          description: The version of the connection specification ID.
-          example: '1.0'
 x-original-swagger-version: '2.0'

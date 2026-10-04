@@ -519,29 +519,93 @@ paths:
           description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
 components:
   schemas:
-    EntitlementSpecDTO:
+    RunSpecDTO:
+      type: object
+      description: Defines various params required for creating flow run for the speicific spec.
+      properties:
+        startTime:
+          type: integer
+          description: An integer that defines the start time of the run. The value is represented in Unix epoch time.
+        windowStartTime:
+          type: integer
+          description: An integer that defines the start time of the window against which data is to be pulled. The value is represented in Unix epoch time
+        windowEndTime:
+          type: integer
+          description: An integer that defines the end time of the window against which data is to be pulled. The value is represented in Unix epoch time.
+    FlowSpecFilterRequest:
       type: object
       properties:
-        operation:
+        queryString:
           type: string
-          description: The type of checks to be applied on entitlements array.
-          example: anyOf
-        entitlements:
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+        groupByProperty:
+          type: string
+        projectionFields:
+          type: string
+    CreateFlowSpecRequest:
+      type: object
+      required:
+      - name
+      - providerId
+      properties:
+        transformationSpecDTOS:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransformationSpecDTO'
+        name:
+          type: string
+        providerId:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        optionSpec:
+          $ref: '#/components/schemas/OptionSpecDTO'
+        scheduleSpec:
+          $ref: '#/components/schemas/ScheduleSpecDTO'
+        runSpec:
+          $ref: '#/components/schemas/RunSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
+        sourceConnectionSpecIds:
           type: array
           items:
             type: string
-            description: The name of the entitlement supported.
-    PolicyItemDTO:
+        targetConnectionSpecIds:
+          type: array
+          items:
+            type: string
+    TransformationSpecDTO:
       type: object
       properties:
-        duleLabels:
-          type: array
-          items:
-            type: string
-        enforcementRefs:
-          type: array
-          items:
-            type: string
+        mappingId:
+          type: string
+          example: 97051e9e86184c7d88d6bf8104ad7765
+        mappingVersion:
+          type: string
+          example: '0'
     FlowSpecItemDTO:
       type: object
       properties:
@@ -860,82 +924,14 @@ components:
                     - read
                     items:
                       type: string
-    OptionSpecDTO:
+    PolicyItemDTO:
       type: object
       properties:
-        errorDiagnosticsEnabled:
-          type: boolean
-          description: Flag to enable detailed and sample error diagnostics summary.
-          example: true
-        partialIngestionPercent:
-          type: integer
-          description: Percentage which defines the threshold of errors allowed before the run is marked as failed
-          example: 5
-    FlowSpecResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowSpecItemDTO'
-    RunSpecDTO:
-      type: object
-      description: Defines various params required for creating flow run for the speicific spec.
-      properties:
-        startTime:
-          type: integer
-          description: An integer that defines the start time of the run. The value is represented in Unix epoch time.
-        windowStartTime:
-          type: integer
-          description: An integer that defines the start time of the window against which data is to be pulled. The value is represented in Unix epoch time
-        windowEndTime:
-          type: integer
-          description: An integer that defines the end time of the window against which data is to be pulled. The value is represented in Unix epoch time.
-    UpdateFlowSpecRequest:
-      type: object
-      required:
-      - name
-      - providerId
-      properties:
-        transformationSpecDTOS:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransformationSpecDTO'
-        name:
-          type: string
-        providerId:
-          type: string
-        version:
-          type: string
-        type:
-          type: string
-        attributes:
-          type: object
-          additionalProperties:
-            type: object
-        optionSpec:
-          $ref: '#/components/schemas/OptionSpecDTO'
-        scheduleSpec:
-          $ref: '#/components/schemas/ScheduleSpecDTO'
-        runSpec:
-          $ref: '#/components/schemas/RunSpecDTO'
-        permissionsInfo:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/PermissionDTO'
-        entitlementInfo:
-          type: array
-          items:
-            $ref: '#/components/schemas/EntitlementSpecDTO'
-        policy:
-          $ref: '#/components/schemas/PolicyItemDTO'
-        sourceConnectionSpecIds:
+        duleLabels:
           type: array
           items:
             type: string
-        targetConnectionSpecIds:
+        enforcementRefs:
           type: array
           items:
             type: string
@@ -1005,7 +1001,25 @@ components:
                   - read
             description: Defines the type of access available to the `view` permission.
       description: Contains information regarding the permissions applied to the queried source.
-    CreateFlowSpecRequest:
+    FlowSpecResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowSpecItemDTO'
+    OptionSpecDTO:
+      type: object
+      properties:
+        errorDiagnosticsEnabled:
+          type: boolean
+          description: Flag to enable detailed and sample error diagnostics summary.
+          example: true
+        partialIngestionPercent:
+          type: integer
+          description: Percentage which defines the threshold of errors allowed before the run is marked as failed
+          example: 5
+    UpdateFlowSpecRequest:
       type: object
       required:
       - name
@@ -1053,30 +1067,16 @@ components:
           type: array
           items:
             type: string
-    TransformationSpecDTO:
+    EntitlementSpecDTO:
       type: object
       properties:
-        mappingId:
+        operation:
           type: string
-          example: 97051e9e86184c7d88d6bf8104ad7765
-        mappingVersion:
-          type: string
-          example: '0'
-    FlowSpecFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
-        groupByProperty:
-          type: string
-        projectionFields:
-          type: string
+          description: The type of checks to be applied on entitlements array.
+          example: anyOf
+        entitlements:
+          type: array
+          items:
+            type: string
+            description: The name of the entitlement supported.
 x-original-swagger-version: '2.0'

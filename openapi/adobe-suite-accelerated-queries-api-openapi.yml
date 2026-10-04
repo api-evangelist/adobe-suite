@@ -117,6 +117,29 @@ paths:
       x-codegen-request-body-name: accelerated-query-body
 components:
   schemas:
+    TemplateIdAcceleratedQueryDef:
+      type: object
+      required:
+      - dbName
+      - templateId
+      properties:
+        dbName:
+          type: string
+          description: The name of the database you are making an accelerated query to. The value for `dbName` should take the format of `{SANDBOX_NAME}:{ACCELERATED_STORE_DATABASE}.{ACCELERATED_STORE_SCHEMA}`. The database provided must exist within the accelerated store or the request will result in an error. You must ensure that the `x-sandbox-name` header and sandbox name in `dbName` refer to same sandbox.
+          example: acmesbox1:acmeacceldb:accmeaggschema
+        templateId:
+          type: string
+          description: The ID of a query created when a POST request is made to the `/templates` endpoint. The corresponding query is submitted to the query accelerated store. Accelerated queries require EITHER an SQL statement OR a template ID, but not both. Submitting both in a request causes an error.
+          example: f7cb5155-29da-4b95-8131-8c5deadfbe7f
+        name:
+          type: string
+          description: An optional human-friendly, descriptive name for the accelerated query.
+          example: Second Accelerated Query Sample
+        description:
+          type: string
+          description: An optional comment on the intent of the query to help other users understand its purpose. The maximum size allowed is 1000 bytes.
+          example: Another sample of an accelerated query.
+      description: The query definition submitted to the query accelerated store.
     metadata_schema_ref:
       type: object
       properties:
@@ -153,6 +176,23 @@ components:
                   meta:xdmType: boolean
           description: The schema of the ad hoc object created. An ad-hoc Experience Data Model (XDM) schema with fields that are namespaced for usage only by a single dataset.
       description: This object contains the metadata for each column returned in the response. It includes the name and type of each column.
+    TemplateIdAcceleratedQueryResponse:
+      type: object
+      properties:
+        queryId:
+          type: string
+          description: The unique identifier for the query.
+          example: ba7aa60c-f5ab-47de-b980-c30789108efe
+        resultsMeta:
+          $ref: '#/components/schemas/metadata_schema_ref'
+        results:
+          type: array
+          description: The results of the query in JSON format.
+          items:
+            $ref: '#/components/schemas/results_each_row_schema_ref'
+        request:
+          $ref: '#/components/examples/TemplateIdAcceleratedQueryDefinition'
+      description: The response body for the accelerated query.
     accelerated_query_response:
       type: object
       properties:
@@ -193,23 +233,6 @@ components:
           description: An optional comment on the intent of the query to help other users understand its purpose. The maximum size allowed is 1000 bytes.
           example: Another sample of an accelerated query.
       description: The query definition submitted to the query accelerated store.
-    TemplateIdAcceleratedQueryResponse:
-      type: object
-      properties:
-        queryId:
-          type: string
-          description: The unique identifier for the query.
-          example: ba7aa60c-f5ab-47de-b980-c30789108efe
-        resultsMeta:
-          $ref: '#/components/schemas/metadata_schema_ref'
-        results:
-          type: array
-          description: The results of the query in JSON format.
-          items:
-            $ref: '#/components/schemas/results_each_row_schema_ref'
-        request:
-          $ref: '#/components/examples/TemplateIdAcceleratedQueryDefinition'
-      description: The response body for the accelerated query.
     results_each_row_schema_ref:
       type: object
       description: An object that represents a single row of the result set.
@@ -218,30 +241,14 @@ components:
         Industry_code: 23
         Value: 93141
         column_name_boolean_type: true
-    TemplateIdAcceleratedQueryDef:
-      type: object
-      required:
-      - dbName
-      - templateId
-      properties:
-        dbName:
-          type: string
-          description: The name of the database you are making an accelerated query to. The value for `dbName` should take the format of `{SANDBOX_NAME}:{ACCELERATED_STORE_DATABASE}.{ACCELERATED_STORE_SCHEMA}`. The database provided must exist within the accelerated store or the request will result in an error. You must ensure that the `x-sandbox-name` header and sandbox name in `dbName` refer to same sandbox.
-          example: acmesbox1:acmeacceldb:accmeaggschema
-        templateId:
-          type: string
-          description: The ID of a query created when a POST request is made to the `/templates` endpoint. The corresponding query is submitted to the query accelerated store. Accelerated queries require EITHER an SQL statement OR a template ID, but not both. Submitting both in a request causes an error.
-          example: f7cb5155-29da-4b95-8131-8c5deadfbe7f
-        name:
-          type: string
-          description: An optional human-friendly, descriptive name for the accelerated query.
-          example: Second Accelerated Query Sample
-        description:
-          type: string
-          description: An optional comment on the intent of the query to help other users understand its purpose. The maximum size allowed is 1000 bytes.
-          example: Another sample of an accelerated query.
-      description: The query definition submitted to the query accelerated store.
   examples:
+    SqlAcceleratedQueryDefinition:
+      description: A payload for an accelerated query request that includes SQL in the payload.
+      value:
+        dbName: acmesbox1:acmeacceldb:accmeaggschema
+        sql: SELECT * FROM accounts;
+        name: Accelerated Query Sample
+        description: A sample of an accelerated query.
     SqlAcceleratedQueryResponse:
       description: A sample response for an accelerated query request that used SQL directly in the payload.
       value:
@@ -285,13 +292,6 @@ components:
         templateId: f7cb5155-29da-4b95-8131-8c5deadfbe7f
         name: A Templated Accelerated Query Sample
         description: A sample of an accelerated query request that uses a template ID.
-    SqlAcceleratedQueryDefinition:
-      description: A payload for an accelerated query request that includes SQL in the payload.
-      value:
-        dbName: acmesbox1:acmeacceldb:accmeaggschema
-        sql: SELECT * FROM accounts;
-        name: Accelerated Query Sample
-        description: A sample of an accelerated query.
     TemplateIdAcceleratedQueryResponse:
       description: A sample response for an accelerated query request that used a template ID in the payload.
       value:

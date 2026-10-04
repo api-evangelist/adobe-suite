@@ -940,42 +940,6 @@ paths:
                     error_code: '500001'
                     message: An internal server error occurred. Please try again later.
 components:
-  examples:
-    ErrorBodyMethodNotAllowed:
-      summary: Method Not Allowed
-      value:
-        error_code: method_not_allowed
-        message: The HTTP method is not supported for this endpoint.
-    ErrorBodyTooManyRequests:
-      summary: Too many requests
-      value:
-        error_code: '429050'
-        message: Too many requests
-    ErrorBodyBadRequest:
-      summary: Bad Request
-      value:
-        error_code: bad_request
-        message: The request was invalid or cannot be served.
-    ErrorBodyForbidden:
-      summary: Api Key is required
-      value:
-        error_code: '403000'
-        message: Api Key is required
-    ErrorBodyResourceNotFound:
-      summary: Not Found
-      value:
-        error_code: unknown_job_id
-        message: The requested resource was not found.
-    ErrorBodyInternalServerError:
-      summary: Internal Server Error
-      value:
-        error_code: internal_server_error
-        message: An unexpected error occurred while processing the request.
-    ErrorBodyUnauthorized:
-      summary: Invalid Token
-      value:
-        error_code: '401013'
-        message: Oauth token is not valid
   schemas:
     Source:
       type: object
@@ -1008,6 +972,32 @@ components:
             description: See documentation for Semantic Subject Lock.
             url: https://developer.adobe.com/reframev2/getting-started/semantic-search/
       description: Analysis configuration for the video processing.
+    AspectRatioV2:
+      type: object
+      description: Aspect ratio specification for video output.
+      properties:
+        x:
+          type: integer
+          description: AspectRatio x ratio.
+        y:
+          type: integer
+          description: AspectRatio y ratio.
+      required:
+      - x
+      - y
+    GenerateReframedVideoJobErrorBody:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: A code representing the specific error type.
+        message:
+          type: string
+          description: A description of the error that occurred.
+      required:
+      - error_code
+      - message
+      description: Error response for the reframed video job.
     Destination:
       type: object
       properties:
@@ -1018,6 +1008,61 @@ components:
       required:
       - url
       description: Destination details including a pre-signed URL for the output media.
+    VideoInputV2:
+      type: object
+      properties:
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              description: The pre-signed URL pointing to the input source.
+          required:
+          - url
+          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+      required:
+      - source
+      description: Video input details for generate reframed video request.
+    RepeatV2:
+      type: string
+      enum:
+      - stop_on_last_frame
+      - loop
+      - time_stretch
+      description: Defines the repeat behavior of the overlay.
+    OverlayV2:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+        startTime:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Start time for the overlay in the format HH:MM:SS:FF.
+        duration:
+          type: string
+          format: HH:MM:SS:FRAME_NUMBER
+          description: Duration of the overlay in the format HH:MM:SS:FF.
+        scale:
+          $ref: '#/components/schemas/ScaleV2'
+        position:
+          $ref: '#/components/schemas/PositionV2'
+        repeat:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/RepeatV2'
+          description: Repeat behavior for GIF overlay (optional).
+    ScaleV2:
+      type: object
+      description: Scale configuration for overlay dimensions.
+      properties:
+        width:
+          type: integer
+          description: The width of the scaled overlay.
+        height:
+          type: integer
+          description: The height of the scaled overlay.
     CompositionV2:
       type: object
       properties:
@@ -1027,28 +1072,6 @@ components:
             $ref: '#/components/schemas/OverlayV2'
           description: List of overlays to be composed on the video.
       description: Configuration for composing elements on the video.
-    OutputFormatV2:
-      type: object
-      default: source
-      properties:
-        media:
-          type: string
-          enum:
-          - none
-          - mp4
-          - mov
-          - source
-          description: Media format for the output video. If only the OTIO file is needed, set this as `none`.
-        sidecar:
-          type: string
-          enum:
-          - json
-          - otio
-          description: Sidecar format for additional metadata.
-      description: Output format configuration. A media property is mandatory when this format object is specified.
-      required:
-      - media
-      - sidecar
     Overlay:
       type: object
       properties:
@@ -1127,45 +1150,6 @@ components:
       - scale
       - position
       description: Configuration for an overlay in the reframed video.
-    ScaleV2:
-      type: object
-      description: Scale configuration for overlay dimensions.
-      properties:
-        width:
-          type: integer
-          description: The width of the scaled overlay.
-        height:
-          type: integer
-          description: The height of the scaled overlay.
-    VideoInputV2:
-      type: object
-      properties:
-        source:
-          type: object
-          properties:
-            url:
-              type: string
-              format: uri
-              description: The pre-signed URL pointing to the input source.
-          required:
-          - url
-          description: Details of the source including a pre-signed URL. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
-      required:
-      - source
-      description: Video input details for generate reframed video request.
-    AspectRatioV2:
-      type: object
-      description: Aspect ratio specification for video output.
-      properties:
-        x:
-          type: integer
-          description: AspectRatio x ratio.
-        y:
-          type: integer
-          description: AspectRatio y ratio.
-      required:
-      - x
-      - y
     PositionV2:
       type: object
       description: Position configuration for overlay placement.
@@ -1189,48 +1173,64 @@ components:
           - integer
           - 'null'
           description: Vertical offset for the anchor point.
-    OverlayV2:
+    OutputFormatV2:
       type: object
+      default: source
       properties:
-        source:
-          $ref: '#/components/schemas/Source'
-        startTime:
+        media:
           type: string
-          format: HH:MM:SS:FRAME_NUMBER
-          description: Start time for the overlay in the format HH:MM:SS:FF.
-        duration:
+          enum:
+          - none
+          - mp4
+          - mov
+          - source
+          description: Media format for the output video. If only the OTIO file is needed, set this as `none`.
+        sidecar:
           type: string
-          format: HH:MM:SS:FRAME_NUMBER
-          description: Duration of the overlay in the format HH:MM:SS:FF.
-        scale:
-          $ref: '#/components/schemas/ScaleV2'
-        position:
-          $ref: '#/components/schemas/PositionV2'
-        repeat:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/RepeatV2'
-          description: Repeat behavior for GIF overlay (optional).
-    RepeatV2:
-      type: string
-      enum:
-      - stop_on_last_frame
-      - loop
-      - time_stretch
-      description: Defines the repeat behavior of the overlay.
-    GenerateReframedVideoJobErrorBody:
-      type: object
-      properties:
-        error_code:
-          type: string
-          description: A code representing the specific error type.
-        message:
-          type: string
-          description: A description of the error that occurred.
+          enum:
+          - json
+          - otio
+          description: Sidecar format for additional metadata.
+      description: Output format configuration. A media property is mandatory when this format object is specified.
       required:
-      - error_code
-      - message
-      description: Error response for the reframed video job.
+      - media
+      - sidecar
+  examples:
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    ErrorBodyMethodNotAllowed:
+      summary: Method Not Allowed
+      value:
+        error_code: method_not_allowed
+        message: The HTTP method is not supported for this endpoint.
+    ErrorBodyInternalServerError:
+      summary: Internal Server Error
+      value:
+        error_code: internal_server_error
+        message: An unexpected error occurred while processing the request.
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
+    ErrorBodyBadRequest:
+      summary: Bad Request
+      value:
+        error_code: bad_request
+        message: The request was invalid or cannot be served.
+    ErrorBodyResourceNotFound:
+      summary: Not Found
+      value:
+        error_code: unknown_job_id
+        message: The requested resource was not found.
   securitySchemes:
     AccessToken:
       type: http

@@ -796,18 +796,6 @@ paths:
           - platform-stage
 components:
   schemas:
-    StateActionDTO:
-      type: object
-      properties:
-        percentCompleted:
-          type: number
-          format: double
-        status:
-          $ref: '#/components/schemas/StatusDTO'
-        recordTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FlowRecordTypeDTO'
     PatchInstruction:
       required:
       - op
@@ -831,6 +819,33 @@ components:
               type: string
               description: The new description value you want to add.
               example: A new description to provide further context on a specified connection or flow.
+    AuthInfoDTO:
+      required:
+      - specName
+      type: object
+      properties:
+        specName:
+          type: string
+          description: Specifies the type of authentication a specific source is using to connect.
+          example: Basic Authentication for google-cloud
+        params:
+          $ref: '#/components/schemas/AuthCreateBaseDTO'
+    AuthCreateBaseDTO:
+      type: object
+      properties:
+        accessKeyId:
+          type: string
+          example: GOOGMG1234ABCDEFGHIJKLMN
+        secretAccessKey:
+          type: string
+          example: xxxx
+    ConnectionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionItemDTO'
     ExploreConnectionResponse:
       type: array
       items:
@@ -856,13 +871,110 @@ components:
             type: boolean
             description: A boolean value indicating whether the schema can be fetched.
             example: false
-    ConnectionListResponse:
+    SpecInfoDTO:
+      required:
+      - id
+      - version
       type: object
       properties:
-        items:
+        id:
+          type: string
+          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
+          example: 32e8f412-cdf7-464c-9885-78184cb113fd
+        version:
+          type: string
+          description: The version of the connection specification ID.
+          example: '1.0'
+    CreateConnectionRequest:
+      required:
+      - connectionSpec
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the base connection.
+          example: Google Cloud Storage Base Connection
+        description:
+          type: string
+          description: An optional description that can be added to provide further context on the connection.
+          example: Google Cloud Storage base connection for customer data
+        auth:
+          $ref: '#/components/schemas/AuthInfoDTO'
+        connectionSpec:
+          $ref: '#/components/schemas/SpecInfoDTO'
+    CreateConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The newly created base connection ID.
+          example: 69f188b6-af07-4587-8061-e94d34637b41
+        etag:
+          type: string
+          description: The eTag assigned to the base connection ID.
+          example: '"6802064a-0000-0200-0000-6387c6b90000"'
+      description: The location of the newly created connection instance.
+    StatusDTO:
+      type: object
+      properties:
+        value:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - COMPLETED
+          - SUCCESS
+          - PARTIAL_SUCCESS
+          - FAILED
+          - PARTIAL_FAILURE
+          - QUEUED
+          - SCHEDULED
+        properties:
+          type: object
+        errors:
           type: array
           items:
-            $ref: '#/components/schemas/ConnectionItemDTO'
+            $ref: '#/components/schemas/StatusErrorDTO'
+    StateActionDTO:
+      type: object
+      properties:
+        percentCompleted:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/StatusDTO'
+        recordTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowRecordTypeDTO'
+    ConnectionFilterRequest:
+      type: object
+      properties:
+        queryString:
+          type: string
+        limit:
+          type: integer
+          format: int32
+          maximum: 1000
+        orderby:
+          type: string
+        count:
+          type: boolean
+    StatusErrorDTO:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+    TestConnectionResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+          description: A boolean value indicating whether the connection is successful  or not.
+          example: true
     ConnectionItemDTO:
       type: object
       properties:
@@ -942,118 +1054,6 @@ components:
           type: string
         extensions:
           type: object
-    CreateConnectionRequest:
-      required:
-      - connectionSpec
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the base connection.
-          example: Google Cloud Storage Base Connection
-        description:
-          type: string
-          description: An optional description that can be added to provide further context on the connection.
-          example: Google Cloud Storage base connection for customer data
-        auth:
-          $ref: '#/components/schemas/AuthInfoDTO'
-        connectionSpec:
-          $ref: '#/components/schemas/SpecInfoDTO'
-    StatusErrorDTO:
-      type: object
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-        details:
-          type: object
-    StatusDTO:
-      type: object
-      properties:
-        value:
-          type: string
-          enum:
-          - IN_PROGRESS
-          - COMPLETED
-          - SUCCESS
-          - PARTIAL_SUCCESS
-          - FAILED
-          - PARTIAL_FAILURE
-          - QUEUED
-          - SCHEDULED
-        properties:
-          type: object
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/StatusErrorDTO'
-    ConnectionFilterRequest:
-      type: object
-      properties:
-        queryString:
-          type: string
-        limit:
-          type: integer
-          format: int32
-          maximum: 1000
-        orderby:
-          type: string
-        count:
-          type: boolean
-    AuthCreateBaseDTO:
-      type: object
-      properties:
-        accessKeyId:
-          type: string
-          example: GOOGMG1234ABCDEFGHIJKLMN
-        secretAccessKey:
-          type: string
-          example: xxxx
-    CreateConnectionResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The newly created base connection ID.
-          example: 69f188b6-af07-4587-8061-e94d34637b41
-        etag:
-          type: string
-          description: The eTag assigned to the base connection ID.
-          example: '"6802064a-0000-0200-0000-6387c6b90000"'
-      description: The location of the newly created connection instance.
-    AuthInfoDTO:
-      required:
-      - specName
-      type: object
-      properties:
-        specName:
-          type: string
-          description: Specifies the type of authentication a specific source is using to connect.
-          example: Basic Authentication for google-cloud
-        params:
-          $ref: '#/components/schemas/AuthCreateBaseDTO'
-    SpecInfoDTO:
-      required:
-      - id
-      - version
-      type: object
-      properties:
-        id:
-          type: string
-          description: The connection specification ID that corresponds with the source from where data is being ingested from. This ID is fixed and each source supported by Experience Platform has its own connection specification ID.
-          example: 32e8f412-cdf7-464c-9885-78184cb113fd
-        version:
-          type: string
-          description: The version of the connection specification ID.
-          example: '1.0'
-    TestConnectionResponse:
-      type: object
-      properties:
-        result:
-          type: boolean
-          description: A boolean value indicating whether the connection is successful  or not.
-          example: true
     connection_parameters:
       type: object
       properties:

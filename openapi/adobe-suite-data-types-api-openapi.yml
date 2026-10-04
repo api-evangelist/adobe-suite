@@ -194,20 +194,33 @@ components:
       required: false
       schema:
         type: string
-    containerIdLookup:
+    start:
+      name: start
+      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
+
+
+        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
+
+
+        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
+      required: false
+      in: query
+      schema:
+        type: string
+    containerIdList:
       name: CONTAINER_ID
-      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
       required: true
       in: path
       schema:
         type: string
-    replaceDataTypePayload:
-      name: body
-      description: The JSON payload must include all of the fields that were originally required for creating the data type, but with updated values.
+    content-type:
+      name: Content-Type
+      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
       required: true
-      in: body
+      in: header
       schema:
-        $ref: '#/components/schemas/replaceDataType'
+        type: string
     authorization:
       name: Authorization
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
@@ -215,32 +228,9 @@ components:
       in: header
       schema:
         type: string
-    accept:
+    acceptListing:
       name: Accept
-      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
-
-        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
-      required: true
-      in: header
-      schema:
-        type: string
-    orderBy:
-      name: orderby
-      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
-      required: false
-      in: query
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      in: header
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
       required: true
       in: header
       schema:
@@ -252,6 +242,57 @@ components:
       in: body
       schema:
         $ref: '#/components/schemas/patchDataType'
+    orderBy:
+      name: orderby
+      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
+      required: false
+      in: query
+      schema:
+        type: string
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string
+    replaceDataTypePayload:
+      name: body
+      description: The JSON payload must include all of the fields that were originally required for creating the data type, but with updated values.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/replaceDataType'
+    containerIdLookup:
+      name: CONTAINER_ID
+      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      required: true
+      in: path
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    DATA_TYPE_ID:
+      name: DATA_TYPE_ID
+      description: The `meta:altId` or URL-encoded `$id` of the data type in question.
+      required: true
+      in: path
+      schema:
+        type: string
     createDataTypePayload:
       name: body
       description: 'Unlike field groups, defining a data type does not require `meta:extends` or `meta:intendedToExtend` fields, nor do fields need to be nested to avoid collisions.
@@ -271,55 +312,106 @@ components:
       in: query
       schema:
         type: number
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    start:
-      name: start
-      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
-
-
-        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
-
-
-        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
-      required: false
-      in: query
-      schema:
-        type: string
-    acceptListing:
-      name: Accept
-      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
-      required: true
-      in: header
-      schema:
-        type: string
-    containerIdList:
-      name: CONTAINER_ID
-      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
-      required: true
-      in: path
-      schema:
-        type: string
-    DATA_TYPE_ID:
-      name: DATA_TYPE_ID
-      description: The `meta:altId` or URL-encoded `$id` of the data type in question.
-      required: true
-      in: path
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       in: header
       schema:
         type: string
   schemas:
+    registryMetadata:
+      type: object
+      description: Contains registry-specific metadata about the XDM resource.
+      properties:
+        repo:createdDate:
+          type: integer
+          description: A Unix timestamp of when the resource was created.
+        repo:lastModifiedDate:
+          type: integer
+          description: A Unix timestamp of when the resource was last modified.
+        xdm:createdClientId:
+          type: string
+          description: The ID of the client that created the resource.
+        xdm:lastModifiedClientId:
+          type: string
+          description: The ID of the client that last modified the resource.
+        xdm:createdUserId:
+          type: string
+          description: The ID of the user that created the resource.
+        xdm:lastModifiedUserId:
+          type: string
+          description: The ID of the user that last modified the resource.
+        etag:
+          type: string
+          description: An HTTP entity tag (ETag) for the resource.
+        meta:globalLibVersion:
+          type: string
+          description: The current global library version of the resource.
+        meta:usageCount:
+          type: integer
+          description: The number of instances where this resource is referenced by other XDM resources.
+    replaceDataType:
+      allOf:
+      - $ref: '#/components/schemas/createDataType'
+      - properties:
+          description:
+            example: Updated description for the data type.
+    allOfRef:
+      type: object
+      properties:
+        $ref:
+          type: string
+          description: The `$id` of the XDM resource.
+        type:
+          type: string
+          description: The resource type (typically `object`).
+        meta:xdmType:
+          type: string
+          description: The XDM resource type (typically `object`).
+    metaRegistryMetadata:
+      type: object
+      properties:
+        meta:registryMetadata:
+          $ref: '#/components/schemas/registryMetadata'
+    xdmTypeToSchema:
+      type: object
+      properties:
+        meta:xdmType:
+          type: string
+          description: The XDM resource type (typically `object`).
+        meta:status:
+          type: string
+          description: (For `global` resources only) The status of the resource.
+        $schema:
+          type: string
+          description: The JSON schema definition that this resource is based on.
+    listResponseItemWithVersion:
+      allOf:
+      - $ref: '#/components/schemas/listResponseItem'
+      - properties:
+          version:
+            type: string
+            description: The current version of the XDM resource.
+            example: '1.1'
+    metaTenantNamespace:
+      type: object
+      properties:
+        meta:tenantNamespace:
+          type: string
+          description: 'The namespace that all custom fields that the schema employs can be found under. Takes the form of your organization''s tenant ID prepended with an underscore: `_{TENANT_ID}`.'
+    singleDataTypeResponse:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
+      - properties:
+          meta:extends:
+            type: array
+            description: An array that contains the `$id` values of the XDM resources this data type extends.
+            items:
+              type: string
+              description: The `$id` of the resource this data type extends.
+      - $ref: '#/components/schemas/xdmTypeToSchema'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
     errorBasic:
       type: object
       properties:
@@ -353,6 +445,97 @@ components:
         detail:
           type: string
           description: A detailed message about what caused the error.
+    lookupDataTypeResponse:
+      allOf:
+      - $ref: '#/components/schemas/singleDataTypeResponse'
+      - properties:
+          meta:createdDate:
+            type: object
+            description: (For `global` data types only) A timestamp of when the global data type was released.
+      example:
+        $id: https://ns.adobe.com/xdm/content/productlistitem
+        meta:altId: _xdm.content.productlistitem
+        meta:resourceType: datatypes
+        version: 1.27.4
+        title: Product list item
+        type: object
+        description: The product list item represents a product selected by a customer with specific options, pricing, usage context for a specific point of time and may differ from the product record. For example the product record contains details from the product information system that are consistent for all customers, where the product list item has the actual price offered to the customer at that time which may vary due to sales campaigns or seasonal pricing.
+        definitions:
+          productlistitem:
+            properties:
+              _id:
+                title: Line item ID.
+                type: string
+                format: uri-reference
+                description: The line item identifier for this product entry. The product itself is identified through `xdm:product`.
+                meta:xdmType: string
+                meta:xdmField: '@id'
+              SKU:
+                title: SKU
+                type: string
+                description: Stock keeping unit (SKU), the unique identifier for a product defined by the vendor.
+                meta:xdmType: string
+                meta:xdmField: xdm:SKU
+              currencyCode:
+                title: Currency code
+                type: string
+                examples:
+                - USD
+                - EUR
+                pattern: ^[A-Z]{3}$
+                description: The ISO 4217 alphabetic currency code used for pricing the product.
+                meta:xdmType: string
+                meta:xdmField: xdm:currencyCode
+              name:
+                title: Name
+                type: string
+                description: The display name for the product as presented to the user for this product view.
+                meta:xdmType: string
+                meta:xdmField: xdm:name
+              priceTotal:
+                title: Price total
+                type: number
+                description: The total price for the product line item.
+                meta:xdmType: number
+                meta:xdmField: xdm:priceTotal
+              product:
+                title: Product
+                type: string
+                format: uri
+                description: The XDM identifier of the product itself.
+                meta:xdmType: string
+                meta:xdmField: xdm:product
+              productAddMethod:
+                title: Product add method
+                type: string
+                description: The method that was used to add a product item to the list by the visitor. Set with product list add metrics.
+                meta:xdmType: string
+                meta:xdmField: xdm:productAddMethod
+              quantity:
+                title: Quantity
+                type: integer
+                description: The number of units the customer has indicated they require of the product.
+                meta:xdmType: int
+                meta:xdmField: xdm:quantity
+            required:
+            - SKU
+        allOf:
+        - '$ref ': '#/definitions/productlistitem'
+          type: object
+          meta:xdmType: object
+        - '$ref ': https://ns.adobe.com/xdm/mixins/product-measurement#/definitions/uomcode
+          type: object
+          meta:xdmType: object
+        meta:xdmType: object
+        meta:status: stable
+        $schema: http://json-schema.org/draft-06/schema#
+        meta:registryMetadata:
+          repo:createdDate: 1635361816394
+          repo:lastModifiedDate: 1635361816394
+          eTag: ba11c63e004dd1db02b7475cf2908b2611890f2e7bd139e31ff064bb424c24c7
+          meta:globalLibVersion: 1.27.4
+          meta:usageCount: 33
+        meta:createdDate: '2021-02-19'
     listResponseBasic:
       type: object
       properties:
@@ -397,50 +580,73 @@ components:
           next: null
           global_schemas:
             href: https://platform.adobe.io/data/foundation/schemaregistry/global/schemas
-    allOfRef:
-      type: object
-      properties:
-        $ref:
-          type: string
-          description: The `$id` of the XDM resource.
-        type:
-          type: string
-          description: The resource type (typically `object`).
-        meta:xdmType:
-          type: string
-          description: The XDM resource type (typically `object`).
-    xdmTypeToSchema:
-      type: object
-      properties:
-        meta:xdmType:
-          type: string
-          description: The XDM resource type (typically `object`).
-        meta:status:
-          type: string
-          description: (For `global` resources only) The status of the resource.
-        $schema:
-          type: string
-          description: The JSON schema definition that this resource is based on.
-    listResponseItemWithVersion:
+    putDataTypeResponse:
       allOf:
-      - $ref: '#/components/schemas/listResponseItem'
+      - $ref: '#/components/schemas/createDataTypeResponse'
+      - properties:
+          description:
+            example: Updated description of the data type.
+          version:
+            example: '1.1'
+    patchDataTypeResponse:
+      allOf:
+      - $ref: '#/components/schemas/createDataTypeResponse'
       - properties:
           version:
-            type: string
-            description: The current version of the XDM resource.
             example: '1.1'
-    resourceContainers:
+          properties:
+            example:
+              field1:
+                title: Field 1
+                description: Description of Field 1.
+                type: string
+              field2:
+                title: Field 2
+                description: Description of Field 2.
+                type: integer
+              field3:
+                title: Field 3
+                description: Description of Field 3.
+                type: string
+                format: date
+    lookupResourceCore:
       type: object
       properties:
-        meta:containerId:
+        $id:
           type: string
-          description: The container for the schema, either `global` or `tenant`.
-        meta:sandboxId:
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:altId:
           type: string
-          description: The ID of the Platform sandbox that contains the schema.
-        meta:sandboxType:
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
+        meta:resourceType:
           type: string
-          description: The type of Platform sandbox that contains the schema, either `production` or `development`.
+          description: The type of XDM resource.
+          example: schemas
+        version:
+          type: string
+          description: The current version of the resource.
+          example: 1.4
+        title:
+          type: string
+          description: The title of the resource.
+          example: Hotels
+        type:
+          type: string
+          description: The JSON Schema element type that represents the XDM resource (typically `object`).
+          example: object
+        description:
+          type: string
+          description: A description for the resource.
+    linksBasic:
+      type: object
+      description: Contains various links related to the response.
+      properties:
+        next:
+          type: string
+          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
+          example: null
     createDataType:
       type: object
       properties:
@@ -486,182 +692,45 @@ components:
               freeStanding: Free Standing Building
               mall: Mall Space
               shoppingCenter: Shopping Center
-    putDataTypeResponse:
+    resourceContainers:
+      type: object
+      properties:
+        meta:containerId:
+          type: string
+          description: The container for the schema, either `global` or `tenant`.
+        meta:sandboxId:
+          type: string
+          description: The ID of the Platform sandbox that contains the schema.
+        meta:sandboxType:
+          type: string
+          description: The type of Platform sandbox that contains the schema, either `production` or `development`.
+    listResponse:
       allOf:
-      - $ref: '#/components/schemas/createDataTypeResponse'
+      - $ref: '#/components/schemas/listResponseBasic'
       - properties:
-          description:
-            example: Updated description of the data type.
-          version:
-            example: '1.1'
-    acceptErrorLookup:
-      allOf:
-      - $ref: '#/components/schemas/errorBasic'
-      example:
-        type: http://ns.adobe.com/aep/errors/XDM-1007-400
-        title: Accept header invalid
-        status: 400
-        report:
-          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
-          timestamp: 11-02-2021 07:42:43
-          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-          sub-errors: []
-        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-    lookupResourceWithDefinitions:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceCore'
-      - properties:
-          definitions:
-            type: object
-            description: Contains definitions for the unique attributes provided by the resource.
-          allOf:
-            type: array
-            description: A list of objects that refer to the common definitions and fields that the resource inherits.
-            items:
-              $ref: '#/components/schemas/allOfRef'
-          meta:extensible:
-            type: boolean
-            description: Indicates whether this resource is extensible or not.
-          meta:abstract:
-            type: boolean
-            description: Indicates whether this resource is abstract or not.
-    patchDataTypeResponse:
-      allOf:
-      - $ref: '#/components/schemas/createDataTypeResponse'
-      - properties:
-          version:
-            example: '1.1'
-          properties:
-            example:
-              field1:
-                title: Field 1
-                description: Description of Field 1.
-                type: string
-              field2:
-                title: Field 2
-                description: Description of Field 2.
-                type: integer
-              field3:
-                title: Field 3
-                description: Description of Field 3.
-                type: string
-                format: date
-    createDataTypeResponse:
-      allOf:
-      - $ref: '#/components/schemas/singleDataTypeResponse'
-      - $ref: '#/components/schemas/resourceContainers'
-      - $ref: '#/components/schemas/metaTenantNamespace'
-      example:
-        $id: https://ns.adobe.com/{TENANT_ID}/datatypes/669ffcc61cf5e94e8640dbe6a15f0f24eb3cd1ddbbfb6b36
-        meta:altId: _{TENANT_ID}.datatypes.669ffcc61cf5e94e8640dbe6a15f0f24eb3cd1ddbbfb6b36
-        meta:resourceType: datatypes
-        version: '1.0'
-        title: Property Construction
+          _links:
+            $ref: '#/components/schemas/linksBasic'
+    patchDataType:
+      type: array
+      items:
         type: object
-        description: Information related to the property construction
         properties:
-          yearBuilt:
-            type: integer
-            title: Year Built
-            description: The year the property was constructed.
-            meta:xdmType: int
-          propertyType:
+          op:
+            description: Type of JSON Patch operation being performed.
             type: string
-            title: Property Type
-            description: Type of building or structure in which the property exists.
-            enum:
-            - freeStanding
-            - mall
-            - shoppingCenter
-            meta:enum:
-              freeStanding: Free Standing Building
-              mall: Mall Space
-              shoppingCenter: Shopping Center
-            meta:xdmType: string
-        refs: []
-        imsOrg: '{ORG_ID}'
-        meta:extensible: true
-        meta:abstract: true
-        meta:xdmType: object
-        meta:registryMetadata:
-          repo:createdDate: 1670885230789
-          repo:lastModifiedDate: 1670885230789
-          xdm:createdClientId: '{CLIENT_ID}'
-          xdm:lastModifiedClientId: '{CLIENT_ID}'
-          xdm:createdUserId: '{USER_ID}'
-          xdm:lastModifiedUserId: '{USER_ID}'
-          eTag: d3cc803a1f8daa06b7c150d882bd337d88f4d5d5f08d36cfc4c2849dc0255f7e
-          meta:globalLibVersion: 1.38.3.1
-        meta:containerId: tenant
-        meta:sandboxId: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
-        meta:sandboxType: production
-        meta:tenantNamespace: _{TENANT_ID}
-    registryMetadata:
-      type: object
-      description: Contains registry-specific metadata about the XDM resource.
-      properties:
-        repo:createdDate:
-          type: integer
-          description: A Unix timestamp of when the resource was created.
-        repo:lastModifiedDate:
-          type: integer
-          description: A Unix timestamp of when the resource was last modified.
-        xdm:createdClientId:
-          type: string
-          description: The ID of the client that created the resource.
-        xdm:lastModifiedClientId:
-          type: string
-          description: The ID of the client that last modified the resource.
-        xdm:createdUserId:
-          type: string
-          description: The ID of the user that created the resource.
-        xdm:lastModifiedUserId:
-          type: string
-          description: The ID of the user that last modified the resource.
-        etag:
-          type: string
-          description: An HTTP entity tag (ETag) for the resource.
-        meta:globalLibVersion:
-          type: string
-          description: The current global library version of the resource.
-        meta:usageCount:
-          type: integer
-          description: The number of instances where this resource is referenced by other XDM resources.
-    singleDataTypeResponse:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
-      - properties:
-          meta:extends:
-            type: array
-            description: An array that contains the `$id` values of the XDM resources this data type extends.
-            items:
+            example: add
+          path:
+            description: Location where the operation is being performed.
+            type: string
+            example: /properties/field3
+          value:
+            description: Required elements vary depending on type of 'value' (e.g. string, integer, object, etc.)
+            type: object
+            example:
+              title: Field 3
               type: string
-              description: The `$id` of the resource this data type extends.
-      - $ref: '#/components/schemas/xdmTypeToSchema'
-      - $ref: '#/components/schemas/metaRegistryMetadata'
-    listResponseItem:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The title of the XDM resource.
-          example: Tenant Data Schema
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
-    linksBasic:
-      type: object
-      description: Contains various links related to the response.
-      properties:
-        next:
-          type: string
-          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
-          example: null
+              format: date
+              description: Description of Field 3.
     listDataTypesResponse:
       allOf:
       - $ref: '#/components/schemas/listResponse'
@@ -932,42 +1001,24 @@ components:
           count: 2
         _links:
           next: null
-    lookupResourceCore:
-      type: object
-      properties:
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.d4ad4b8463a67f6755f2aabbeb9e02c7
-        meta:resourceType:
-          type: string
-          description: The type of XDM resource.
-          example: schemas
-        version:
-          type: string
-          description: The current version of the resource.
-          example: 1.4
-        title:
-          type: string
-          description: The title of the resource.
-          example: Hotels
-        type:
-          type: string
-          description: The JSON Schema element type that represents the XDM resource (typically `object`).
-          example: object
-        description:
-          type: string
-          description: A description for the resource.
-    listResponse:
+    lookupResourceWithDefinitions:
       allOf:
-      - $ref: '#/components/schemas/listResponseBasic'
+      - $ref: '#/components/schemas/lookupResourceCore'
       - properties:
-          _links:
-            $ref: '#/components/schemas/linksBasic'
+          definitions:
+            type: object
+            description: Contains definitions for the unique attributes provided by the resource.
+          allOf:
+            type: array
+            description: A list of objects that refer to the common definitions and fields that the resource inherits.
+            items:
+              $ref: '#/components/schemas/allOfRef'
+          meta:extensible:
+            type: boolean
+            description: Indicates whether this resource is extensible or not.
+          meta:abstract:
+            type: boolean
+            description: Indicates whether this resource is abstract or not.
     acceptErrorList:
       allOf:
       - $ref: '#/components/schemas/errorBasic'
@@ -981,132 +1032,81 @@ components:
           detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
           sub-errors: []
         detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
-    metaRegistryMetadata:
-      type: object
-      properties:
-        meta:registryMetadata:
-          $ref: '#/components/schemas/registryMetadata'
-    patchDataType:
-      type: array
-      items:
-        type: object
-        properties:
-          op:
-            description: Type of JSON Patch operation being performed.
-            type: string
-            example: add
-          path:
-            description: Location where the operation is being performed.
-            type: string
-            example: /properties/field3
-          value:
-            description: Required elements vary depending on type of 'value' (e.g. string, integer, object, etc.)
-            type: object
-            example:
-              title: Field 3
-              type: string
-              format: date
-              description: Description of Field 3.
-    metaTenantNamespace:
-      type: object
-      properties:
-        meta:tenantNamespace:
-          type: string
-          description: 'The namespace that all custom fields that the schema employs can be found under. Takes the form of your organization''s tenant ID prepended with an underscore: `_{TENANT_ID}`.'
-    lookupDataTypeResponse:
+    createDataTypeResponse:
       allOf:
       - $ref: '#/components/schemas/singleDataTypeResponse'
-      - properties:
-          meta:createdDate:
-            type: object
-            description: (For `global` data types only) A timestamp of when the global data type was released.
+      - $ref: '#/components/schemas/resourceContainers'
+      - $ref: '#/components/schemas/metaTenantNamespace'
       example:
-        $id: https://ns.adobe.com/xdm/content/productlistitem
-        meta:altId: _xdm.content.productlistitem
+        $id: https://ns.adobe.com/{TENANT_ID}/datatypes/669ffcc61cf5e94e8640dbe6a15f0f24eb3cd1ddbbfb6b36
+        meta:altId: _{TENANT_ID}.datatypes.669ffcc61cf5e94e8640dbe6a15f0f24eb3cd1ddbbfb6b36
         meta:resourceType: datatypes
-        version: 1.27.4
-        title: Product list item
+        version: '1.0'
+        title: Property Construction
         type: object
-        description: The product list item represents a product selected by a customer with specific options, pricing, usage context for a specific point of time and may differ from the product record. For example the product record contains details from the product information system that are consistent for all customers, where the product list item has the actual price offered to the customer at that time which may vary due to sales campaigns or seasonal pricing.
-        definitions:
-          productlistitem:
-            properties:
-              _id:
-                title: Line item ID.
-                type: string
-                format: uri-reference
-                description: The line item identifier for this product entry. The product itself is identified through `xdm:product`.
-                meta:xdmType: string
-                meta:xdmField: '@id'
-              SKU:
-                title: SKU
-                type: string
-                description: Stock keeping unit (SKU), the unique identifier for a product defined by the vendor.
-                meta:xdmType: string
-                meta:xdmField: xdm:SKU
-              currencyCode:
-                title: Currency code
-                type: string
-                examples:
-                - USD
-                - EUR
-                pattern: ^[A-Z]{3}$
-                description: The ISO 4217 alphabetic currency code used for pricing the product.
-                meta:xdmType: string
-                meta:xdmField: xdm:currencyCode
-              name:
-                title: Name
-                type: string
-                description: The display name for the product as presented to the user for this product view.
-                meta:xdmType: string
-                meta:xdmField: xdm:name
-              priceTotal:
-                title: Price total
-                type: number
-                description: The total price for the product line item.
-                meta:xdmType: number
-                meta:xdmField: xdm:priceTotal
-              product:
-                title: Product
-                type: string
-                format: uri
-                description: The XDM identifier of the product itself.
-                meta:xdmType: string
-                meta:xdmField: xdm:product
-              productAddMethod:
-                title: Product add method
-                type: string
-                description: The method that was used to add a product item to the list by the visitor. Set with product list add metrics.
-                meta:xdmType: string
-                meta:xdmField: xdm:productAddMethod
-              quantity:
-                title: Quantity
-                type: integer
-                description: The number of units the customer has indicated they require of the product.
-                meta:xdmType: int
-                meta:xdmField: xdm:quantity
-            required:
-            - SKU
-        allOf:
-        - '$ref ': '#/definitions/productlistitem'
-          type: object
-          meta:xdmType: object
-        - '$ref ': https://ns.adobe.com/xdm/mixins/product-measurement#/definitions/uomcode
-          type: object
-          meta:xdmType: object
+        description: Information related to the property construction
+        properties:
+          yearBuilt:
+            type: integer
+            title: Year Built
+            description: The year the property was constructed.
+            meta:xdmType: int
+          propertyType:
+            type: string
+            title: Property Type
+            description: Type of building or structure in which the property exists.
+            enum:
+            - freeStanding
+            - mall
+            - shoppingCenter
+            meta:enum:
+              freeStanding: Free Standing Building
+              mall: Mall Space
+              shoppingCenter: Shopping Center
+            meta:xdmType: string
+        refs: []
+        imsOrg: '{ORG_ID}'
+        meta:extensible: true
+        meta:abstract: true
         meta:xdmType: object
-        meta:status: stable
-        $schema: http://json-schema.org/draft-06/schema#
         meta:registryMetadata:
-          repo:createdDate: 1635361816394
-          repo:lastModifiedDate: 1635361816394
-          eTag: ba11c63e004dd1db02b7475cf2908b2611890f2e7bd139e31ff064bb424c24c7
-          meta:globalLibVersion: 1.27.4
-          meta:usageCount: 33
-        meta:createdDate: '2021-02-19'
-    replaceDataType:
+          repo:createdDate: 1670885230789
+          repo:lastModifiedDate: 1670885230789
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: d3cc803a1f8daa06b7c150d882bd337d88f4d5d5f08d36cfc4c2849dc0255f7e
+          meta:globalLibVersion: 1.38.3.1
+        meta:containerId: tenant
+        meta:sandboxId: 1bd86660-c5da-11e9-93d4-6d5fc3a66a8e
+        meta:sandboxType: production
+        meta:tenantNamespace: _{TENANT_ID}
+    listResponseItem:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the XDM resource.
+          example: Tenant Data Schema
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
+    acceptErrorLookup:
       allOf:
-      - $ref: '#/components/schemas/createDataType'
-      - properties:
-          description:
-            example: Updated description for the data type.
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1007-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
+          timestamp: 11-02-2021 07:42:43
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'

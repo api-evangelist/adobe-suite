@@ -659,15 +659,129 @@ paths:
           description: Program not found.
 components:
   schemas:
-    ContentFlowInfo:
+    InvalidParameter:
       type: object
       properties:
-        validationErrors:
+        name:
+          type: string
+          example: paramName
+          description: Name of the invalid parameter.
+        reason:
+          type: string
+          example: value must be a positive number
+          description: Reason of why the parameter's value is not accepted.
+    ContentFlowValidationErrors:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: content flow warning error code
+        message:
+          type: string
+          description: content flow warning message
+        details:
           type: array
-          description: validationErrors
+          description: details
           items:
-            $ref: '#/components/schemas/ContentFlowValidationErrors'
-      description: The Content Flow Info
+            type: string
+      description: The Content Flow Validation Errors
+    ContentFlowResultDetails:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: content flow error
+        message:
+          type: string
+          description: content flow error message
+        details:
+          type: array
+          description: details
+          items:
+            type: string
+        info:
+          description: info
+          $ref: '#/components/schemas/ContentFlowInfo'
+        phase:
+          type: string
+          description: phase
+      description: The Content Flow Result Details
+    ContentSet:
+      type: object
+      properties:
+        id:
+          type: string
+          example: '123'
+          description: Identifier of the Content Set
+        name:
+          type: string
+          description: The name of the content set
+        paths:
+          type: array
+          description: Included asset paths
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ContentSetPath'
+        programId:
+          type: string
+          example: '658'
+          description: Identifier of the program. Unique within the space.
+        createdAt:
+          type: string
+          format: date-time
+          description: Create date
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: Update date
+          readOnly: true
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Application this content set belongs to.
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: A representation of a ContentSet custom
+    ContentSetList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            contentSets:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentSet'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+      description: Describes a Content Set List representation
     ContentFlowList:
       type: object
       properties:
@@ -699,6 +813,28 @@ components:
             self:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
+    ContentSetPath:
+      type: object
+      properties:
+        path:
+          type: string
+          description: path
+        excluded:
+          type: array
+          description: excluded
+          uniqueItems: true
+          items:
+            type: string
+      description: Describes a __Content Set path__
+    ContentFlowInfo:
+      type: object
+      properties:
+        validationErrors:
+          type: array
+          description: validationErrors
+          items:
+            $ref: '#/components/schemas/ContentFlowValidationErrors'
+      description: The Content Flow Info
     CompatibilityCheckResponse:
       type: object
       properties:
@@ -754,119 +890,6 @@ components:
           type: integer
           format: int32
       description: Describes the Backflow Compatibility between two topologies.
-    ContentFlowLogs:
-      type: object
-      properties:
-        download:
-          $ref: '#/components/schemas/Redirect'
-          description: link to download logs
-        logs/tail:
-          $ref: '#/components/schemas/Redirect'
-          description: link to download tails log
-    ContentFlowInput:
-      type: object
-      properties:
-        contentSetId:
-          type: string
-        destEnvironmentId:
-          type: string
-        tier:
-          type: string
-          example: author
-          description: tier
-        includeACL:
-          type: boolean
-          description: includeACL
-          default: false
-        destProgramId:
-          type: string
-          description: destProgramId
-        mergeExcludePaths:
-          type: boolean
-          description: mergeExcludePaths
-          default: false
-        copyVersions:
-          type: boolean
-          description: copyVersions
-          default: false
-      description: Wraps the content flow execution arguments
-    ContentFlowResultDetails:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: content flow error
-        message:
-          type: string
-          description: content flow error message
-        details:
-          type: array
-          description: details
-          items:
-            type: string
-        info:
-          description: info
-          $ref: '#/components/schemas/ContentFlowInfo'
-        phase:
-          type: string
-          description: phase
-      description: The Content Flow Result Details
-    RequestedPageDetails:
-      type: object
-      properties:
-        start:
-          type: integer
-          format: int32
-          description: The start index for the current page of results
-        limit:
-          type: integer
-          format: int32
-          description: The item limit for the current page of results
-        next:
-          type: integer
-          format: int32
-          description: The start index for the next page of results
-        prev:
-          type: integer
-          format: int32
-          description: The start index for the previous page of results
-        orderBy:
-          type: string
-        property:
-          type: array
-          items:
-            type: string
-        type:
-          type: string
-      description: Filtering and sorting page details
-    ContentFlowResults:
-      type: object
-      properties:
-        exportResult:
-          description: export results
-          $ref: '#/components/schemas/ContentFlowResultDetails'
-        importResult:
-          description: import results
-          $ref: '#/components/schemas/ContentFlowResultDetails'
-        transferProgress:
-          type: string
-          description: Transfer progress percentage
-      description: The Content Flow Results
-    ContentFlowValidationErrors:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          description: content flow warning error code
-        message:
-          type: string
-          description: content flow warning message
-        details:
-          type: array
-          description: details
-          items:
-            type: string
-      description: The Content Flow Validation Errors
     BadRequestError:
       type: object
       properties:
@@ -894,17 +917,6 @@ components:
           items:
             $ref: '#/components/schemas/InvalidParameter'
       description: A Bad Request response error.
-    InvalidParameter:
-      type: object
-      properties:
-        name:
-          type: string
-          example: paramName
-          description: Name of the invalid parameter.
-        reason:
-          type: string
-          example: value must be a positive number
-          description: Reason of why the parameter's value is not accepted.
     NewContentSet:
       type: object
       properties:
@@ -919,14 +931,28 @@ components:
           description: Included asset paths
           items:
             $ref: '#/components/schemas/ContentSetPath'
-    Redirect:
+    ContentFlowResults:
       type: object
-      required:
-      - redirect
       properties:
-        redirect:
+        exportResult:
+          description: export results
+          $ref: '#/components/schemas/ContentFlowResultDetails'
+        importResult:
+          description: import results
+          $ref: '#/components/schemas/ContentFlowResultDetails'
+        transferProgress:
           type: string
-          description: The url to redirect to.
+          description: Transfer progress percentage
+      description: The Content Flow Results
+    ContentFlowLogs:
+      type: object
+      properties:
+        download:
+          $ref: '#/components/schemas/Redirect'
+          description: link to download logs
+        logs/tail:
+          $ref: '#/components/schemas/Redirect'
+          description: link to download tails log
     HalLink:
       type: object
       properties:
@@ -1000,93 +1026,34 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: The Content Flow Execution
-    MissingParameter:
+    RequestedPageDetails:
       type: object
       properties:
-        name:
-          type: string
-          example: paramName
-          description: Name of the missing parameter.
-        type:
-          type: string
-          example: string
-          description: Type of the missing parameter.
-    ContentSetList:
-      type: object
-      properties:
-        _totalNumberOfItems:
+        start:
           type: integer
           format: int32
-          description: The total number of embedded items
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            contentSets:
-              type: array
-              items:
-                $ref: '#/components/schemas/ContentSet'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: Describes a Content Set List representation
-    ContentSet:
-      type: object
-      properties:
-        id:
+          description: The start index for the current page of results
+        limit:
+          type: integer
+          format: int32
+          description: The item limit for the current page of results
+        next:
+          type: integer
+          format: int32
+          description: The start index for the next page of results
+        prev:
+          type: integer
+          format: int32
+          description: The start index for the previous page of results
+        orderBy:
           type: string
-          example: '123'
-          description: Identifier of the Content Set
-        name:
-          type: string
-          description: The name of the content set
-        paths:
+        property:
           type: array
-          description: Included asset paths
-          uniqueItems: true
           items:
-            $ref: '#/components/schemas/ContentSetPath'
-        programId:
+            type: string
+        type:
           type: string
-          example: '658'
-          description: Identifier of the program. Unique within the space.
-        createdAt:
-          type: string
-          format: date-time
-          description: Create date
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          description: Update date
-          readOnly: true
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/program:
-              description: The Application this content set belongs to.
-              $ref: '#/components/schemas/HalLink'
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-      description: A representation of a ContentSet custom
+      description: Filtering and sorting page details
     CompatibilityCheckInput:
       type: object
       required:
@@ -1103,16 +1070,49 @@ components:
           - PUBLISH
           - AUTHOR
       description: Wraps the content copy compatibility check execution arguments.
-    ContentSetPath:
+    MissingParameter:
       type: object
       properties:
-        path:
+        name:
           type: string
-          description: path
-        excluded:
-          type: array
-          description: excluded
-          uniqueItems: true
-          items:
-            type: string
-      description: Describes a __Content Set path__
+          example: paramName
+          description: Name of the missing parameter.
+        type:
+          type: string
+          example: string
+          description: Type of the missing parameter.
+    ContentFlowInput:
+      type: object
+      properties:
+        contentSetId:
+          type: string
+        destEnvironmentId:
+          type: string
+        tier:
+          type: string
+          example: author
+          description: tier
+        includeACL:
+          type: boolean
+          description: includeACL
+          default: false
+        destProgramId:
+          type: string
+          description: destProgramId
+        mergeExcludePaths:
+          type: boolean
+          description: mergeExcludePaths
+          default: false
+        copyVersions:
+          type: boolean
+          description: copyVersions
+          default: false
+      description: Wraps the content flow execution arguments
+    Redirect:
+      type: object
+      required:
+      - redirect
+      properties:
+        redirect:
+          type: string
+          description: The url to redirect to.

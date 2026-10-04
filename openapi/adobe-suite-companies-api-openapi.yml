@@ -434,29 +434,10 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    propertiesLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/propertiesEntity'
-    createPropertyPayload:
-      allOf:
-      - $ref: '#/components/schemas/propertiesCreatePayload'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-    relatedLibraries:
+    relatedCompany:
       type: object
       properties:
-        libraries:
+        company:
           type: object
           properties:
             links:
@@ -464,36 +445,20 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
-          description: Contains a link to the related libraries for the resource.
-    relatedRules:
-      type: object
-      properties:
-        rules:
-          type: object
-          properties:
-            links:
+                  description: A link that can be used in a subsequent API call to fetch the related company.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related company.
+            data:
               type: object
               properties:
-                related:
+                id:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
-          description: Contains a link to the related rules for the resource.
-    propertiesCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreate'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/propertiesAttributes'
-    propertiesListResponse:
+                  description: The unique ID of the company.
+                type:
+                  type: string
+                  description: The resource type for the company (`companies`).
+              description: Contains further information about the related company.
+          description: Contains information about the company that owns the resource.
+    companiesListResponse:
       allOf:
       - $ref: '#/components/schemas/dataList'
       - type: object
@@ -501,79 +466,89 @@ components:
           data:
             type: array
       - $ref: '#/components/schemas/metaList'
-    appConfigurationsAttributes:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the app configuration.
-        app_id:
-          type: string
-          description: The third-party ID for the app this configuration is built for.
-        platform:
-          type: string
-          description: The platform for the app configuration, either `web` or `mobile`.
-        messaging_service:
-          type: string
-          description: The messaging service for the configuration, such as Apple’s `apns` or Google’s `fcm`. This value determines which key types can be used.
-        key_type:
-          type: string
-          description: The specific protocol supported by the `messaging_service` vendor. This value determines the definition of the `push_credential` object, which is only used by Adobe services and not included in API responses.
-        push_credential:
-          type: object
-          properties: {}
-          description: An object that stores the credentials based on the specified protocol (`key_type`). The credential is encrypted at rest. This field is not normally decrypted or included in API responses, as only Adobe services can receive a response containing a decrypted `push_credential`.
-    relatedProperties:
-      type: object
-      properties:
-        properties:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related properties for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related properties for the resource.
-          description: Contains a link to the related properties for the resource.
-    companiesLookupResponse:
+    companiesEntity:
       allOf:
-      - $ref: '#/components/schemas/dataLookup'
+      - $ref: '#/components/schemas/basicResourceProperties'
       - type: object
         properties:
-          data:
+          attributes:
             type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the company was created in the system.
+              name:
+                type: string
+                description: The company name.
+              org_id:
+                type: string
+                description: The ID for the IMS Organization that owns the company entity.
+              updated_at:
+                type: string
+                description: A timestamp of when the company was last updated.
+              token:
+                type: string
+                description: 'A unique token for the company.
+
+
+                  When a build is pushed to an Adobe-managed host (`akamai`), this token is used to identify the company within the library''s folder structure. This also prevent''s the company''s `id` value from being unnecessarily exposed. This also applies to `sftp` hosts so that libraries are constructed in the same manner.'
+              cjm_enabled:
+                type: boolean
+                description: Indicates whether the company is enabled for Customer Journey Management.
+              edge_enabled:
+                type: boolean
+                description: Indicates whether the company is enabled for event forwarding.
+              edge_events_allotment:
+                type: integer
+                description: The event forwarding allotment for your organization. Please check with your CSM or contract information for more information on this value.
+              edge_fanout_ratio:
+                type: integer
+                description: The number of servers that events are configured to be forwarded to.
+              premium_cdn_enabled:
+                type: boolean
+                description: If the company has purchased an offer for a premium  content delivery network (CDN), this flag will be set to `true`.
+              sla_enabled:
+                type: boolean
+                description: If the company has purchased a service level agreement  (SLA), this flag will be set to `true`.
+            description: Contains the company's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this company.
             allOf:
-            - $ref: '#/components/schemas/companiesEntity'
-    relatedHosts:
-      type: object
-      properties:
-        hosts:
-          type: object
-          properties:
-            links:
-              type: object
+            - $ref: '#/components/schemas/relatedProperties'
+          links:
+            type: object
+            properties:
+              self:
+                type: string
+                description: A link to the company itself.
               properties:
-                related:
+                type: string
+                description: A link to the properties that are owned by the company.
+            description: Contains links related to the company which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              rights:
+                type: array
+                description: Lists the rights that are enabled for the company.
+                items:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related hosts for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related hosts for the resource.
-          description: Contains a link to the related hosts for the resource.
-    relatedCallbacks:
-      type: object
-      properties:
-        callbacks:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related callbacks for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related callbacks for the resource.
-          description: Contains a link to the related callbacks for the resource.
+              platform_rights:
+                type: object
+                properties:
+                  web:
+                    type: array
+                    description: Lists the rights that are enabled for web properties belonging to the company.
+                    items:
+                      type: string
+                  mobile:
+                    type: array
+                    description: Lists the rights that are enabled for mobile properties belonging to the company.
+                    items:
+                      type: string
+                description: Contains the platform-specific rights that are enabled for the company.
+            description: Contains meta information about the company.
     dataCreate:
       required:
       - data
@@ -610,41 +585,22 @@ components:
               - rule_components
               - secrets
           description: Contains the attributes and type for the resource being created.
-    appConfigurationsListResponse:
+    appConfigurationsCreatePayload:
       allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
-    relatedEnvironments:
-      type: object
-      properties:
-        environments:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related environments for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environments for the resource.
-          description: Contains a link to the related environments for the resource.
-    appConfigurationsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
+      - $ref: '#/components/schemas/dataCreate'
       - type: object
         properties:
           data:
             type: object
-            allOf:
-            - $ref: '#/components/schemas/appConfigurationsEntity'
-    relatedDataElements:
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/appConfigurationsAttributes'
+    relatedHosts:
       type: object
       properties:
-        data_elements:
+        hosts:
           type: object
           properties:
             links:
@@ -652,9 +608,18 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
-          description: Contains a link to the related data elements for the resource.
+                  description: A link that can be used in a subsequent API call to fetch the related hosts for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related hosts for the resource.
+          description: Contains a link to the related hosts for the resource.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
     relatedNotes:
       type: object
       properties:
@@ -669,10 +634,28 @@ components:
                   description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
               description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
           description: Contains a link to the related notes for the resource.
-    relatedCompany:
+    companiesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/companiesEntity'
+    propertiesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/propertiesEntity'
+    relatedCallbacks:
       type: object
       properties:
-        company:
+        callbacks:
           type: object
           properties:
             links:
@@ -680,19 +663,9 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related company.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related company.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the company.
-                type:
-                  type: string
-                  description: The resource type for the company (`companies`).
-              description: Contains further information about the related company.
-          description: Contains information about the company that owns the resource.
+                  description: A link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+          description: Contains a link to the related callbacks for the resource.
     propertiesEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -781,14 +754,6 @@ components:
                 items:
                   type: string
             description: Contains meta information about the property.
-    companiesListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
     dataList:
       type: object
       properties:
@@ -798,6 +763,54 @@ components:
           items:
             type: object
             properties: {}
+    relatedDataElements:
+      type: object
+      properties:
+        data_elements:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
+          description: Contains a link to the related data elements for the resource.
+    relatedRules:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
+          description: Contains a link to the related rules for the resource.
+    propertiesCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreate'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/propertiesAttributes'
+    propertiesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
     metaList:
       type: object
       properties:
@@ -824,6 +837,83 @@ components:
                   description: The total number of results in the response.
               description: Contains pagination information about the list response.
           description: Contains a `pagination` object that provides pagination information about the list response.
+    createPropertyPayload:
+      allOf:
+      - $ref: '#/components/schemas/propertiesCreatePayload'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
+    relatedProperties:
+      type: object
+      properties:
+        properties:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related properties for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related properties for the resource.
+          description: Contains a link to the related properties for the resource.
+    appConfigurationsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    propertiesAttributes:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the property.
+        platform:
+          type: string
+          description: The platform for the property, either `web` or `mobile`.
+        development:
+          type: boolean
+          description: Indicates whether this property is in development.
+        domains:
+          type: array
+          description: A list of domains associated with the property. This field is **required** when the property's `platform` attribute is set to `web`.
+          items:
+            type: string
+        privacy:
+          type: string
+          description: A privacy-related category for the property.
+        rule_component_sequencing_enabled:
+          type: boolean
+          description: Indicates whether rule component sequencing is enabled for the property.
+        ssl_enabled:
+          type: boolean
+          description: Indicates whether Secure Sockets Layer (SSL) is enabled for the property.
+        undefined_vars_return_empty:
+          type: boolean
+          description: Indicates whether missing data elements return an empty string on this property.
+    appConfigurationsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/appConfigurationsEntity'
     appConfigurationsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -869,15 +959,56 @@ components:
                 type: string
                 description: A link to the app configuration itself.
             description: Contains links related to the app configuration which can be used in subsequent fetch requests.
-    basicResourceProperties:
+    relatedLibraries:
       type: object
       properties:
-        id:
+        libraries:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
+          description: Contains a link to the related libraries for the resource.
+    appConfigurationsAttributes:
+      type: object
+      properties:
+        name:
           type: string
-          description: The unique ID for the resource.
-        type:
+          description: The name of the app configuration.
+        app_id:
           type: string
-          description: The resource type.
+          description: The third-party ID for the app this configuration is built for.
+        platform:
+          type: string
+          description: The platform for the app configuration, either `web` or `mobile`.
+        messaging_service:
+          type: string
+          description: The messaging service for the configuration, such as Apple’s `apns` or Google’s `fcm`. This value determines which key types can be used.
+        key_type:
+          type: string
+          description: The specific protocol supported by the `messaging_service` vendor. This value determines the definition of the `push_credential` object, which is only used by Adobe services and not included in API responses.
+        push_credential:
+          type: object
+          properties: {}
+          description: An object that stores the credentials based on the specified protocol (`key_type`). The credential is encrypted at rest. This field is not normally decrypted or included in API responses, as only Adobe services can receive a response containing a decrypted `push_credential`.
+    relatedEnvironments:
+      type: object
+      properties:
+        environments:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environments for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environments for the resource.
+          description: Contains a link to the related environments for the resource.
     relatedExtensions:
       type: object
       properties:
@@ -892,135 +1023,4 @@ components:
                   description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
               description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
           description: Contains a link to the related extensions for the resource.
-    propertiesAttributes:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the property.
-        platform:
-          type: string
-          description: The platform for the property, either `web` or `mobile`.
-        development:
-          type: boolean
-          description: Indicates whether this property is in development.
-        domains:
-          type: array
-          description: A list of domains associated with the property. This field is **required** when the property's `platform` attribute is set to `web`.
-          items:
-            type: string
-        privacy:
-          type: string
-          description: A privacy-related category for the property.
-        rule_component_sequencing_enabled:
-          type: boolean
-          description: Indicates whether rule component sequencing is enabled for the property.
-        ssl_enabled:
-          type: boolean
-          description: Indicates whether Secure Sockets Layer (SSL) is enabled for the property.
-        undefined_vars_return_empty:
-          type: boolean
-          description: Indicates whether missing data elements return an empty string on this property.
-    companiesEntity:
-      allOf:
-      - $ref: '#/components/schemas/basicResourceProperties'
-      - type: object
-        properties:
-          attributes:
-            type: object
-            properties:
-              created_at:
-                type: string
-                description: A timestamp of when the company was created in the system.
-              name:
-                type: string
-                description: The company name.
-              org_id:
-                type: string
-                description: The ID for the IMS Organization that owns the company entity.
-              updated_at:
-                type: string
-                description: A timestamp of when the company was last updated.
-              token:
-                type: string
-                description: 'A unique token for the company.
-
-
-                  When a build is pushed to an Adobe-managed host (`akamai`), this token is used to identify the company within the library''s folder structure. This also prevent''s the company''s `id` value from being unnecessarily exposed. This also applies to `sftp` hosts so that libraries are constructed in the same manner.'
-              cjm_enabled:
-                type: boolean
-                description: Indicates whether the company is enabled for Customer Journey Management.
-              edge_enabled:
-                type: boolean
-                description: Indicates whether the company is enabled for event forwarding.
-              edge_events_allotment:
-                type: integer
-                description: The event forwarding allotment for your organization. Please check with your CSM or contract information for more information on this value.
-              edge_fanout_ratio:
-                type: integer
-                description: The number of servers that events are configured to be forwarded to.
-              premium_cdn_enabled:
-                type: boolean
-                description: If the company has purchased an offer for a premium  content delivery network (CDN), this flag will be set to `true`.
-              sla_enabled:
-                type: boolean
-                description: If the company has purchased a service level agreement  (SLA), this flag will be set to `true`.
-            description: Contains the company's attributes.
-          relationships:
-            type: object
-            description: Provides information about other entities that are related to this company.
-            allOf:
-            - $ref: '#/components/schemas/relatedProperties'
-          links:
-            type: object
-            properties:
-              self:
-                type: string
-                description: A link to the company itself.
-              properties:
-                type: string
-                description: A link to the properties that are owned by the company.
-            description: Contains links related to the company which can be used in subsequent fetch requests.
-          meta:
-            type: object
-            properties:
-              rights:
-                type: array
-                description: Lists the rights that are enabled for the company.
-                items:
-                  type: string
-              platform_rights:
-                type: object
-                properties:
-                  web:
-                    type: array
-                    description: Lists the rights that are enabled for web properties belonging to the company.
-                    items:
-                      type: string
-                  mobile:
-                    type: array
-                    description: Lists the rights that are enabled for mobile properties belonging to the company.
-                    items:
-                      type: string
-                description: Contains the platform-specific rights that are enabled for the company.
-            description: Contains meta information about the company.
-    dataLookup:
-      type: object
-      properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
-    appConfigurationsCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreate'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/appConfigurationsAttributes'
 x-original-swagger-version: '2.0'

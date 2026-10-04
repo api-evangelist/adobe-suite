@@ -143,66 +143,26 @@ paths:
                 $ref: '#/components/schemas/JobError'
 components:
   schemas:
-    VectorizeSettings:
-      type: object
-      description: Vectorization preset. Only `preset` is supported.
-      additionalProperties: false
-      properties:
-        preset:
-          type: string
-          description: Vectorization preset. `enhanced_general` favors a clean, vector-style look. `high_fidelity_photo` favors photorealistic tracing. Omit to use the service default. Other values return 400.
-          enum:
-          - enhanced_general
-          - high_fidelity_photo
-          example: enhanced_general
-    JobLinkResponse:
+    VectorizeInput:
       type: object
       properties:
-        jobId:
-          type: string
-          description: The job ID.
-          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
-        statusUrl:
-          type: string
-          description: The status URL.
-          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        source:
+          description: The source containing the raster file to vectorize.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeSourceUrl'
+        mediaType:
+          description: The media type of the source file.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeInputMediaType'
       required:
-      - jobId
-      - statusUrl
-    JobStatus:
+      - source
+      - mediaType
+    VectorizeInputMediaType:
       type: string
-      description: The job status.
+      description: The media type of the input raster file.
       enum:
-      - running
-      - failed
-      - succeeded
-    JobError:
-      type: object
-      properties:
-        error_code:
-          type: string
-          description: The error code.
-          example: validation_error
-        message:
-          type: string
-          description: The error message.
-          example: Invalid request payload. Check validation_errors for details.
-        validation_errors:
-          description: An array of various validation errors.
-          type: array
-          items:
-            type: string
-      required:
-      - error_code
-    CreateRenditionOutputDestination:
-      type: object
-      properties:
-        url:
-          type: string
-          description: The URL to the output file.
-          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
-      required:
-      - url
+      - image/png
+      - image/jpeg
     ImageTraceJobApiResponse:
       type: object
       title: Succeeded (Image Trace)
@@ -226,6 +186,83 @@ components:
       - status
       - jobId
       - outputs
+    ImageTraceOutput:
+      type: object
+      properties:
+        destination:
+          description: Details of the location where the output is located.
+          allOf:
+          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
+        mediaType:
+          type: string
+          enum:
+          - image/svg+xml
+          description: Media type of the generated output.
+      required:
+      - destination
+      - mediaType
+      additionalProperties: false
+    CreateRenditionOutputDestination:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to the output file.
+          example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
+      required:
+      - url
+    JobStatus:
+      type: string
+      description: The job status.
+      enum:
+      - running
+      - failed
+      - succeeded
+    VectorizeSettings:
+      type: object
+      description: Vectorization preset. Only `preset` is supported.
+      additionalProperties: false
+      properties:
+        preset:
+          type: string
+          description: Vectorization preset. `enhanced_general` favors a clean, vector-style look. `high_fidelity_photo` favors photorealistic tracing. Omit to use the service default. Other values return 400.
+          enum:
+          - enhanced_general
+          - high_fidelity_photo
+          example: enhanced_general
+    VectorizeSourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL pointing to the input raster file.
+          example: https://your-bucket.s3.amazonaws.com/your-image.png
+      required:
+      - url
+    JobStatusPollPayload:
+      type: object
+      title: Running
+      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
+      properties:
+        status:
+          description: The job status.
+          allOf:
+          - $ref: '#/components/schemas/JobStatus'
+          - enum:
+            - running
+        jobId:
+          type: string
+          description: The job ID.
+          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
+        Retry-After:
+          type: string
+          description: Suggested number of seconds to wait before sending another request to this endpoint.
+          example: '1'
+      required:
+      - status
+      - jobId
+      - Retry-After
+      additionalProperties: false
     VectorizeRequest:
       type: object
       description: Request body for an Image Trace job. Input accepts PNG or JPEG; output is SVG.
@@ -266,75 +303,24 @@ components:
       - status
       - error_code
       - message
-    VectorizeInputMediaType:
-      type: string
-      description: The media type of the input raster file.
-      enum:
-      - image/png
-      - image/jpeg
-    VectorizeInput:
+    JobError:
       type: object
       properties:
-        source:
-          description: The source containing the raster file to vectorize.
-          allOf:
-          - $ref: '#/components/schemas/VectorizeSourceUrl'
-        mediaType:
-          description: The media type of the source file.
-          allOf:
-          - $ref: '#/components/schemas/VectorizeInputMediaType'
-      required:
-      - source
-      - mediaType
-    JobStatusPollPayload:
-      type: object
-      title: Running
-      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
-      properties:
-        status:
-          description: The job status.
-          allOf:
-          - $ref: '#/components/schemas/JobStatus'
-          - enum:
-            - running
-        jobId:
+        error_code:
           type: string
-          description: The job ID.
-          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
-        Retry-After:
+          description: The error code.
+          example: validation_error
+        message:
           type: string
-          description: Suggested number of seconds to wait before sending another request to this endpoint.
-          example: '1'
+          description: The error message.
+          example: Invalid request payload. Check validation_errors for details.
+        validation_errors:
+          description: An array of various validation errors.
+          type: array
+          items:
+            type: string
       required:
-      - status
-      - jobId
-      - Retry-After
-      additionalProperties: false
-    VectorizeSourceUrl:
-      type: object
-      properties:
-        url:
-          type: string
-          description: The URL pointing to the input raster file.
-          example: https://your-bucket.s3.amazonaws.com/your-image.png
-      required:
-      - url
-    ImageTraceOutput:
-      type: object
-      properties:
-        destination:
-          description: Details of the location where the output is located.
-          allOf:
-          - $ref: '#/components/schemas/CreateRenditionOutputDestination'
-        mediaType:
-          type: string
-          enum:
-          - image/svg+xml
-          description: Media type of the generated output.
-      required:
-      - destination
-      - mediaType
-      additionalProperties: false
+      - error_code
     LongJobError:
       type: object
       properties:
@@ -355,6 +341,20 @@ components:
       required:
       - status
       - error_code
+    JobLinkResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          description: The job ID.
+          example: f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+        statusUrl:
+          type: string
+          description: The status URL.
+          example: https://illustrator-api-beta.adobe.io/beta/status/f246bc8a-45ef-4cdc-8217-6c1ab74c5dc4
+      required:
+      - jobId
+      - statusUrl
   securitySchemes:
     AccessToken:
       type: http

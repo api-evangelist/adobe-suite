@@ -340,22 +340,6 @@ paths:
       x-codegen-request-body-name: operation
 components:
   schemas:
-    prev:
-      type: object
-      properties:
-        href:
-          type: string
-          description: A link to the previous page of results.
-          example: https://platform.adobe.io/data/foundation/query/queries/alert-subscriptions?orderby=-created&page=0
-      description: Pre-constructed URI for the previous page of results, if any exist.
-    next:
-      type: object
-      properties:
-        href:
-          type: string
-          description: A link to the next page of results.
-          example: https://platform.adobe.io/data/foundation/query/queries/alert-subscriptions?orderby=-created&page=2
-      description: Pre-constructed URI for the next page of results, if any exist.
     query_links:
       type: object
       description: A list of links that provide more information on a query.
@@ -452,32 +436,79 @@ components:
               description: The HTTP method to use with the `href`.
               example: GET
           description: If this query was triggered by a schedule, then this object will be defined.
-    query_list_links:
+    query_def:
       type: object
       properties:
-        next:
-          $ref: '#/components/schemas/next'
-        prev:
-          $ref: '#/components/schemas/prev'
-      description: Contains the URI reference that clients may use to obtain the next or previous page of resources.
-    error:
+        dbName:
+          type: string
+          description: The name of the database you are making the query to. The value for `dbName` should take the format of `{SANDBOX}:{DATABASE}.{SCHEMA}`.
+          example: acmesbox1:acmeacceldb:accmeaggschema
+        sql:
+          type: string
+          description: The SQL query statement. You can either use standard SQL (such as `SELECT * FROM t1;`) or include parameter replacements. To use a parameter replacement in the SQL you must prepend the parameter key with a `$`. For example, `$key`, and provide the parameters used in the SQL as JSON key value pairs in the `queryParameters` field. The values passed here will be the default parameters used in the template. If you want to override these parameters, you must override them in the POST request.
+          example: SELECT $key FROM $key1 WHERE $key > $key2;
+        queryParameters:
+          type: object
+          properties:
+            key:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value
+            key1:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value1
+            key2:
+              type: string
+              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
+              example: value2
+          description: A key value pairing to replace values in the SQL statement. These are required if you are using parameter replacements. No value type checking will be done on these key value pairs.
+        templateId:
+          type: string
+          description: The unique identifier for the query created and saved using a POST request to the `/query-templates` endpoint.
+          example: 0094d000-9062-4e6a-8fdb-05606805f08f
+        name:
+          type: string
+          description: An optional human friendly name for the query.
+          example: Sample Query Template for ACME Data
+        description:
+          type: string
+          description: An optional comment on the intended purpose of the query.
+          example: This query returns all account details.
+        insertIntoParameters:
+          type: object
+          properties:
+            datasetName:
+              type: string
+              description: The name of the dataset used in the query.
+              example: Acme - Product Dataset
+          description: If this property is defined, then this query will be converted into an `INSERT INTO` query. Optional.
+          example: sampling_test_geometrix_sitesection_copy
+        ctasParameters:
+          type: object
+          properties:
+            datasetName:
+              type: string
+              description: The name of the dataset to created as part of the CTAS statement.
+              example: sampling_test_geometrix_sitesection_copy
+            description:
+              type: string
+              description: A description for the new dataset. Optional.
+              example: Sampling of geometrix dataset.
+            targetSchemaTitle:
+              type: string
+              description: The schema name for the new dataset.
+              example: Schema for sampling_test_geometrix_sitesection_copy
+          description: If this property is defined, this query will be converted into a CTAS query. Optional.
+      description: The POST request payload sent to the `/queries` endpoint.
+    prev:
       type: object
       properties:
-        code:
+        href:
           type: string
-          description: A code that identifies the type of error encountered.
-          example: 408
-        message:
-          type: string
-          description: Short description of the error.
-          example: The server timed out waiting for the request
-        errorType:
-          type: string
-          description: The broad type for this error.
-          enum:
-          - USER_ERROR
-          - SYSTEM_ERROR
-          example: USER_ERROR
+          description: A link to the previous page of results.
+          example: https://platform.adobe.io/data/foundation/query/queries/alert-subscriptions?orderby=-created&page=0
+      description: Pre-constructed URI for the previous page of results, if any exist.
     _page:
       type: object
       properties:
@@ -577,6 +608,32 @@ components:
         version:
           type: integer
           description: The REST API version of this resource.
+    next:
+      type: object
+      properties:
+        href:
+          type: string
+          description: A link to the next page of results.
+          example: https://platform.adobe.io/data/foundation/query/queries/alert-subscriptions?orderby=-created&page=2
+      description: Pre-constructed URI for the next page of results, if any exist.
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: A code that identifies the type of error encountered.
+          example: 408
+        message:
+          type: string
+          description: Short description of the error.
+          example: The server timed out waiting for the request
+        errorType:
+          type: string
+          description: The broad type for this error.
+          enum:
+          - USER_ERROR
+          - SYSTEM_ERROR
+          example: USER_ERROR
     query_list:
       type: object
       properties:
@@ -592,68 +649,11 @@ components:
           type: integer
           description: The REST API version of this resource.
       description: List of queries
-    query_def:
+    query_list_links:
       type: object
       properties:
-        dbName:
-          type: string
-          description: The name of the database you are making the query to. The value for `dbName` should take the format of `{SANDBOX}:{DATABASE}.{SCHEMA}`.
-          example: acmesbox1:acmeacceldb:accmeaggschema
-        sql:
-          type: string
-          description: The SQL query statement. You can either use standard SQL (such as `SELECT * FROM t1;`) or include parameter replacements. To use a parameter replacement in the SQL you must prepend the parameter key with a `$`. For example, `$key`, and provide the parameters used in the SQL as JSON key value pairs in the `queryParameters` field. The values passed here will be the default parameters used in the template. If you want to override these parameters, you must override them in the POST request.
-          example: SELECT $key FROM $key1 WHERE $key > $key2;
-        queryParameters:
-          type: object
-          properties:
-            key:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value
-            key1:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value1
-            key2:
-              type: string
-              description: A set of two linked data items. The key is a unique identifier for some item of data, and the value, is either the data that is identified or a pointer to the location of that data.
-              example: value2
-          description: A key value pairing to replace values in the SQL statement. These are required if you are using parameter replacements. No value type checking will be done on these key value pairs.
-        templateId:
-          type: string
-          description: The unique identifier for the query created and saved using a POST request to the `/query-templates` endpoint.
-          example: 0094d000-9062-4e6a-8fdb-05606805f08f
-        name:
-          type: string
-          description: An optional human friendly name for the query.
-          example: Sample Query Template for ACME Data
-        description:
-          type: string
-          description: An optional comment on the intended purpose of the query.
-          example: This query returns all account details.
-        insertIntoParameters:
-          type: object
-          properties:
-            datasetName:
-              type: string
-              description: The name of the dataset used in the query.
-              example: Acme - Product Dataset
-          description: If this property is defined, then this query will be converted into an `INSERT INTO` query. Optional.
-          example: sampling_test_geometrix_sitesection_copy
-        ctasParameters:
-          type: object
-          properties:
-            datasetName:
-              type: string
-              description: The name of the dataset to created as part of the CTAS statement.
-              example: sampling_test_geometrix_sitesection_copy
-            description:
-              type: string
-              description: A description for the new dataset. Optional.
-              example: Sampling of geometrix dataset.
-            targetSchemaTitle:
-              type: string
-              description: The schema name for the new dataset.
-              example: Schema for sampling_test_geometrix_sitesection_copy
-          description: If this property is defined, this query will be converted into a CTAS query. Optional.
-      description: The POST request payload sent to the `/queries` endpoint.
+        next:
+          $ref: '#/components/schemas/next'
+        prev:
+          $ref: '#/components/schemas/prev'
+      description: Contains the URI reference that clients may use to obtain the next or previous page of resources.

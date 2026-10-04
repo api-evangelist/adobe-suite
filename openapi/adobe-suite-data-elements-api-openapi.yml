@@ -390,55 +390,38 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    dataElementsLookupResponse:
+    notesListResponse:
       allOf:
-      - $ref: '#/components/schemas/dataLookup'
+      - $ref: '#/components/schemas/dataList'
       - type: object
         properties:
           data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/dataElementsEntity'
-    dataElementsUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataElementsLookupResponse'
-    notesLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/notesEntity'
-    relatedRevisions:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    dataElementsRelationships:
+      required:
+      - extension
       type: object
       properties:
-        revisions:
+        extension:
+          required:
+          - data
           type: object
           properties:
-            links:
+            data:
+              required:
+              - id
+              - type
               type: object
               properties:
-                related:
+                id:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related revisions for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related revisions for the resource.
-          description: Contains a link to the related revisions for the resource.
-    relatedLibraries:
-      type: object
-      properties:
-        libraries:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
+                  description: The ID of the extension.
+                type:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
-          description: Contains a link to the related libraries for the resource.
+                  description: The resource type for the extension (`extensions`).
+              description: Contains the basic information about the extension.
+          description: Establishes the required relationship between the data element and the extension that provides it.
     relatedOrigin:
       type: object
       properties:
@@ -463,46 +446,114 @@ components:
                   description: The resource type for the origin.
               description: Contains further information about the related origin.
           description: Contains information about the resource's origin. The origin is the previous resource that was revised to make this resource.
+    relatedUpdatedWithExtensionPackage:
+      type: object
+      properties:
+        updated_with_extension_package:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extension.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extension.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the extension.
+                type:
+                  type: string
+                  description: The resource type for the extension (`extensions`).
+              description: Contains further information about the related extension.
+          description: Contains information about the extension that updated the resource, if applicable.
     dataElementsCreateAttributes:
       allOf:
       - $ref: '#/components/schemas/dataElementsAttributes'
-    dataElementsAttributes:
+    dataCreateWithRelationships:
+      required:
+      - data
       type: object
       properties:
-        name:
-          type: string
-          description: The name of the data element.
-        delegate_descriptor_id:
-          type: string
-          description: The [delegate descriptor ID](https://experienceleague.adobe.com/docs/experience-platform/tags/api/guides/delegate-descriptor-ids.html) for the data element.
-        clean_text:
-          type: boolean
-          description: Indicates whether the data element removes leading and trailing whitespace characters in text. This setting also converts any instances of two or more consecutive spaces in the middle of the text with just one space each.
-        default_value:
+        data:
           type: object
-          description: The default value of the data element. Returns `null` if no default value exists.
-        enabled:
-          type: boolean
-          description: Indicates whether this data element is enabled.
-        force_lower_case:
-          type: boolean
-          description: Indicates whether the data element converts string values to lowercase.
-        settings:
-          type: string
-          description: A custom settings JSON object represented as a string.
-        storage_duration:
-          type: string
-          description: 'The duration that the data element''s value will be persisted. This attribute is set to `null` by default, meaning the data element value will not persist at all. To implement storage, the following options are available:
-
-
-            * `pageview`: Data element values are held in a JavaScript variable inside the library. If the user navigates to a new page or refreshes the page, the value is discarded. * `session`: Data element values are persisted to session storage. When the browser tab is closed, the value is discarded. * `visitor`: Data element values are persisted to local storage. The value will be persisted indefinitely.'
-          enum:
-          - pageview
-          - session
-          - visitor
-    dataElementsCreateResponse:
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+            relationships:
+              type: object
+              description: The relationships for the resource being created.
+            type:
+              type: string
+              description: The type of resource being created.
+              enum:
+              - app_configurations
+              - audit_events
+              - builds
+              - callbacks
+              - companies
+              - data_elements
+              - environments
+              - extensions
+              - extension_packages
+              - hosts
+              - libraries
+              - notes
+              - properties
+              - rules
+              - rule_components
+              - secrets
+          description: Contains the attributes, relationships, and type for the resource being created.
+    relatedUpdatedWithExtension:
+      type: object
+      properties:
+        updated_with_extension:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extension.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extension.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the extension.
+                type:
+                  type: string
+                  description: The resource type for the extension (`extensions`).
+              description: Contains further information about the related extension.
+          description: Contains information about the extension that updated the resource, if applicable.
+    dataElementsUpdatePayload:
       allOf:
-      - $ref: '#/components/schemas/dataElementsLookupResponse'
+      - $ref: '#/components/schemas/dataUpdateWithMeta'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/dataElementsAttributes'
+    notesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/notesEntity'
     dataUpdateWithMeta:
       required:
       - data
@@ -551,10 +602,49 @@ components:
               - rule_components
               - secrets
           description: Contains the attributes and type for the resource being updated.
-    relatedResource:
+    dataCreate:
+      required:
+      - data
       type: object
       properties:
-        resource:
+        data:
+          required:
+          - attributes
+          - type
+          type: object
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+            type:
+              type: string
+              description: The type of resource being created.
+              enum:
+              - app_configurations
+              - audit_events
+              - builds
+              - callbacks
+              - companies
+              - data_elements
+              - environments
+              - extensions
+              - extension_packages
+              - hosts
+              - libraries
+              - notes
+              - properties
+              - rules
+              - rule_components
+              - secrets
+          description: Contains the attributes and type for the resource being created.
+    dataElementsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataElementsLookupResponse'
+    relatedNotes:
+      type: object
+      properties:
+        notes:
           type: object
           properties:
             links:
@@ -562,62 +652,22 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the resource.
-                type:
-                  type: string
-                  description: The resource type.
-              description: Contains further information about the related resource.
-          description: Contains a link to the resource that that the note is attached to.
-    dataElementsNotesCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/notesCreatePayload'
-    notesEntity:
-      allOf:
-      - $ref: '#/components/schemas/basicResourceProperties'
-      - type: object
-        properties:
-          attributes:
-            type: object
-            properties:
-              author_display_name:
-                type: string
-                description: The display name for the note's author.
-              author_email:
-                type: string
-                description: The email address for the note's author.
-              created_at:
-                type: string
-                description: A timestamp of when the note was created in the system.
-              text:
-                type: string
-                description: The contents of the note.
-            description: Contains the note's attributes.
-          relationships:
-            type: object
-            description: Provides information about other entities that are related to this note.
-            allOf:
-            - $ref: '#/components/schemas/relatedResource'
-          links:
-            type: object
-            properties:
-              resource:
-                type: string
-                description: A link to the resource that the note is attached to.
-              self:
-                type: string
-                description: A link to the note itself.
-            description: Contains links related to the note which can be used in subsequent fetch requests.
-    relatedProperty:
+                  description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
+          description: Contains a link to the related notes for the resource.
+    basicResourceProperties:
       type: object
       properties:
-        property:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    relatedRevisions:
+      type: object
+      properties:
+        revisions:
           type: object
           properties:
             links:
@@ -625,27 +675,9 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the property.
-                type:
-                  type: string
-                  description: The resource type for the property (`properties`).
-              description: Contains further information about the related property.
-          description: Contains details about the property that owns the resource.
-    notesListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
+                  description: A link that can be used in a subsequent API call to fetch the related revisions for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related revisions for the resource.
+          description: Contains a link to the related revisions for the resource.
     dataElementsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -739,6 +771,82 @@ components:
                 type: integer
                 description: The latest revision number for the data element.
             description: Contains meta information about the data element.
+    dataElementsNotesCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/notesCreatePayload'
+    dataElementsNotesCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/notesLookupResponse'
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
+    dataElementsAttributes:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the data element.
+        delegate_descriptor_id:
+          type: string
+          description: The [delegate descriptor ID](https://experienceleague.adobe.com/docs/experience-platform/tags/api/guides/delegate-descriptor-ids.html) for the data element.
+        clean_text:
+          type: boolean
+          description: Indicates whether the data element removes leading and trailing whitespace characters in text. This setting also converts any instances of two or more consecutive spaces in the middle of the text with just one space each.
+        default_value:
+          type: object
+          description: The default value of the data element. Returns `null` if no default value exists.
+        enabled:
+          type: boolean
+          description: Indicates whether this data element is enabled.
+        force_lower_case:
+          type: boolean
+          description: Indicates whether the data element converts string values to lowercase.
+        settings:
+          type: string
+          description: A custom settings JSON object represented as a string.
+        storage_duration:
+          type: string
+          description: 'The duration that the data element''s value will be persisted. This attribute is set to `null` by default, meaning the data element value will not persist at all. To implement storage, the following options are available:
+
+
+            * `pageview`: Data element values are held in a JavaScript variable inside the library. If the user navigates to a new page or refreshes the page, the value is discarded. * `session`: Data element values are persisted to session storage. When the browser tab is closed, the value is discarded. * `visitor`: Data element values are persisted to local storage. The value will be persisted indefinitely.'
+          enum:
+          - pageview
+          - session
+          - visitor
+    notesAttributes:
+      required:
+      - text
+      type: object
+      properties:
+        text:
+          type: string
+          description: The contents of the note.
+    dataElementsCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreateWithRelationships'
+      - type: object
+        properties:
+          data:
+            required:
+            - attributes
+            - relationships
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/dataElementsCreateAttributes'
+              relationships:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/dataElementsRelationships'
     relatedExtension:
       type: object
       properties:
@@ -763,116 +871,46 @@ components:
                   description: The resource type for the extension (`extensions`).
               description: Contains further information about the related extension.
           description: Contains information about the extension that provides the resource.
-    dataCreate:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          required:
-          - attributes
-          - type
-          type: object
-          properties:
-            attributes:
-              type: object
-              properties: {}
-              description: The attributes for the resource being created.
-            type:
-              type: string
-              description: The type of resource being created.
-              enum:
-              - app_configurations
-              - audit_events
-              - builds
-              - callbacks
-              - companies
-              - data_elements
-              - environments
-              - extensions
-              - extension_packages
-              - hosts
-              - libraries
-              - notes
-              - properties
-              - rules
-              - rule_components
-              - secrets
-          description: Contains the attributes and type for the resource being created.
-    notesAttributes:
-      required:
-      - text
-      type: object
-      properties:
-        text:
-          type: string
-          description: The contents of the note.
-    dataElementsRelationships:
-      required:
-      - extension
-      type: object
-      properties:
-        extension:
-          required:
-          - data
-          type: object
-          properties:
-            data:
-              required:
-              - id
-              - type
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The ID of the extension.
-                type:
-                  type: string
-                  description: The resource type for the extension (`extensions`).
-              description: Contains the basic information about the extension.
-          description: Establishes the required relationship between the data element and the extension that provides it.
-    relatedNotes:
-      type: object
-      properties:
-        notes:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
-          description: Contains a link to the related notes for the resource.
-    dataElementsNotesCreateResponse:
+    notesEntity:
       allOf:
-      - $ref: '#/components/schemas/notesLookupResponse'
-    dataList:
-      type: object
-      properties:
-        data:
-          type: array
-          description: Contains the results from the listing call.
-          items:
-            type: object
-            properties: {}
-    dataElementsUpdatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataUpdateWithMeta'
+      - $ref: '#/components/schemas/basicResourceProperties'
       - type: object
         properties:
-          data:
+          attributes:
             type: object
             properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/dataElementsAttributes'
-    relatedUpdatedWithExtensionPackage:
+              author_display_name:
+                type: string
+                description: The display name for the note's author.
+              author_email:
+                type: string
+                description: The email address for the note's author.
+              created_at:
+                type: string
+                description: A timestamp of when the note was created in the system.
+              text:
+                type: string
+                description: The contents of the note.
+            description: Contains the note's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this note.
+            allOf:
+            - $ref: '#/components/schemas/relatedResource'
+          links:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: A link to the resource that the note is attached to.
+              self:
+                type: string
+                description: A link to the note itself.
+            description: Contains links related to the note which can be used in subsequent fetch requests.
+    relatedResource:
       type: object
       properties:
-        updated_with_extension_package:
+        resource:
           type: object
           properties:
             links:
@@ -880,19 +918,49 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related extension.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extension.
+                  description: A link that can be used in a subsequent API call to fetch the related resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related resource.
             data:
               type: object
               properties:
                 id:
                   type: string
-                  description: The unique ID of the extension.
+                  description: The unique ID of the resource.
                 type:
                   type: string
-                  description: The resource type for the extension (`extensions`).
-              description: Contains further information about the related extension.
-          description: Contains information about the extension that updated the resource, if applicable.
+                  description: The resource type.
+              description: Contains further information about the related resource.
+          description: Contains a link to the resource that that the note is attached to.
+    dataElementsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataElementsLookupResponse'
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    dataElementsNotesListResponse:
+      allOf:
+      - $ref: '#/components/schemas/notesListResponse'
     metaList:
       type: object
       properties:
@@ -919,51 +987,6 @@ components:
                   description: The total number of results in the response.
               description: Contains pagination information about the list response.
           description: Contains a `pagination` object that provides pagination information about the list response.
-    basicResourceProperties:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
-    dataCreateWithRelationships:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            attributes:
-              type: object
-              properties: {}
-              description: The attributes for the resource being created.
-            relationships:
-              type: object
-              description: The relationships for the resource being created.
-            type:
-              type: string
-              description: The type of resource being created.
-              enum:
-              - app_configurations
-              - audit_events
-              - builds
-              - callbacks
-              - companies
-              - data_elements
-              - environments
-              - extensions
-              - extension_packages
-              - hosts
-              - libraries
-              - notes
-              - properties
-              - rules
-              - rule_components
-              - secrets
-          description: Contains the attributes, relationships, and type for the resource being created.
     dataLookup:
       type: object
       properties:
@@ -971,60 +994,6 @@ components:
           type: object
           properties: {}
           description: Contains the details of the resource.
-    relatedUpdatedWithExtension:
-      type: object
-      properties:
-        updated_with_extension:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related extension.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extension.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the extension.
-                type:
-                  type: string
-                  description: The resource type for the extension (`extensions`).
-              description: Contains further information about the related extension.
-          description: Contains information about the extension that updated the resource, if applicable.
-    dataElementsCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreateWithRelationships'
-      - type: object
-        properties:
-          data:
-            required:
-            - attributes
-            - relationships
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/dataElementsCreateAttributes'
-              relationships:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/dataElementsRelationships'
-    dataElementsNotesListResponse:
-      allOf:
-      - $ref: '#/components/schemas/notesListResponse'
-    dataElementsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
     notesCreatePayload:
       allOf:
       - $ref: '#/components/schemas/dataCreate'
@@ -1037,4 +1006,35 @@ components:
                 type: object
                 allOf:
                 - $ref: '#/components/schemas/notesAttributes'
+    relatedLibraries:
+      type: object
+      properties:
+        libraries:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
+          description: Contains a link to the related libraries for the resource.
+    dataElementsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/dataElementsEntity'
+    dataElementsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
 x-original-swagger-version: '2.0'

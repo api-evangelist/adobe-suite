@@ -235,18 +235,75 @@ paths:
         required: true
 components:
   schemas:
-    Pair_string_string:
+    AccountResource:
       type: object
       properties:
-        key:
+        benefits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Benefit'
+        companyProfile:
+          $ref: '#/components/schemas/CompanyProfile'
+        cotermDate:
           type: string
-        left:
+          example: yyyy-MM-dd
+        creationDate:
           type: string
-        right:
+          example: yyyy-MM-dd'T'HH:mm:ss'Z'
+        customerId:
           type: string
-        value:
+        discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractDiscountLevel'
+        distributorId:
           type: string
-      title: Pair«string,string»
+        externalReferenceId:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceLink'
+        resellerId:
+          type: string
+        status:
+          type: string
+      title: AccountResource
+    Contact:
+      type: object
+      required:
+      - email
+      - firstName
+      - lastName
+      properties:
+        email:
+          type: string
+          minLength: 0
+          maxLength: 240
+          pattern: (?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-zA-Z0-9-]*[a-zA-Z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+        firstName:
+          type: string
+          pattern: ^[\p{L}\p{N}-_ 　,.＆&'\"]{1,35}$
+        lastName:
+          type: string
+          pattern: ^[\p{L}\p{N}-_ 　,.＆&'\"]{1,35}$
+        phoneNumber:
+          type: string
+          minLength: 0
+          maxLength: 40
+      title: Contact
+    CommitmentQuantity:
+      type: object
+      properties:
+        offerType:
+          type: string
+          enum:
+          - CONSUMABLES
+          - LICENSE
+        quantity:
+          type: integer
+          format: int32
+      title: CommitmentQuantity
     Account:
       type: object
       required:
@@ -285,6 +342,22 @@ components:
         status:
           type: string
       title: Account
+    CommitmentTerm:
+      type: object
+      properties:
+        endDate:
+          type: string
+          format: date
+        minimumQuantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommitmentQuantity'
+        startDate:
+          type: string
+          format: date
+        status:
+          type: string
+      title: CommitmentTerm
     ContractDiscountLevel:
       type: object
       properties:
@@ -293,6 +366,30 @@ components:
         offerType:
           type: string
       title: ContractDiscountLevel
+    Pair_string_string:
+      type: object
+      properties:
+        key:
+          type: string
+        left:
+          type: string
+        right:
+          type: string
+        value:
+          type: string
+      title: Pair«string,string»
+    ResourceLink:
+      type: object
+      properties:
+        headers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pair_string_string'
+        method:
+          type: string
+        uri:
+          type: string
+      title: ResourceLink
     CompanyProfile:
       type: object
       required:
@@ -325,36 +422,6 @@ components:
           minLength: 0
           maxLength: 40
       title: CompanyProfile
-    CommitmentTerm:
-      type: object
-      properties:
-        endDate:
-          type: string
-          format: date
-        minimumQuantities:
-          type: array
-          items:
-            $ref: '#/components/schemas/CommitmentQuantity'
-        startDate:
-          type: string
-          format: date
-        status:
-          type: string
-      title: CommitmentTerm
-    Benefit:
-      type: object
-      properties:
-        commitment:
-          $ref: '#/components/schemas/CommitmentTerm'
-        commitmentRequest:
-          $ref: '#/components/schemas/CommitmentTerm'
-        recommitmentRequest:
-          $ref: '#/components/schemas/CommitmentTerm'
-        type:
-          type: string
-          enum:
-          - THREE_YEAR_COMMIT
-      title: Benefit
     Address:
       type: object
       required:
@@ -397,87 +464,20 @@ components:
           minLength: 0
           maxLength: 255
       title: Address
-    AccountResource:
+    Benefit:
       type: object
       properties:
-        benefits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Benefit'
-        companyProfile:
-          $ref: '#/components/schemas/CompanyProfile'
-        cotermDate:
-          type: string
-          example: yyyy-MM-dd
-        creationDate:
-          type: string
-          example: yyyy-MM-dd'T'HH:mm:ss'Z'
-        customerId:
-          type: string
-        discounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContractDiscountLevel'
-        distributorId:
-          type: string
-        externalReferenceId:
-          type: string
-        links:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResourceLink'
-        resellerId:
-          type: string
-        status:
-          type: string
-      title: AccountResource
-    CommitmentQuantity:
-      type: object
-      properties:
-        offerType:
+        commitment:
+          $ref: '#/components/schemas/CommitmentTerm'
+        commitmentRequest:
+          $ref: '#/components/schemas/CommitmentTerm'
+        recommitmentRequest:
+          $ref: '#/components/schemas/CommitmentTerm'
+        type:
           type: string
           enum:
-          - CONSUMABLES
-          - LICENSE
-        quantity:
-          type: integer
-          format: int32
-      title: CommitmentQuantity
-    Contact:
-      type: object
-      required:
-      - email
-      - firstName
-      - lastName
-      properties:
-        email:
-          type: string
-          minLength: 0
-          maxLength: 240
-          pattern: (?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-zA-Z0-9-]*[a-zA-Z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
-        firstName:
-          type: string
-          pattern: ^[\p{L}\p{N}-_ 　,.＆&'\"]{1,35}$
-        lastName:
-          type: string
-          pattern: ^[\p{L}\p{N}-_ 　,.＆&'\"]{1,35}$
-        phoneNumber:
-          type: string
-          minLength: 0
-          maxLength: 40
-      title: Contact
-    ResourceLink:
-      type: object
-      properties:
-        headers:
-          type: array
-          items:
-            $ref: '#/components/schemas/Pair_string_string'
-        method:
-          type: string
-        uri:
-          type: string
-      title: ResourceLink
+          - THREE_YEAR_COMMIT
+      title: Benefit
   securitySchemes:
     authorization:
       type: apiKey

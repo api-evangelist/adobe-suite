@@ -1103,6 +1103,110 @@ paths:
                 $ref: '#/components/schemas/ErrorBody'
 components:
   schemas:
+    PlacementStart:
+      properties:
+        position:
+          description: The position of the image on the timeline for the generated video, 0 being the first frame and 1 being the last frame.
+          maximum: 1
+          minimum: 0
+          type: number
+      required:
+      - position
+      title: PlacementStart
+      type: object
+    ExpandImageRequestV3:
+      properties:
+        image:
+          $ref: '#/components/schemas/InputImageV3'
+          description: 'The image to expand. Use a URL or an <code>uploadID</code> as the source for the image. Firefly only allows these listed domains for input URLs in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
+        mask:
+          $ref: '#/components/schemas/InputMaskV3'
+          description: Mask image which will be used to expand the given image.
+        numVariations:
+          description: Generate this number of variations. <code>numVariations</code> defaults to the number of seed images, or to 1 if you do not specify seeds.
+          maximum: 4
+          minimum: 1
+          title: The number of variations to generate
+          type: integer
+        placement:
+          $ref: '#/components/schemas/Placement'
+          description: The position of the source image after Firefly resizes it. The value describes the horizontal and vertical placement and dimensions of the image in the output. Note you cannot use placement for source images when you also apply a mask image.
+        prompt:
+          description: An optional text prompt up to 1024 characters. The longer the prompt the better Firefly performs.
+          maxLength: 1024
+          minLength: 1
+          title: The prompt
+          type: string
+        seeds:
+          description: Array of seed image IDs. These reference images help ensure consistent image generation across multiple API calls. For example, you can use the same seed to generate a similar image with different styles. If specified along with <code>numVariations</code>, the number of seeds must equal <code>numVariations</code>.
+          items:
+            type: integer
+          maxItems: 4
+          minItems: 1
+          title: The seed image for each variation
+          type: array
+          uniqueItems: true
+        size:
+          allOf:
+          - $ref: '#/components/schemas/Size'
+          default:
+            height: 2048
+            width: 2048
+          description: The desired width and height for the final expanded image in pixels. The maximum size for the output images is 3999px by 3999px.
+          title: The size
+      required:
+      - image
+      title: Images expand payload
+      type: object
+    ReferenceBlobUsageV3:
+      type: string
+      title: ReferenceBlobUsageV3
+      enum:
+      - general
+    GenerateSimilarImagesRequestV3:
+      properties:
+        image:
+          $ref: '#/components/schemas/BaseInputImageV3'
+          description: 'Firefly will create similar variations. Use a URL or an <code>uploadID</code> as the source for the image. Firefly only allows these listed domains: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
+        numVariations:
+          description: Generate this number of variations. <code>numVariations</code> defaults to the number of seed images, or to 1 if you do not specify `seeds`.
+          maximum: 4
+          minimum: 1
+          title: The number of variations
+          type: integer
+        seeds:
+          description: Array of seed image IDs. These reference images help ensure consistent image generation across multiple API calls. If specified along with <code>numVariations</code>, the number of seeds must equal <code>numVariations</code>.
+          items:
+            type: integer
+          maxItems: 4
+          minItems: 1
+          title: The seed image for each variation
+          type: array
+          uniqueItems: true
+        size:
+          allOf:
+          - $ref: '#/components/schemas/Size'
+          default:
+            height: 2048
+            width: 2048
+          description: 'The desired width and height for the final image in pixels. The supported sizes for the output images are: <ul> <li>Square (1:1) - width 2048px, height 2048px </li> <li>Square (1:1) - width 1024px, height 1024px </li> <li>Landscape (4:3)  - width 2304px, height 1792px </li> <li>Portrait (3:4)  - width 1792px, height 2304px</li> <li>Widescreen (16:9) - width 2688px, height 1536px </li> <li>(7:4)  - width 1344px, height 768px </li> <li>(9:7) - width 1152px, height 896px </li> <li>(7:9) - width 896px, height 1152px</li> </ul>.'
+          title: The size
+      required:
+      - image
+      title: Generating similar images from a reference image
+      type: object
+    ContentPolicyErrorResponse:
+      type: object
+      title: ContentPolicyErrorResponse
+      description: Error response body for HTTP 451 (content policy, legal, or safety).
+      required:
+      - error_code
+      properties:
+        error_code:
+          $ref: '#/components/schemas/ContentPolicyErrorCode451'
+        message:
+          type: string
+          description: Human-readable error description.
     InputImageV3:
       properties:
         mask:
@@ -1118,180 +1222,43 @@ components:
       - source
       title: InputImageV3
       type: object
-    AsyncTaskResponse:
-      type: object
-      title: AsyncTaskResponse
-      description: Response type for async requests.
-      required:
-      - links
+    ImageConditionV3:
       properties:
-        links:
-          type: object
-          title: Links
-          additionalProperties:
-            $ref: '#/components/schemas/AsyncTaskLink'
-          propertyNames:
-            $ref: '#/components/schemas/AsyncTaskLinkType'
-        progress:
-          type: number
-          title: Progress
-    PlacementInset:
-      properties:
-        bottom:
-          description: The space between bottom edge of the result image and bottom edge of the placed object image.
-          title: Bottom Inset
-          type: integer
-        left:
-          description: The space between left edge of the result image and left edge of the placed object image.
-          title: Left Inset
-          type: integer
-        right:
-          description: The space between right edge of the result image and right edge of the placed object image.
-          title: Right Inset
-          type: integer
-        top:
-          description: The space between top edge of the result image and top edge of the placed object image.
-          title: Top Inset
-          type: integer
-      title: PlacementInset
-      type: object
-    VideoPromptStyle:
-      enum:
-      - anime
-      - 3d
-      - fantasy
-      - cinematic
-      - claymation
-      - line art
-      - stop motion
-      - 2d
-      - vector art
-      - black and white
-      title: VideoPromptStyle
-      type: string
-    ApiError:
-      description: The error within the error response.
-      properties:
-        error_code:
-          $ref: '#/components/schemas/ColligoErrorCodeAsyncV3'
-        message:
-          title: Message
-          type: string
-        stack_trace:
-          items:
-            type: string
-          title: Stack Trace
-          type: array
-        validation_errors:
-          items:
-            $ref: '#/components/schemas/ValidationErrorMessage'
-          title: Validation Errors
-          type: array
-      required:
-      - error_code
-      title: ApiError
-      type: object
-    ValidationErrorMessage:
-      properties:
-        ctx:
-          title: Ctx
-          type: object
-        loc:
-          items:
-            anyOf:
-            - type: integer
-            - type: string
-          title: Loc
-          type: array
-        msg:
-          title: Msg
-          type: string
-        type:
-          title: Type
-          type: string
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationErrorMessage
-      type: object
-    FillImageRequestV3:
-      properties:
-        image:
-          $ref: '#/components/schemas/InputImageV3'
-          description: 'The image to expand. Use a URL or an <code>uploadID</code> as the source for the image. Firefly only allows these listed domains for input URLs in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
-        mask:
-          $ref: '#/components/schemas/InputMaskV3'
-          description: Required. Selected areas of a background image that Firefly uses to fill the source image.
-        negativePrompt:
-          description: An optional text prompt up to 1024 characters. Avoid these characteristics in the generated image. Not supported for Firefly Custom Models on Image Model 3 or Firefly Custom Models on Image Model 4.
-          maxLength: 1024
-          title: Avoid prompt
-          type: string
-        numVariations:
-          description: Generate this number of variations. <code>numVariations</code> defaults to the number of seed images, or to 1 if you do not specify seeds.
-          maximum: 4
-          minimum: 1
-          title: The number of variations
-          type: integer
-        prompt:
-          description: An optional text prompt up to 1024 characters. The longer the prompt the better Firefly performs.
-          maxLength: 1024
-          minLength: 1
-          title: The prompt
-          type: string
-        promptBiasingLocaleCode:
-          description: A hyphen-separated string combining the ISO 639-1 language code and the ISO 3166-1 region, such as en-US. When a locale is set, the prompt will be biased to generate more relevant content for that region. The locale will be auto-detected if not specified based on your profile and the accepted language header.
-          title: The locale used to generate an image
-          type: string
-        seeds:
-          description: Array of seed image IDs. These reference images help ensure consistent image generation across multiple API calls. For example, you can use the same seed to generate a similar image with different styles. If specified along with <code>numVariations</code>, the number of seeds must equal <code>numVariations</code>.
-          items:
-            type: integer
-          maxItems: 4
-          minItems: 1
-          title: The seed of each variation
-          type: array
-          uniqueItems: true
-        size:
-          allOf:
-          - $ref: '#/components/schemas/Size'
-          default:
-            height: 2048
-            width: 2048
-          description: 'The desired width and height for the final expanded image in pixels. The supported sizes for the output images are: <ul> <li>Square (1:1) - width 2048px, height 2048px </li> <li>Square (1:1) - width 1024px, height 1024px </li> <li>Landscape (4:3)  - width 2304px, height 1792px </li> <li>Portrait (3:4)  - width 1792px, height 2304px</li> <li>Widescreen (16:9) - width 2688px, height 1536px </li> <li>(7:4)  - width 1344px, height 768px </li> <li>(9:7) - width 1152px, height 896px </li> <li>(7:9) - width 896px, height 1152px</li> </ul>.'
-          title: The size
-      required:
-      - image
-      - mask
-      title: Fill images payload
-      type: object
-    ErrorResponse:
-      type: object
-      properties:
-        reason:
-          type: string
-          description: The type of error that occurred.
-        message:
-          type: string
-          description: A message describing the error.
-      title: ErrorResponse
-    PlacementStart:
-      properties:
-        position:
-          description: The position of the image on the timeline for the generated video, 0 being the first frame and 1 being the last frame.
-          maximum: 1
-          minimum: 0
-          type: number
-      required:
-      - position
-      title: PlacementStart
-      type: object
-    StylesImageReferenceV3:
-      properties:
+        placement:
+          $ref: '#/components/schemas/PlacementStart'
+          description: Details about the timeline placement of the image.
         source:
           $ref: '#/components/schemas/PublicBinaryInputV3'
+          description: The source details of the image.
+      required:
+      - source
+      - placement
+      title: ImageConditionV3
       type: object
+    Size:
+      properties:
+        height:
+          maximum: 4096
+          minimum: 1
+          type: integer
+        width:
+          maximum: 4096
+          minimum: 1
+          type: integer
+      required:
+      - width
+      - height
+      type: object
+    StorageImageResponse:
+      description: Storage response.
+      type: object
+      properties:
+        images:
+          type: array
+          description: Array of objects containing asset ID.
+          items:
+            $ref: '#/components/schemas/StorageImage'
+      title: StorageImageResponse
     Body_fillImagesV3Async:
       properties:
         files:
@@ -1307,12 +1274,31 @@ components:
       - files
       title: Body_fillImagesV3Async
       type: object
-    AsyncTaskLinkType:
-      type: string
-      title: AsyncTaskLinkType
-      enum:
-      - cancel
-      - result
+    StylesV3:
+      properties:
+        imageReference:
+          $ref: '#/components/schemas/StylesImageReferenceV3'
+        presets:
+          description: The style presets. Specify an ID for a style of image to generate.
+          items:
+            type: string
+          type: array
+          uniqueItems: true
+        strength:
+          description: How strictly Firefly should adhere to the style you provide. 0 means no adherence. 100 means full adherence.
+          exclusiveMinimum: 0
+          maximum: 100
+          type: integer
+      type: object
+    Links:
+      type: object
+      properties:
+        page:
+          $ref: '#/components/schemas/Link'
+        next:
+          $ref: '#/components/schemas/Link'
+      description: Collection of hypermedia links for pagination, navigation, etc.
+      title: Links
     Placement:
       properties:
         alignment:
@@ -1327,16 +1313,20 @@ components:
           title: Margin values in target size
       title: Placement
       type: object
-    StorageImage:
+    Link:
       type: object
-      description: Source image.
-      required:
-      - id
       properties:
-        id:
+        href:
           type: string
-          description: ID associated with the asset. The id will be valid for 7 days from the date of creation.
-      title: StorageImage
+          description: Fully qualified URI or relative path for the link.
+        rel:
+          type: string
+          description: Describes the relationship or function of the link (e.g. `next`, `page`, `self`).
+        templated:
+          type: boolean
+          description: Indicates whether or not the `href` supports URI template parameters.
+      description: Standard representation of a hypermedia link.
+      title: Link
     GenerateImagesRequestV3:
       properties:
         contentClass:
@@ -1399,228 +1389,20 @@ components:
       - prompt
       title: Generating images from prompt
       type: object
-    FireflyModelId:
-      type: string
-      title: FireflyModelId
-      enum:
-      - firefly_image
-    ValidationErrorResponse:
-      type: object
-      title: ValidationErrorResponse
-      description: Error response body for HTTP 422 (validation failures).
-      required:
-      - error_code
+    VideoSettingsV3:
       properties:
-        error_code:
-          $ref: '#/components/schemas/ValidationErrorCode422'
-        message:
-          type: string
-          description: Human-readable error description.
-        validation_errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/ValidationErrorDetail'
-          description: List of field-level validation errors.
-    CameraMotion:
-      enum:
-      - camera pan left
-      - camera pan right
-      - camera zoom in
-      - camera zoom out
-      - camera tilt up
-      - camera tilt down
-      - camera locked down
-      - camera handheld
-      title: CameraMotion
-      type: string
-    Links:
-      type: object
-      properties:
-        page:
-          $ref: '#/components/schemas/Link'
-        next:
-          $ref: '#/components/schemas/Link'
-      description: Collection of hypermedia links for pagination, navigation, etc.
-      title: Links
-    AspectRatio:
-      type: string
-      title: AspectRatio
-      enum:
-      - '1:1'
-      - '4:3'
-      - '3:4'
-      - '16:9'
-      - '9:16'
-      - auto
-    ContentClassV3:
-      description: The content class of the image.
-      enum:
-      - photo
-      - art
-      type: string
-    BaseModel:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the base model.
-        version:
-          type: string
-          description: The version of the base model.
-      title: BaseModel
-    ImageGenerateRequestV3:
-      type: object
-      title: ImageGenerateRequestV3
-      required:
-      - prompt
-      properties:
-        prompt:
-          type: string
-          title: The prompt
-          description: The prompt used to generate the image. The longer the prompt, the better.
-          minLength: 1
-          maxLength: 1500
-        aspectRatio:
-          $ref: '#/components/schemas/AspectRatio'
-          description: The aspect ratio of the requested generations. This controls the size of the generated image. When <code>referenceBlobs</code> is included in the request, this property should be omitted or set to <code>auto</code>.
-        resolutionLevel:
-          type: string
-          title: Resolution level
-          description: The resolution level.
-          enum:
-          - 1MP
-          - 2.4MP
-          - 4MP
-          default: 2.4MP
-        modelId:
-          $ref: '#/components/schemas/FireflyModelId'
-          description: 'The specific model to use for image generation. Available options: ''firefly_image'' for Firefly Image model.'
-        modelSpecificPayload:
-          $ref: '#/components/schemas/ModelSpecificPayloadV3'
-          description: Additional model-specific parameters for controlling the generation process.
-        numVariations:
-          type: integer
-          maximum: 1
-          title: The number of variations
-          description: The number of image variations to generate. Greater than 1 is not supported. Only one image per variation is allowed. For multiple variations, send separate requests.
-        referenceBlobs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReferenceBlobV3'
-          title: Reference blobs
-          description: List of reference blobs that will be used as additional input for the generation process. Only one reference image is supported. When this array is not empty, <code>aspectRatio</code> must be omitted or set to <code>auto</code>. [Pre-signed URLs can be used from supported domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/#image-api-usage).
-          default: []
-          maxItems: 1
-        seeds:
-          type: array
-          items:
-            type: integer
-          maxItems: 1
-          title: The seeds for the generations
-          description: The seed value to vary the image generation. Only one seed per variation is allowed. If specified alongside with numVariations, the number of seeds must be equal to numVariations.
-    ValidationErrorCode422:
-      type: string
-      title: ValidationErrorCode422
-      description: Error code for HTTP 422 responses (request validation only).
-      enum:
-      - validation_error
-      - cai_assertion_violation_error
-    StylesV3:
-      properties:
-        imageReference:
-          $ref: '#/components/schemas/StylesImageReferenceV3'
-        presets:
-          description: The style presets. Specify an ID for a style of image to generate.
-          items:
-            type: string
-          type: array
-          uniqueItems: true
-        strength:
-          description: How strictly Firefly should adhere to the style you provide. 0 means no adherence. 100 means full adherence.
-          exclusiveMinimum: 0
-          maximum: 100
-          type: integer
-      type: object
-    ShotSize:
-      enum:
-      - close-up shot
-      - extreme close-up
-      - medium shot
-      - long shot
-      - extreme long shot
-      title: ShotSize
-      type: string
-    BaseInputImageV3:
-      properties:
-        source:
-          $ref: '#/components/schemas/PublicBinaryInputV3'
-          description: Source image that Firefly expands, fills, uses to generate similar images, or upscales.
-      required:
-      - source
-      title: BaseInputImageV3
-      type: object
-    ModelSpecificPayloadV3:
-      type: object
-      title: ModelSpecificPayloadV3
-      description: Model-specific payload parameters for V3 generation workflows.
-      properties:
-        localeCode:
-          type: string
-          title: The locale code used for image generations
-          description: The locale code (following RFC 5646 format, e.g., 'en-US') will be used to generate content that is more relevant for user's country and language.
-          example: en-US
-        prompt_reasoner:
-          type: string
-          title: Prompt reasoner mode
-          description: Controls the prompt reasoning strategy used during image generation. When set to <code>quality</code>, the response includes a populated <code>altText</code> field with a generated description of the image. When set to <code>speed</code>, prompt reasoning is optimized for speed and the <code>altText</code> field is returned empty.
-          enum:
-          - quality
-          - speed
-          default: speed
-          example: quality
-    AsyncAcceptResponseV3:
-      properties:
-        cancelUrl:
-          description: The URL to cancel the job.
-          title: Cancel URL
-          type: string
-        jobId:
-          description: The ID of the job.
-          title: Job ID
-          type: string
-        statusUrl:
-          description: The URL to check the status of the job.
-          title: Status URL
-          type: string
-      required:
-      - jobId
-      - statusUrl
-      - cancelUrl
-      title: AsyncAcceptResponseV3
-      type: object
-    ReferenceBlobUsageV3:
-      type: string
-      title: ReferenceBlobUsageV3
-      enum:
-      - general
-    ClinetoSize:
-      properties:
-        height:
-          maximum: 8192
-          minimum: 1
-          description: The height of the output video.
-          type: integer
-          example: 720
-        width:
-          maximum: 8192
-          minimum: 1
-          description: The width of the output video.
-          type: integer
-          example: 720
-      required:
-      - width
-      - height
-      title: ClinetoSize
+        cameraMotion:
+          $ref: '#/components/schemas/CameraMotion'
+          description: The camera motion control.
+        promptStyle:
+          $ref: '#/components/schemas/VideoPromptStyle'
+          description: The style of the generated video.
+        shotAngle:
+          $ref: '#/components/schemas/ShotAngle'
+          description: The shot angle control.
+        shotSize:
+          $ref: '#/components/schemas/ShotSize'
+          description: The shot size control.
       type: object
     PublicBinaryInputV3:
       properties:
@@ -1638,28 +1420,40 @@ components:
           type: string
       title: PublicBinaryInputV3
       type: object
-    ExpandImageRequestV3:
+    ContentClassV3:
+      description: The content class of the image.
+      enum:
+      - photo
+      - art
+      type: string
+    FillImageRequestV3:
       properties:
         image:
           $ref: '#/components/schemas/InputImageV3'
           description: 'The image to expand. Use a URL or an <code>uploadID</code> as the source for the image. Firefly only allows these listed domains for input URLs in the request: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
         mask:
           $ref: '#/components/schemas/InputMaskV3'
-          description: Mask image which will be used to expand the given image.
+          description: Required. Selected areas of a background image that Firefly uses to fill the source image.
+        negativePrompt:
+          description: An optional text prompt up to 1024 characters. Avoid these characteristics in the generated image. Not supported for Firefly Custom Models on Image Model 3 or Firefly Custom Models on Image Model 4.
+          maxLength: 1024
+          title: Avoid prompt
+          type: string
         numVariations:
           description: Generate this number of variations. <code>numVariations</code> defaults to the number of seed images, or to 1 if you do not specify seeds.
           maximum: 4
           minimum: 1
-          title: The number of variations to generate
+          title: The number of variations
           type: integer
-        placement:
-          $ref: '#/components/schemas/Placement'
-          description: The position of the source image after Firefly resizes it. The value describes the horizontal and vertical placement and dimensions of the image in the output. Note you cannot use placement for source images when you also apply a mask image.
         prompt:
           description: An optional text prompt up to 1024 characters. The longer the prompt the better Firefly performs.
           maxLength: 1024
           minLength: 1
           title: The prompt
+          type: string
+        promptBiasingLocaleCode:
+          description: A hyphen-separated string combining the ISO 639-1 language code and the ISO 3166-1 region, such as en-US. When a locale is set, the prompt will be biased to generate more relevant content for that region. The locale will be auto-detected if not specified based on your profile and the accepted language header.
+          title: The locale used to generate an image
           type: string
         seeds:
           description: Array of seed image IDs. These reference images help ensure consistent image generation across multiple API calls. For example, you can use the same seed to generate a similar image with different styles. If specified along with <code>numVariations</code>, the number of seeds must equal <code>numVariations</code>.
@@ -1667,7 +1461,7 @@ components:
             type: integer
           maxItems: 4
           minItems: 1
-          title: The seed image for each variation
+          title: The seed of each variation
           type: array
           uniqueItems: true
         size:
@@ -1676,26 +1470,146 @@ components:
           default:
             height: 2048
             width: 2048
-          description: The desired width and height for the final expanded image in pixels. The maximum size for the output images is 3999px by 3999px.
+          description: 'The desired width and height for the final expanded image in pixels. The supported sizes for the output images are: <ul> <li>Square (1:1) - width 2048px, height 2048px </li> <li>Square (1:1) - width 1024px, height 1024px </li> <li>Landscape (4:3)  - width 2304px, height 1792px </li> <li>Portrait (3:4)  - width 1792px, height 2304px</li> <li>Widescreen (16:9) - width 2688px, height 1536px </li> <li>(7:4)  - width 1344px, height 768px </li> <li>(9:7) - width 1152px, height 896px </li> <li>(7:9) - width 896px, height 1152px</li> </ul>.'
           title: The size
       required:
       - image
-      title: Images expand payload
+      - mask
+      title: Fill images payload
       type: object
-    VideoSettingsV3:
+    ReferenceBlobV3:
+      type: object
+      title: ReferenceBlobV3
+      description: 'Reference blob for V3 API. Style Guide compliant: The <code>source</code> property specifies the input location, and other properties like <code>usage</code> are peers of <code>source</code>.'
+      required:
+      - source
       properties:
-        cameraMotion:
-          $ref: '#/components/schemas/CameraMotion'
-          description: The camera motion control.
-        promptStyle:
-          $ref: '#/components/schemas/VideoPromptStyle'
-          description: The style of the generated video.
-        shotAngle:
-          $ref: '#/components/schemas/ShotAngle'
-          description: The shot angle control.
-        shotSize:
-          $ref: '#/components/schemas/ShotSize'
-          description: The shot size control.
+        source:
+          $ref: '#/components/schemas/ReferenceBlobSourceV3'
+          description: The source location of the reference image.
+        usage:
+          $ref: '#/components/schemas/ReferenceBlobUsageV3'
+          description: 'The usage of the reference blob. Available options: ''general'' for general reference.'
+    ColligoErrorCodeAsyncV3:
+      description: An enumeration.
+      enum:
+      - validation_error
+      - runtime_error
+      - timeout_error
+      - rate_limited
+      - access_error
+      - invalid_content_type
+      - empty_input_body
+      - bad_request
+      type: string
+    ValidationErrorCode422:
+      type: string
+      title: ValidationErrorCode422
+      description: Error code for HTTP 422 responses (request validation only).
+      enum:
+      - validation_error
+      - cai_assertion_violation_error
+    CameraMotion:
+      enum:
+      - camera pan left
+      - camera pan right
+      - camera zoom in
+      - camera zoom out
+      - camera tilt up
+      - camera tilt down
+      - camera locked down
+      - camera handheld
+      title: CameraMotion
+      type: string
+    BaseModel:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the base model.
+        version:
+          type: string
+          description: The version of the base model.
+      title: BaseModel
+    PlacementAlignment:
+      properties:
+        horizontal:
+          allOf:
+          - $ref: '#/components/schemas/AlignmentHorizontal'
+          default: center
+        vertical:
+          allOf:
+          - $ref: '#/components/schemas/AlignmentVertical'
+          default: center
+      title: PlacementAlignment
+      type: object
+    GenerateVideoRequestV3:
+      properties:
+        bitRateFactor:
+          description: The constant rate factor for encoding video. 0 indicates a lossless generation, with the highest quality and largest file size. 63 indicates the worst quality generation with the smallest file size. The suggested value range is 17-23.
+          maximum: 63
+          minimum: 0
+          default: 18
+          type: integer
+        image:
+          description: The details of the image used as a keyframe for the generated video. Provided images are used as a first frame or final frame to guide the video generation.
+          $ref: '#/components/schemas/InputImageVideoV3'
+        prompt:
+          description: The prompt used to generate the video. The longer the prompt, the better.
+          type: string
+          example: A lone figure stands in the middle of a vast desert, looking up at the sky, with a sense of awe and wonder.
+        seeds:
+          description: The seed reference value. Currently only 1 seed is supported.
+          items:
+            type: integer
+          maxItems: 1
+          minItems: 1
+          type: array
+          example:
+          - 1842533538
+        sizes:
+          description: The dimensions of the generated video. Consult the [supported aspect ratios in the usage notes](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/#supported-aspect-ratios) for allowed values.
+          items:
+            $ref: '#/components/schemas/ClinetoSize'
+          type: array
+        videoSettings:
+          description: The camera and shot control settings.
+          $ref: '#/components/schemas/VideoSettingsV3'
+      title: Generating video from prompt
+      type: object
+    ErrorResponse:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: The type of error that occurred.
+        message:
+          type: string
+          description: A message describing the error.
+      title: ErrorResponse
+    CustomModelsFF3pInfo:
+      type: object
+      properties:
+        custom_models:
+          type: array
+          description: List of custom models.
+          items:
+            $ref: '#/components/schemas/CustomModelFF3pInfo'
+        _links:
+          $ref: '#/components/schemas/Links'
+        total_count:
+          type: integer
+          description: Total number of results for the query.
+          format: int32
+      title: CustomModelsFF3pInfo
+    BaseInputImageV3:
+      properties:
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+          description: Source image that Firefly expands, fills, uses to generate similar images, or upscales.
+      required:
+      - source
+      title: BaseInputImageV3
       type: object
     CustomModelFF3pInfo:
       type: object
@@ -1752,92 +1666,16 @@ components:
           description: When 'trainingMode' is 'subject', this string specifies the subject for the prompt.
       description: Custom Model info.
       title: CustomModelFF3pInfo
-    StructureImageReferenceV3:
-      properties:
-        source:
-          $ref: '#/components/schemas/PublicBinaryInputV3'
-      type: object
-    ReferenceBlobSourceV3:
-      type: object
-      title: ReferenceBlobSourceV3
-      description: 'Source specification for a reference blob input asset. Input images must meet these requirements: file size must be 10 MB or less; image area must be between 512×512 and 2048×2048 pixels (inclusive); aspect ratio must be between 1:5 and 5:1 (inclusive).'
-      properties:
-        uploadId:
-          type: string
-          format: uuid
-          title: Upload ID
-          description: The ID of an asset previously uploaded to the Firefly Upload Image API.
-        url:
-          type: string
-          title: URL
-          description: URL of the reference image.
-    ContentPolicyErrorCode451:
+    AspectRatio:
       type: string
-      title: ContentPolicyErrorCode451
-      description: Error code for HTTP 451 responses (content policy, legal, or safety).
+      title: AspectRatio
       enum:
-      - legal_error
-      - prompt_unsafe
-      - prompt_entity_denied
-      - image_unsafe
-      - video_unsafe
-      - reference_image_unsafe_error
-      - input_media_unsafe
-    ErrorBody:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Error message.
-        error_code:
-          type: string
-          description: Associated error code.
-      title: ErrorBody
-    PlacementAlignment:
-      properties:
-        horizontal:
-          allOf:
-          - $ref: '#/components/schemas/AlignmentHorizontal'
-          default: center
-        vertical:
-          allOf:
-          - $ref: '#/components/schemas/AlignmentVertical'
-          default: center
-      title: PlacementAlignment
-      type: object
-    Link:
-      type: object
-      properties:
-        href:
-          type: string
-          description: Fully qualified URI or relative path for the link.
-        rel:
-          type: string
-          description: Describes the relationship or function of the link (e.g. `next`, `page`, `self`).
-        templated:
-          type: boolean
-          description: Indicates whether or not the `href` supports URI template parameters.
-      description: Standard representation of a hypermedia link.
-      title: Link
-    AlignmentHorizontal:
-      description: An enumeration.
-      enum:
-      - center
-      - left
-      - right
-      title: AlignmentHorizontal
-    ColligoErrorCodeAsyncV3:
-      description: An enumeration.
-      enum:
-      - validation_error
-      - runtime_error
-      - timeout_error
-      - rate_limited
-      - access_error
-      - invalid_content_type
-      - empty_input_body
-      - bad_request
-      type: string
+      - '1:1'
+      - '4:3'
+      - '3:4'
+      - '16:9'
+      - '9:16'
+      - auto
     Body_generateImagesV3Async:
       properties:
         files:
@@ -1853,47 +1691,51 @@ components:
       - files
       title: Body_generateImagesV3Async
       type: object
-    GenerateSimilarImagesRequestV3:
+    AlignmentHorizontal:
+      description: An enumeration.
+      enum:
+      - center
+      - left
+      - right
+      title: AlignmentHorizontal
+    AsyncTaskLinkType:
+      type: string
+      title: AsyncTaskLinkType
+      enum:
+      - cancel
+      - result
+    FireflyModelId:
+      type: string
+      title: FireflyModelId
+      enum:
+      - firefly_image
+    ApiError:
+      description: The error within the error response.
       properties:
-        image:
-          $ref: '#/components/schemas/BaseInputImageV3'
-          description: 'Firefly will create similar variations. Use a URL or an <code>uploadID</code> as the source for the image. Firefly only allows these listed domains: <ul> <li><code>amazonaws.com</code></li> <li><code>windows.net</code></li> <li><code>dropboxusercontent.com</code></li> <li><code>storage.googleapis.com</code></li> </ul>.'
-        numVariations:
-          description: Generate this number of variations. <code>numVariations</code> defaults to the number of seed images, or to 1 if you do not specify `seeds`.
-          maximum: 4
-          minimum: 1
-          title: The number of variations
-          type: integer
-        seeds:
-          description: Array of seed image IDs. These reference images help ensure consistent image generation across multiple API calls. If specified along with <code>numVariations</code>, the number of seeds must equal <code>numVariations</code>.
-          items:
-            type: integer
-          maxItems: 4
-          minItems: 1
-          title: The seed image for each variation
-          type: array
-          uniqueItems: true
-        size:
-          allOf:
-          - $ref: '#/components/schemas/Size'
-          default:
-            height: 2048
-            width: 2048
-          description: 'The desired width and height for the final image in pixels. The supported sizes for the output images are: <ul> <li>Square (1:1) - width 2048px, height 2048px </li> <li>Square (1:1) - width 1024px, height 1024px </li> <li>Landscape (4:3)  - width 2304px, height 1792px </li> <li>Portrait (3:4)  - width 1792px, height 2304px</li> <li>Widescreen (16:9) - width 2688px, height 1536px </li> <li>(7:4)  - width 1344px, height 768px </li> <li>(9:7) - width 1152px, height 896px </li> <li>(7:9) - width 896px, height 1152px</li> </ul>.'
-          title: The size
-      required:
-      - image
-      title: Generating similar images from a reference image
-      type: object
-    AsyncTaskLink:
-      type: object
-      title: AsyncTaskLink
-      required:
-      - href
-      properties:
-        href:
+        error_code:
+          $ref: '#/components/schemas/ColligoErrorCodeAsyncV3'
+        message:
+          title: Message
           type: string
-          title: Href
+        stack_trace:
+          items:
+            type: string
+          title: Stack Trace
+          type: array
+        validation_errors:
+          items:
+            $ref: '#/components/schemas/ValidationErrorMessage'
+          title: Validation Errors
+          type: array
+      required:
+      - error_code
+      title: ApiError
+      type: object
+    StylesImageReferenceV3:
+      properties:
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+      type: object
     ShotAngle:
       enum:
       - aerial shot
@@ -1902,6 +1744,49 @@ components:
       - low angle shot
       - top-down shot
       title: ShotAngle
+      type: string
+    Body_generateSimilarImagesV3Async:
+      properties:
+        files:
+          items:
+            format: binary
+            type: string
+          title: Files
+          type: array
+        request:
+          $ref: '#/components/schemas/GenerateSimilarImagesRequestV3'
+      required:
+      - request
+      - files
+      title: Body_generateSimilarImagesV3Async
+      type: object
+    ReferenceBlobSourceV3:
+      type: object
+      title: ReferenceBlobSourceV3
+      description: 'Source specification for a reference blob input asset. Input images must meet these requirements: file size must be 10 MB or less; image area must be between 512×512 and 2048×2048 pixels (inclusive); aspect ratio must be between 1:5 and 5:1 (inclusive).'
+      properties:
+        uploadId:
+          type: string
+          format: uuid
+          title: Upload ID
+          description: The ID of an asset previously uploaded to the Firefly Upload Image API.
+        url:
+          type: string
+          title: URL
+          description: URL of the reference image.
+    VideoPromptStyle:
+      enum:
+      - anime
+      - 3d
+      - fantasy
+      - cinematic
+      - claymation
+      - line art
+      - stop motion
+      - 2d
+      - vector art
+      - black and white
+      title: VideoPromptStyle
       type: string
     InputImageVideoV3:
       properties:
@@ -1913,21 +1798,37 @@ components:
           type: array
       title: InputImageVideoV3
       type: object
-    Body_expandImagesV3Async:
+    ValidationErrorMessage:
       properties:
-        files:
+        ctx:
+          title: Ctx
+          type: object
+        loc:
           items:
-            format: binary
-            type: string
-          title: Files
+            anyOf:
+            - type: integer
+            - type: string
+          title: Loc
           type: array
-        request:
-          $ref: '#/components/schemas/ExpandImageRequestV3'
+        msg:
+          title: Msg
+          type: string
+        type:
+          title: Type
+          type: string
       required:
-      - request
-      - files
-      title: Body_expandImagesV3Async
+      - loc
+      - msg
+      - type
+      title: ValidationErrorMessage
       type: object
+    AlignmentVertical:
+      description: An enumeration.
+      enum:
+      - center
+      - top
+      - bottom
+      title: AlignmentVertical
     StructureReferenceV3:
       properties:
         imageReference:
@@ -1939,58 +1840,32 @@ components:
           title: Adherence Threshold
           type: integer
       type: object
-    ImageConditionV3:
-      properties:
-        placement:
-          $ref: '#/components/schemas/PlacementStart'
-          description: Details about the timeline placement of the image.
-        source:
-          $ref: '#/components/schemas/PublicBinaryInputV3'
-          description: The source details of the image.
-      required:
-      - source
-      - placement
-      title: ImageConditionV3
+    ValidationErrorResponse:
       type: object
-    ReferenceBlobV3:
-      type: object
-      title: ReferenceBlobV3
-      description: 'Reference blob for V3 API. Style Guide compliant: The <code>source</code> property specifies the input location, and other properties like <code>usage</code> are peers of <code>source</code>.'
+      title: ValidationErrorResponse
+      description: Error response body for HTTP 422 (validation failures).
       required:
-      - source
+      - error_code
       properties:
-        source:
-          $ref: '#/components/schemas/ReferenceBlobSourceV3'
-          description: The source location of the reference image.
-        usage:
-          $ref: '#/components/schemas/ReferenceBlobUsageV3'
-          description: 'The usage of the reference blob. Available options: ''general'' for general reference.'
-    Size:
-      properties:
-        height:
-          maximum: 4096
-          minimum: 1
-          type: integer
-        width:
-          maximum: 4096
-          minimum: 1
-          type: integer
-      required:
-      - width
-      - height
+        error_code:
+          $ref: '#/components/schemas/ValidationErrorCode422'
+        message:
+          type: string
+          description: Human-readable error description.
+        validation_errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+          description: List of field-level validation errors.
+    AsyncTaskLink:
       type: object
-    InputMaskV3:
-      properties:
-        invert:
-          description: Invert mask is an optional boolen property, use <code>true</code> if you want take an image mask, invert it and apply it.
-          title: Invert mask
-          type: boolean
-        source:
-          $ref: '#/components/schemas/PublicBinaryInputV3'
+      title: AsyncTaskLink
       required:
-      - source
-      title: InputMaskV3
-      type: object
+      - href
+      properties:
+        href:
+          type: string
+          title: Href
     ValidationErrorDetail:
       type: object
       properties:
@@ -2011,7 +1886,63 @@ components:
           type: object
           additionalProperties: true
           description: Additional context about the error.
-    Body_generateSimilarImagesV3Async:
+    AsyncTaskResponse:
+      type: object
+      title: AsyncTaskResponse
+      description: Response type for async requests.
+      required:
+      - links
+      properties:
+        links:
+          type: object
+          title: Links
+          additionalProperties:
+            $ref: '#/components/schemas/AsyncTaskLink'
+          propertyNames:
+            $ref: '#/components/schemas/AsyncTaskLinkType'
+        progress:
+          type: number
+          title: Progress
+    AsyncAcceptResponseV3:
+      properties:
+        cancelUrl:
+          description: The URL to cancel the job.
+          title: Cancel URL
+          type: string
+        jobId:
+          description: The ID of the job.
+          title: Job ID
+          type: string
+        statusUrl:
+          description: The URL to check the status of the job.
+          title: Status URL
+          type: string
+      required:
+      - jobId
+      - statusUrl
+      - cancelUrl
+      title: AsyncAcceptResponseV3
+      type: object
+    ErrorBody:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message.
+        error_code:
+          type: string
+          description: Associated error code.
+      title: ErrorBody
+    ShotSize:
+      enum:
+      - close-up shot
+      - extreme close-up
+      - medium shot
+      - long shot
+      - extreme long shot
+      title: ShotSize
+      type: string
+    Body_expandImagesV3Async:
       properties:
         files:
           items:
@@ -2020,90 +1951,159 @@ components:
           title: Files
           type: array
         request:
-          $ref: '#/components/schemas/GenerateSimilarImagesRequestV3'
+          $ref: '#/components/schemas/ExpandImageRequestV3'
       required:
       - request
       - files
-      title: Body_generateSimilarImagesV3Async
+      title: Body_expandImagesV3Async
       type: object
-    CustomModelsFF3pInfo:
-      type: object
+    PlacementInset:
       properties:
-        custom_models:
-          type: array
-          description: List of custom models.
-          items:
-            $ref: '#/components/schemas/CustomModelFF3pInfo'
-        _links:
-          $ref: '#/components/schemas/Links'
-        total_count:
+        bottom:
+          description: The space between bottom edge of the result image and bottom edge of the placed object image.
+          title: Bottom Inset
           type: integer
-          description: Total number of results for the query.
-          format: int32
-      title: CustomModelsFF3pInfo
-    AlignmentVertical:
-      description: An enumeration.
-      enum:
-      - center
-      - top
-      - bottom
-      title: AlignmentVertical
-    ContentPolicyErrorResponse:
+        left:
+          description: The space between left edge of the result image and left edge of the placed object image.
+          title: Left Inset
+          type: integer
+        right:
+          description: The space between right edge of the result image and right edge of the placed object image.
+          title: Right Inset
+          type: integer
+        top:
+          description: The space between top edge of the result image and top edge of the placed object image.
+          title: Top Inset
+          type: integer
+      title: PlacementInset
       type: object
-      title: ContentPolicyErrorResponse
-      description: Error response body for HTTP 451 (content policy, legal, or safety).
+    ModelSpecificPayloadV3:
+      type: object
+      title: ModelSpecificPayloadV3
+      description: Model-specific payload parameters for V3 generation workflows.
+      properties:
+        localeCode:
+          type: string
+          title: The locale code used for image generations
+          description: The locale code (following RFC 5646 format, e.g., 'en-US') will be used to generate content that is more relevant for user's country and language.
+          example: en-US
+        prompt_reasoner:
+          type: string
+          title: Prompt reasoner mode
+          description: Controls the prompt reasoning strategy used during image generation. When set to <code>quality</code>, the response includes a populated <code>altText</code> field with a generated description of the image. When set to <code>speed</code>, prompt reasoning is optimized for speed and the <code>altText</code> field is returned empty.
+          enum:
+          - quality
+          - speed
+          default: speed
+          example: quality
+    StorageImage:
+      type: object
+      description: Source image.
       required:
-      - error_code
+      - id
       properties:
-        error_code:
-          $ref: '#/components/schemas/ContentPolicyErrorCode451'
-        message:
+        id:
           type: string
-          description: Human-readable error description.
-    GenerateVideoRequestV3:
+          description: ID associated with the asset. The id will be valid for 7 days from the date of creation.
+      title: StorageImage
+    ContentPolicyErrorCode451:
+      type: string
+      title: ContentPolicyErrorCode451
+      description: Error code for HTTP 451 responses (content policy, legal, or safety).
+      enum:
+      - legal_error
+      - prompt_unsafe
+      - prompt_entity_denied
+      - image_unsafe
+      - video_unsafe
+      - reference_image_unsafe_error
+      - input_media_unsafe
+    InputMaskV3:
       properties:
-        bitRateFactor:
-          description: The constant rate factor for encoding video. 0 indicates a lossless generation, with the highest quality and largest file size. 63 indicates the worst quality generation with the smallest file size. The suggested value range is 17-23.
-          maximum: 63
-          minimum: 0
-          default: 18
-          type: integer
-        image:
-          description: The details of the image used as a keyframe for the generated video. Provided images are used as a first frame or final frame to guide the video generation.
-          $ref: '#/components/schemas/InputImageVideoV3'
+        invert:
+          description: Invert mask is an optional boolen property, use <code>true</code> if you want take an image mask, invert it and apply it.
+          title: Invert mask
+          type: boolean
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+      required:
+      - source
+      title: InputMaskV3
+      type: object
+    ImageGenerateRequestV3:
+      type: object
+      title: ImageGenerateRequestV3
+      required:
+      - prompt
+      properties:
         prompt:
-          description: The prompt used to generate the video. The longer the prompt, the better.
           type: string
-          example: A lone figure stands in the middle of a vast desert, looking up at the sky, with a sense of awe and wonder.
+          title: The prompt
+          description: The prompt used to generate the image. The longer the prompt, the better.
+          minLength: 1
+          maxLength: 1500
+        aspectRatio:
+          $ref: '#/components/schemas/AspectRatio'
+          description: The aspect ratio of the requested generations. This controls the size of the generated image. When <code>referenceBlobs</code> is included in the request, this property should be omitted or set to <code>auto</code>.
+        resolutionLevel:
+          type: string
+          title: Resolution level
+          description: The resolution level.
+          enum:
+          - 1MP
+          - 2.4MP
+          - 4MP
+          default: 2.4MP
+        modelId:
+          $ref: '#/components/schemas/FireflyModelId'
+          description: 'The specific model to use for image generation. Available options: ''firefly_image'' for Firefly Image model.'
+        modelSpecificPayload:
+          $ref: '#/components/schemas/ModelSpecificPayloadV3'
+          description: Additional model-specific parameters for controlling the generation process.
+        numVariations:
+          type: integer
+          maximum: 1
+          title: The number of variations
+          description: The number of image variations to generate. Greater than 1 is not supported. Only one image per variation is allowed. For multiple variations, send separate requests.
+        referenceBlobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferenceBlobV3'
+          title: Reference blobs
+          description: List of reference blobs that will be used as additional input for the generation process. Only one reference image is supported. When this array is not empty, <code>aspectRatio</code> must be omitted or set to <code>auto</code>. [Pre-signed URLs can be used from supported domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/#image-api-usage).
+          default: []
+          maxItems: 1
         seeds:
-          description: The seed reference value. Currently only 1 seed is supported.
+          type: array
           items:
             type: integer
           maxItems: 1
-          minItems: 1
-          type: array
-          example:
-          - 1842533538
-        sizes:
-          description: The dimensions of the generated video. Consult the [supported aspect ratios in the usage notes](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/#supported-aspect-ratios) for allowed values.
-          items:
-            $ref: '#/components/schemas/ClinetoSize'
-          type: array
-        videoSettings:
-          description: The camera and shot control settings.
-          $ref: '#/components/schemas/VideoSettingsV3'
-      title: Generating video from prompt
-      type: object
-    StorageImageResponse:
-      description: Storage response.
-      type: object
+          title: The seeds for the generations
+          description: The seed value to vary the image generation. Only one seed per variation is allowed. If specified alongside with numVariations, the number of seeds must be equal to numVariations.
+    StructureImageReferenceV3:
       properties:
-        images:
-          type: array
-          description: Array of objects containing asset ID.
-          items:
-            $ref: '#/components/schemas/StorageImage'
-      title: StorageImageResponse
+        source:
+          $ref: '#/components/schemas/PublicBinaryInputV3'
+      type: object
+    ClinetoSize:
+      properties:
+        height:
+          maximum: 8192
+          minimum: 1
+          description: The height of the output video.
+          type: integer
+          example: 720
+        width:
+          maximum: 8192
+          minimum: 1
+          description: The width of the output video.
+          type: integer
+          example: 720
+      required:
+      - width
+      - height
+      title: ClinetoSize
+      type: object
   securitySchemes:
     AccessToken:
       type: http

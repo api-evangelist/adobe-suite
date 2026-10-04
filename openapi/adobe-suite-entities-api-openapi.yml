@@ -702,42 +702,57 @@ paths:
                 $ref: '#/components/schemas/ResponseInternalErrorContext'
 components:
   schemas:
-    ResponseErrorContext:
+    PostRequestBodyEntity:
+      required:
+      - identities
+      - schema
+      type: object
+      properties:
+        schema:
+          $ref: '#/components/schemas/SchemaEntity'
+        fields:
+          type: array
+          description: Fields for the model object. By default, all fields will be fetched. Separated by comma.
+          items:
+            type: string
+            example: person.name.firstName
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostIdentityEntityItem'
+        timeFilter:
+          $ref: '#/components/schemas/PostTimeFilterEntity'
+        limit:
+          type: number
+          description: 'Number of records to return from the result. Only for ExperienceEvents. Default: 1000'
+          example: 10.0
+        orderBy:
+          type: string
+          description: 'The sort order of retrieved ExperienceEvents by timestamp. Syntax: (+/-)timestamp. Default: +timestamp'
+          example: -timestamp
+    TooManyRequestError:
       type: object
       properties:
         message:
           type: string
           description: Error message
-          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
+          example: Too many requests
         cause:
           type: string
           description: Cause message
-          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
-        statusCode:
+          example: '{"Errors":["Request rate is large"]}'
+        retryAfterMs:
           type: string
-          description: Original status code from error
-          example: '422'
-    ResponseInternalErrorContext:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Error message
-          example: Unable to connect to server
-        cause:
-          type: string
-          description: Cause message
-          example: 'Status Code - 500 : Connection Timeout'
-        statusCode:
-          type: string
-          description: Original status code from error
+          description: Retry in milliseconds
           example: '500'
-    NotFoundError:
-      type: object
-      properties:
         statusCode:
           type: string
-          example: '404'
+          description: Original status code from error
+          example: '429'
+    GetEntityResponse:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Entity'
     PostTimeFilterEntity:
       type: object
       properties:
@@ -787,6 +802,65 @@ components:
         _page:
           type: object
           description: ''
+    ForbiddenError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
+        statusCode:
+          type: string
+          example: '403'
+    NotFoundError:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          example: '404'
+    ResponseInternalErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Unable to connect to server
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 500 : Connection Timeout'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '500'
+    ResponseErrorContext:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: UPS-MRG-1000001:Identities cannot be retrieved for XID - "A0Fxh6UjQa6mAA5hhzdu6SJTu78M" for graph type "auto"
+        cause:
+          type: string
+          description: Cause message
+          example: 'Status Code - 400 : message {"reason":"Validation error Request id: 9b4d449c-213c-4f76-8442-3d151a205fb9.","message":"Failed to convert mcid=6993527987241034661918658814749273655 to aamuuid using imsOrg=****@AdobeOrg"}'
+        statusCode:
+          type: string
+          description: Original status code from error
+          example: '422'
+    SchemaEntity:
+      type: object
+      properties:
+        name:
+          type: string
+          description: XED name of the schema class.
+          example: _xdm.context.profile
+    ErrorResponseById:
+      type: object
+      properties:
+        xid:
+          type: string
+        error:
+          $ref: '#/components/schemas/ResponseErrorContext'
     PostIdentityEntityItem:
       type: object
       properties:
@@ -806,81 +880,14 @@ components:
           type: string
           description: The ID of the related entity
           example: GkouAW-2u-7iWt5vQ9u2wm40JOZY
-    SchemaEntity:
-      type: object
-      properties:
-        name:
-          type: string
-          description: XED name of the schema class.
-          example: _xdm.context.profile
-    ErrorResponseById:
-      type: object
-      properties:
-        xid:
-          type: string
-        error:
-          $ref: '#/components/schemas/ResponseErrorContext'
-    GetEntityResponse:
-      type: object
-      additionalProperties:
-        $ref: '#/components/schemas/Entity'
-    ForbiddenError:
-      type: object
-      properties:
-        message:
-          type: string
-          example: 'UPS-ACC-1000004: IMS Org is not provisioned.'
-        statusCode:
-          type: string
-          example: '403'
-    TooManyRequestError:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Error message
-          example: Too many requests
-        cause:
-          type: string
-          description: Cause message
-          example: '{"Errors":["Request rate is large"]}'
-        retryAfterMs:
-          type: string
-          description: Retry in milliseconds
-          example: '500'
-        statusCode:
-          type: string
-          description: Original status code from error
-          example: '429'
-    PostRequestBodyEntity:
-      required:
-      - identities
-      - schema
-      type: object
-      properties:
-        schema:
-          $ref: '#/components/schemas/SchemaEntity'
-        fields:
-          type: array
-          description: Fields for the model object. By default, all fields will be fetched. Separated by comma.
-          items:
-            type: string
-            example: person.name.firstName
-        identities:
-          type: array
-          items:
-            $ref: '#/components/schemas/PostIdentityEntityItem'
-        timeFilter:
-          $ref: '#/components/schemas/PostTimeFilterEntity'
-        limit:
-          type: number
-          description: 'Number of records to return from the result. Only for ExperienceEvents. Default: 1000'
-          example: 10.0
-        orderBy:
-          type: string
-          description: 'The sort order of retrieved ExperienceEvents by timestamp. Syntax: (+/-)timestamp. Default: +timestamp'
-          example: -timestamp
   parameters:
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -892,13 +899,6 @@ components:
       name: Authorization
       in: header
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
       required: true
       schema:
         type: string

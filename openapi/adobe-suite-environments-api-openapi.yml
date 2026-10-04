@@ -986,19 +986,10 @@ paths:
     - url: https://cloudmanager.adobe.io
 components:
   schemas:
-    propertiesLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/propertiesEntity'
-    relatedLibraries:
+    relatedExtensions:
       type: object
       properties:
-        libraries:
+        extensions:
           type: object
           properties:
             links:
@@ -1006,28 +997,67 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
-          description: Contains a link to the related libraries for the resource.
-    environmentsUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/environmentsLookupResponse'
-    relationshipsLookupResponse:
+                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
+          description: Contains a link to the related extensions for the resource.
+    environmentsUpdateAttributes:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the environment.
+        archive:
+          type: boolean
+          description: Indicates whether the environment should be archived.
+        archive_passphrase:
+          type: string
+          description: A passphrase for the environment if `archive` is set to `true`.
+        path:
+          type: string
+          description: The path for the environment.
+        include_debug_library:
+          type: boolean
+          description: Indicates whether a debug library is included for the environment.
+    dataCreateWithRelationships:
+      required:
+      - data
       type: object
       properties:
         data:
-          type: array
-          description: Lists the relationships that you wish to add to the parent resource.
-          items:
-            $ref: '#/components/schemas/relationshipEntity'
-        links:
           type: object
-          properties: {}
-          description: Contains links that can be used in subsequent fetch requests.
-    relatedRules:
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+            relationships:
+              type: object
+              description: The relationships for the resource being created.
+            type:
+              type: string
+              description: The type of resource being created.
+              enum:
+              - app_configurations
+              - audit_events
+              - builds
+              - callbacks
+              - companies
+              - data_elements
+              - environments
+              - extensions
+              - extension_packages
+              - hosts
+              - libraries
+              - notes
+              - properties
+              - rules
+              - rule_components
+              - secrets
+          description: Contains the attributes, relationships, and type for the resource being created.
+    relatedCompany:
       type: object
       properties:
-        rules:
+        company:
           type: object
           properties:
             links:
@@ -1035,9 +1065,56 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
-          description: Contains a link to the related rules for the resource.
+                  description: A link that can be used in a subsequent API call to fetch the related company.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related company.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the company.
+                type:
+                  type: string
+                  description: The resource type for the company (`companies`).
+              description: Contains further information about the related company.
+          description: Contains information about the company that owns the resource.
+    environmentsLibraryLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/librariesLookupResponse'
+    relatedExtensionsWithSelf:
+      type: object
+      properties:
+        extensions:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related extensions.
+              description: Contains links that can be used in a subsequent fetch calls.
+          description: Contains a link to the related extensions for the resource.
+    environmentsHostRelationshipLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/relationshipsLookupResponse'
+      - type: object
+        properties:
+          links:
+            type: object
+            properties:
+              related:
+                type: string
+                description: A link to the related host for the environment.
+              self:
+                type: string
+                description: A link to the host relationship object for the environment.
+    environmentsSecretsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/secretsListResponse'
     relatedUpstreamLibrary:
       type: object
       properties:
@@ -1055,22 +1132,10 @@ components:
                   description: The resource type for the library (`libraries`).
               description: Contains basic information about the upstream library.
           description: Contains information about the [upstream library](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html?lang=en#upstream) for this library.
-    environmentsBuildsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/buildsListResponse'
-    librariesLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/librariesEntity'
-    relatedDataElementsWithSelf:
+    relatedHosts:
       type: object
       properties:
-        data_elements:
+        hosts:
           type: object
           properties:
             links:
@@ -1078,40 +1143,70 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
-                self:
+                  description: A link that can be used in a subsequent API call to fetch the related hosts for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related hosts for the resource.
+          description: Contains a link to the related hosts for the resource.
+    relatedLibrary:
+      type: object
+      properties:
+        library:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related data elements.
-              description: Contains links that can be used in a subsequent fetch calls.
-          description: Contains a link to the related data elements for the resource.
-    environmentsCreatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreateWithRelationships'
-      - type: object
-        properties:
-          data:
-            required:
-            - attributes
-            - relationships
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/environmentsAttributes'
-              relationships:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/environmentsRelationships'
-    environmentsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/environmentsEntity'
+                  description: A link that can be used in a subsequent API call to fetch the library.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the library.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the library.
+                type:
+                  type: string
+                  description: The resource type for the library (`libraries`).
+              description: Contains further information about the library.
+          description: Contains a link to the library that is assigned to this environment.
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    relatedBuilds:
+      type: object
+      properties:
+        builds:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related builds for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related builds for the resource.
+          description: Contains a link to the related builds for the resource.
+    relatedNotes:
+      type: object
+      properties:
+        notes:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
+          description: Contains a link to the related notes for the resource.
     environmentsEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -1204,6 +1299,24 @@ components:
                 items:
                   type: string
             description: Contains meta information about the environment.
+    propertiesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/propertiesEntity'
+    relationshipEntity:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The resource type for the related entity.
+        id:
+          type: string
+          description: The ID for the related entity.
     relatedRulesWithSelf:
       type: object
       properties:
@@ -1221,6 +1334,42 @@ components:
                   description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related rules.
               description: Contains links that can be used in a subsequent fetch calls.
           description: Contains a link to the related rules for the resource.
+    relatedEnvironment:
+      type: object
+      properties:
+        environment:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related environment.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the environment.
+                type:
+                  type: string
+                  description: The resource type for the environment (`environments`).
+              description: Contains further information about the related environment.
+          description: Contains information about the environment that this resource is active under.
+    environmentsPropertyLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/propertiesLookupResponse'
+    environmentsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/environmentsEntity'
     environmentsRelationships:
       required:
       - host
@@ -1245,219 +1394,9 @@ components:
                   description: The resource type for the host (`hosts`).
               description: Contains basic information about the host.
           description: Describes the host that the environment will be assigned to.
-    environmentsUpdatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataCreateWithRelationships'
-      - type: object
-        properties:
-          data:
-            required:
-            - attributes
-            - relationships
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/environmentsUpdateAttributes'
-              relationships:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/environmentsRelationships'
-    relatedHosts:
-      type: object
-      properties:
-        hosts:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related hosts for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related hosts for the resource.
-          description: Contains a link to the related hosts for the resource.
-    relatedBuilds:
-      type: object
-      properties:
-        builds:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related builds for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related builds for the resource.
-          description: Contains a link to the related builds for the resource.
-    environmentsLibraryLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/librariesLookupResponse'
-    hostsEntity:
-      allOf:
-      - $ref: '#/components/schemas/basicResourceProperties'
-      - type: object
-        properties:
-          attributes:
-            type: object
-            properties:
-              created_at:
-                type: string
-                description: A timestamp of when the host was created in the system.
-              server:
-                type: string
-                description: The URL of the server associated with the host.
-              name:
-                type: string
-                description: The name of the host.
-              path:
-                type: string
-                description: The path for the host (i.e. what comes after the `server` URL).
-              port:
-                type: integer
-                description: The port number for the server URL.
-              status:
-                type: string
-                description: The current status of the host.
-              skip_symlinks:
-                type: boolean
-                description: '**Note**: This attribute is only available for SFTP hosts.
-
-
-                  By default, all SFTP hosts use symbolic links (symlinks) to reference library builds that are saved to the server. However, not all servers support the use of symlinks. When this attribute is included and set to `true`, the host uses a copy operation to update the build assets directly instead of using symlinks.'
-              type_of:
-                type: string
-                description: The host type, either `akamai` for an Adobe-managed  host, or `sftp` for self-hosting.
-              updated_at:
-                type: string
-                description: A timestamp of when the host was last updated.
-              username:
-                type: string
-                description: A username associated with the host.
-            description: Contains the host's attributes.
-          relationships:
-            type: object
-            description: Provides information about other entities that are related to this host.
-            allOf:
-            - $ref: '#/components/schemas/relatedProperty'
-          links:
-            type: object
-            properties:
-              property:
-                type: string
-                description: A link to the property that owns the host.
-              self:
-                type: string
-                description: A link to the host itself.
-            description: Contains links related to the host which can be used in subsequent fetch requests.
-    relatedProperty:
-      type: object
-      properties:
-        property:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the property.
-                type:
-                  type: string
-                  description: The resource type for the property (`properties`).
-              description: Contains further information about the related property.
-          description: Contains details about the property that owns the resource.
-    relatedLastBuild:
-      type: object
-      properties:
-        last_build:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the build.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the build.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the build.
-                type:
-                  type: string
-                  description: The resource type for the build (`builds`).
-              description: Contains further information about the build.
-          description: Contains information about the last build for a library.
-    environmentsHostRelationshipLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/relationshipsLookupResponse'
-      - type: object
-        properties:
-          links:
-            type: object
-            properties:
-              related:
-                type: string
-                description: A link to the related host for the environment.
-              self:
-                type: string
-                description: A link to the host relationship object for the environment.
-    relatedCallbacks:
-      type: object
-      properties:
-        callbacks:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related callbacks for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related callbacks for the resource.
-          description: Contains a link to the related callbacks for the resource.
-    hostsLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataLookup'
-      - type: object
-        properties:
-          data:
-            type: object
-            allOf:
-            - $ref: '#/components/schemas/hostsEntity'
-    environmentsPropertyLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/propertiesLookupResponse'
-    relatedEnvironments:
-      type: object
-      properties:
-        environments:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related environments for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environments for the resource.
-          description: Contains a link to the related environments for the resource.
-    environmentsHostLookupResponse:
-      allOf:
-      - $ref: '#/components/schemas/hostsLookupResponse'
-    environmentsUpdateAttributes:
+    environmentsAttributes:
+      required:
+      - name
       type: object
       properties:
         name:
@@ -1472,88 +1411,13 @@ components:
         path:
           type: string
           description: The path for the environment.
-        include_debug_library:
-          type: boolean
-          description: Indicates whether a debug library is included for the environment.
-    librariesEntity:
-      allOf:
-      - $ref: '#/components/schemas/basicResourceProperties'
-      - type: object
-        properties:
-          attributes:
-            type: object
-            properties:
-              created_at:
-                type: string
-                description: A timestamp of when the library was created in the system.
-              name:
-                type: string
-                description: The name of the library.
-              published_at:
-                type: string
-                description: A timestamp of when the library was published. Returns `null` if the library has not been published yet.
-              state:
-                type: string
-                description: The current state of the library within the [publishing flow](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html?lang=en#state).
-              updated_at:
-                type: string
-                description: A timestamp of when the library was last updated.
-              build_required:
-                type: boolean
-                description: Indicates whether changes have been made to the library that require a build to activate.
-              stale:
-                type: string
-                description: 'When present, this attribute indicates that the library has become stale.
-
-
-                  A library enters a stale state when another library on the [upstream](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html#upstream) has been changed and the current library needs to be rebuilt to reflect those changes. In this case, the value for the attribute would be `upstream_changed`.
-
-
-                  A library may also enter a stale state if one of the extensions it uses receives an update. In this case, the value for the attribute would be `extension_upgraded`.'
-                enum:
-                - upstream_changed
-                - extension_upgraded
-            description: Contains the library's attributes.
-          relationships:
-            type: object
-            description: Provides information about other entities that are related to this library.
-            allOf:
-            - $ref: '#/components/schemas/relatedBuilds'
-            - $ref: '#/components/schemas/relatedEnvironment'
-            - $ref: '#/components/schemas/relatedDataElementsWithSelf'
-            - $ref: '#/components/schemas/relatedExtensionsWithSelf'
-            - $ref: '#/components/schemas/relatedNotes'
-            - $ref: '#/components/schemas/relatedRulesWithSelf'
-            - $ref: '#/components/schemas/relatedUpstreamLibrary'
-            - $ref: '#/components/schemas/relatedProperty'
-            - $ref: '#/components/schemas/relatedLastBuild'
-          links:
-            type: object
-            properties:
-              property:
-                type: string
-                description: A link to the property that owns the library.
-              self:
-                type: string
-                description: A link to the library itself.
-            description: Contains links related to the library which can be used in subsequent fetch requests.
-          meta:
-            type: object
-            properties:
-              build_status:
-                type: string
-                description: The current build status for the library.
-              build_required_detail:
-                type: string
-                description: A message regarding the current `build_required` status for the library.
-            description: Contains meta information about the library.
-    environmentsSecretsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/secretsListResponse'
-    relatedNotes:
+        stage:
+          type: string
+          description: The stage for the environment (`development`, `staging`, or `production`).
+    relatedCallbacks:
       type: object
       properties:
-        notes:
+        callbacks:
           type: object
           properties:
             links:
@@ -1561,10 +1425,10 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related notes for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related notes for the resource.
-          description: Contains a link to the related notes for the resource.
-    relatedDataElements:
+                  description: A link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related callbacks for the resource.
+          description: Contains a link to the related callbacks for the resource.
+    relatedDataElementsWithSelf:
       type: object
       properties:
         data_elements:
@@ -1576,7 +1440,10 @@ components:
                 related:
                   type: string
                   description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
+                self:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related data elements.
+              description: Contains links that can be used in a subsequent fetch calls.
           description: Contains a link to the related data elements for the resource.
     propertiesEntity:
       allOf:
@@ -1666,33 +1533,6 @@ components:
                 items:
                   type: string
             description: Contains meta information about the property.
-    environmentsCreateResponse:
-      allOf:
-      - $ref: '#/components/schemas/environmentsLookupResponse'
-    relatedCompany:
-      type: object
-      properties:
-        company:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related company.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related company.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the company.
-                type:
-                  type: string
-                  description: The resource type for the company (`companies`).
-              description: Contains further information about the related company.
-          description: Contains information about the company that owns the resource.
     dataList:
       type: object
       properties:
@@ -1702,6 +1542,66 @@ components:
           items:
             type: object
             properties: {}
+    relatedDataElements:
+      type: object
+      properties:
+        data_elements:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related data elements for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related data elements for the resource.
+          description: Contains a link to the related data elements for the resource.
+    relatedRules:
+      type: object
+      properties:
+        rules:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related rules for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related rules for the resource.
+          description: Contains a link to the related rules for the resource.
+    hostsLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/hostsEntity'
+    relationshipsLookupResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Lists the relationships that you wish to add to the parent resource.
+          items:
+            $ref: '#/components/schemas/relationshipEntity'
+        links:
+          type: object
+          properties: {}
+          description: Contains links that can be used in subsequent fetch requests.
+    buildsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataList'
+      - type: object
+        properties:
+          data:
+            type: array
+      - $ref: '#/components/schemas/metaList'
+    environmentsBuildsListResponse:
+      allOf:
+      - $ref: '#/components/schemas/buildsListResponse'
     environmentsListResponse:
       allOf:
       - $ref: '#/components/schemas/dataList'
@@ -1710,6 +1610,57 @@ components:
           data:
             type: array
       - $ref: '#/components/schemas/metaList'
+    relatedLastBuild:
+      type: object
+      properties:
+        last_build:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the build.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the build.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the build.
+                type:
+                  type: string
+                  description: The resource type for the build (`builds`).
+              description: Contains further information about the build.
+          description: Contains information about the last build for a library.
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
+    environmentsCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/environmentsLookupResponse'
     metaList:
       type: object
       properties:
@@ -1736,56 +1687,173 @@ components:
                   description: The total number of results in the response.
               description: Contains pagination information about the list response.
           description: Contains a `pagination` object that provides pagination information about the list response.
-    relatedEnvironment:
+    hostsEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the host was created in the system.
+              server:
+                type: string
+                description: The URL of the server associated with the host.
+              name:
+                type: string
+                description: The name of the host.
+              path:
+                type: string
+                description: The path for the host (i.e. what comes after the `server` URL).
+              port:
+                type: integer
+                description: The port number for the server URL.
+              status:
+                type: string
+                description: The current status of the host.
+              skip_symlinks:
+                type: boolean
+                description: '**Note**: This attribute is only available for SFTP hosts.
+
+
+                  By default, all SFTP hosts use symbolic links (symlinks) to reference library builds that are saved to the server. However, not all servers support the use of symlinks. When this attribute is included and set to `true`, the host uses a copy operation to update the build assets directly instead of using symlinks.'
+              type_of:
+                type: string
+                description: The host type, either `akamai` for an Adobe-managed  host, or `sftp` for self-hosting.
+              updated_at:
+                type: string
+                description: A timestamp of when the host was last updated.
+              username:
+                type: string
+                description: A username associated with the host.
+            description: Contains the host's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this host.
+            allOf:
+            - $ref: '#/components/schemas/relatedProperty'
+          links:
+            type: object
+            properties:
+              property:
+                type: string
+                description: A link to the property that owns the host.
+              self:
+                type: string
+                description: A link to the host itself.
+            description: Contains links related to the host which can be used in subsequent fetch requests.
+    dataLookup:
       type: object
       properties:
-        environment:
+        data:
           type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related environment.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environment.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the environment.
-                type:
-                  type: string
-                  description: The resource type for the environment (`environments`).
-              description: Contains further information about the related environment.
-          description: Contains information about the environment that this resource is active under.
-    relatedExtensionsWithSelf:
-      type: object
-      properties:
-        extensions:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
-                self:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the relationship object for the resource's related extensions.
-              description: Contains links that can be used in a subsequent fetch calls.
-          description: Contains a link to the related extensions for the resource.
-    basicResourceProperties:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
+          properties: {}
+          description: Contains the details of the resource.
+    librariesLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/dataLookup'
+      - type: object
+        properties:
+          data:
+            type: object
+            allOf:
+            - $ref: '#/components/schemas/librariesEntity'
+    environmentsCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreateWithRelationships'
+      - type: object
+        properties:
+          data:
+            required:
+            - attributes
+            - relationships
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/environmentsAttributes'
+              relationships:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/environmentsRelationships'
+    librariesEntity:
+      allOf:
+      - $ref: '#/components/schemas/basicResourceProperties'
+      - type: object
+        properties:
+          attributes:
+            type: object
+            properties:
+              created_at:
+                type: string
+                description: A timestamp of when the library was created in the system.
+              name:
+                type: string
+                description: The name of the library.
+              published_at:
+                type: string
+                description: A timestamp of when the library was published. Returns `null` if the library has not been published yet.
+              state:
+                type: string
+                description: The current state of the library within the [publishing flow](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html?lang=en#state).
+              updated_at:
+                type: string
+                description: A timestamp of when the library was last updated.
+              build_required:
+                type: boolean
+                description: Indicates whether changes have been made to the library that require a build to activate.
+              stale:
+                type: string
+                description: 'When present, this attribute indicates that the library has become stale.
+
+
+                  A library enters a stale state when another library on the [upstream](https://experienceleague.adobe.com/docs/experience-platform/tags/publish/publishing-flow.html#upstream) has been changed and the current library needs to be rebuilt to reflect those changes. In this case, the value for the attribute would be `upstream_changed`.
+
+
+                  A library may also enter a stale state if one of the extensions it uses receives an update. In this case, the value for the attribute would be `extension_upgraded`.'
+                enum:
+                - upstream_changed
+                - extension_upgraded
+            description: Contains the library's attributes.
+          relationships:
+            type: object
+            description: Provides information about other entities that are related to this library.
+            allOf:
+            - $ref: '#/components/schemas/relatedBuilds'
+            - $ref: '#/components/schemas/relatedEnvironment'
+            - $ref: '#/components/schemas/relatedDataElementsWithSelf'
+            - $ref: '#/components/schemas/relatedExtensionsWithSelf'
+            - $ref: '#/components/schemas/relatedNotes'
+            - $ref: '#/components/schemas/relatedRulesWithSelf'
+            - $ref: '#/components/schemas/relatedUpstreamLibrary'
+            - $ref: '#/components/schemas/relatedProperty'
+            - $ref: '#/components/schemas/relatedLastBuild'
+          links:
+            type: object
+            properties:
+              property:
+                type: string
+                description: A link to the property that owns the library.
+              self:
+                type: string
+                description: A link to the library itself.
+            description: Contains links related to the library which can be used in subsequent fetch requests.
+          meta:
+            type: object
+            properties:
+              build_status:
+                type: string
+                description: The current build status for the library.
+              build_required_detail:
+                type: string
+                description: A message regarding the current `build_required` status for the library.
+            description: Contains meta information about the library.
+    environmentsUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/environmentsLookupResponse'
     relatedHost:
       type: object
       properties:
@@ -1813,10 +1881,10 @@ components:
                   description: The resource type for the host (`hosts`).
               description: Contains further information about the host.
           description: Contains a link to the host that is assigned to this environment.
-    relatedExtensions:
+    relatedLibraries:
       type: object
       properties:
-        extensions:
+        libraries:
           type: object
           properties:
             links:
@@ -1824,29 +1892,28 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the related extensions for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related extensions for the resource.
-          description: Contains a link to the related extensions for the resource.
-    environmentsAttributes:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the environment.
-        archive:
-          type: boolean
-          description: Indicates whether the environment should be archived.
-        archive_passphrase:
-          type: string
-          description: A passphrase for the environment if `archive` is set to `true`.
-        path:
-          type: string
-          description: The path for the environment.
-        stage:
-          type: string
-          description: The stage for the environment (`development`, `staging`, or `production`).
+                  description: A link that can be used in a subsequent API call to fetch the related libraries for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related libraries for the resource.
+          description: Contains a link to the related libraries for the resource.
+    environmentsUpdatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreateWithRelationships'
+      - type: object
+        properties:
+          data:
+            required:
+            - attributes
+            - relationships
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/environmentsUpdateAttributes'
+              relationships:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/environmentsRelationships'
     secretsListResponse:
       allOf:
       - $ref: '#/components/schemas/dataList'
@@ -1855,54 +1922,10 @@ components:
           data:
             type: array
       - $ref: '#/components/schemas/metaList'
-    buildsListResponse:
-      allOf:
-      - $ref: '#/components/schemas/dataList'
-      - type: object
-        properties:
-          data:
-            type: array
-      - $ref: '#/components/schemas/metaList'
-    dataCreateWithRelationships:
-      required:
-      - data
+    relatedEnvironments:
       type: object
       properties:
-        data:
-          type: object
-          properties:
-            attributes:
-              type: object
-              properties: {}
-              description: The attributes for the resource being created.
-            relationships:
-              type: object
-              description: The relationships for the resource being created.
-            type:
-              type: string
-              description: The type of resource being created.
-              enum:
-              - app_configurations
-              - audit_events
-              - builds
-              - callbacks
-              - companies
-              - data_elements
-              - environments
-              - extensions
-              - extension_packages
-              - hosts
-              - libraries
-              - notes
-              - properties
-              - rules
-              - rule_components
-              - secrets
-          description: Contains the attributes, relationships, and type for the resource being created.
-    relatedLibrary:
-      type: object
-      properties:
-        library:
+        environments:
           type: object
           properties:
             links:
@@ -1910,55 +1933,84 @@ components:
               properties:
                 related:
                   type: string
-                  description: A link that can be used in a subsequent API call to fetch the library.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the library.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the library.
-                type:
-                  type: string
-                  description: The resource type for the library (`libraries`).
-              description: Contains further information about the library.
-          description: Contains a link to the library that is assigned to this environment.
-    dataLookup:
+                  description: A link that can be used in a subsequent API call to fetch the related environments for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related environments for the resource.
+          description: Contains a link to the related environments for the resource.
+    environmentsHostLookupResponse:
+      allOf:
+      - $ref: '#/components/schemas/hostsLookupResponse'
+    InvalidParameter:
       type: object
       properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
-    relationshipEntity:
-      type: object
-      properties:
-        type:
+        name:
           type: string
-          description: The resource type for the related entity.
-        id:
+          example: paramName
+          description: Name of the invalid parameter.
+        reason:
           type: string
-          description: The ID for the related entity.
-    Redirect:
+          example: value must be a positive number
+          description: Reason of why the parameter's value is not accepted.
+    EnvironmentLog:
       type: object
-      required:
-      - redirect
-      properties:
-        redirect:
-          type: string
-          description: The url to redirect to.
-    LogOptionRepresentation:
-      type: object
-      required:
-      - name
-      - service
       properties:
         service:
           type: string
-          description: 'Name of the service in environment. Example: author'
+          example: author
+          description: Name of the service
         name:
           type: string
-          description: 'Name of the log for service in environment. Example: aemerror'
+          example: aemerror
+          description: Name of the Log
+        date:
+          type: string
+          example: '2019-04-05'
+          description: date of the Log
+          format: date
+        programId:
+          type: integer
+          format: int64
+        environmentId:
+          type: integer
+          format: int64
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/logs/download:
+              description: Download Logs link
+              $ref: '#/components/schemas/HalLink'
+            http://ns.adobe.com/adobecloud/rel/logs/tail:
+              description: Tail Log link
+              $ref: '#/components/schemas/HalLink'
+      description: Log from Environment
+    EnvironmentList:
+      type: object
+      properties:
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            environments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Environment'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
     BadRequestError:
       type: object
       properties:
@@ -1986,6 +2038,92 @@ components:
           items:
             $ref: '#/components/schemas/InvalidParameter'
       description: A Bad Request response error.
+    NewEnvironment:
+      type: object
+      description: Description of a new program to be created
+      required:
+      - name
+      - region
+      - type
+      properties:
+        name:
+          type: string
+          example: acme-dev1
+          description: Name of the environment
+        type:
+          type: string
+          enum:
+          - dev
+          - stage
+          - prod
+          - rde
+        region:
+          type: string
+          example: va7
+          description: Region to create the environment.
+        description:
+          type: string
+          example: This is our primary development environment
+          description: Description of the environment
+    MissingParameter:
+      type: object
+      properties:
+        name:
+          type: string
+          example: paramName
+          description: Name of the missing parameter.
+        type:
+          type: string
+          example: string
+          description: Type of the missing parameter.
+    Redirect:
+      type: object
+      required:
+      - redirect
+      properties:
+        redirect:
+          type: string
+          description: The url to redirect to.
+    EnvironmentLogs:
+      type: object
+      properties:
+        service:
+          type: array
+          example: author
+          description: Name of the service
+          items:
+            type: string
+        name:
+          type: array
+          example: aemerror
+          description: Name of the Log
+          items:
+            type: string
+        days:
+          type: integer
+          format: int32
+          example: 2
+          description: Number of days
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            http://ns.adobe.com/adobecloud/rel/program:
+              description: The Application this environment belongs to.
+              $ref: '#/components/schemas/HalLink'
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            downloads:
+              type: array
+              description: Links to logs
+              items:
+                $ref: '#/components/schemas/EnvironmentLog'
+      description: Logs of an Environment
     HalLink:
       type: object
       properties:
@@ -2096,156 +2234,18 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of an Environment known to Cloud Manager.
-    InvalidParameter:
+    LogOptionRepresentation:
       type: object
-      properties:
-        name:
-          type: string
-          example: paramName
-          description: Name of the invalid parameter.
-        reason:
-          type: string
-          example: value must be a positive number
-          description: Reason of why the parameter's value is not accepted.
-    EnvironmentList:
-      type: object
-      properties:
-        _totalNumberOfItems:
-          type: integer
-          format: int32
-          description: The total number of embedded items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            environments:
-              type: array
-              items:
-                $ref: '#/components/schemas/Environment'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-    NewEnvironment:
-      type: object
-      description: Description of a new program to be created
       required:
       - name
-      - region
-      - type
-      properties:
-        name:
-          type: string
-          example: acme-dev1
-          description: Name of the environment
-        type:
-          type: string
-          enum:
-          - dev
-          - stage
-          - prod
-          - rde
-        region:
-          type: string
-          example: va7
-          description: Region to create the environment.
-        description:
-          type: string
-          example: This is our primary development environment
-          description: Description of the environment
-    EnvironmentLogs:
-      type: object
-      properties:
-        service:
-          type: array
-          example: author
-          description: Name of the service
-          items:
-            type: string
-        name:
-          type: array
-          example: aemerror
-          description: Name of the Log
-          items:
-            type: string
-        days:
-          type: integer
-          format: int32
-          example: 2
-          description: Number of days
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/program:
-              description: The Application this environment belongs to.
-              $ref: '#/components/schemas/HalLink'
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            downloads:
-              type: array
-              description: Links to logs
-              items:
-                $ref: '#/components/schemas/EnvironmentLog'
-      description: Logs of an Environment
-    EnvironmentLog:
-      type: object
+      - service
       properties:
         service:
           type: string
-          example: author
-          description: Name of the service
+          description: 'Name of the service in environment. Example: author'
         name:
           type: string
-          example: aemerror
-          description: Name of the Log
-        date:
-          type: string
-          example: '2019-04-05'
-          description: date of the Log
-          format: date
-        programId:
-          type: integer
-          format: int64
-        environmentId:
-          type: integer
-          format: int64
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            http://ns.adobe.com/adobecloud/rel/logs/download:
-              description: Download Logs link
-              $ref: '#/components/schemas/HalLink'
-            http://ns.adobe.com/adobecloud/rel/logs/tail:
-              description: Tail Log link
-              $ref: '#/components/schemas/HalLink'
-      description: Log from Environment
-    MissingParameter:
-      type: object
-      properties:
-        name:
-          type: string
-          example: paramName
-          description: Name of the missing parameter.
-        type:
-          type: string
-          example: string
-          description: Type of the missing parameter.
+          description: 'Name of the log for service in environment. Example: aemerror'
 x-refined-from:
 - adobe-suite-aep-reactor-openapi.yaml
 - adobe-suite-cloud-manager-openapi.yaml

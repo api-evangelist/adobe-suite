@@ -534,9 +534,23 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    PolicyRequest:
-      allOf:
-      - $ref: '#/components/schemas/PolicyBody'
+    _linksPaging:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URL template.
+                  format: uri
+                templated:
+                  type: string
+                  description: When present and set to `true`, indicates that this is a templated URL.
+          description: Contains a templated URL for clients to obtain this resource.
     Error:
       type: object
       properties:
@@ -554,60 +568,133 @@ components:
         detail:
           type: string
           description: A description of the error.
-    PolicyPatchRequest:
+    _linksPagingCustomPolicies:
       allOf:
-      - $ref: '#/components/schemas/PatchDocument'
-    PolicyPatchResponse:
+      - $ref: '#/components/schemas/_linksPaging'
+    CustomPolicyResponse:
+      allOf:
+      - $ref: '#/components/schemas/CustomPolicyRequest'
+      - $ref: '#/components/schemas/PolicyResponseCustomEval'
+    PagingProperties:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of resources returned.
+              example: 1
+          description: Contains a `count` property for the number of resources returned.
+    _linksPagingCorePolicies:
+      allOf:
+      - $ref: '#/components/schemas/_linksPaging'
+    PolicyResponseCustomEval:
       allOf:
       - $ref: '#/components/schemas/PolicyResponse'
       - type: object
         properties:
-          name:
-            type: string
-            example: Email Policy 001
-    PolicyExpression:
-      type: object
-      properties:
-        label:
-          type: string
-          description: The name of a single data usage label that applies to the policy.
-          example: C1
-        operator:
-          type: string
-          description: "Indicates the conditional relationship between the labels provided in the sibling operands array. Accepted values are:\n  \n  - `OR`: The expression resolves to true if any of the labels in the operands array are present.\n  - `AND`: The expression only resolves to true if all of the labels in the operands array are present."
-          example: AND
-          enum:
-          - AND
-          - OR
-        operands:
-          type: array
-          description: An array of objects, with each object representing either a single `label` or an additional pair of `operator` and `operands` properties. The presence of the labels and/or operations in an `operands` array resolves to true or false based on the value of its sibling operator property.
-          example:
-          - label: C1
-          - label: C3
-          items:
-            $ref: '#/components/schemas/PolicyExpression'
-      description: A boolean expression to be evaluated over the presence of data usage labels, referred to as a "policy expression". Note that a policy expression **must** consist of **either** a label **or** an operator and operands. Each operand in turn is itself a policy expression. You cannot specify both a label and an operator/operand in combination. See the [Policy Service API guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html?lang=en#create-policy) for more details on how to configure this property.
-      example:
-        operator: AND
-        operands:
-        - label: C1
-        - operator: OR
-          operands:
-          - label: C3
-          - label: C7
-    CustomPoliciesPage:
+          marketingActionRefs:
+            type: array
+            example: []
+          _links:
+            type: object
+            properties:
+              self:
+                type: object
+                properties:
+                  href:
+                    type: string
+                    example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
+    CorePolicyResponse:
       allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCustomPolicies'
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/_links'
+      - type: object
+        example:
+          name: Restrict email targeting
+          status: ENABLED
+          marketingActionRefs:
+          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
+          description: Restrict use of data labeled C4 OR C5 for email targeting.
+          deny:
+            operator: OR
+            operands:
+            - label: C4
+            - label: C5
+          _links:
+            self:
+              href: https://platform-stage.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the core policy.
+            example: corepolicy_0003
+    PolicyPatchRequest:
+      allOf:
+      - $ref: '#/components/schemas/PatchDocument'
+    PagingPropertiesCorePolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCorePolicies'
+    BadRequestError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
+    PolicyRequest:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+    CustomPolicyRequest:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+    PoliciesPage:
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core?{?limit,start,property}
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCorePolicies'
       - type: object
         properties:
           children:
             type: array
             items:
-              $ref: '#/components/schemas/CustomPolicyResponse'
-    _linksPagingCorePolicies:
-      allOf:
-      - $ref: '#/components/schemas/_linksPaging'
+              $ref: '#/components/schemas/CorePolicyResponse'
+    PatchDocument:
+      required:
+      - op
+      - path
+      type: object
+      properties:
+        op:
+          type: string
+          description: The operation to be performed.
+          enum:
+          - add
+          - remove
+          - replace
+          - move
+          - copy
+          - test
+        path:
+          type: string
+          description: A JSON Pointer path to the resource field being updated.
+        value:
+          type: object
+          properties: {}
+          description: The value to be used in the context of the patch operation.
+      description: A JSON Patch document as defined by RFC 6902. See the [JSON Patch specification](https://datatracker.ietf.org/doc/html/rfc6902) for more information.
     ServiceProperties:
       properties:
         imsOrg:
@@ -646,102 +733,35 @@ components:
           example: '{USER_ID}'
       allOf:
       - $ref: '#/components/schemas/_links'
-    _linksPaging:
-      type: object
-      properties:
-        _links:
-          type: object
-          properties:
-            _page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: The URL template.
-                  format: uri
-                templated:
-                  type: string
-                  description: When present and set to `true`, indicates that this is a templated URL.
-          description: Contains a templated URL for clients to obtain this resource.
-    BadRequestError:
+    PolicyPatchResponse:
+      allOf:
+      - $ref: '#/components/schemas/PolicyResponse'
+      - type: object
+        properties:
+          name:
+            type: string
+            example: Email Policy 001
+    PagingPropertiesCustomPolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCustomPolicies'
+    NotFoundError:
       allOf:
       - $ref: '#/components/schemas/Error'
       - type: object
         example:
           type: /placeholder/type/uri
-          status: 400
-          title: BadRequest
-    PolicyResponse:
+          status: 404
+          title: NotFound
+    CustomPoliciesPage:
       allOf:
-      - type: object
-        properties:
-          id:
-            type: string
-            description: The unique ID for this policy resource, as assigned by the service.
-            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
-      - $ref: '#/components/schemas/PolicyBody'
-      - $ref: '#/components/schemas/ServiceProperties'
-    PoliciesPage:
-      properties:
-        _links:
-          type: object
-          properties:
-            _page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core?{?limit,start,property}
-      allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCorePolicies'
+      - $ref: '#/components/schemas/PagingPropertiesCustomPolicies'
       - type: object
         properties:
           children:
             type: array
             items:
-              $ref: '#/components/schemas/CorePolicyResponse'
-    CorePolicyResponse:
-      allOf:
-      - $ref: '#/components/schemas/PolicyBody'
-      - $ref: '#/components/schemas/_links'
-      - type: object
-        example:
-          name: Restrict email targeting
-          status: ENABLED
-          marketingActionRefs:
-          - https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/core/emailTargeting
-          description: Restrict use of data labeled C4 OR C5 for email targeting.
-          deny:
-            operator: OR
-            operands:
-            - label: C4
-            - label: C5
-          _links:
-            self:
-              href: https://platform-stage.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
-      - type: object
-        properties:
-          id:
-            type: string
-            description: The ID of the core policy.
-            example: corepolicy_0003
-    PolicyResponseCustomEval:
-      allOf:
-      - $ref: '#/components/schemas/PolicyResponse'
-      - type: object
-        properties:
-          marketingActionRefs:
-            type: array
-            example: []
-          _links:
-            type: object
-            properties:
-              self:
-                type: object
-                properties:
-                  href:
-                    type: string
-                    example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
+              $ref: '#/components/schemas/CustomPolicyResponse'
     PolicyBody:
       type: object
       properties:
@@ -771,88 +791,37 @@ components:
           example: Conditions under which we won't send marketing-based email
         deny:
           $ref: '#/components/schemas/PolicyExpression'
-    PagingPropertiesCorePolicies:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCorePolicies'
-    NotFoundError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
-      - type: object
-        example:
-          type: /placeholder/type/uri
-          status: 404
-          title: NotFound
-    PagingProperties:
+    PolicyExpression:
       type: object
       properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of resources returned.
-              example: 1
-          description: Contains a `count` property for the number of resources returned.
-    CustomPolicyResponse:
-      allOf:
-      - $ref: '#/components/schemas/CustomPolicyRequest'
-      - $ref: '#/components/schemas/PolicyResponseCustomEval'
-    CustomPolicyNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
+        label:
           type: string
-          detail: https://platform.adobe.io:443/policies/custom/12345 not found
-    CorePolicyNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
+          description: The name of a single data usage label that applies to the policy.
+          example: C1
+        operator:
           type: string
-          detail: https://platform.adobe.io:443/policies/core/corepolicy_9999 not found
-    _linksPagingCustomPolicies:
-      allOf:
-      - $ref: '#/components/schemas/_linksPaging'
-    PagingPropertiesCustomPolicies:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCustomPolicies'
-    PatchDocument:
-      required:
-      - op
-      - path
-      type: object
-      properties:
-        op:
-          type: string
-          description: The operation to be performed.
+          description: "Indicates the conditional relationship between the labels provided in the sibling operands array. Accepted values are:\n  \n  - `OR`: The expression resolves to true if any of the labels in the operands array are present.\n  - `AND`: The expression only resolves to true if all of the labels in the operands array are present."
+          example: AND
           enum:
-          - add
-          - remove
-          - replace
-          - move
-          - copy
-          - test
-        path:
-          type: string
-          description: A JSON Pointer path to the resource field being updated.
-        value:
-          type: object
-          properties: {}
-          description: The value to be used in the context of the patch operation.
-      description: A JSON Patch document as defined by RFC 6902. See the [JSON Patch specification](https://datatracker.ietf.org/doc/html/rfc6902) for more information.
-    CreatePolicyError:
-      allOf:
-      - $ref: '#/components/schemas/BadRequestError'
-      - type: object
-        example:
-          type: string
-          detail: 'Unable to parse PolicyRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
-    CustomPolicyRequest:
-      allOf:
-      - $ref: '#/components/schemas/PolicyBody'
+          - AND
+          - OR
+        operands:
+          type: array
+          description: An array of objects, with each object representing either a single `label` or an additional pair of `operator` and `operands` properties. The presence of the labels and/or operations in an `operands` array resolves to true or false based on the value of its sibling operator property.
+          example:
+          - label: C1
+          - label: C3
+          items:
+            $ref: '#/components/schemas/PolicyExpression'
+      description: A boolean expression to be evaluated over the presence of data usage labels, referred to as a "policy expression". Note that a policy expression **must** consist of **either** a label **or** an operator and operands. Each operand in turn is itself a policy expression. You cannot specify both a label and an operator/operand in combination. See the [Policy Service API guide](https://experienceleague.adobe.com/docs/experience-platform/data-governance/api/policies.html?lang=en#create-policy) for more details on how to configure this property.
+      example:
+        operator: AND
+        operands:
+        - label: C1
+        - operator: OR
+          operands:
+          - label: C3
+          - label: C7
     _links:
       type: object
       properties:
@@ -868,4 +837,35 @@ components:
                   format: uri
                   example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
           description: Contains the URI reference that clients may use to obtain this resource.
+    CorePolicyNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/policies/core/corepolicy_9999 not found
+    CustomPolicyNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/policies/custom/12345 not found
+    PolicyResponse:
+      allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The unique ID for this policy resource, as assigned by the service.
+            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/ServiceProperties'
+    CreatePolicyError:
+      allOf:
+      - $ref: '#/components/schemas/BadRequestError'
+      - type: object
+        example:
+          type: string
+          detail: 'Unable to parse PolicyRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
 x-original-swagger-version: '2.0'

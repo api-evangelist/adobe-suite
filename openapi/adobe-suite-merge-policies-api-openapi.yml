@@ -529,44 +529,28 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    MergePoliciesResponse:
+    PatchOperation:
       required:
-      - _page
-      - children
+      - op
+      - path
+      - value
       type: object
       properties:
-        _page:
-          $ref: '#/components/schemas/Page'
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/MergePolicy'
-    Page:
-      required:
-      - count
-      type: object
-      properties:
-        count:
-          type: number
-          description: number of merge policies per page
-          example: 100.0
-        next:
+        op:
           type: string
-          description: page offset
-          example: K1JJRDpFaWc5QUwyZFgtMEpBQUFBQUFBQUFBPT0jUlQ6MSNUUkM6MiNGUEM6QWdFQUFBQVFBQWZBQUg0Ly9yL25PcmpmZndEZUR3QT0=
-    IdentityGraph:
-      required:
-      - type
-      type: object
-      properties:
-        type:
-          type: string
-          description: The identity graph type. This determines which related identities will be merged.
-          example: pdg
+          description: op
+          example: add
           enum:
-          - none
-          - pdg
-      description: The identity graph for the merge policy.
+          - add
+        path:
+          type: string
+          description: The path of the attribute need to be updated. Supported values include `/name`, `/identityGraph.type`, `/attributeMerge.type`, `/schema.name`, `/version`, `/default`, and `/idActiveOnEdge`.
+          example: /identityGraph.type
+        value:
+          type: string
+          description: The new value used to update the specified attribute
+          example: pdg
+      description: Patch operation
     AttributeMerge:
       required:
       - type
@@ -584,6 +568,47 @@ components:
           items:
             type: string
       description: An object that describes which profile attributes to prioritize in case of conflicting profile attributes.
+    MergePolicy:
+      description: merge policy
+      allOf:
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the merge policy.
+            example: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
+      - $ref: '#/components/schemas/PostMergePolicy'
+      - type: object
+        properties:
+          version:
+            type: integer
+            description: The version of the merge policy.
+            example: 1
+    IdentityGraph:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: The identity graph type. This determines which related identities will be merged.
+          example: pdg
+          enum:
+          - none
+          - pdg
+      description: The identity graph for the merge policy.
+    MergePoliciesResponse:
+      required:
+      - _page
+      - children
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/Page'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergePolicy'
     SchemaClass:
       required:
       - name
@@ -620,45 +645,27 @@ components:
           example: true
           description: A boolean that specifies if the merge policy will be active on edge.
       description: The request body when you want to create a merge policy.
-    MergePolicy:
-      description: merge policy
-      allOf:
-      - type: object
-        properties:
-          id:
-            type: string
-            description: The ID of the merge policy.
-            example: 10648288-cda5-11e8-a8d5-f2801f1b9fd1
-      - $ref: '#/components/schemas/PostMergePolicy'
-      - type: object
-        properties:
-          version:
-            type: integer
-            description: The version of the merge policy.
-            example: 1
-    PatchOperation:
+    Page:
       required:
-      - op
-      - path
-      - value
+      - count
       type: object
       properties:
-        op:
+        count:
+          type: number
+          description: number of merge policies per page
+          example: 100.0
+        next:
           type: string
-          description: op
-          example: add
-          enum:
-          - add
-        path:
-          type: string
-          description: The path of the attribute need to be updated. Supported values include `/name`, `/identityGraph.type`, `/attributeMerge.type`, `/schema.name`, `/version`, `/default`, and `/idActiveOnEdge`.
-          example: /identityGraph.type
-        value:
-          type: string
-          description: The new value used to update the specified attribute
-          example: pdg
-      description: Patch operation
+          description: page offset
+          example: K1JJRDpFaWc5QUwyZFgtMEpBQUFBQUFBQUFBPT0jUlQ6MSNUUkM6MiNGUEM6QWdFQUFBQVFBQWZBQUg0Ly9yL25PcmpmZndEZUR3QT0=
   parameters:
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -670,13 +677,6 @@ components:
       name: Authorization
       in: header
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: All resources in Experience Platform are isolated to specific virtual sandboxes. Requests to Platform APIs require a header that specifies the name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
       required: true
       schema:
         type: string

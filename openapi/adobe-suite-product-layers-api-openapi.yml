@@ -206,6 +206,32 @@ paths:
                     locale: en-US
                     layer: seasonal-winter-2024
 components:
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
   schemas:
     SourceLayer:
       title: Catalog layer source
@@ -222,31 +248,19 @@ components:
           type: string
           description: "Unique identifier for the layer within the product's layer hierarchy. Use descriptive names \nthat indicate the layer's purpose (for example, \"seasonal-winter-2024\", \"promotional-black-friday\", \"a-b-test-variant\").\n"
           example: seasonal-winter-2024
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
+    ProductExternalId:
+      title: External Ids
       type: object
+      required:
+      - id
+      - origin
       properties:
-        code:
+        id:
           type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
+          description: External ID of the product.
+        origin:
           type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
+          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
     ProcessFeedResponse:
       title: Response payload
       type: object
@@ -311,32 +325,6 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
-    ProductExternalId:
-      title: External Ids
-      type: object
-      required:
-      - id
-      - origin
-      properties:
-        id:
-          type: string
-          description: External ID of the product.
-        origin:
-          type: string
-          description: External ID origin. Specifies the system that generated the external ID, such as Adobe Commerce, Google Product Ratings, etc.
-    FeedProductLayerDelete:
-      title: Catalog Product Layer delete payload
-      type: object
-      required:
-      - sku
-      - source
-      properties:
-        sku:
-          type: string
-          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
-          example: red-pants
-        source:
-          $ref: '#/components/schemas/SourceLayer'
     ProductLink:
       title: Links
       required:
@@ -357,27 +345,46 @@ components:
           type: string
           description: Product SKU
       description: Product association
-    403Response:
-      title: 403 Forbidden
+    ProductAttribute:
+      title: Product Attribute
       type: object
+      required:
+      - code
+      - values
       properties:
-        title:
+        code:
           type: string
-          description: Error title
-        status:
+          description: Product Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
+        variantReferenceId:
+          type:
+          - string
+          - 'null'
+          description: 'The variant reference ID establishes a link between a product variant and the corresponding
+
+            [Option Value ID](#operation/createProducts!path=options/values/id&t=request) in a configurable product.
+
+
+            A variant reference ID can be specified only for a product that represents a variant of a configurable product.
+
+            '
+    FeedProductLayerDelete:
+      title: Catalog Product Layer delete payload
+      type: object
+      required:
+      - sku
+      - source
+      properties:
+        sku:
           type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
+          description: SKU (Stock Keeping Unit) that identifies the base product containing the layer to delete. Must match an existing product SKU in the catalog.
+          example: red-pants
+        source:
+          $ref: '#/components/schemas/SourceLayer'
     ProductImage:
       title: Product Image
       type: object
@@ -416,6 +423,14 @@ components:
             '
           items:
             type: string
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
     FeedProductLayer:
       title: Catalog Product Layer payload
       type: object
@@ -467,33 +482,27 @@ components:
           description: External system identifiers that will be merged with base product external IDs. Use to add layer-specific tracking codes, campaign IDs, or integration references.
           items:
             $ref: '#/components/schemas/ProductExternalId'
-    ProductAttribute:
-      title: Product Attribute
+    403Response:
+      title: 403 Forbidden
       type: object
-      required:
-      - code
-      - values
       properties:
-        code:
+        title:
           type: string
-          description: Product Attribute Code
-        values:
-          type: array
-          description: A list of value(s) associated with a specified attribute code.
-          items:
-            type: string
-        variantReferenceId:
-          type:
-          - string
-          - 'null'
-          description: 'The variant reference ID establishes a link between a product variant and the corresponding
-
-            [Option Value ID](#operation/createProducts!path=options/values/id&t=request) in a configurable product.
-
-
-            A variant reference ID can be specified only for a product that represents a variant of a configurable product.
-
-            '
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
     ProductMetaAttribute:
       title: Meta Attributes
       description: Meta attributes that are specified in <meta> tags.
@@ -510,71 +519,24 @@ components:
         description:
           type: string
           description: A meta description
-  parameters:
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
   responses:
-    AcceptedResponse:
-      x-summary: All items accepted
-      description: 'All items accepted and will be processed asynchronously
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/ProcessFeedResponse'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    TooManyRequestsResponse:
-      x-summary: Too many requests
-      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      content:
-        text/html;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/429Response'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -604,6 +566,44 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+    TooManyRequestsResponse:
+      x-summary: Too many requests
+      description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      content:
+        text/html;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/429Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

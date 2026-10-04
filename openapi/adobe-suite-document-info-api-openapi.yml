@@ -193,62 +193,6 @@ paths:
               description: The length of the response.
 components:
   schemas:
-    InputAsset:
-      type: object
-      description: The URL where the asset will be fetched.
-      required:
-      - source
-      properties:
-        source:
-          type: object
-          required:
-          - url
-          properties:
-            url:
-              type: string
-              description: The pre-signed URL of the input asset. This is the URL of the asset that will be downloaded and acted upon during the job.
-        destination:
-          type: string
-          description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-        error_code:
-          type: string
-      required:
-      - message
-      - error_code
-    failedEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The job is in a failed state.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - failed
-          errors:
-            type: array
-            description: A list of errors that caused the job to fail.
-            items:
-              type: object
-              properties:
-                error_code:
-                  type: string
-                  description: The error code for the failure.
-                message:
-                  type: string
-                  description: The error message for the failure
-                source:
-                  type: string
-                  description: The source file of the error, if applicable.
-                url:
-                  type: string
-                  description: A URL related to an asset causing the failure(if any), if applicable.
     BaseJobRequest:
       description: The base job request for any job.
       required:
@@ -314,71 +258,17 @@ components:
                     logsRelativePath:
                       type: string
                       description: This provides a path to a file, relative to the temporary base directory (working directory). This file is where the application's logs are to be dumped.
-    partialSuccessEvent:
+    notstartedEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
-      - description: The job has succeeded with some non-critical errors.
+      - description: The status when a job is in queued state.
         type: object
         properties:
           status:
             type: string
             description: The current state of the job.
             enum:
-            - partial_success
-          data:
-            type: object
-            description: The output response from the current state of the job.
-          dataURL:
-            type: string
-            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
-          outputs:
-            type: object
-            description: A list of URLs for all the successfully generated assets.
-          errors:
-            type: array
-            description: A list of errors that occurred during a partially successful job.
-            items:
-              type: object
-              properties:
-                error_code:
-                  type: string
-                  description: The error code for the partial failure.
-                message:
-                  type: string
-                  description: The error message for the partial failure
-                source:
-                  type: string
-                  description: The source file of the partial failure error, if applicable.
-                url:
-                  type: string
-                  description: A URL related to an asset causing the partial failure(if any), if applicable.
-    BaseEvent:
-      type: object
-      description: The job event response object.
-      properties:
-        jobId:
-          description: The GUID for the job.
-          type: string
-    succeededEvent:
-      allOf:
-      - $ref: '#/components/schemas/BaseEvent'
-      - description: The job has succeeded.
-        type: object
-        properties:
-          status:
-            type: string
-            description: The current state of the job.
-            enum:
-            - succeeded
-          data:
-            type: object
-            description: The output response from the current state of the job.
-          dataURL:
-            type: string
-            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
-          outputs:
-            type: object
-            description: A list of URLs for all the generated assets.
+            - not_started
     DocumentInfoRequest:
       allOf:
       - $ref: '#/components/schemas/BaseJobRequest'
@@ -435,6 +325,82 @@ components:
                     type: boolean
                     description: If true, return text stories information.
                     default: false
+    InputAsset:
+      type: object
+      description: The URL where the asset will be fetched.
+      required:
+      - source
+      properties:
+        source:
+          type: object
+          required:
+          - url
+          properties:
+            url:
+              type: string
+              description: The pre-signed URL of the input asset. This is the URL of the asset that will be downloaded and acted upon during the job.
+        destination:
+          type: string
+          description: This provides a path relative to a temporary base directory (working directory) where the resource would be downloaded. This would be used to identify the assets within the parameters. It cannot go up using '..' or '/'. Should be a valid file name.
+    succeededEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job has succeeded.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - succeeded
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the generated assets.
+    failedEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - description: The job is in a failed state.
+        type: object
+        properties:
+          status:
+            type: string
+            description: The current state of the job.
+            enum:
+            - failed
+          errors:
+            type: array
+            description: A list of errors that caused the job to fail.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the failure.
+                message:
+                  type: string
+                  description: The error message for the failure
+                source:
+                  type: string
+                  description: The source file of the error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the failure(if any), if applicable.
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: string
+      required:
+      - message
+      - error_code
     runningEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
@@ -449,92 +415,52 @@ components:
           message:
             type: string
             description: A description of the current running state.
-    notstartedEvent:
+    BaseEvent:
+      type: object
+      description: The job event response object.
+      properties:
+        jobId:
+          description: The GUID for the job.
+          type: string
+    partialSuccessEvent:
       allOf:
       - $ref: '#/components/schemas/BaseEvent'
-      - description: The status when a job is in queued state.
+      - description: The job has succeeded with some non-critical errors.
         type: object
         properties:
           status:
             type: string
             description: The current state of the job.
             enum:
-            - not_started
+            - partial_success
+          data:
+            type: object
+            description: The output response from the current state of the job.
+          dataURL:
+            type: string
+            description: The data returned from the execution of the job. If the data size is between 250 KB and 20 MB, it will be provided as a pre-signed URL. If it is larger than 20 MB, the job will fail.
+          outputs:
+            type: object
+            description: A list of URLs for all the successfully generated assets.
+          errors:
+            type: array
+            description: A list of errors that occurred during a partially successful job.
+            items:
+              type: object
+              properties:
+                error_code:
+                  type: string
+                  description: The error code for the partial failure.
+                message:
+                  type: string
+                  description: The error message for the partial failure
+                source:
+                  type: string
+                  description: The source file of the partial failure error, if applicable.
+                url:
+                  type: string
+                  description: A URL related to an asset causing the partial failure(if any), if applicable.
   responses:
-    TooManyRequests:
-      description: Too Many Requests
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The format of the content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Retry-After:
-          schema:
-            type: integer
-          description: The number of seconds until the user should try again.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This header indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
     BadParams:
       description: Bad Parameter
       content:
@@ -570,8 +496,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    InternalServerError:
-      description: Internal Server Error
+    Forbidden:
+      description: Forbidden
       content:
         application/json:
           schema:
@@ -605,43 +531,8 @@ components:
           schema:
             type: integer
           description: This indicates how long the results of a preflight request can be cached.
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-      headers:
-        Content-Type:
-          schema:
-            type: string
-          description: The type of content returned (e.g., `application/json`).
-        Content-Length:
-          schema:
-            type: integer
-          description: The length of the response content.
-        Access-Control-Allow-Origin:
-          schema:
-            type: string
-          description: The Cross Origin Resource Sharing (CORS) header.
-        Access-Control-Allow-Methods:
-          schema:
-            type: string
-          description: This indicates what HTTP methods are allowed.
-        Access-Control-Allow-Headers:
-          schema:
-            type: string
-          description: This indicates which HTTP headers can be used during the actual request.
-        Access-Control-Allow-Credentials:
-          schema:
-            type: string
-          description: This header is used by servers to indicate that the client shall share HTTP responses.
-        Access-Control-Max-Age:
-          schema:
-            type: integer
-          description: This indicates how long the results of a preflight request can be cached.
-    Forbidden:
-      description: Forbidden
+    NotFound:
+      description: Not Found
       content:
         application/json:
           schema:
@@ -700,6 +591,115 @@ components:
           schema:
             type: string
           description: The type of content that is returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The format of the content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Retry-After:
+          schema:
+            type: integer
+          description: The number of seconds until the user should try again.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
+        Content-Length:
+          schema:
+            type: integer
+          description: The length of the response content.
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+          description: The Cross Origin Resource Sharing (CORS) header.
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+          description: This header indicates what HTTP methods are allowed.
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+          description: This indicates which HTTP headers can be used during the actual request.
+        Access-Control-Allow-Credentials:
+          schema:
+            type: string
+          description: This header is used by servers to indicate that the client shall share HTTP responses.
+        Access-Control-Max-Age:
+          schema:
+            type: integer
+          description: This indicates how long the results of a preflight request can be cached.
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: The type of content returned (e.g., `application/json`).
         Content-Length:
           schema:
             type: integer

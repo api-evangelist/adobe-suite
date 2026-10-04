@@ -987,6 +987,164 @@ paths:
                 $ref: '#/components/schemas/ProblemDetail'
 components:
   schemas:
+    Daypart:
+      type: object
+      properties:
+        startMinute:
+          type: integer
+          format: int32
+        endMinute:
+          type: integer
+          format: int32
+    TaskTemplate:
+      type: object
+      properties:
+        templateTaskId:
+          type: string
+        overrides:
+          type: object
+          additionalProperties:
+            type: object
+    JourneyMetadata:
+      type: object
+      description: Journey configuration for challenge journeys
+      properties:
+        metadata:
+          $ref: '#/components/schemas/MetadataConfig'
+          description: Core journey metadata including challenge ID and journey name
+        audienceQualification:
+          $ref: '#/components/schemas/AudienceQualificationConfig'
+          description: Adobe Experience Platform audience/segment configuration
+        eventTemplateDetails:
+          type: array
+          description: Event template definitions for journey events
+          items:
+            $ref: '#/components/schemas/EventTemplateDetail'
+        content:
+          $ref: '#/components/schemas/ContentConfig'
+          description: Content phases with message sequences
+      required:
+      - audienceQualification
+      - content
+      - metadata
+    EventTemplatesConfig:
+      type: object
+      properties:
+        signupEventTemplateId:
+          type: string
+        taskCompleteEventTemplateId:
+          type: string
+        challengeCompleteEventTemplateId:
+          type: string
+    AudienceQualificationConfig:
+      type: object
+      description: Audience configuration for journey targeting
+      properties:
+        segmentName:
+          type: string
+          description: Human-readable segment name (optional, for documentation)
+          example: High-Value Mobile Users
+        segmentId:
+          type: string
+          description: Adobe Experience Platform segment/audience UUID
+          example: 88e4300a-c762-4cd6-8bd0-c0c02ba9afcf
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+      required:
+      - segmentId
+    Milestone:
+      type: object
+      properties:
+        contiguous:
+          type: boolean
+        interval:
+          type: string
+          enum:
+          - none
+          - task
+          - daily
+          - weekly
+          - monthly
+          - annually
+        completions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MilestoneReward'
+    Task:
+      type: object
+      discriminator:
+        propertyName: taskType
+      properties:
+        get_id:
+          type: string
+        imsOrgId:
+          type: string
+        sandboxId:
+          type: string
+        creationDate:
+          type: string
+          format: date-time
+        lastModifiedDate:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        lastModifiedBy:
+          type: string
+        taskType:
+          type: string
+          enum:
+          - purchase
+        taskId:
+          type: string
+        taskName:
+          type: string
+        desc:
+          type: string
+        variables:
+          $ref: '#/components/schemas/Variables'
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        dependsOnTaskName:
+          type: array
+          items:
+            type: string
+        schedule:
+          $ref: '#/components/schemas/Schedule'
+        personalizedTaskAttributes:
+          $ref: '#/components/schemas/PersonalizedTaskAttributes'
+        reward:
+          $ref: '#/components/schemas/Reward'
+        uiStash:
+          type: string
+        taskClass:
+          type: string
+    PersonalizedTaskAttributes:
+      type: object
+      properties:
+        desc:
+          type: boolean
+        name:
+          type: boolean
+        include_csv:
+          type: boolean
+        exclude_csv:
+          type: boolean
+        qtyMin:
+          type: boolean
+        spendMin:
+          type: boolean
+        multiDayDays:
+          type: boolean
+        streak:
+          type: boolean
+        maxRepeat:
+          type: boolean
+        reward:
+          type: boolean
     MetadataConfig:
       type: object
       description: Journey metadata for context and challenge linking
@@ -1021,111 +1179,29 @@ components:
     PurchaseTask:
       allOf:
       - $ref: '#/components/schemas/Task'
-    ContentPhaseConfig:
-      type: object
-      description: Message sequence for a journey phase
-      properties:
-        messages:
-          type: array
-          description: Ordered list of messages for this phase
-          items:
-            $ref: '#/components/schemas/MessageConfig'
-    ChallengeList:
+    Variables:
       type: object
       properties:
-        challengeList:
-          type: array
-          items:
-            $ref: '#/components/schemas/Challenge'
-    ProblemDetail:
-      type: object
-      properties:
+        include:
+          $ref: '#/components/schemas/IncludeExclude'
+        exclude:
+          $ref: '#/components/schemas/IncludeExclude'
+        goal:
+          type: number
+          format: double
         type:
           type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-          format: int32
-        detail:
-          type: string
-        instance:
-          type: string
-          format: uri
-        properties:
-          type: object
-          additionalProperties:
-            type: object
-    PersonalizedAttributes:
-      type: object
-      properties:
-        desc:
-          type: boolean
-        dayPart:
-          type: boolean
-        reward:
-          type: boolean
-        milestones:
-          type: boolean
-        allTasks:
-          type: boolean
-    AudienceQualificationConfig:
-      type: object
-      description: Audience configuration for journey targeting
-      properties:
-        segmentName:
-          type: string
-          description: Human-readable segment name (optional, for documentation)
-          example: High-Value Mobile Users
-        segmentId:
-          type: string
-          description: Adobe Experience Platform segment/audience UUID
-          example: 88e4300a-c762-4cd6-8bd0-c0c02ba9afcf
-          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
-      required:
-      - segmentId
-    PersonalizedTaskAttributes:
-      type: object
-      properties:
-        desc:
-          type: boolean
-        name:
-          type: boolean
-        include_csv:
-          type: boolean
-        exclude_csv:
-          type: boolean
-        qtyMin:
+        singleTrans:
           type: boolean
         spendMin:
-          type: boolean
-        multiDayDays:
-          type: boolean
-        streak:
-          type: boolean
-        maxRepeat:
-          type: boolean
-        reward:
-          type: boolean
-    Milestone:
-      type: object
-      properties:
-        contiguous:
-          type: boolean
-        interval:
-          type: string
-          enum:
-          - none
-          - task
-          - daily
-          - weekly
-          - monthly
-          - annually
-        completions:
-          type: array
-          items:
-            $ref: '#/components/schemas/MilestoneReward'
+          type: number
+          format: float
+        qtyMin:
+          type: number
+          format: float
+        maxTrans:
+          type: integer
+          format: int32
     Reward:
       type: object
       properties:
@@ -1158,6 +1234,52 @@ components:
       required:
       - eventType
       - name
+    Schedule:
+      type: object
+      properties:
+        duration:
+          type: string
+          enum:
+          - task
+          - daily
+        maxRepeat:
+          type: integer
+          format: int32
+    DependsOn:
+      type: object
+      properties:
+        challengeId:
+          type: string
+    ChallengeList:
+      type: object
+      properties:
+        challengeList:
+          type: array
+          items:
+            $ref: '#/components/schemas/Challenge'
+    ContentConfig:
+      type: object
+      description: Content phases for journey messaging
+      properties:
+        launch:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'Launch phase messages (initial engagement). Example: welcome email, onboarding content card.'
+        inProgress:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'In-progress phase messages (during challenge). Example: reminder push, progress update email.'
+        end:
+          $ref: '#/components/schemas/ContentPhaseConfig'
+          description: 'End phase messages (completion confirmation). Example: congratulations email, reward notification.'
+    IncludeExclude:
+      type: object
+      properties:
+        values_csv:
+          type: string
+        valuesSet:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
     MessageConfig:
       type: object
       description: Message configuration for a journey node
@@ -1205,61 +1327,6 @@ components:
       required:
       - name
       - type
-    MilestoneReward:
-      type: object
-      properties:
-        count:
-          type: integer
-          format: int32
-        rewardValue:
-          type: string
-    Schedule:
-      type: object
-      properties:
-        duration:
-          type: string
-          enum:
-          - task
-          - daily
-        maxRepeat:
-          type: integer
-          format: int32
-    JourneyMetadata:
-      type: object
-      description: Journey configuration for challenge journeys
-      properties:
-        metadata:
-          $ref: '#/components/schemas/MetadataConfig'
-          description: Core journey metadata including challenge ID and journey name
-        audienceQualification:
-          $ref: '#/components/schemas/AudienceQualificationConfig'
-          description: Adobe Experience Platform audience/segment configuration
-        eventTemplateDetails:
-          type: array
-          description: Event template definitions for journey events
-          items:
-            $ref: '#/components/schemas/EventTemplateDetail'
-        content:
-          $ref: '#/components/schemas/ContentConfig'
-          description: Content phases with message sequences
-      required:
-      - audienceQualification
-      - content
-      - metadata
-    Daypart:
-      type: object
-      properties:
-        startMinute:
-          type: integer
-          format: int32
-        endMinute:
-          type: integer
-          format: int32
-    DependsOn:
-      type: object
-      properties:
-        challengeId:
-          type: string
     Challenge:
       type: object
       properties:
@@ -1357,120 +1424,53 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskTemplate'
-    Task:
-      type: object
-      discriminator:
-        propertyName: taskType
-      properties:
-        get_id:
-          type: string
-        imsOrgId:
-          type: string
-        sandboxId:
-          type: string
-        creationDate:
-          type: string
-          format: date-time
-        lastModifiedDate:
-          type: string
-          format: date-time
-        createdBy:
-          type: string
-        lastModifiedBy:
-          type: string
-        taskType:
-          type: string
-          enum:
-          - purchase
-        taskId:
-          type: string
-        taskName:
-          type: string
-        desc:
-          type: string
-        variables:
-          $ref: '#/components/schemas/Variables'
-        startDate:
-          type: string
-          format: date-time
-        endDate:
-          type: string
-          format: date-time
-        dependsOnTaskName:
-          type: array
-          items:
-            type: string
-        schedule:
-          $ref: '#/components/schemas/Schedule'
-        personalizedTaskAttributes:
-          $ref: '#/components/schemas/PersonalizedTaskAttributes'
-        reward:
-          $ref: '#/components/schemas/Reward'
-        uiStash:
-          type: string
-        taskClass:
-          type: string
-    TaskTemplate:
+    ProblemDetail:
       type: object
       properties:
-        templateTaskId:
+        type:
           type: string
-        overrides:
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        properties:
           type: object
           additionalProperties:
             type: object
-    EventTemplatesConfig:
+    PersonalizedAttributes:
       type: object
       properties:
-        signupEventTemplateId:
-          type: string
-        taskCompleteEventTemplateId:
-          type: string
-        challengeCompleteEventTemplateId:
-          type: string
-    ContentConfig:
-      type: object
-      description: Content phases for journey messaging
-      properties:
-        launch:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'Launch phase messages (initial engagement). Example: welcome email, onboarding content card.'
-        inProgress:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'In-progress phase messages (during challenge). Example: reminder push, progress update email.'
-        end:
-          $ref: '#/components/schemas/ContentPhaseConfig'
-          description: 'End phase messages (completion confirmation). Example: congratulations email, reward notification.'
-    Variables:
-      type: object
-      properties:
-        include:
-          $ref: '#/components/schemas/IncludeExclude'
-        exclude:
-          $ref: '#/components/schemas/IncludeExclude'
-        goal:
-          type: number
-          format: double
-        type:
-          type: string
-        singleTrans:
+        desc:
           type: boolean
-        spendMin:
-          type: number
-          format: float
-        qtyMin:
-          type: number
-          format: float
-        maxTrans:
+        dayPart:
+          type: boolean
+        reward:
+          type: boolean
+        milestones:
+          type: boolean
+        allTasks:
+          type: boolean
+    MilestoneReward:
+      type: object
+      properties:
+        count:
           type: integer
           format: int32
-    IncludeExclude:
-      type: object
-      properties:
-        values_csv:
+        rewardValue:
           type: string
-        valuesSet:
+    ContentPhaseConfig:
+      type: object
+      description: Message sequence for a journey phase
+      properties:
+        messages:
           type: array
+          description: Ordered list of messages for this phase
           items:
-            type: string
-          uniqueItems: true
+            $ref: '#/components/schemas/MessageConfig'

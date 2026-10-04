@@ -163,27 +163,43 @@ paths:
                 type: object
 components:
   schemas:
-    createNewPolicyRequestBody:
+    policyUpdateResponse:
       type: object
       properties:
+        id:
+          type: string
+          description: The ID that corresponds with the policy.
+        imsOrgID:
+          type: string
+          description: The organization where the queried policy is accessible.
+        createdBy:
+          type: string
+          description: The ID of the user that created the polucy.
+        createdAt:
+          type: integer
+          description: A timestamp to date the creation of the policy.
+        modifiedBy:
+          type: string
+          description: The ID of the user that modified the policy.
+        modifiedAt:
+          type: integer
+          description: A timestamp to date the modification of the policy.
         name:
           type: string
-          example: acme-integration-policy
           description: The name of the policy.
         description:
           type: string
-          example: Policy for ACME.
-          description: A descriptive value that you can include to provide more information on your policy.
-        imsOrgID:
+          description: A descriptive value that you can include to provide more information on your role.
+        status:
           type: string
-          example: 5555467B5D8013E50A494220@AdobeOrg
-          description: The organization where the queried policy is accessible.
+          description: The current status of a policy.
+        subjectCondition:
+          description: The conditions applied to a subject.
         rules:
           type: object
           properties:
             effect:
               type: string
-              example: Permit
               description: The effect that results after considering values for action, condition and resource. Possible values include permit, deny, or indeterminate.
               enum:
               - permit
@@ -191,17 +207,110 @@ components:
               - indeterminate
             resource:
               type: string
-              example: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
               description: The asset or object that a subject can or can’t access.
             condition:
               type: string
-              example: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
               description: The conditions applied to a resource.
             actions:
               type: string
-              example:
-              - com.adobe.action.read
               description: The action that a subject is permitted to do against a queried resource. Possible values include read, write, view, and delete.
+          description: The set of rules that define a policy.
+        _etag:
+          type: string
+          example: null
+          description: A unique eTag is returned by the HTTP response.
+      example:
+      - id: 8cf487d7-3642-4243-a8ea-213d72f694b9
+        imsOrgId: 5555467B5D8013E50A494220@AdobeOrg
+        createdBy: example@AdobeID
+        createdAt: 1652988866647
+        modifiedBy: example@AdobeID
+        modifiedAt: 1652989297287
+        name: acme-integration-policy
+        description: Policy for ACME.
+        status: active
+        subjectCondition: null
+        rules:
+        - effect: Deny
+          resource: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
+          condition: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
+          actions:
+          - com.adobe.action.read
+        _etag: null
+    newPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID that corresponds with the policy.
+        imsOrgID:
+          type: string
+          description: The organization where the queried policy is accessible.
+        createdBy:
+          type: string
+          description: The ID of the user that created the polucy.
+        createdAt:
+          type: integer
+          description: A timestamp to date the creation of the policy.
+        modifiedBy:
+          type: string
+          description: The ID of the user that modified the policy.
+        modifiedAt:
+          type: integer
+          description: A timestamp to date the modification of the policy.
+        name:
+          type: string
+          description: The name of the policy.
+        description:
+          type: string
+          description: A descriptive value that you can include to provide more information on your role.
+        status:
+          type: string
+          description: The current status of a policy.
+        subjectCondition:
+          description: The conditions applied to a subject.
+        rules:
+          type: object
+          properties:
+            effect:
+              type: string
+              description: The effect that results after considering values for action, condition and resource. Possible values include permit, deny, or indeterminate.
+              enum:
+              - permit
+              - deny
+              - indeterminate
+            resource:
+              type: string
+              description: The asset or object that a subject can or can’t access.
+            condition:
+              type: string
+              description: The conditions applied to a resource.
+            actions:
+              type: string
+              description: The action that a subject is permitted to do against a queried resource. Possible values include read, write, view, and delete.
+          description: The set of rules that define a policy.
+        _etag:
+          type: string
+          example: null
+          description: A unique eTag is returned by the HTTP response.
+      example:
+      - id: c3863937-5d40-448d-a7be-416e538f955e
+        imsOrgId: 5555467B5D8013E50A494220@AdobeOrg
+        createdBy: example@AdobeID
+        createdAt: 1652988384458
+        modifiedBy: example@AdobeID
+        modifiedAt: 1652988384458
+        name: acme-integration-policy
+        description: Policy for ACME.
+        status: active
+        subjectCondition: null
+        rules:
+        - effect: Permit
+          resource: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
+          condition: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
+          actions:
+          - com.adobe.action.read
+        _etag: null
     policyResponse:
       type: object
       properties:
@@ -378,178 +487,6 @@ components:
               items:
                 type: string
               description: The list of properties included in the response.
-    policyPatchOperation:
-      required:
-      - op
-      - path
-      - value
-      type: object
-      properties:
-        op:
-          type: string
-          description: The operation call used to define the action needed to update the policy. Operations include add, replace, and remove.
-          example: replace
-          enum:
-          - add
-          - replace
-          - remove
-        path:
-          type: string
-          description: The path of the parameter to be updated.
-          example: /description
-        value:
-          type: string
-          description: The new value you want to update your parameter with.
-          example: Policy for ACME.
-      description: Patch operation.
-    newPolicyResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID that corresponds with the policy.
-        imsOrgID:
-          type: string
-          description: The organization where the queried policy is accessible.
-        createdBy:
-          type: string
-          description: The ID of the user that created the polucy.
-        createdAt:
-          type: integer
-          description: A timestamp to date the creation of the policy.
-        modifiedBy:
-          type: string
-          description: The ID of the user that modified the policy.
-        modifiedAt:
-          type: integer
-          description: A timestamp to date the modification of the policy.
-        name:
-          type: string
-          description: The name of the policy.
-        description:
-          type: string
-          description: A descriptive value that you can include to provide more information on your role.
-        status:
-          type: string
-          description: The current status of a policy.
-        subjectCondition:
-          description: The conditions applied to a subject.
-        rules:
-          type: object
-          properties:
-            effect:
-              type: string
-              description: The effect that results after considering values for action, condition and resource. Possible values include permit, deny, or indeterminate.
-              enum:
-              - permit
-              - deny
-              - indeterminate
-            resource:
-              type: string
-              description: The asset or object that a subject can or can’t access.
-            condition:
-              type: string
-              description: The conditions applied to a resource.
-            actions:
-              type: string
-              description: The action that a subject is permitted to do against a queried resource. Possible values include read, write, view, and delete.
-          description: The set of rules that define a policy.
-        _etag:
-          type: string
-          example: null
-          description: A unique eTag is returned by the HTTP response.
-      example:
-      - id: c3863937-5d40-448d-a7be-416e538f955e
-        imsOrgId: 5555467B5D8013E50A494220@AdobeOrg
-        createdBy: example@AdobeID
-        createdAt: 1652988384458
-        modifiedBy: example@AdobeID
-        modifiedAt: 1652988384458
-        name: acme-integration-policy
-        description: Policy for ACME.
-        status: active
-        subjectCondition: null
-        rules:
-        - effect: Permit
-          resource: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
-          condition: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
-          actions:
-          - com.adobe.action.read
-        _etag: null
-    policyUpdateResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The ID that corresponds with the policy.
-        imsOrgID:
-          type: string
-          description: The organization where the queried policy is accessible.
-        createdBy:
-          type: string
-          description: The ID of the user that created the polucy.
-        createdAt:
-          type: integer
-          description: A timestamp to date the creation of the policy.
-        modifiedBy:
-          type: string
-          description: The ID of the user that modified the policy.
-        modifiedAt:
-          type: integer
-          description: A timestamp to date the modification of the policy.
-        name:
-          type: string
-          description: The name of the policy.
-        description:
-          type: string
-          description: A descriptive value that you can include to provide more information on your role.
-        status:
-          type: string
-          description: The current status of a policy.
-        subjectCondition:
-          description: The conditions applied to a subject.
-        rules:
-          type: object
-          properties:
-            effect:
-              type: string
-              description: The effect that results after considering values for action, condition and resource. Possible values include permit, deny, or indeterminate.
-              enum:
-              - permit
-              - deny
-              - indeterminate
-            resource:
-              type: string
-              description: The asset or object that a subject can or can’t access.
-            condition:
-              type: string
-              description: The conditions applied to a resource.
-            actions:
-              type: string
-              description: The action that a subject is permitted to do against a queried resource. Possible values include read, write, view, and delete.
-          description: The set of rules that define a policy.
-        _etag:
-          type: string
-          example: null
-          description: A unique eTag is returned by the HTTP response.
-      example:
-      - id: 8cf487d7-3642-4243-a8ea-213d72f694b9
-        imsOrgId: 5555467B5D8013E50A494220@AdobeOrg
-        createdBy: example@AdobeID
-        createdAt: 1652988866647
-        modifiedBy: example@AdobeID
-        modifiedAt: 1652989297287
-        name: acme-integration-policy
-        description: Policy for ACME.
-        status: active
-        subjectCondition: null
-        rules:
-        - effect: Deny
-          resource: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
-          condition: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
-          actions:
-          - com.adobe.action.read
-        _etag: null
     policyUpdateByIdBody:
       type: object
       properties:
@@ -590,7 +527,79 @@ components:
             condition: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
             actions:
             - com.adobe.action.read
+    policyPatchOperation:
+      required:
+      - op
+      - path
+      - value
+      type: object
+      properties:
+        op:
+          type: string
+          description: The operation call used to define the action needed to update the policy. Operations include add, replace, and remove.
+          example: replace
+          enum:
+          - add
+          - replace
+          - remove
+        path:
+          type: string
+          description: The path of the parameter to be updated.
+          example: /description
+        value:
+          type: string
+          description: The new value you want to update your parameter with.
+          example: Policy for ACME.
+      description: Patch operation.
+    createNewPolicyRequestBody:
+      type: object
+      properties:
+        name:
+          type: string
+          example: acme-integration-policy
+          description: The name of the policy.
+        description:
+          type: string
+          example: Policy for ACME.
+          description: A descriptive value that you can include to provide more information on your policy.
+        imsOrgID:
+          type: string
+          example: 5555467B5D8013E50A494220@AdobeOrg
+          description: The organization where the queried policy is accessible.
+        rules:
+          type: object
+          properties:
+            effect:
+              type: string
+              example: Permit
+              description: The effect that results after considering values for action, condition and resource. Possible values include permit, deny, or indeterminate.
+              enum:
+              - permit
+              - deny
+              - indeterminate
+            resource:
+              type: string
+              example: /orgs/5555467B5D8013E50A494220@AdobeOrg/sandboxes/*
+              description: The asset or object that a subject can or can’t access.
+            condition:
+              type: string
+              example: '{"or":[{"adobe.match_any_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]},{"!":[{"adobe.match_all_labels_by_prefix":[{"var":"subject.roles.labels"},"core/",{"var":"resource.labels"}]}]}]}'
+              description: The conditions applied to a resource.
+            actions:
+              type: string
+              example:
+              - com.adobe.action.read
+              description: The action that a subject is permitted to do against a queried resource. Possible values include read, write, view, and delete.
   parameters:
+    content-type:
+      name: Content-Type
+      in: header
+      description: The content type of the request body. For all requests, this value must be application/json.
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       in: header
@@ -612,13 +621,4 @@ components:
       required: true
       schema:
         type: string
-    content-type:
-      name: Content-Type
-      in: header
-      description: The content type of the request body. For all requests, this value must be application/json.
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
 x-original-swagger-version: '2.0'

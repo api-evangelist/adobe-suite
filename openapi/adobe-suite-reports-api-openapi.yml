@@ -220,23 +220,39 @@ components:
           type: string
         value:
           type: string
-    ReportSearch:
+    RankedReportData:
       type: object
       properties:
-        clause:
+        totalPages:
+          type: integer
+          format: int32
+        firstPage:
+          type: boolean
+        lastPage:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int32
+        message:
           type: string
-        excludeItemIds:
+        request:
+          $ref: '#/components/schemas/RankedRequest'
+        reportId:
+          type: string
+        columns:
+          $ref: '#/components/schemas/RankedColumnMetaData'
+        rows:
           type: array
           items:
-            type: string
-        itemIds:
-          type: array
-          items:
-            type: string
-        includeSearchTotal:
-          type: boolean
-        empty:
-          type: boolean
+            $ref: '#/components/schemas/Row'
+        summaryData:
+          $ref: '#/components/schemas/RankedSummaryData'
     AnalyticsSegmentDefinition:
       type: object
       properties:
@@ -281,6 +297,137 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReportMetric'
+    RankedSettings:
+      type: object
+      properties:
+        limit:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        dimensionSort:
+          type: string
+        countRepeatInstances:
+          type: boolean
+        reflectRequest:
+          type: boolean
+        includeAnomalyDetection:
+          type: boolean
+        includeForecasting:
+          type: boolean
+        includePercentChange:
+          type: boolean
+        includeLatLong:
+          type: boolean
+        nonesBehavior:
+          type: string
+    ReportMetric:
+      type: object
+      properties:
+        id:
+          type: string
+        columnId:
+          type: string
+        filters:
+          type: array
+          items:
+            type: string
+        sort:
+          type: string
+        metricDefinition:
+          type: object
+          additionalProperties:
+            type: object
+        predictive:
+          $ref: '#/components/schemas/ReportMetricPredictiveSettings'
+    ReportRow:
+      type: object
+      properties:
+        rowId:
+          type: string
+        filters:
+          type: array
+          items:
+            type: string
+    ReportErrorStatus:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          enum:
+          - invalid_segment_ids_found
+          - invalid_metric_access
+          - method_not_allowed
+          - resource_conflict
+          - invalid_access
+          - resource_temporarily_unavailable
+          - external_api_failure
+          - aam_failure
+          - resource_already_exists
+          - invalid_state
+          - invalid_json_input
+          - invalid_parameters
+          - invalid_dimension_access
+          - unsupported_data_type
+          - resource_not_found
+          - insufficient_access
+          - health_check_error
+          - invalid_data
+          - unexpected_error
+          - external_api_error
+          - unsupported_resource
+          - io_error
+          - invalid_request
+          - invalid_client_id
+          - unauthorized
+          - authorization_error
+          - invalid_token
+          - insufficient_scope
+          - bluecoat_unauthorized
+        errorDescription:
+          type: string
+        errorId:
+          type: string
+        errorDetails:
+          type: object
+          additionalProperties:
+            type: object
+        rootCauseService:
+          type: string
+    RankedColumnMetaData:
+      type: object
+      properties:
+        dimension:
+          $ref: '#/components/schemas/ReportDimension'
+        columnIds:
+          type: array
+          items:
+            type: string
+        columnErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankedColumnError'
+    RankedColumnError:
+      type: object
+      properties:
+        columnId:
+          type: string
+        errorCode:
+          type: string
+          enum:
+          - unauthorized_metric
+          - unauthorized_dimension
+          - unauthorized_dimension_global
+          - anomaly_detection_failure_unexpected_item_count
+          - anomaly_detection_failure_tsa_service
+          - not_enabled_metric
+          - not_enabled_dimension
+          - not_enabled_dimension_global
+        errorId:
+          type: string
+        errorDescription:
+          type: string
     RankedStatistics:
       type: object
       properties:
@@ -289,6 +436,23 @@ components:
           items:
             type: string
         ignoreZeroes:
+          type: boolean
+    ReportSearch:
+      type: object
+      properties:
+        clause:
+          type: string
+        excludeItemIds:
+          type: array
+          items:
+            type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        includeSearchTotal:
+          type: boolean
+        empty:
           type: boolean
     Row:
       type: object
@@ -349,6 +513,121 @@ components:
           items:
             type: number
             format: double
+    RankedSummaryData:
+      type: object
+    UnhashReportData:
+      type: object
+      properties:
+        totalPages:
+          type: integer
+          format: int32
+        firstPage:
+          type: boolean
+        lastPage:
+          type: boolean
+        numberOfElements:
+          type: integer
+          format: int32
+        number:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int32
+        message:
+          type: string
+        reportId:
+          type: string
+        searchAnd:
+          type: string
+        searchOr:
+          type: string
+        searchNot:
+          type: string
+        searchPhrase:
+          type: string
+        oberonRequestXML:
+          type: string
+        oberonResponseXML:
+          type: string
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowItem'
+    ReportFilter:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - dateRange
+          - breakdown
+          - segment
+          - excludeItemIds
+        dimension:
+          type: string
+        itemId:
+          type: string
+        itemIds:
+          type: array
+          items:
+            type: string
+        segmentId:
+          type: string
+        segmentDefinition:
+          type: object
+          $ref: '#/components/schemas/AnalyticsSegmentDefinition'
+        dateRange:
+          type: string
+        dateRangeRelative:
+          type: string
+        excludeItemIds:
+          type: array
+          items:
+            type: string
+    ReportDimension:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - STRING
+          - INT
+          - DECIMAL
+          - CURRENCY
+          - PERCENT
+          - TIME
+          - ENUM
+          - ORDERED_ENUM
+    RankedRequest:
+      type: object
+      properties:
+        rsid:
+          type: string
+        dimension:
+          type: string
+        locale:
+          $ref: '#/components/schemas/Locale'
+        globalFilters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportFilter'
+        search:
+          $ref: '#/components/schemas/ReportSearch'
+        settings:
+          $ref: '#/components/schemas/RankedSettings'
+        statistics:
+          $ref: '#/components/schemas/RankedStatistics'
+        metricContainer:
+          $ref: '#/components/schemas/ReportMetrics'
+        rowContainer:
+          $ref: '#/components/schemas/ReportRows'
+        anchorDate:
+          type: string
     Locale:
       type: object
       properties:
@@ -389,6 +668,12 @@ components:
           type: string
         displayName:
           type: string
+    ReportMetricPredictiveSettings:
+      type: object
+      properties:
+        anomalyConfidence:
+          type: number
+          format: double
     ReportRows:
       type: object
       properties:
@@ -400,291 +685,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReportRow'
-    ReportErrorStatus:
-      type: object
-      properties:
-        errorCode:
-          type: string
-          enum:
-          - invalid_segment_ids_found
-          - invalid_metric_access
-          - method_not_allowed
-          - resource_conflict
-          - invalid_access
-          - resource_temporarily_unavailable
-          - external_api_failure
-          - aam_failure
-          - resource_already_exists
-          - invalid_state
-          - invalid_json_input
-          - invalid_parameters
-          - invalid_dimension_access
-          - unsupported_data_type
-          - resource_not_found
-          - insufficient_access
-          - health_check_error
-          - invalid_data
-          - unexpected_error
-          - external_api_error
-          - unsupported_resource
-          - io_error
-          - invalid_request
-          - invalid_client_id
-          - unauthorized
-          - authorization_error
-          - invalid_token
-          - insufficient_scope
-          - bluecoat_unauthorized
-        errorDescription:
-          type: string
-        errorId:
-          type: string
-        errorDetails:
-          type: object
-          additionalProperties:
-            type: object
-        rootCauseService:
-          type: string
-    ReportMetric:
-      type: object
-      properties:
-        id:
-          type: string
-        columnId:
-          type: string
-        filters:
-          type: array
-          items:
-            type: string
-        sort:
-          type: string
-        metricDefinition:
-          type: object
-          additionalProperties:
-            type: object
-        predictive:
-          $ref: '#/components/schemas/ReportMetricPredictiveSettings'
-    ReportRow:
-      type: object
-      properties:
-        rowId:
-          type: string
-        filters:
-          type: array
-          items:
-            type: string
-    ReportFilter:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum:
-          - dateRange
-          - breakdown
-          - segment
-          - excludeItemIds
-        dimension:
-          type: string
-        itemId:
-          type: string
-        itemIds:
-          type: array
-          items:
-            type: string
-        segmentId:
-          type: string
-        segmentDefinition:
-          type: object
-          $ref: '#/components/schemas/AnalyticsSegmentDefinition'
-        dateRange:
-          type: string
-        dateRangeRelative:
-          type: string
-        excludeItemIds:
-          type: array
-          items:
-            type: string
-    RankedSettings:
-      type: object
-      properties:
-        limit:
-          type: integer
-          format: int32
-        page:
-          type: integer
-          format: int32
-        dimensionSort:
-          type: string
-        countRepeatInstances:
-          type: boolean
-        reflectRequest:
-          type: boolean
-        includeAnomalyDetection:
-          type: boolean
-        includeForecasting:
-          type: boolean
-        includePercentChange:
-          type: boolean
-        includeLatLong:
-          type: boolean
-        nonesBehavior:
-          type: string
-    UnhashReportData:
-      type: object
-      properties:
-        totalPages:
-          type: integer
-          format: int32
-        firstPage:
-          type: boolean
-        lastPage:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        number:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int32
-        message:
-          type: string
-        reportId:
-          type: string
-        searchAnd:
-          type: string
-        searchOr:
-          type: string
-        searchNot:
-          type: string
-        searchPhrase:
-          type: string
-        oberonRequestXML:
-          type: string
-        oberonResponseXML:
-          type: string
-        rows:
-          type: array
-          items:
-            $ref: '#/components/schemas/RowItem'
-    RankedReportData:
-      type: object
-      properties:
-        totalPages:
-          type: integer
-          format: int32
-        firstPage:
-          type: boolean
-        lastPage:
-          type: boolean
-        numberOfElements:
-          type: integer
-          format: int32
-        number:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int32
-        message:
-          type: string
-        request:
-          $ref: '#/components/schemas/RankedRequest'
-        reportId:
-          type: string
-        columns:
-          $ref: '#/components/schemas/RankedColumnMetaData'
-        rows:
-          type: array
-          items:
-            $ref: '#/components/schemas/Row'
-        summaryData:
-          $ref: '#/components/schemas/RankedSummaryData'
-    RankedRequest:
-      type: object
-      properties:
-        rsid:
-          type: string
-        dimension:
-          type: string
-        locale:
-          $ref: '#/components/schemas/Locale'
-        globalFilters:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReportFilter'
-        search:
-          $ref: '#/components/schemas/ReportSearch'
-        settings:
-          $ref: '#/components/schemas/RankedSettings'
-        statistics:
-          $ref: '#/components/schemas/RankedStatistics'
-        metricContainer:
-          $ref: '#/components/schemas/ReportMetrics'
-        rowContainer:
-          $ref: '#/components/schemas/ReportRows'
-        anchorDate:
-          type: string
-    RankedSummaryData:
-      type: object
-    RankedColumnMetaData:
-      type: object
-      properties:
-        dimension:
-          $ref: '#/components/schemas/ReportDimension'
-        columnIds:
-          type: array
-          items:
-            type: string
-        columnErrors:
-          type: array
-          items:
-            $ref: '#/components/schemas/RankedColumnError'
-    RankedColumnError:
-      type: object
-      properties:
-        columnId:
-          type: string
-        errorCode:
-          type: string
-          enum:
-          - unauthorized_metric
-          - unauthorized_dimension
-          - unauthorized_dimension_global
-          - anomaly_detection_failure_unexpected_item_count
-          - anomaly_detection_failure_tsa_service
-          - not_enabled_metric
-          - not_enabled_dimension
-          - not_enabled_dimension_global
-        errorId:
-          type: string
-        errorDescription:
-          type: string
-    ReportMetricPredictiveSettings:
-      type: object
-      properties:
-        anomalyConfidence:
-          type: number
-          format: double
-    ReportDimension:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-          enum:
-          - STRING
-          - INT
-          - DECIMAL
-          - CURRENCY
-          - PERCENT
-          - TIME
-          - ENUM
-          - ORDERED_ENUM
   parameters:
     authorization:
       name: Authorization

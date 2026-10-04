@@ -89,6 +89,109 @@ paths:
                 $ref: '#/components/schemas/acceptErrorLookup'
 components:
   schemas:
+    registryMetadata:
+      type: object
+      description: Contains registry-specific metadata about the XDM resource.
+      properties:
+        repo:createdDate:
+          type: integer
+          description: A Unix timestamp of when the resource was created.
+        repo:lastModifiedDate:
+          type: integer
+          description: A Unix timestamp of when the resource was last modified.
+        xdm:createdClientId:
+          type: string
+          description: The ID of the client that created the resource.
+        xdm:lastModifiedClientId:
+          type: string
+          description: The ID of the client that last modified the resource.
+        xdm:createdUserId:
+          type: string
+          description: The ID of the user that created the resource.
+        xdm:lastModifiedUserId:
+          type: string
+          description: The ID of the user that last modified the resource.
+        etag:
+          type: string
+          description: An HTTP entity tag (ETag) for the resource.
+        meta:globalLibVersion:
+          type: string
+          description: The current global library version of the resource.
+        meta:usageCount:
+          type: integer
+          description: The number of instances where this resource is referenced by other XDM resources.
+    singleBehaviorResponse:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
+      - $ref: '#/components/schemas/xdmTypeToSchema'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      example:
+        $id: https://ns.adobe.com/xdm/data/record
+        meta:altId: _xdm.data.record
+        meta:resourceType: behaviors
+        version: 1.16.4
+        title: Record Schema
+        type: object
+        description: Used to indicate the behavior of record data semantic when composed into data schemas.
+        definitions:
+          record:
+            properties:
+              _id:
+                title: Identifier
+                type: string
+                format: uri-reference
+                description: A unique identifier for the record.
+                meta:xdmType: string
+                meta:xdmField: '@id'
+        allOf:
+        - $ref: '#/components/schemas/record'
+          type: object
+          meta:xdmType: object
+        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
+          type: object
+          meta:xdmType: object
+        meta:extensible: true
+        meta:abstract: true
+        meta:xdmType: object
+        meta:status: stable
+        $schema: http://json-schema.org/draft-06/schema#
+        meta:registryMetadata:
+          repo:createdDate: 1606266789446
+          repo:lastModifiedDate: 1606266789446
+          eTag: 2cc114a54949a9668fe2ad046ccece59192e1bfa28f14e5ac7c893acb7820ba2
+          meta:globalLibVersion: 1.16.4
+    allOfRef:
+      type: object
+      properties:
+        $ref:
+          type: string
+          description: The `$id` of the XDM resource.
+        type:
+          type: string
+          description: The resource type (typically `object`).
+        meta:xdmType:
+          type: string
+          description: The XDM resource type (typically `object`).
+    metaRegistryMetadata:
+      type: object
+      properties:
+        meta:registryMetadata:
+          $ref: '#/components/schemas/registryMetadata'
+    xdmTypeToSchema:
+      type: object
+      properties:
+        meta:xdmType:
+          type: string
+          description: The XDM resource type (typically `object`).
+        meta:status:
+          type: string
+          description: (For `global` resources only) The status of the resource.
+        $schema:
+          type: string
+          description: The JSON schema definition that this resource is based on.
+    record:
+      type: string
+      example: '#/definitions/record'
     errorBasic:
       type: object
       properties:
@@ -166,163 +269,6 @@ components:
           next: null
           global_schemas:
             href: https://platform.adobe.io/data/foundation/schemaregistry/global/schemas
-    allOfRef:
-      type: object
-      properties:
-        $ref:
-          type: string
-          description: The `$id` of the XDM resource.
-        type:
-          type: string
-          description: The resource type (typically `object`).
-        meta:xdmType:
-          type: string
-          description: The XDM resource type (typically `object`).
-    xdmTypeToSchema:
-      type: object
-      properties:
-        meta:xdmType:
-          type: string
-          description: The XDM resource type (typically `object`).
-        meta:status:
-          type: string
-          description: (For `global` resources only) The status of the resource.
-        $schema:
-          type: string
-          description: The JSON schema definition that this resource is based on.
-    listResponseItemWithVersion:
-      allOf:
-      - $ref: '#/components/schemas/listResponseItem'
-      - properties:
-          version:
-            type: string
-            description: The current version of the XDM resource.
-            example: '1.1'
-    acceptErrorLookup:
-      allOf:
-      - $ref: '#/components/schemas/errorBasic'
-      example:
-        type: http://ns.adobe.com/aep/errors/XDM-1007-400
-        title: Accept header invalid
-        status: 400
-        report:
-          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
-          timestamp: 11-02-2021 07:42:43
-          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-          sub-errors: []
-        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
-    lookupResourceWithDefinitions:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceCore'
-      - properties:
-          definitions:
-            type: object
-            description: Contains definitions for the unique attributes provided by the resource.
-          allOf:
-            type: array
-            description: A list of objects that refer to the common definitions and fields that the resource inherits.
-            items:
-              $ref: '#/components/schemas/allOfRef'
-          meta:extensible:
-            type: boolean
-            description: Indicates whether this resource is extensible or not.
-          meta:abstract:
-            type: boolean
-            description: Indicates whether this resource is abstract or not.
-    registryMetadata:
-      type: object
-      description: Contains registry-specific metadata about the XDM resource.
-      properties:
-        repo:createdDate:
-          type: integer
-          description: A Unix timestamp of when the resource was created.
-        repo:lastModifiedDate:
-          type: integer
-          description: A Unix timestamp of when the resource was last modified.
-        xdm:createdClientId:
-          type: string
-          description: The ID of the client that created the resource.
-        xdm:lastModifiedClientId:
-          type: string
-          description: The ID of the client that last modified the resource.
-        xdm:createdUserId:
-          type: string
-          description: The ID of the user that created the resource.
-        xdm:lastModifiedUserId:
-          type: string
-          description: The ID of the user that last modified the resource.
-        etag:
-          type: string
-          description: An HTTP entity tag (ETag) for the resource.
-        meta:globalLibVersion:
-          type: string
-          description: The current global library version of the resource.
-        meta:usageCount:
-          type: integer
-          description: The number of instances where this resource is referenced by other XDM resources.
-    listResponseItem:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The title of the XDM resource.
-          example: Tenant Data Schema
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
-    linksBasic:
-      type: object
-      description: Contains various links related to the response.
-      properties:
-        next:
-          type: string
-          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
-          example: null
-    singleBehaviorResponse:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
-      - $ref: '#/components/schemas/xdmTypeToSchema'
-      - $ref: '#/components/schemas/metaRegistryMetadata'
-      example:
-        $id: https://ns.adobe.com/xdm/data/record
-        meta:altId: _xdm.data.record
-        meta:resourceType: behaviors
-        version: 1.16.4
-        title: Record Schema
-        type: object
-        description: Used to indicate the behavior of record data semantic when composed into data schemas.
-        definitions:
-          record:
-            properties:
-              _id:
-                title: Identifier
-                type: string
-                format: uri-reference
-                description: A unique identifier for the record.
-                meta:xdmType: string
-                meta:xdmField: '@id'
-        allOf:
-        - $ref: '#/components/schemas/record'
-          type: object
-          meta:xdmType: object
-        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
-          type: object
-          meta:xdmType: object
-        meta:extensible: true
-        meta:abstract: true
-        meta:xdmType: object
-        meta:status: stable
-        $schema: http://json-schema.org/draft-06/schema#
-        meta:registryMetadata:
-          repo:createdDate: 1606266789446
-          repo:lastModifiedDate: 1606266789446
-          eTag: 2cc114a54949a9668fe2ad046ccece59192e1bfa28f14e5ac7c893acb7820ba2
-          meta:globalLibVersion: 1.16.4
     lookupResourceCore:
       type: object
       properties:
@@ -353,12 +299,38 @@ components:
         description:
           type: string
           description: A description for the resource.
+    linksBasic:
+      type: object
+      description: Contains various links related to the response.
+      properties:
+        next:
+          type: string
+          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
+          example: null
     listResponse:
       allOf:
       - $ref: '#/components/schemas/listResponseBasic'
       - properties:
           _links:
             $ref: '#/components/schemas/linksBasic'
+    lookupResourceWithDefinitions:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceCore'
+      - properties:
+          definitions:
+            type: object
+            description: Contains definitions for the unique attributes provided by the resource.
+          allOf:
+            type: array
+            description: A list of objects that refer to the common definitions and fields that the resource inherits.
+            items:
+              $ref: '#/components/schemas/allOfRef'
+          meta:extensible:
+            type: boolean
+            description: Indicates whether this resource is extensible or not.
+          meta:abstract:
+            type: boolean
+            description: Indicates whether this resource is abstract or not.
     acceptErrorList:
       allOf:
       - $ref: '#/components/schemas/errorBasic'
@@ -372,27 +344,62 @@ components:
           detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
           sub-errors: []
         detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json;version=1 - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json'
-    metaRegistryMetadata:
+    listResponseItemWithVersion:
+      allOf:
+      - $ref: '#/components/schemas/listResponseItem'
+      - properties:
+          version:
+            type: string
+            description: The current version of the XDM resource.
+            example: '1.1'
+    listResponseItem:
       type: object
       properties:
-        meta:registryMetadata:
-          $ref: '#/components/schemas/registryMetadata'
-    record:
-      type: string
-      example: '#/definitions/record'
+        title:
+          type: string
+          description: The title of the XDM resource.
+          example: Tenant Data Schema
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
+    acceptErrorLookup:
+      allOf:
+      - $ref: '#/components/schemas/errorBasic'
+      example:
+        type: http://ns.adobe.com/aep/errors/XDM-1007-400
+        title: Accept header invalid
+        status: 400
+        report:
+          registryRequestId: fc4f81b7-d0aa-4116-a0e1-e6f9c82b6470
+          timestamp: 11-02-2021 07:42:43
+          detailed-message: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
+          sub-errors: []
+        detail: 'The supplied Accept header is not valid: application/vnd.adobe.xed+json - A valid Accept value should look like application/vnd.adobe.''{xed|xdm''}+json; version=1 (Version should be specified)'
   parameters:
-    BEHAVIOR_ID:
-      name: BEHAVIOR_ID
-      description: The `meta:altId` or URL-encoded `$id` of the behavior in question.
-      required: true
-      in: path
-      schema:
-        type: string
     authorization:
       name: Authorization
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       in: header
+      schema:
+        type: string
+    acceptListing:
+      name: Accept
+      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
+      required: true
+      in: header
+      schema:
+        type: string
+    BEHAVIOR_ID:
+      name: BEHAVIOR_ID
+      description: The `meta:altId` or URL-encoded `$id` of the behavior in question.
+      required: true
+      in: path
       schema:
         type: string
     accept:
@@ -411,13 +418,6 @@ components:
       in: header
       schema:
         type: string
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
     x-gw-ims-org-id:
       name: x-gw-ims-org-id
       description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
@@ -425,9 +425,9 @@ components:
       in: header
       schema:
         type: string
-    acceptListing:
-      name: Accept
-      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       in: header
       schema:

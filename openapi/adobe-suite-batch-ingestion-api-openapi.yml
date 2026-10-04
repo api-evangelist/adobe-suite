@@ -648,6 +648,84 @@ paths:
           content: {}
 components:
   schemas:
+    Column:
+      type: object
+      properties:
+        cid:
+          type: string
+          description: This is the column ID.
+        name:
+          type: string
+          description: This is the name of the column.
+      example:
+      - cid: 0
+        name: _acmesandbox/testClassField0
+      - cid: 1
+        name: _acmesandbox/testClassField1
+      - cid: 2
+        name: _acmesandbox/testClassField2
+    IngestBatch:
+      required:
+      - datasetId
+      - inputFormat
+      type: object
+      properties:
+        datasetId:
+          type: string
+          description: The ID of the dataset that you are creating a batch for. When creating the batch, the files uploaded must conform to the XDM schema of the dataset ID that you provided.
+          example: 5da9452f7de80400007jc52a
+        externalId:
+          type: string
+          description: A client supplied batch identifier, that is expected to be unique within your organization. This defaults to the batch ID if not specified.
+          example: 01EQ1C48TR4GD4FE7NH2522TCQ
+        inputFormat:
+          type: object
+          properties:
+            format:
+              required:
+              - format
+              type: string
+              description: The file format of the ingested files.
+              example: json
+              enum:
+              - JSON
+              - Parquet
+              - CSV
+            isMultiLineJson:
+              description: The flag to ingest a multi-line JSON file.
+              example: true
+          description: The format of the ingested batch files. It can be any of the following values; `JSON`, `Parquet`, or `CSV`. The ingestion of a multi-line JSON file is only supported when the `inputFormat` field `format` is set to JSON and the `isMultiLineJson` flag is set to `true`. For more information, please read the batch ingestion [troubleshooting guide](https://experienceleague.adobe.com/docs/experience-platform/ingestion/batch/troubleshooting.html#how-is-multi-line-json-ingested%3F).
+        replay:
+          type: object
+          properties:
+            reason:
+              type: string
+              description: State the reason for including the batch IDs.
+              example: replace
+            predecessors:
+              type: array
+              description: An array of batch IDs to be updated by the request. Any client provided ID in the request body must be prefixed with a `$` to be parameterized.
+              items:
+                type: string
+                example: 01EQ1C48TR4GD4FE7NH2522TCQ, 04KF5E28NQ7QQ0LZ3KN5517WJS
+            predecessorsByExternalId:
+              type: array
+              description: An array of client batch IDs to be updated by the request. Any client ID provided in the request body must be prefixed with a `$` to be parameterized.
+              items:
+                type: string
+                example: 8gfgnrvtbxzj6hs3l40aeq843qr407, z27ouygzi3bcskuueah7d3z3ffw9z3
+          description: Provide a list of client supplied IDs to identify the previous batches that this new batch is replacing. Any ID supplied from the client as part of the request body must be prefixed with a `$`.
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            description: Any properties associated with previous batches.
+            items:
+              type: string
+            example:
+            - tagValue1
+            - tagValue2
+          description: Additional batch tags. This object contains any properties associated with the previous batches.
     Batch:
       type: object
       properties:
@@ -800,6 +878,13 @@ components:
               description: The flag to indicate if the header is supplied in the dataset files.
               example: true
           description: Metadata describing the ingest format of the batch being ingested.
+    PreviewResponse:
+      type: object
+      properties:
+        formatParams:
+          $ref: '#/components/schemas/FormatParams'
+        preview:
+          $ref: '#/components/schemas/Preview'
     File:
       type: object
       properties:
@@ -812,6 +897,20 @@ components:
           description: The size in bytes of the file you have uploaded.
           example: 3682
           format: int64
+    Preview:
+      type: object
+      description: A data preview for the files uploaded to the batch so far.
+      properties:
+        columns:
+          description: This describes the columns of the batch ingested records.
+          type: array
+          items:
+            $ref: '#/components/schemas/Column'
+        rows:
+          description: This describes the rows of the batch ingested records.
+          type: array
+          items:
+            $ref: '#/components/schemas/Row'
     Row:
       type: object
       additionalProperties:
@@ -849,22 +948,6 @@ components:
           type: string
           description: The file format for the uploaded file.
           example: parquet
-    Column:
-      type: object
-      properties:
-        cid:
-          type: string
-          description: This is the column ID.
-        name:
-          type: string
-          description: This is the name of the column.
-      example:
-      - cid: 0
-        name: _acmesandbox/testClassField0
-      - cid: 1
-        name: _acmesandbox/testClassField1
-      - cid: 2
-        name: _acmesandbox/testClassField2
     relatedObjects:
       type: object
       properties:
@@ -910,20 +993,6 @@ components:
           additionalProperties:
             type: integer
           description: Contains metrics related to the dataset.
-    Preview:
-      type: object
-      description: A data preview for the files uploaded to the batch so far.
-      properties:
-        columns:
-          description: This describes the columns of the batch ingested records.
-          type: array
-          items:
-            $ref: '#/components/schemas/Column'
-        rows:
-          description: This describes the rows of the batch ingested records.
-          type: array
-          items:
-            $ref: '#/components/schemas/Row'
     errors:
       type: object
       properties:
@@ -942,72 +1011,3 @@ components:
           type: string
           description: A human-readable description of the error.
           example: HTTP 405 Method Not Allowed
-    PreviewResponse:
-      type: object
-      properties:
-        formatParams:
-          $ref: '#/components/schemas/FormatParams'
-        preview:
-          $ref: '#/components/schemas/Preview'
-    IngestBatch:
-      required:
-      - datasetId
-      - inputFormat
-      type: object
-      properties:
-        datasetId:
-          type: string
-          description: The ID of the dataset that you are creating a batch for. When creating the batch, the files uploaded must conform to the XDM schema of the dataset ID that you provided.
-          example: 5da9452f7de80400007jc52a
-        externalId:
-          type: string
-          description: A client supplied batch identifier, that is expected to be unique within your organization. This defaults to the batch ID if not specified.
-          example: 01EQ1C48TR4GD4FE7NH2522TCQ
-        inputFormat:
-          type: object
-          properties:
-            format:
-              required:
-              - format
-              type: string
-              description: The file format of the ingested files.
-              example: json
-              enum:
-              - JSON
-              - Parquet
-              - CSV
-            isMultiLineJson:
-              description: The flag to ingest a multi-line JSON file.
-              example: true
-          description: The format of the ingested batch files. It can be any of the following values; `JSON`, `Parquet`, or `CSV`. The ingestion of a multi-line JSON file is only supported when the `inputFormat` field `format` is set to JSON and the `isMultiLineJson` flag is set to `true`. For more information, please read the batch ingestion [troubleshooting guide](https://experienceleague.adobe.com/docs/experience-platform/ingestion/batch/troubleshooting.html#how-is-multi-line-json-ingested%3F).
-        replay:
-          type: object
-          properties:
-            reason:
-              type: string
-              description: State the reason for including the batch IDs.
-              example: replace
-            predecessors:
-              type: array
-              description: An array of batch IDs to be updated by the request. Any client provided ID in the request body must be prefixed with a `$` to be parameterized.
-              items:
-                type: string
-                example: 01EQ1C48TR4GD4FE7NH2522TCQ, 04KF5E28NQ7QQ0LZ3KN5517WJS
-            predecessorsByExternalId:
-              type: array
-              description: An array of client batch IDs to be updated by the request. Any client ID provided in the request body must be prefixed with a `$` to be parameterized.
-              items:
-                type: string
-                example: 8gfgnrvtbxzj6hs3l40aeq843qr407, z27ouygzi3bcskuueah7d3z3ffw9z3
-          description: Provide a list of client supplied IDs to identify the previous batches that this new batch is replacing. Any ID supplied from the client as part of the request body must be prefixed with a `$`.
-        tags:
-          type: object
-          additionalProperties:
-            type: array
-            description: Any properties associated with previous batches.
-            items:
-              type: string
-            example:
-            - tagValue1
-            - tagValue2
-          description: Additional batch tags. This object contains any properties associated with the previous batches.

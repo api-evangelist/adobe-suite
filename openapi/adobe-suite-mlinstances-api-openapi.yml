@@ -549,56 +549,45 @@ paths:
           content: {}
 components:
   schemas:
-    TaskSpec:
+    MLInstanceSummary:
       required:
-      - type
+      - name
       type: object
       properties:
-        type:
+        id:
           type: string
-          enum:
-          - ContainerTaskSpec
-          - SparkTaskSpec
-      description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
-      discriminator:
-        propertyName: type
-    MLInstanceTaskList:
-      type: array
-      items:
-        $ref: '#/components/schemas/MLInstanceTask'
-    MLInstanceTaskParameter:
-      type: object
-      properties:
-        key:
+          readOnly: true
+        name:
           type: string
-        value:
+        description:
           type: string
-        secret:
+        engineId:
+          type: string
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        createdBy:
+          type: object
+          properties:
+            displayName:
+              type: string
+            avatar:
+              type: string
+            userId:
+              type: string
+        updated:
+          type: string
+          format: date-time
+          readOnly: true
+        deleted:
           type: boolean
-      description: A parameter passed to an MLInstanceTask
-    PagingInformationAttributes:
-      type: object
-      properties:
-        orderby:
-          type: string
-          readOnly: true
-        property:
-          type: string
-          readOnly: true
-        start:
-          type: string
-          readOnly: true
-        totalCount:
-          type: integer
-          format: int64
-          readOnly: true
-        count:
-          type: integer
-          format: int64
-          readOnly: true
-        next:
-          type: string
-          readOnly: true
+          default: false
+        _links:
+          type: object
+          properties:
+            self:
+              $ref: '#/components/schemas/LinkObject'
     LinkObject:
       required:
       - href
@@ -624,13 +613,6 @@ components:
         hrefLang:
           type: string
           description: The language of the target resource (as defined by RFC5988)
-    PagingNavigationAttributes:
-      type: object
-      properties:
-        next:
-          $ref: '#/components/schemas/LinkObject'
-        page:
-          $ref: '#/components/schemas/LinkObject'
     SenseiApiResponse:
       type: object
       properties:
@@ -655,6 +637,63 @@ components:
           type: object
           additionalProperties:
             type: string
+    PagingNavigationAttributes:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/LinkObject'
+        page:
+          $ref: '#/components/schemas/LinkObject'
+    MLInstanceTaskList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MLInstanceTask'
+    MLInstance:
+      allOf:
+      - $ref: '#/components/schemas/MLInstanceSummary'
+      - type: object
+        properties:
+          tags:
+            type: object
+            additionalProperties:
+              type: string
+          tasks:
+            $ref: '#/components/schemas/MLInstanceTaskList'
+          _links:
+            type: object
+            properties:
+              self:
+                $ref: '#/components/schemas/LinkObject'
+              getMLInstance:
+                $ref: '#/components/schemas/LinkObject'
+              deleteMLInstance:
+                $ref: '#/components/schemas/LinkObject'
+              getEngine:
+                $ref: '#/components/schemas/LinkObject'
+              listExperiments:
+                $ref: '#/components/schemas/LinkObject'
+              createExperiment:
+                $ref: '#/components/schemas/LinkObject'
+    MLInstanceListing:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/MLInstanceSummary'
+        _page:
+          $ref: '#/components/schemas/PagingInformationAttributes'
+        _links:
+          $ref: '#/components/schemas/MLInstanceListingLinks'
+    MLInstanceListingLinks:
+      allOf:
+      - $ref: '#/components/schemas/PagingNavigationAttributes'
+      - type: object
+        properties:
+          self:
+            $ref: '#/components/schemas/LinkObject'
+          createMLInstance:
+            $ref: '#/components/schemas/LinkObject'
     MLInstanceTask:
       type: object
       properties:
@@ -731,89 +770,50 @@ components:
                       type: object
                       properties: {}
       description: A single execution unit of Sensei
-    MLInstanceSummary:
-      required:
-      - name
+    MLInstanceTaskParameter:
       type: object
       properties:
-        id:
+        key:
           type: string
-          readOnly: true
-        name:
+        value:
           type: string
-        description:
-          type: string
-        engineId:
-          type: string
-        created:
-          type: string
-          format: date-time
-          readOnly: true
-        createdBy:
-          type: object
-          properties:
-            displayName:
-              type: string
-            avatar:
-              type: string
-            userId:
-              type: string
-        updated:
-          type: string
-          format: date-time
-          readOnly: true
-        deleted:
+        secret:
           type: boolean
-          default: false
-        _links:
-          type: object
-          properties:
-            self:
-              $ref: '#/components/schemas/LinkObject'
-    MLInstance:
-      allOf:
-      - $ref: '#/components/schemas/MLInstanceSummary'
-      - type: object
-        properties:
-          tags:
-            type: object
-            additionalProperties:
-              type: string
-          tasks:
-            $ref: '#/components/schemas/MLInstanceTaskList'
-          _links:
-            type: object
-            properties:
-              self:
-                $ref: '#/components/schemas/LinkObject'
-              getMLInstance:
-                $ref: '#/components/schemas/LinkObject'
-              deleteMLInstance:
-                $ref: '#/components/schemas/LinkObject'
-              getEngine:
-                $ref: '#/components/schemas/LinkObject'
-              listExperiments:
-                $ref: '#/components/schemas/LinkObject'
-              createExperiment:
-                $ref: '#/components/schemas/LinkObject'
-    MLInstanceListing:
+      description: A parameter passed to an MLInstanceTask
+    PagingInformationAttributes:
       type: object
       properties:
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/MLInstanceSummary'
-        _page:
-          $ref: '#/components/schemas/PagingInformationAttributes'
-        _links:
-          $ref: '#/components/schemas/MLInstanceListingLinks'
-    MLInstanceListingLinks:
-      allOf:
-      - $ref: '#/components/schemas/PagingNavigationAttributes'
-      - type: object
-        properties:
-          self:
-            $ref: '#/components/schemas/LinkObject'
-          createMLInstance:
-            $ref: '#/components/schemas/LinkObject'
+        orderby:
+          type: string
+          readOnly: true
+        property:
+          type: string
+          readOnly: true
+        start:
+          type: string
+          readOnly: true
+        totalCount:
+          type: integer
+          format: int64
+          readOnly: true
+        count:
+          type: integer
+          format: int64
+          readOnly: true
+        next:
+          type: string
+          readOnly: true
+    TaskSpec:
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ContainerTaskSpec
+          - SparkTaskSpec
+      description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
+      discriminator:
+        propertyName: type
 x-original-swagger-version: '2.0'

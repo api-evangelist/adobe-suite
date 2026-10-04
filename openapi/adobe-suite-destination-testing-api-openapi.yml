@@ -181,48 +181,23 @@ paths:
           description: Resource not found. Verify that you are using the correct destination instance ID before trying again.
           x-summary: Resource Not Found
 components:
-  parameters:
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
-      required: true
-      schema:
-        type: string
-      in: header
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
-      required: true
-      schema:
-        type: string
-      in: header
-    authorization:
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
-      required: true
-      schema:
-        type: string
-      in: header
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
-      required: true
-      schema:
-        type: string
-      in: header
   schemas:
-    DestinationTestingProcessResult:
+    testingTemplateRender:
       type: object
-      description: A summary of the HTTP call to the destination endpoint and the request received back from the endpoint.
       properties:
-        traceId:
+        destinationId:
+          description: The ID of the destination configuration for which you are rendering exported data.
+          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
           type: string
-          description: An ID used for debugging purposes, that Experience Platform adds to the response received from the destination.
-        request:
-          $ref: '#/components/schemas/DestinationTestingRequest'
-        response:
-          $ref: '#/components/schemas/IrisResponse'
-      title: DestinationTestingProcessResult
+        template:
+          description: The character-escaped version of the template based on which you are rendering exported data.
+          example: "{# THIS is an example template for multiple profiles #}\n{\n    \"profiles\": [\n        {% for profile in input.profiles %}\n            {\n                \"identities\": [\n                    {% for email in profile.identityMap.email %}\n                        {\n                            \"type\": \"email\",\n                            \"id\": \"{{ email.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n\n                    {# Add a comma only if we have both emails and external_ids. #}\n                    {% if profile.identityMap.email is not empty and profile.identityMap.external_id is not empty %}\n                        ,\n                    {% endif %}\n\n                    {% for external in profile.identityMap.external_id %}\n                        {\n                            \"type\": \"external_id\",\n                            \"id\": \"{{ external.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n                ],\n                \"AdobeExperiencePlatformSegments\": {\n                    \"add\": [\n                        {% for segment in profile.segmentMembership.ups | added %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ],\n                    \"remove\": [\n                        {# Alternative syntax for filtering segments by status: #}\n                        {% for segment in removedSegments(profile.segmentMembership.ups) %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ]\n                }\n            }{% if not loop.last %},{% endif %}\n        {% endfor %}\n    ]\n}"
+          type: string
+        profiles:
+          type: array
+          description: Optionally, you can add profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api#generate-sample-profiles-source-schema).
+          items:
+            $ref: '#/components/schemas/getSampleProfileResponse'
     DestinationTestingResponse:
       type: object
       properties:
@@ -253,27 +228,87 @@ components:
           items:
             $ref: '#/components/schemas/getSampleProfileResponse'
       title: DestinationTestingResponse
-    IrisResponse:
+    InputProfileList:
+      type: object
+      properties:
+        profiles:
+          description: Optionally, you can add profiles to the call when testing your destination. <br><br> To generate profiles to use on this call, read [Generate sample profiles based on the source schema](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api). If you don't add any profiles to the call, Experience Platform will generate and send dummy profiles.
+          example:
+          - segmentMembership:
+              ups:
+                374a9a6c-c719-4cdb-a660-155a2838e6d6:
+                  lastQualificationTime: '2021-05-13T12:16:27.248585Z'
+                  status: realized
+                896f8776-9498-47b4-b994-51cb3f61c2c5:
+                  lastQualificationTime: '2021-05-13T12:16:27.248605Z'
+                  status: realized
+            identityMap:
+              ECID:
+              - id: ECID-Z3i2t
+              external_id:
+              - id: external_id-h29Fq
+            attributes:
+              firstName:
+                value: John
+          type: array
+          items:
+            $ref: '#/components/schemas/JsonNode'
+    DestinationTestingProcessResultList:
+      type: object
+      properties:
+        aggregationKey:
+          description: The aggregation key used in the test call to your destination endpoint.
+          type: object
+          properties:
+            destinationInstanceId:
+              type: string
+              description: The destination instance ID of the destination that you are testing.
+              example: null
+            segmentId:
+              type: string
+              description: The ID of the segment which includes the profiles in the request.
+              example: null
+            segmentStatus:
+              type: string
+              description: The status of the segment which includes the profiles in the request.
+              example: realized
+            identityNamespaces:
+              type: array
+              description: The identity namespaces of the profiles in the request.
+              items:
+                type: object
+                example:
+                - email
+                - phone
+        httpCalls:
+          type: array
+          items:
+            $ref: '#/components/schemas/DestinationTestingProcessResult'
+      title: DestinationTestingProcessResultList
+    DestinationTestingProcessResult:
+      type: object
+      description: A summary of the HTTP call to the destination endpoint and the request received back from the endpoint.
+      properties:
+        traceId:
+          type: string
+          description: An ID used for debugging purposes, that Experience Platform adds to the response received from the destination.
+        request:
+          $ref: '#/components/schemas/DestinationTestingRequest'
+        response:
+          $ref: '#/components/schemas/IrisResponse'
+      title: DestinationTestingProcessResult
+    DestinationTestingRequest:
       type: object
       properties:
         body:
           type: string
-          example: '{ "attributes": [  { "external_id": "external_id-h29Fq"  , "AdobeExperiencePlatformSegments": { "add": [  "Nirvana fans" ,  "RHCP fans"   ], "remove": [  ] }  ,  "key":  "string"    }  ] }'
-          description: The body returned by the destination endpoint in response to the test call made by Experience Platform.
-        code:
-          type: string
-          example: 200
-          description: The code returned by the destination endpoint in response to the test call made by Experience Platform.
         headers:
+          $ref: '#/components/schemas/JsonNode'
+        method:
           type: string
-          example:
-          - Connection: keep-alive
-          - Content-Type: application/json
-          - Server: nginx
-          - Vary: Origin,Accept-Encoding
-          - transfer-encoding: chunked
-          description: The headers returned by the destination endpoint in response to the test call made by Experience Platform.
-      title: IrisResponse
+        uri:
+          type: string
+      title: DestinationTestingRequest
     getSampleProfileResponse:
       type: object
       properties:
@@ -317,90 +352,55 @@ components:
             - id: ECID-7VEsJ
           items:
             type: string
-    testingTemplateRender:
-      type: object
-      properties:
-        destinationId:
-          description: The ID of the destination configuration for which you are rendering exported data.
-          example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
-          type: string
-        template:
-          description: The character-escaped version of the template based on which you are rendering exported data.
-          example: "{# THIS is an example template for multiple profiles #}\n{\n    \"profiles\": [\n        {% for profile in input.profiles %}\n            {\n                \"identities\": [\n                    {% for email in profile.identityMap.email %}\n                        {\n                            \"type\": \"email\",\n                            \"id\": \"{{ email.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n\n                    {# Add a comma only if we have both emails and external_ids. #}\n                    {% if profile.identityMap.email is not empty and profile.identityMap.external_id is not empty %}\n                        ,\n                    {% endif %}\n\n                    {% for external in profile.identityMap.external_id %}\n                        {\n                            \"type\": \"external_id\",\n                            \"id\": \"{{ external.id }}\"\n                        }{% if not loop.last %},{% endif %}\n                    {% endfor %}\n                ],\n                \"AdobeExperiencePlatformSegments\": {\n                    \"add\": [\n                        {% for segment in profile.segmentMembership.ups | added %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ],\n                    \"remove\": [\n                        {# Alternative syntax for filtering segments by status: #}\n                        {% for segment in removedSegments(profile.segmentMembership.ups) %}\n                            \"{{ segment.key }}\"{% if not loop.last %},{% endif %}\n                        {% endfor %}\n                    ]\n                }\n            }{% if not loop.last %},{% endif %}\n        {% endfor %}\n    ]\n}"
-          type: string
-        profiles:
-          type: array
-          description: Optionally, you can add profiles to the body of the call. To get sample profiles to use in the call, you can generate some by using the [Sample profile generation API](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api#generate-sample-profiles-source-schema).
-          items:
-            $ref: '#/components/schemas/getSampleProfileResponse'
-    DestinationTestingProcessResultList:
-      type: object
-      properties:
-        aggregationKey:
-          description: The aggregation key used in the test call to your destination endpoint.
-          type: object
-          properties:
-            destinationInstanceId:
-              type: string
-              description: The destination instance ID of the destination that you are testing.
-              example: null
-            segmentId:
-              type: string
-              description: The ID of the segment which includes the profiles in the request.
-              example: null
-            segmentStatus:
-              type: string
-              description: The status of the segment which includes the profiles in the request.
-              example: realized
-            identityNamespaces:
-              type: array
-              description: The identity namespaces of the profiles in the request.
-              items:
-                type: object
-                example:
-                - email
-                - phone
-        httpCalls:
-          type: array
-          items:
-            $ref: '#/components/schemas/DestinationTestingProcessResult'
-      title: DestinationTestingProcessResultList
-    InputProfileList:
-      type: object
-      properties:
-        profiles:
-          description: Optionally, you can add profiles to the call when testing your destination. <br><br> To generate profiles to use on this call, read [Generate sample profiles based on the source schema](https://experienceleague.adobe.com/en/docs/experience-platform/destinations/destination-sdk/testing-api/streaming-destinations/sample-profile-generation-api). If you don't add any profiles to the call, Experience Platform will generate and send dummy profiles.
-          example:
-          - segmentMembership:
-              ups:
-                374a9a6c-c719-4cdb-a660-155a2838e6d6:
-                  lastQualificationTime: '2021-05-13T12:16:27.248585Z'
-                  status: realized
-                896f8776-9498-47b4-b994-51cb3f61c2c5:
-                  lastQualificationTime: '2021-05-13T12:16:27.248605Z'
-                  status: realized
-            identityMap:
-              ECID:
-              - id: ECID-Z3i2t
-              external_id:
-              - id: external_id-h29Fq
-            attributes:
-              firstName:
-                value: John
-          type: array
-          items:
-            $ref: '#/components/schemas/JsonNode'
-    JsonNode:
-      type: object
-    DestinationTestingRequest:
+    IrisResponse:
       type: object
       properties:
         body:
           type: string
+          example: '{ "attributes": [  { "external_id": "external_id-h29Fq"  , "AdobeExperiencePlatformSegments": { "add": [  "Nirvana fans" ,  "RHCP fans"   ], "remove": [  ] }  ,  "key":  "string"    }  ] }'
+          description: The body returned by the destination endpoint in response to the test call made by Experience Platform.
+        code:
+          type: string
+          example: 200
+          description: The code returned by the destination endpoint in response to the test call made by Experience Platform.
         headers:
-          $ref: '#/components/schemas/JsonNode'
-        method:
           type: string
-        uri:
-          type: string
-      title: DestinationTestingRequest
+          example:
+          - Connection: keep-alive
+          - Content-Type: application/json
+          - Server: nginx
+          - Vary: Origin,Accept-Encoding
+          - transfer-encoding: chunked
+          description: The headers returned by the destination endpoint in response to the test call made by Experience Platform.
+      title: IrisResponse
+    JsonNode:
+      type: object
+  parameters:
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+      required: true
+      schema:
+        type: string
+      in: header
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+      required: true
+      schema:
+        type: string
+      in: header

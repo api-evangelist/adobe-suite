@@ -255,15 +255,68 @@ paths:
           description: successful operation
 components:
   schemas:
-    PipelineUpdate:
+    PipelineList:
       type: object
-      description: Describe an update to a pipeline
       properties:
-        phases:
-          type: array
-          description: Pipeline phases to update
-          items:
-            $ref: '#/components/schemas/PipelinePhaseUpdate'
+        _totalNumberOfItems:
+          type: integer
+          format: int32
+          description: The total number of embedded items
+        _page:
+          $ref: '#/components/schemas/RequestedPageDetails'
+          description: Details of the requested page of items
+        _embedded:
+          type: object
+          readOnly: true
+          properties:
+            pipelines:
+              type: array
+              items:
+                $ref: '#/components/schemas/Pipeline'
+        _links:
+          type: object
+          readOnly: true
+          properties:
+            next:
+              $ref: '#/components/schemas/HalLink'
+              description: The next page of results.
+            page:
+              $ref: '#/components/schemas/HalLink'
+              description: An arbitrary page of results.
+            prev:
+              $ref: '#/components/schemas/HalLink'
+              description: The previous page of results.
+            self:
+              $ref: '#/components/schemas/HalLink'
+              description: This object's representation
+    PipelineStepUpdate:
+      type: object
+      required:
+      - type
+      description: Describes an update to a phase of a pipeline
+      properties:
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepUpdateOptions'
+    PipelineStep:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          example: deploy
+          description: Name of the step
+        options:
+          type: object
+          description: Map of option parameters for the step
+          $ref: '#/components/schemas/PipelineStepOptions'
+      description: Describes a step from a phase of a pipeline
     PipelinePhase:
       type: object
       required:
@@ -305,110 +358,6 @@ components:
           items:
             $ref: '#/components/schemas/PipelineStep'
       description: Describes a phase of a pipeline
-    PipelineStepUpdate:
-      type: object
-      required:
-      - type
-      description: Describes an update to a phase of a pipeline
-      properties:
-        name:
-          type: string
-          example: deploy
-          description: Name of the step
-        options:
-          type: object
-          description: Map of option parameters for the step
-          $ref: '#/components/schemas/PipelineStepUpdateOptions'
-    HalLink:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
-          default: false
-        type:
-          type: string
-        deprecation:
-          type: string
-        profile:
-          type: string
-        title:
-          type: string
-        hreflang:
-          type: string
-        name:
-          type: string
-    PipelineStepUpdateOptions:
-      type: object
-      properties:
-        dispatcherCacheInvalidationPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
-        dispatcherCacheFlushPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
-    PipelineStepOptions:
-      type: object
-      description: Options for a pipeline step. Will vary based on step action and platform.
-      properties:
-        skipDetachingDispatchers:
-          type: boolean
-          description: For deploy steps on AMS pipelines, if true will not detach dispatcher from the load balancer.
-        dispatcherCacheInvalidationPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
-        dispatcherCacheFlushPaths:
-          type: array
-          items:
-            type: string
-          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
-        cse:
-          type: string
-          enum:
-          - MY_CSE
-          - ANY_CSE
-          description: For managed steps on AMS pipelines, which CSE will be responsible for CSE oversight.
-        popularPagesWeight:
-          type: integer
-          format: int32
-          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the popular pages bucket.
-        newPagesWeight:
-          type: integer
-          format: int32
-          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the new pages bucket.
-        otherPagesWeight:
-          type: integer
-          format: int32
-          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the other pages bucket.
-        imageAssetsWeight:
-          type: integer
-          format: int32
-          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test images.
-        pdfAssetsWeight:
-          type: integer
-          format: int32
-          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test PDF files.
-    PipelineStep:
-      type: object
-      required:
-      - name
-      properties:
-        name:
-          type: string
-          example: deploy
-          description: Name of the step
-        options:
-          type: object
-          description: Map of option parameters for the step
-          $ref: '#/components/schemas/PipelineStepOptions'
-      description: Describes a step from a phase of a pipeline
     PipelinePhaseUpdate:
       type: object
       required:
@@ -468,40 +417,78 @@ components:
         type:
           type: string
       description: Filtering and sorting page details
-    PipelineList:
+    PipelineStepOptions:
       type: object
+      description: Options for a pipeline step. Will vary based on step action and platform.
       properties:
-        _totalNumberOfItems:
+        skipDetachingDispatchers:
+          type: boolean
+          description: For deploy steps on AMS pipelines, if true will not detach dispatcher from the load balancer.
+        dispatcherCacheInvalidationPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
+        dispatcherCacheFlushPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.
+        cse:
+          type: string
+          enum:
+          - MY_CSE
+          - ANY_CSE
+          description: For managed steps on AMS pipelines, which CSE will be responsible for CSE oversight.
+        popularPagesWeight:
           type: integer
           format: int32
-          description: The total number of embedded items
-        _page:
-          $ref: '#/components/schemas/RequestedPageDetails'
-          description: Details of the requested page of items
-        _embedded:
-          type: object
-          readOnly: true
-          properties:
-            pipelines:
-              type: array
-              items:
-                $ref: '#/components/schemas/Pipeline'
-        _links:
-          type: object
-          readOnly: true
-          properties:
-            next:
-              $ref: '#/components/schemas/HalLink'
-              description: The next page of results.
-            page:
-              $ref: '#/components/schemas/HalLink'
-              description: An arbitrary page of results.
-            prev:
-              $ref: '#/components/schemas/HalLink'
-              description: The previous page of results.
-            self:
-              $ref: '#/components/schemas/HalLink'
-              description: This object's representation
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the popular pages bucket.
+        newPagesWeight:
+          type: integer
+          format: int32
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the new pages bucket.
+        otherPagesWeight:
+          type: integer
+          format: int32
+          description: For loadTest steps on AMS pipelines, the percentage of performance test traffic which will be sent to the other pages bucket.
+        imageAssetsWeight:
+          type: integer
+          format: int32
+          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test images.
+        pdfAssetsWeight:
+          type: integer
+          format: int32
+          description: For assetsTest steps on AMS pipelines, the percentage of asset uploads which will be test PDF files.
+    PipelineUpdate:
+      type: object
+      description: Describe an update to a pipeline
+      properties:
+        phases:
+          type: array
+          description: Pipeline phases to update
+          items:
+            $ref: '#/components/schemas/PipelinePhaseUpdate'
+    HalLink:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+          default: false
+        type:
+          type: string
+        deprecation:
+          type: string
+        profile:
+          type: string
+        title:
+          type: string
+        hreflang:
+          type: string
+        name:
+          type: string
     Pipeline:
       type: object
       required:
@@ -600,3 +587,16 @@ components:
               $ref: '#/components/schemas/HalLink'
               description: This object's representation
       description: A representation of a CI/CD Pipeline
+    PipelineStepUpdateOptions:
+      type: object
+      properties:
+        dispatcherCacheInvalidationPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to invalidate on dispatchers after package installation.
+        dispatcherCacheFlushPaths:
+          type: array
+          items:
+            type: string
+          description: For deploy steps on AMS pipelines, list of paths to flush on dispatchers after package installation.

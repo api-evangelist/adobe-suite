@@ -711,103 +711,19 @@ paths:
           - platform
           - platform-stage
 components:
-  parameters:
-    limit:
-      name: limit
-      in: query
-      description: Limit response to a specified positive number of objects. The maximum number of objects that can be returned is 100.
-      schema:
-        type: integer
-      example: 20
-    x-user-token:
-      name: x-user-token
-      in: header
-      description: For calls which are proxied by catalog, the access token for the user on whose behalf this call is made.
-      schema:
-        type: string
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    x-sandbox-name:
-      name: x-sandbox-name
-      in: header
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      schema:
-        type: string
-    if-none-match:
-      name: if-none-match
-      in: header
-      description: Set to verify the invalid versions of document to be modified by matching the updated date.
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
-    content-type:
-      name: content-type
-      in: header
-      description: Specifies the media type of the request body. Required for requests with a payload, such as POST, PUT, and PATCH. When sending a JSON payload, this must be set to `application/json`.
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-    dataset_id:
-      name: DATASET_ID
-      in: path
-      description: The ID of the dataset.
-      required: true
-      schema:
-        type: string
-    accept-encoding:
-      name: accept-encoding
-      in: header
-      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
-      schema:
-        type: string
   schemas:
-    persistenceResponse:
-      type: object
-      properties:
-        adls:
-          type: object
-          properties:
-            location:
-              type: string
-              description: Filter by the fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN. Its value is same as the basePath field.
-            adlsType:
-              type: object
-              description: ADLS generation type 1 or 2.
-              readOnly: true
-            credentials:
-              type: string
-              description: This property represents the relative URI for persistence credentials of this dataset, for e.g. @/dataSets/{id}/credentials.
-          description: This object represents adls storage path for dataSets.
-          readOnly: true
-        datastream:
-          type: object
-          properties:
-            source:
-              type: string
-              description: This property represents the source of dataStream.
-          description: This object represents stream persistence type for dataSets.
-      description: Persistence object holds meta data of different persistence type supported by a dataset.
+    format:
+      type: string
+      description: The file format for all dataSetFiles associated with this view. Required for CSV upload workflows, but optional in all other cases.
+      enum:
+      - ''
+      - csv
+      - text
+      - parquet
+      - json
+      - sequencefile
+      - avro
+      example: parquet
     dataSetCredentials:
       type: object
       properties:
@@ -825,97 +741,6 @@ components:
           example: platformdataset/stage/5d01230fc78a4e4f8c0c6b387b4b8d1c
         credentials:
           $ref: '#/components/schemas/credentials'
-    dataSetRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          description: A descriptive, human-readable name for this dataset.
-          example: Acme accounts dataset - 1521827915638
-        description:
-          type: string
-          description: A longer text description of the dataset.
-          example: A dataset for accounts held by Acme.
-        tags:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              type: string
-          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands. Normally tags are not used for internal Catalog business logic
-          example:
-            foo_bar:
-            - stuff
-            bar_foo:
-            - woo
-            - baz
-            foo/bar/foo-bar:
-            - weehaw
-            - wee:haw
-        enableErrorDiagnostics:
-          type: boolean
-          description: This field provides the ability to opt in to generating diagnostic files for the errors while ingesting data.
-          example: true
-        observableSchema:
-          type: object
-          properties: {}
-          description: observableSchema stores a JSON Schema object that is a valid subset (including the null case) of the XDM model specified by `schemaRef`.
-        basePath:
-          type: string
-          description: Fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN.
-          readOnly: true
-          example: s3://bar/ball/baz
-        fileDescription:
-          type: object
-          properties:
-            format:
-              $ref: '#/components/schemas/format'
-            delimiters:
-              type: array
-              description: Characters used to separate fields.
-              items:
-                maxLength: 1
-                type: string
-            quotes:
-              type: array
-              description: Quote characters used.
-              items:
-                type: string
-              example: '`'
-            escapes:
-              type: array
-              description: Escape characters used.
-              items:
-                type: string
-                example: \
-            nullMarkers:
-              type: array
-              description: Null markers used.
-              items:
-                type: string
-              example: ''
-            header:
-              type: boolean
-              description: ''
-              example: 'true'
-            charset:
-              type: string
-              description: The character encoding of the files.
-              enum:
-              - US-ASCII
-              - UTF-8
-              - ISO-8859-1
-              - ''
-              example: UTF-8
-          description: Metadata describing the dataset files associated with this DatasetView.
-        schema:
-          type: string
-          description: This is the uri for the XDM model
-        schemaRef:
-          $ref: '#/components/schemas/schemaRef'
-        dataSourceId:
-          type: integer
-          description: The ID of the datasource. It must be unique, along with its name.
     schemaRef:
       type: object
       properties:
@@ -980,6 +805,32 @@ components:
           type: string
           description: Hadoop URI.
       description: Credentials.
+    persistenceResponse:
+      type: object
+      properties:
+        adls:
+          type: object
+          properties:
+            location:
+              type: string
+              description: Filter by the fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN. Its value is same as the basePath field.
+            adlsType:
+              type: object
+              description: ADLS generation type 1 or 2.
+              readOnly: true
+            credentials:
+              type: string
+              description: This property represents the relative URI for persistence credentials of this dataset, for e.g. @/dataSets/{id}/credentials.
+          description: This object represents adls storage path for dataSets.
+          readOnly: true
+        datastream:
+          type: object
+          properties:
+            source:
+              type: string
+              description: This property represents the source of dataStream.
+          description: This object represents stream persistence type for dataSets.
+      description: Persistence object holds meta data of different persistence type supported by a dataset.
     dataSetResponse:
       type: object
       properties:
@@ -1116,115 +967,100 @@ components:
           description: The ID of the data source. It must be unique, along with its name.
         persistence:
           $ref: '#/components/schemas/persistenceResponse'
-    format:
-      type: string
-      description: The file format for all dataSetFiles associated with this view. Required for CSV upload workflows, but optional in all other cases.
-      enum:
-      - ''
-      - csv
-      - text
-      - parquet
-      - json
-      - sequencefile
-      - avro
-      example: parquet
-    ConflictError:
+    dataSetRequest:
       type: object
       properties:
-        code:
+        name:
           type: string
-          description: The Policy Service error code.
-          example: PES-409
-        message:
+          description: A descriptive, human-readable name for this dataset.
+          example: Acme accounts dataset - 1521827915638
+        description:
           type: string
-          description: The error message.
-          example: Policy conflict error
-        violations:
-          type: array
-          description: A list of policy violations that the attempted action triggered.
-          items:
-            $ref: '#/components/schemas/policyViolation'
-        count:
-          type: number
-          description: The number of policy violations that were triggered.
-          example: 1.0
-    policyViolation:
-      type: object
-      properties:
-        enforcementRef:
+          description: A longer text description of the dataset.
+          example: A dataset for accounts held by Acme.
+        tags:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          description: Tags are values associated with a particular object, these are generally used by external systems for marking an object in a way that it understands. Normally tags are not used for internal Catalog business logic
+          example:
+            foo_bar:
+            - stuff
+            bar_foo:
+            - woo
+            - baz
+            foo/bar/foo-bar:
+            - weehaw
+            - wee:haw
+        enableErrorDiagnostics:
+          type: boolean
+          description: This field provides the ability to opt in to generating diagnostic files for the errors while ingesting data.
+          example: true
+        observableSchema:
+          type: object
+          properties: {}
+          description: observableSchema stores a JSON Schema object that is a valid subset (including the null case) of the XDM model specified by `schemaRef`.
+        basePath:
           type: string
-          description: Indicates the marketing action whose policy constraints were violated.
-          example: /dulepolicy/marketingActions/core/g72cbgy644bsgc3becbba1e197fa25c1e/constraints
-        entities:
-          type: array
-          description: A list of dataset entities that were involved in the violation, including their associated labels.
-          items:
-            $ref: '#/components/schemas/LabelPayload'
-        violatedPolicies:
-          type: array
-          description: A list of policies that were violated for the datasets and/or fields listed in the `entities` array.
-          items:
-            $ref: '#/components/schemas/violatedPolicy'
-    LabelPayload:
-      type: object
-      properties:
-        labels:
-          type: array
-          description: A list of data usage labels that have been applied to the dataset as a whole.
-          items:
-            type: string
-            example: ''
-        optionalLabels:
-          type: array
-          description: A list of individual fields within the dataset that have data usage labels applied.
-          items:
-            type: object
-            properties:
-              option:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: The URL `$id` of the dataset's schema.
-                    example: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
-                  contentType:
-                    type: string
-                    description: The content type and version of the schema.
-                    example: application/vnd.adobe.xed-full+json;version=1
-                  schemaPath:
-                    type: string
-                    description: The path to the specific field in the schema.
-                    example: /properties/repositoryCreatedBy
-                description: Describes the field that the labels have been applied to.
-              labels:
-                type: array
-                description: A list of data usage labels that have been applied to the field described in the sibling `option` property.
-                items:
-                  type: string
-                  example: ''
-    NotFoundError:
-      type: object
-      properties:
-        timestamp:
+          description: Fully qualified base path for all dataset files associated with this view. For views cached in a database (HBase or Cassandra), supply a templatized DSN.
+          readOnly: true
+          example: s3://bar/ball/baz
+        fileDescription:
+          type: object
+          properties:
+            format:
+              $ref: '#/components/schemas/format'
+            delimiters:
+              type: array
+              description: Characters used to separate fields.
+              items:
+                maxLength: 1
+                type: string
+            quotes:
+              type: array
+              description: Quote characters used.
+              items:
+                type: string
+              example: '`'
+            escapes:
+              type: array
+              description: Escape characters used.
+              items:
+                type: string
+                example: \
+            nullMarkers:
+              type: array
+              description: Null markers used.
+              items:
+                type: string
+              example: ''
+            header:
+              type: boolean
+              description: ''
+              example: 'true'
+            charset:
+              type: string
+              description: The character encoding of the files.
+              enum:
+              - US-ASCII
+              - UTF-8
+              - ISO-8859-1
+              - ''
+              example: UTF-8
+          description: Metadata describing the dataset files associated with this DatasetView.
+        schema:
           type: string
-          description: A timestamp of when the error occurred.
-          example: 2021-04-21 19:56:46.551000+00:00
-        status:
-          type: string
-          description: The error status.
-          example: NOT_FOUND
-        code:
-          type: string
-          description: The Policy Service error code.
-          example: PES-404
-        message:
-          type: string
-          description: The error message.
-          example: GET Entities Not Found
-        path:
-          type: string
-          description: The path used in the lookup attempt, containing the ID of the dataset whose labels were not found.
-          example: /entities/AEP:dataset:60105b5e1af43c18db857d69
+          description: This is the uri for the XDM model
+        schemaRef:
+          $ref: '#/components/schemas/schemaRef'
+        dataSourceId:
+          type: integer
+          description: The ID of the datasource. It must be unique, along with its name.
+    ForbiddenError:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
     policyDeny:
       type: object
       properties:
@@ -1283,30 +1119,6 @@ components:
         _links:
           $ref: '#/components/schemas/_links'
       description: An object that describes the specific labels (or combinations therein) that the policy restricts, as well as other metadata.
-    violatedPolicy:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The policy ID
-          example: corepolicy_0001
-        name:
-          type: string
-          description: The name of the policy.
-          example: 3rd party export restriction
-        status:
-          type: string
-          description: The current status of the policy.
-          example: ENABLED
-        description:
-          type: string
-          description: A friendly description for the policy.
-          example: Policy for restricting data export to 3rd parties.
-        deny:
-          $ref: '#/components/schemas/policyDeny'
-    ForbiddenError:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
     _links:
       type: object
       properties:
@@ -1336,6 +1148,194 @@ components:
               description: Indicates that the sibling `href` property is a template.
           description: Contains a templated URL for viewing other response pages.
       description: Contains pagination URLs to view the rest of the response.
+    violatedPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The policy ID
+          example: corepolicy_0001
+        name:
+          type: string
+          description: The name of the policy.
+          example: 3rd party export restriction
+        status:
+          type: string
+          description: The current status of the policy.
+          example: ENABLED
+        description:
+          type: string
+          description: A friendly description for the policy.
+          example: Policy for restricting data export to 3rd parties.
+        deny:
+          $ref: '#/components/schemas/policyDeny'
+    NotFoundError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: A timestamp of when the error occurred.
+          example: 2021-04-21 19:56:46.551000+00:00
+        status:
+          type: string
+          description: The error status.
+          example: NOT_FOUND
+        code:
+          type: string
+          description: The Policy Service error code.
+          example: PES-404
+        message:
+          type: string
+          description: The error message.
+          example: GET Entities Not Found
+        path:
+          type: string
+          description: The path used in the lookup attempt, containing the ID of the dataset whose labels were not found.
+          example: /entities/AEP:dataset:60105b5e1af43c18db857d69
+    LabelPayload:
+      type: object
+      properties:
+        labels:
+          type: array
+          description: A list of data usage labels that have been applied to the dataset as a whole.
+          items:
+            type: string
+            example: ''
+        optionalLabels:
+          type: array
+          description: A list of individual fields within the dataset that have data usage labels applied.
+          items:
+            type: object
+            properties:
+              option:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The URL `$id` of the dataset's schema.
+                    example: https://ns.adobe.com/{TENANT_ID}/schemas/{SCHEMA_ID}
+                  contentType:
+                    type: string
+                    description: The content type and version of the schema.
+                    example: application/vnd.adobe.xed-full+json;version=1
+                  schemaPath:
+                    type: string
+                    description: The path to the specific field in the schema.
+                    example: /properties/repositoryCreatedBy
+                description: Describes the field that the labels have been applied to.
+              labels:
+                type: array
+                description: A list of data usage labels that have been applied to the field described in the sibling `option` property.
+                items:
+                  type: string
+                  example: ''
+    policyViolation:
+      type: object
+      properties:
+        enforcementRef:
+          type: string
+          description: Indicates the marketing action whose policy constraints were violated.
+          example: /dulepolicy/marketingActions/core/g72cbgy644bsgc3becbba1e197fa25c1e/constraints
+        entities:
+          type: array
+          description: A list of dataset entities that were involved in the violation, including their associated labels.
+          items:
+            $ref: '#/components/schemas/LabelPayload'
+        violatedPolicies:
+          type: array
+          description: A list of policies that were violated for the datasets and/or fields listed in the `entities` array.
+          items:
+            $ref: '#/components/schemas/violatedPolicy'
+    ConflictError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The Policy Service error code.
+          example: PES-409
+        message:
+          type: string
+          description: The error message.
+          example: Policy conflict error
+        violations:
+          type: array
+          description: A list of policy violations that the attempted action triggered.
+          items:
+            $ref: '#/components/schemas/policyViolation'
+        count:
+          type: number
+          description: The number of policy violations that were triggered.
+          example: 1.0
+  parameters:
+    dataset_id:
+      name: DATASET_ID
+      in: path
+      description: The ID of the dataset.
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: content-type
+      in: header
+      description: Specifies the media type of the request body. Required for requests with a payload, such as POST, PUT, and PATCH. When sending a JSON payload, this must be set to `application/json`.
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+    x-sandbox-name:
+      name: x-sandbox-name
+      in: header
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview documentation](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-user-token:
+      name: x-user-token
+      in: header
+      description: For calls which are proxied by catalog, the access token for the user on whose behalf this call is made.
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      description: Limit response to a specified positive number of objects. The maximum number of objects that can be returned is 100.
+      schema:
+        type: integer
+      example: 20
+    accept-encoding:
+      name: accept-encoding
+      in: header
+      description: 'Used to signal the intent to consume compressed response bodies. Supported encodings: gzip.'
+      schema:
+        type: string
+    if-none-match:
+      name: if-none-match
+      in: header
+      description: Set to verify the invalid versions of document to be modified by matching the updated date.
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
 x-refined-from:
 - adobe-suite-aep-catalog-openapi.yaml
 - adobe-suite-aep-dataset-service-openapi.yaml

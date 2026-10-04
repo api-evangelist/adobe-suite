@@ -164,182 +164,83 @@ paths:
           x-summary: Internal server error
           description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
 components:
-  parameters:
-    property:
-      name: property
-      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
-      in: query
-      required: false
-      schema:
-        type: string
-    fieldGroupPayload:
-      name: body
-      description: The JSON payload must include a 'meta:intendedToExtend' field listing the '$id' of the class(es) with which the field group is compatible.
-      required: true
-      in: body
-      schema:
-        $ref: '#/components/schemas/createFieldGroup'
-    containerIdLookup:
-      name: CONTAINER_ID
-      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
-      required: true
-      in: path
-      schema:
-        type: string
-    authorization:
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    accept:
-      name: Accept
-      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
-
-        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
-      required: true
-      in: header
-      schema:
-        type: string
-    patchFieldGroupPayload:
-      name: body
-      description: The request body accepts a JSON Patch payload.
-      required: true
-      in: body
-      schema:
-        $ref: '#/components/schemas/patchFieldGroup'
-    orderBy:
-      name: orderby
-      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
-      required: false
-      in: query
-      schema:
-        type: string
-    replaceFieldGroupPayload:
-      name: body
-      description: The JSON payload must include all of the fields that were originally required for creating the field group, but with updated values. This includes an `allOf` attribute referencing the `$id` of the class the schema will implement.
-      required: true
-      in: body
-      schema:
-        $ref: '#/components/schemas/replaceFieldGroup'
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
-      required: true
-      in: header
-      schema:
-        type: string
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    limit:
-      name: limit
-      description: 'When used in conjunction with an `orderby` parameter, `limit` restricts the maximum number of items that should be returned for a given request. This parameter cannot be used without an `orderby` parameter present.
-
-
-        The `limit` parameter specifies a positive integer (between `0` and `500`) as a *hint* as to the maximum number of items that should be returned. For example, `limit=5` returns only five resources in the list. However, this value is not strictly honored. The actual response size may be smaller or larger as constrained by the need to provide the reliable operation of the `start` parameter, if one is provided.'
-      required: false
-      in: query
-      schema:
-        type: number
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      in: header
-      schema:
-        type: string
-    start:
-      name: start
-      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
-
-
-        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
-
-
-        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
-      required: false
-      in: query
-      schema:
-        type: string
-    MIXIN_ID:
-      name: MIXIN_ID
-      description: The `meta:altId` or URL-encoded `$id` of the mixin in question.
-      required: true
-      in: path
-      schema:
-        type: string
-    acceptListing:
-      name: Accept
-      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
-      required: true
-      in: header
-      schema:
-        type: string
-    containerIdList:
-      name: CONTAINER_ID
-      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
-      required: true
-      in: path
-      schema:
-        type: string
-    content-type:
-      name: Content-Type
-      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
-      required: true
-      in: header
-      schema:
-        type: string
   schemas:
-    listResponseBasic:
-      type: object
-      properties:
-        results:
-          type: array
-          description: Lists the basic details of the returned XDM resources.
-          items:
-            $ref: '#/components/schemas/listResponseItemWithVersion'
-        _page:
-          type: object
-          description: Contains pagination information related to the response.
-          properties:
-            orderby:
-              type: string
-              description: The attribute that results are sorted by.
-              example: title
-            next:
-              type: string
-              description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
-              example: null
-            count:
-              type: integer
-              description: The number of results returned per page.
-              example: 2
-        _links:
-          $ref: '#/components/schemas/linksBasic'
+    lookupFieldGroupResponse:
+      allOf:
+      - $ref: '#/components/schemas/singleFieldGroupResponse'
       example:
-        results:
-        - $id: https://ns.adobe.com/{TENANT_ID}/schemas/0238be93d3e7a06aec5e0655955901ec
-          meta:altId: _{TENANT_ID}.schemas.0238be93d3e7a06aec5e0655955901ec
-          version: '1.4'
-          title: Hotels
-        - $id: https://ns.adobe.com/{TENANT_ID}/schemas/0ef4ce0d390f0809fad490802f53d30b
-          meta:altId: _{TENANT_ID}.schemas.0ef4ce0d390f0809fad490802f53d30b
-          version: '1.0'
-          title: Loyalty Members
-        _page:
-          orderby: title
-          next: null
-          count: 2
-        _links:
-          next: null
-          global_schemas:
-            href: https://platform.adobe.io/data/foundation/schemaregistry/global/schemas
+        $id: https://ns.adobe.com/xdm/context/profile-person-details
+        meta:altId: _xdm.context.profile-person-details
+        meta:resourceType: mixins
+        version: 1.22.3
+        title: Demographic Details
+        type: object
+        description: Demographic information such as name, gender, and birth date of an individual.
+        definitions:
+          profile-person-details:
+            properties:
+              person:
+                title: Person
+                '$ref ': https://ns.adobe.com/xdm/context/person
+                description: An individual actor, contact, or owner.
+                type: object
+                meta:xdmType: object
+                meta:xdmField: xdm:person
+        allOf:
+        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
+          type: object
+          meta:xdmType: object
+        - $ref: '#/components/schemas/profile-person-details'
+          type: object
+          meta:xdmType: object
+        meta:extensible: true
+        meta:abstract: true
+        meta:intendedToExtend:
+        - https://ns.adobe.com/xdm/context/profile
+        meta:xdmType: object
+        meta:status: stable
+        $schema: http://json-schema.org/draft-06/schema#
+        meta:registryMetadata:
+          repo:createdDate: 1620758109174
+          repo:lastModifiedDate: 1620758109174
+          eTag: f5b20a7edefab1c4b1a86fbd4de91570b57d36b9f2c6deb3225a18d14fafce3b
+          meta:globalLibVersion: 1.22.3
+          meta:usageCount: 29
+        meta:tags:
+          industry:
+          - all
+        meta:createdDate: '2020-08-10'
+    registryMetadata:
+      type: object
+      description: Contains registry-specific metadata about the XDM resource.
+      properties:
+        repo:createdDate:
+          type: integer
+          description: A Unix timestamp of when the resource was created.
+        repo:lastModifiedDate:
+          type: integer
+          description: A Unix timestamp of when the resource was last modified.
+        xdm:createdClientId:
+          type: string
+          description: The ID of the client that created the resource.
+        xdm:lastModifiedClientId:
+          type: string
+          description: The ID of the client that last modified the resource.
+        xdm:createdUserId:
+          type: string
+          description: The ID of the user that created the resource.
+        xdm:lastModifiedUserId:
+          type: string
+          description: The ID of the user that last modified the resource.
+        etag:
+          type: string
+          description: An HTTP entity tag (ETag) for the resource.
+        meta:globalLibVersion:
+          type: string
+          description: The current global library version of the resource.
+        meta:usageCount:
+          type: integer
+          description: The number of instances where this resource is referenced by other XDM resources.
     allOfRef:
       type: object
       properties:
@@ -352,27 +253,11 @@ components:
         meta:xdmType:
           type: string
           description: The XDM resource type (typically `object`).
-    patchSchema:
-      type: array
-      description: A list of JSON Patch operation objects. Each object contains information about the action to be performed and the attribute to perform it on.
-      items:
-        type: object
-        properties:
-          op:
-            type: string
-            example: add
-            description: The JSON Patch operation to be performed.
-          path:
-            type: string
-            example: /meta:immutableTags-
-            description: The path to the field that the operation should be performed on.
-          value:
-            type: string
-            example: union
-            description: If adding or updating an attribute, this property indicates the value that should be set for that property.
-        required:
-        - op
-        - path
+    metaRegistryMetadata:
+      type: object
+      properties:
+        meta:registryMetadata:
+          $ref: '#/components/schemas/registryMetadata'
     xdmTypeToSchema:
       type: object
       properties:
@@ -385,14 +270,28 @@ components:
         $schema:
           type: string
           description: The JSON schema definition that this resource is based on.
-    listResponseItemWithVersion:
+    profile-person-details:
+      type: string
+      example: '#/definitions/profile-person-details'
+    singleFieldGroupResponse:
       allOf:
-      - $ref: '#/components/schemas/listResponseItem'
+      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
       - properties:
-          version:
-            type: string
-            description: The current version of the XDM resource.
-            example: '1.1'
+          meta:intendedToExtend:
+            type: array
+            description: An array that contains the `$id` of the class this field group is compatible with.
+            items:
+              type: string
+              description: The `$id` of the class this field group is compatible with.
+      - $ref: '#/components/schemas/xdmTypeToSchema'
+      - $ref: '#/components/schemas/metaRegistryMetadata'
+      - properties:
+          meta:tags:
+            type: object
+            description: (For `global` field groups only) Describes various Adobe-managed categorization tags for the field group.
+          meta:createdDate:
+            type: object
+            description: (For `global` field groups only) A timestamp of when the global field group was released.
     createFieldGroup:
       type: object
       properties:
@@ -464,145 +363,6 @@ components:
       - type
       - title
       - meta:intendedToExtend
-    createFieldGroupResponse:
-      allOf:
-      - $ref: '#/components/schemas/singleFieldGroupResponse'
-      example:
-        $id: https://ns.adobe.com/{TENANT_ID}/mixins/8779fd45d6e4eb074300023a439862bbba359b60d451627a
-        meta:altId: _{TENANT_ID}.mixins.8779fd45d6e4eb074300023a439862bbba359b60d451627a
-        meta:resourceType: mixins
-        version: '1.2'
-        title: Property Details
-        type: object
-        description: Detailed information related to the properties owned and operated by the company.
-        definitions:
-          property:
-            properties:
-              _{TENANT_ID}:
-                type: object
-                properties:
-                  propertyName:
-                    type: string
-                    title: Property Name
-                    description: Name of the property
-                  propertyCity:
-                    title: Property City
-                    description: City where the property is located.
-                    type: string
-                  phoneNumber:
-                    title: Phone Number
-                    description: Primary phone number for the property.
-                    type: string
-                  propertyType:
-                    type: string
-                    title: Property Type
-                    description: Type and primary use of property.
-                    enum:
-                    - retail
-                    - yoga
-                    - fitness
-                    meta:enum:
-                      retail: Retail Store
-                      yoga: Yoga Studio
-                      fitness: Fitness Center
-                  propertyConstruction:
-                    '$ref ': https://ns.adobe.com/{TENANT_ID}/datatypes/24c643f618647344606222c494bd0102
-        allOf:
-        - '$ref ': '#/definitions/customFields'
-          type: object
-          meta:xdmType: object
-        imsOrg: '{IMS_ORG}'
-        meta:extensible: true
-        meta:abstract: true
-        meta:intendedToExtend:
-        - https://ns.adobe.com/xdm/context/profile
-        meta:xdmType: object
-        meta:registryMetadata:
-          repo:createdDate: 1594941263588
-          repo:lastModifiedDate: 1594941538433
-          xdm:createdClientId: '{CLIENT_ID}'
-          xdm:lastModifiedClientId: '{CLIENT_ID}'
-          xdm:createdUserId: '{USER_ID}'
-          xdm:lastModifiedUserId: '{USER_ID}'
-          eTag: 5e8a5e508eb2ed344c08cb23ed27cfb60c841bec59a2f7513deda0f7af903021
-          meta:globalLibVersion: 1.15.4
-        meta:containerId: tenant
-        meta:tenantNamespace: _{TENANT_ID}
-    lookupResourceWithDefinitions:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceCore'
-      - properties:
-          definitions:
-            type: object
-            description: Contains definitions for the unique attributes provided by the resource.
-          allOf:
-            type: array
-            description: A list of objects that refer to the common definitions and fields that the resource inherits.
-            items:
-              $ref: '#/components/schemas/allOfRef'
-          meta:extensible:
-            type: boolean
-            description: Indicates whether this resource is extensible or not.
-          meta:abstract:
-            type: boolean
-            description: Indicates whether this resource is abstract or not.
-    replaceFieldGroup:
-      allOf:
-      - $ref: '#/components/schemas/createFieldGroup'
-    registryMetadata:
-      type: object
-      description: Contains registry-specific metadata about the XDM resource.
-      properties:
-        repo:createdDate:
-          type: integer
-          description: A Unix timestamp of when the resource was created.
-        repo:lastModifiedDate:
-          type: integer
-          description: A Unix timestamp of when the resource was last modified.
-        xdm:createdClientId:
-          type: string
-          description: The ID of the client that created the resource.
-        xdm:lastModifiedClientId:
-          type: string
-          description: The ID of the client that last modified the resource.
-        xdm:createdUserId:
-          type: string
-          description: The ID of the user that created the resource.
-        xdm:lastModifiedUserId:
-          type: string
-          description: The ID of the user that last modified the resource.
-        etag:
-          type: string
-          description: An HTTP entity tag (ETag) for the resource.
-        meta:globalLibVersion:
-          type: string
-          description: The current global library version of the resource.
-        meta:usageCount:
-          type: integer
-          description: The number of instances where this resource is referenced by other XDM resources.
-    listResponseItem:
-      type: object
-      properties:
-        title:
-          type: string
-          description: The title of the XDM resource.
-          example: Tenant Data Schema
-        $id:
-          type: string
-          description: The URI ID of the XDM resource.
-          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
-        meta:altId:
-          type: string
-          description: An alternate dot-notation ID for the XDM resource.
-          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
-    linksBasic:
-      type: object
-      description: Contains various links related to the response.
-      properties:
-        next:
-          type: string
-          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
-          example: null
     listFieldGroupsResponse:
       allOf:
       - $ref: '#/components/schemas/listResponse'
@@ -728,51 +488,53 @@ components:
           count: 2
         _links:
           next: null
-    lookupFieldGroupResponse:
-      allOf:
-      - $ref: '#/components/schemas/singleFieldGroupResponse'
+    listResponseBasic:
+      type: object
+      properties:
+        results:
+          type: array
+          description: Lists the basic details of the returned XDM resources.
+          items:
+            $ref: '#/components/schemas/listResponseItemWithVersion'
+        _page:
+          type: object
+          description: Contains pagination information related to the response.
+          properties:
+            orderby:
+              type: string
+              description: The attribute that results are sorted by.
+              example: title
+            next:
+              type: string
+              description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
+              example: null
+            count:
+              type: integer
+              description: The number of results returned per page.
+              example: 2
+        _links:
+          $ref: '#/components/schemas/linksBasic'
       example:
-        $id: https://ns.adobe.com/xdm/context/profile-person-details
-        meta:altId: _xdm.context.profile-person-details
-        meta:resourceType: mixins
-        version: 1.22.3
-        title: Demographic Details
-        type: object
-        description: Demographic information such as name, gender, and birth date of an individual.
-        definitions:
-          profile-person-details:
-            properties:
-              person:
-                title: Person
-                '$ref ': https://ns.adobe.com/xdm/context/person
-                description: An individual actor, contact, or owner.
-                type: object
-                meta:xdmType: object
-                meta:xdmField: xdm:person
-        allOf:
-        - '$ref ': https://ns.adobe.com/xdm/common/extensible%23/definitions/@context
-          type: object
-          meta:xdmType: object
-        - $ref: '#/components/schemas/profile-person-details'
-          type: object
-          meta:xdmType: object
-        meta:extensible: true
-        meta:abstract: true
-        meta:intendedToExtend:
-        - https://ns.adobe.com/xdm/context/profile
-        meta:xdmType: object
-        meta:status: stable
-        $schema: http://json-schema.org/draft-06/schema#
-        meta:registryMetadata:
-          repo:createdDate: 1620758109174
-          repo:lastModifiedDate: 1620758109174
-          eTag: f5b20a7edefab1c4b1a86fbd4de91570b57d36b9f2c6deb3225a18d14fafce3b
-          meta:globalLibVersion: 1.22.3
-          meta:usageCount: 29
-        meta:tags:
-          industry:
-          - all
-        meta:createdDate: '2020-08-10'
+        results:
+        - $id: https://ns.adobe.com/{TENANT_ID}/schemas/0238be93d3e7a06aec5e0655955901ec
+          meta:altId: _{TENANT_ID}.schemas.0238be93d3e7a06aec5e0655955901ec
+          version: '1.4'
+          title: Hotels
+        - $id: https://ns.adobe.com/{TENANT_ID}/schemas/0ef4ce0d390f0809fad490802f53d30b
+          meta:altId: _{TENANT_ID}.schemas.0ef4ce0d390f0809fad490802f53d30b
+          version: '1.0'
+          title: Loyalty Members
+        _page:
+          orderby: title
+          next: null
+          count: 2
+        _links:
+          next: null
+          global_schemas:
+            href: https://platform.adobe.io/data/foundation/schemaregistry/global/schemas
+    replaceFieldGroup:
+      allOf:
+      - $ref: '#/components/schemas/createFieldGroup'
     lookupResourceCore:
       type: object
       properties:
@@ -803,36 +565,78 @@ components:
         description:
           type: string
           description: A description for the resource.
-    listResponse:
+    createFieldGroupResponse:
       allOf:
-      - $ref: '#/components/schemas/listResponseBasic'
-      - properties:
-          _links:
-            $ref: '#/components/schemas/linksBasic'
-    singleFieldGroupResponse:
-      allOf:
-      - $ref: '#/components/schemas/lookupResourceWithDefinitions'
-      - properties:
-          meta:intendedToExtend:
-            type: array
-            description: An array that contains the `$id` of the class this field group is compatible with.
-            items:
-              type: string
-              description: The `$id` of the class this field group is compatible with.
-      - $ref: '#/components/schemas/xdmTypeToSchema'
-      - $ref: '#/components/schemas/metaRegistryMetadata'
-      - properties:
-          meta:tags:
-            type: object
-            description: (For `global` field groups only) Describes various Adobe-managed categorization tags for the field group.
-          meta:createdDate:
-            type: object
-            description: (For `global` field groups only) A timestamp of when the global field group was released.
-    metaRegistryMetadata:
-      type: object
-      properties:
+      - $ref: '#/components/schemas/singleFieldGroupResponse'
+      example:
+        $id: https://ns.adobe.com/{TENANT_ID}/mixins/8779fd45d6e4eb074300023a439862bbba359b60d451627a
+        meta:altId: _{TENANT_ID}.mixins.8779fd45d6e4eb074300023a439862bbba359b60d451627a
+        meta:resourceType: mixins
+        version: '1.2'
+        title: Property Details
+        type: object
+        description: Detailed information related to the properties owned and operated by the company.
+        definitions:
+          property:
+            properties:
+              _{TENANT_ID}:
+                type: object
+                properties:
+                  propertyName:
+                    type: string
+                    title: Property Name
+                    description: Name of the property
+                  propertyCity:
+                    title: Property City
+                    description: City where the property is located.
+                    type: string
+                  phoneNumber:
+                    title: Phone Number
+                    description: Primary phone number for the property.
+                    type: string
+                  propertyType:
+                    type: string
+                    title: Property Type
+                    description: Type and primary use of property.
+                    enum:
+                    - retail
+                    - yoga
+                    - fitness
+                    meta:enum:
+                      retail: Retail Store
+                      yoga: Yoga Studio
+                      fitness: Fitness Center
+                  propertyConstruction:
+                    '$ref ': https://ns.adobe.com/{TENANT_ID}/datatypes/24c643f618647344606222c494bd0102
+        allOf:
+        - '$ref ': '#/definitions/customFields'
+          type: object
+          meta:xdmType: object
+        imsOrg: '{IMS_ORG}'
+        meta:extensible: true
+        meta:abstract: true
+        meta:intendedToExtend:
+        - https://ns.adobe.com/xdm/context/profile
+        meta:xdmType: object
         meta:registryMetadata:
-          $ref: '#/components/schemas/registryMetadata'
+          repo:createdDate: 1594941263588
+          repo:lastModifiedDate: 1594941538433
+          xdm:createdClientId: '{CLIENT_ID}'
+          xdm:lastModifiedClientId: '{CLIENT_ID}'
+          xdm:createdUserId: '{USER_ID}'
+          xdm:lastModifiedUserId: '{USER_ID}'
+          eTag: 5e8a5e508eb2ed344c08cb23ed27cfb60c841bec59a2f7513deda0f7af903021
+          meta:globalLibVersion: 1.15.4
+        meta:containerId: tenant
+        meta:tenantNamespace: _{TENANT_ID}
+    linksBasic:
+      type: object
+      description: Contains various links related to the response.
+      properties:
+        next:
+          type: string
+          description: A URI for the next page in the response, if one exists. Contains `null` if this is the last or only page in the response.
+          example: null
     patchFieldGroup:
       allOf:
       - $ref: '#/components/schemas/patchSchema'
@@ -843,6 +647,202 @@ components:
           title: Property Country
           description: The country where the property is located.
           type: string
-    profile-person-details:
-      type: string
-      example: '#/definitions/profile-person-details'
+    listResponse:
+      allOf:
+      - $ref: '#/components/schemas/listResponseBasic'
+      - properties:
+          _links:
+            $ref: '#/components/schemas/linksBasic'
+    lookupResourceWithDefinitions:
+      allOf:
+      - $ref: '#/components/schemas/lookupResourceCore'
+      - properties:
+          definitions:
+            type: object
+            description: Contains definitions for the unique attributes provided by the resource.
+          allOf:
+            type: array
+            description: A list of objects that refer to the common definitions and fields that the resource inherits.
+            items:
+              $ref: '#/components/schemas/allOfRef'
+          meta:extensible:
+            type: boolean
+            description: Indicates whether this resource is extensible or not.
+          meta:abstract:
+            type: boolean
+            description: Indicates whether this resource is abstract or not.
+    listResponseItemWithVersion:
+      allOf:
+      - $ref: '#/components/schemas/listResponseItem'
+      - properties:
+          version:
+            type: string
+            description: The current version of the XDM resource.
+            example: '1.1'
+    listResponseItem:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the XDM resource.
+          example: Tenant Data Schema
+        $id:
+          type: string
+          description: The URI ID of the XDM resource.
+          example: https://ns.adobe.com/{TENANT_ID}/schemas/274f17bc5807ff307a046bab1489fb18
+        meta:altId:
+          type: string
+          description: An alternate dot-notation ID for the XDM resource.
+          example: _{TENANT_ID}.schemas.274f17bc5807ff307a046bab1489fb18
+    patchSchema:
+      type: array
+      description: A list of JSON Patch operation objects. Each object contains information about the action to be performed and the attribute to perform it on.
+      items:
+        type: object
+        properties:
+          op:
+            type: string
+            example: add
+            description: The JSON Patch operation to be performed.
+          path:
+            type: string
+            example: /meta:immutableTags-
+            description: The path to the field that the operation should be performed on.
+          value:
+            type: string
+            example: union
+            description: If adding or updating an attribute, this property indicates the value that should be set for that property.
+        required:
+        - op
+        - path
+  parameters:
+    property:
+      name: property
+      description: A comma-separated list of top-level object properties to be returned in the response. For example, `property=meta:intendedToExtend==https://ns.adobe.com/xdm/context/profile` returns only field groups that are compatible with the XDM Individual Profile class.
+      in: query
+      required: false
+      schema:
+        type: string
+    start:
+      name: start
+      description: 'When used in conjunction with an `orderby` parameter, `start` specifies where the paginated list of items should begin. This parameter cannot be used without an `orderby` parameter present.
+
+
+        Typically, this parameter is omitted in order to obtain the first page of results. After that, `start` should be set to the maximum value of the primary sort property of the `orderby` field received in the previous page. The API response then returns entries beginning with those that have a primary sort property from `orderby` strictly greater than (for ascending) or strictly less than (for descending) the specified value.
+
+
+        For example, if the `orderby` parameter is set to `orderby=name,firstname`, the `start` parameter would contain a value for the `name` property. In this case, if you wanted to show the next 20 entries of a resource immediately following the name "Miller", you would use: `?orderby=name,firstname&start=Miller&limit=20`.'
+      required: false
+      in: query
+      schema:
+        type: string
+    containerIdList:
+      name: CONTAINER_ID
+      description: The name of the container that you want to list resources from. To list core resources provided by Adobe, use `global`. To list custom resources defined by your organization, use `tenant`.
+      required: true
+      in: path
+      schema:
+        type: string
+    fieldGroupPayload:
+      name: body
+      description: The JSON payload must include a 'meta:intendedToExtend' field listing the '$id' of the class(es) with which the field group is compatible.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/createFieldGroup'
+    content-type:
+      name: Content-Type
+      description: The type of content being sent in the body of the request. When sending requests that include payloads to the Schema Registry API, this header must be included with a value of `application/json`.
+      required: true
+      in: header
+      schema:
+        type: string
+    acceptListing:
+      name: Accept
+      description: "The desired response format. For listing calls, the following `Accept` header values are permitted: \n<table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed-id+json</code></td><td>Returns a short summary of each resource, generally the preferred header for listing.</td></tr><tr><td><code>application/vnd.adobe.xed+json</code></td><td>Returns full JSON for each resource, with the original <code>$ref</code> and <code>allOf</code> attributes included.</td></tr></tbody></table>"
+      required: true
+      in: header
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    orderBy:
+      name: orderby
+      description: Sort the listed resources by specified fields. For example `orderby=title` sorts results by title in ascending order (A-Z). Adding a `-` before the field name (`orderby=-title`) sorts items in descending order (Z-A). Multiple fields can also be included to denote primary and secondary sort orders (for example, `orderby=title,description`).
+      required: false
+      in: query
+      schema:
+        type: string
+    MIXIN_ID:
+      name: MIXIN_ID
+      description: The `meta:altId` or URL-encoded `$id` of the mixin in question.
+      required: true
+      in: path
+      schema:
+        type: string
+    replaceFieldGroupPayload:
+      name: body
+      description: The JSON payload must include all of the fields that were originally required for creating the field group, but with updated values. This includes an `allOf` attribute referencing the `$id` of the class the schema will implement.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/replaceFieldGroup'
+    accept:
+      name: Accept
+      description: 'The desired response format. For lookup requests, a `version` parameter must be included, with the following `Accept` header values being permitted:
+
+        <table><thead><tr><th>Accept</th><th>Description</th></tr></thead><tbody><tr><td><code>application/vnd.adobe.xed+json; version=1</code></td><td>Returns only the basic details of the resource, with all inherited fields relegated to <code>$ref</code> and <code>allOf</code> properties.</td></tr><tr><td><code>application/vnd.adobe.xed-full+json; version=1</code></td><td>Returns the full details of the resource, including the details all fields inherited from other resources.</td></tr><tr><td><code>application/vnd.adobe.xed-notext+json; version=1</code></td><td>Returns only the basic details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-notext+json; version=1</code></td><td>Returns the full details of the resource, but with no titles or descriptions.</td></tr><tr><td><code>application/vnd.adobe.xed-full-desc+json; version=1</code></td><td>Returns the full details of the resource, including descriptions but with no titles.</td></tr></tbody></table>'
+      required: true
+      in: header
+      schema:
+        type: string
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information.
+      required: true
+      in: header
+      schema:
+        type: string
+    containerIdLookup:
+      name: CONTAINER_ID
+      description: The name of the container that you want to retrieve a resource from. To retrieve a core resource provided by Adobe, use `global`. To retrieve a custom resource defined by your organization, use `tenant`.
+      required: true
+      in: path
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
+    limit:
+      name: limit
+      description: 'When used in conjunction with an `orderby` parameter, `limit` restricts the maximum number of items that should be returned for a given request. This parameter cannot be used without an `orderby` parameter present.
+
+
+        The `limit` parameter specifies a positive integer (between `0` and `500`) as a *hint* as to the maximum number of items that should be returned. For example, `limit=5` returns only five resources in the list. However, this value is not strictly honored. The actual response size may be smaller or larger as constrained by the need to provide the reliable operation of the `start` parameter, if one is provided.'
+      required: false
+      in: query
+      schema:
+        type: number
+    patchFieldGroupPayload:
+      name: body
+      description: The request body accepts a JSON Patch payload.
+      required: true
+      in: body
+      schema:
+        $ref: '#/components/schemas/patchFieldGroup'
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      in: header
+      schema:
+        type: string
