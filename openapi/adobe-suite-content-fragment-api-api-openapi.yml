@@ -285,6 +285,24 @@ paths:
           $ref: '#/components/responses/404'
 components:
   schemas:
+    fragment-origin:
+      type: string
+      title: Origin
+      description: Content Fragment Origin/Source system.
+      enum:
+      - ajo
+      - external
+    name:
+      type: string
+      title: Content Name
+      description: Content Name
+      example: Cyber Monday Sale - Header !!
+      minLength: 1
+    patch-request:
+      title: Patch Request
+      type: array
+      items:
+        $ref: '#/components/schemas/patch-document'
     patch-document:
       title: Patch Document
       description: A JSONPatch document as defined by RFC 6902
@@ -308,37 +326,268 @@ components:
         from:
           type: string
           description: A string containing a JSON Pointer value.
-    expression-content:
+    content-fragment-metadata:
+      title: Content Fragment metadata.
+      type: object
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        status:
+          $ref: '#/components/schemas/fragment-status'
+        channels:
+          $ref: '#/components/schemas/fragment-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    content-fragment:
+      title: Content Fragment
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          html: '#/components/schemas/email-html-fragment'
+          expression: '#/components/schemas/expression-fragment'
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    entity-audit-fields:
+      title: Entity Audit Fields.
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        createdBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+        modifiedAt:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        modifiedBy:
+          type: string
+          example: 4c0190e5d702748f0931@AdobeId
+    fragment-page-response:
+      title: Content Fragment Page Response
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/page'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/content-fragment-listing-response'
+        _links:
+          $ref: '#/components/schemas/fragment-list-link'
+    parent-folder-id:
+      type:
+      - string
+      - 'null'
+      title: Folder Id
+      description: Id of the folder in which the content is present.
+      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+    fragment-source:
+      title: Fragment Source.
+      type:
+      - object
+      - 'null'
+      required:
+      - origin
+      properties:
+        origin:
+          $ref: '#/components/schemas/fragment-origin'
+        metadata:
+          title: MetaData
+          description: Map containing custom properties(key-value pair).
+          additionalProperties: true
+    fragment-self-href:
+      title: Self-Href
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              example: /fragments/b6d70a45-a149-453b-85ba-809a5d40066d
+    id:
       type: string
-      title: Expression Content
-      description: Expression Content
-      example: Hi {{profile.person.name}} its a great day to shop !!
+      title: Content Template Id.
+      description: Content Template Id.
+      example: b6d70a45-a149-453b-85ba-809a5d40066d
+    href-link:
+      title: Href-link
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
+    fragment-status:
+      type: string
+      title: Fragment Status
+      description: Fragment Status
+      example: DRAFT
+      enum:
+      - DRAFT
+      - PUBLISHING
+      - PUBLISHED
+    published-expression-fragment-content:
+      description: Published Expression Fragment content
+      title: Published Expression Fragment content.
+      type: object
+      required:
+      - expression
+      properties:
+        expression:
+          $ref: '#/components/schemas/expression-content'
+    description:
+      type: string
+      title: Description
+      description: Description
+      example: Cyber Monday Sale - Header Banner!!
+    publishing-job-status:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - complete
+          - inProgress
+          - error
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/errorResponse'
+    fragment-channel-enum:
+      type: string
+      title: channel
+      description: Supported channels for Content Fragment.
+      example: email
+      enum:
+      - email
+      - shared
+    fragment-type:
+      type: string
+      title: Fragment Type
+      description: Fragment Type
+      example: html
+      enum:
+      - html
+      - expression
     olac-labels:
       title: OLAC Label Details
       type: array
       items:
         type: string
         example: custom/sensitive-data
-    description:
+    fragment-content:
       type: string
-      title: Description
-      description: Description
-      example: Cyber Monday Sale - Header Banner!!
-    fragment-list-link:
-      title: Content Fragment List Link.
+      title: Html Fragment Content
+      description: Html Fragment Content
+      example: <div> Hi {{profile.person.name}} its a great day to shop !! </div>
+    published-html-fragment-content:
+      description: Published HTML Fragment content
+      title: Published HTML Fragment content.
       type: object
       required:
-      - self
+      - content
       properties:
+        content:
+          $ref: '#/components/schemas/fragment-content'
+    content-fragment-with-audit:
+      title: Content Fragment with audit fields.
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          html: '#/components/schemas/html-fragment-with-audit'
+          expression: '#/components/schemas/expression-fragment-with-audit'
+      required:
+      - name
+      - type
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        type:
+          $ref: '#/components/schemas/fragment-type'
+        status:
+          $ref: '#/components/schemas/fragment-status'
+        channels:
+          $ref: '#/components/schemas/fragment-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/fragment-source'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    publish-fragment-request:
+      type: object
+      properties:
+        fragmentId:
+          $ref: '#/components/schemas/id'
+      required:
+      - fragmentId
+    page:
+      title: Page
+      type: object
+      properties:
+        orderBy:
+          type: string
+          enum:
+          - modifiedAt
+          - createdAt
+          - name
+          example: -modifiedAt
+        start:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
         next:
-          $ref: '#/components/schemas/href-link'
-        page:
-          $ref: '#/components/schemas/href-link'
-      example:
-        next:
-          href: /fragments?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
-        page:
-          href: /fragments?orderBy={orderBy}&start={start}&limit={limit}
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        count:
+          type: integer
+          example: 10
+    content-fragment-listing-response:
+      title: Content Fragment
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/content-fragment-metadata'
+      - $ref: '#/components/schemas/entity-audit-fields'
+      - $ref: '#/components/schemas/fragment-self-href'
     errorResponse:
       title: Error Response
       type: object
@@ -396,222 +645,26 @@ components:
               errorCode: CJMMAS-*
               invokingServiceId: cjm-content-service
               unixTimeStampMs: 1610446917396
-    fragment-page-response:
-      title: Content Fragment Page Response
-      type: object
-      properties:
-        _page:
-          $ref: '#/components/schemas/page'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/content-fragment-listing-response'
-        _links:
-          $ref: '#/components/schemas/fragment-list-link'
-    name:
-      type: string
-      title: Content Name
-      description: Content Name
-      example: Cyber Monday Sale - Header !!
-      minLength: 1
-    href-link:
-      title: Href-link
+    fragment-list-link:
+      title: Content Fragment List Link.
       type: object
       required:
-      - href
+      - self
       properties:
-        href:
-          type: string
-    page:
-      title: Page
-      type: object
-      properties:
-        orderBy:
-          type: string
-          enum:
-          - modifiedAt
-          - createdAt
-          - name
-          example: -modifiedAt
-        start:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
         next:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-        count:
-          type: integer
-          example: 10
-    parent-folder-id:
-      type:
-      - string
-      - 'null'
-      title: Folder Id
-      description: Id of the folder in which the content is present.
-      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
-    fragment-source:
-      title: Fragment Source.
-      type:
-      - object
-      - 'null'
-      required:
-      - origin
-      properties:
-        origin:
-          $ref: '#/components/schemas/fragment-origin'
-        metadata:
-          title: MetaData
-          description: Map containing custom properties(key-value pair).
-          additionalProperties: true
-    fragment-self-href:
-      title: Self-Href
-      type: object
-      properties:
-        self:
-          type: object
-          properties:
-            href:
-              type: string
-              example: /fragments/b6d70a45-a149-453b-85ba-809a5d40066d
-    content-fragment-metadata:
-      title: Content Fragment metadata.
-      type: object
-      required:
-      - name
-      - type
-      - channels
-      properties:
-        id:
-          $ref: '#/components/schemas/id'
-        name:
-          $ref: '#/components/schemas/name'
-        description:
-          $ref: '#/components/schemas/description'
-        type:
-          $ref: '#/components/schemas/fragment-type'
-        status:
-          $ref: '#/components/schemas/fragment-status'
-        channels:
-          $ref: '#/components/schemas/fragment-channel-enum'
-        labels:
-          $ref: '#/components/schemas/olac-labels'
-        source:
-          $ref: '#/components/schemas/fragment-source'
-        parentFolderId:
-          $ref: '#/components/schemas/parent-folder-id'
-    entity-audit-fields:
-      title: Entity Audit Fields.
-      type: object
-      properties:
-        createdAt:
-          type: string
-          format: date-time
-          example: '2016-08-29T09:12:33.001Z'
-        createdBy:
-          type: string
-          example: 4c0190e5d702748f0931@AdobeId
-        modifiedAt:
-          type: string
-          format: date-time
-          example: '2016-08-29T09:12:33.001Z'
-        modifiedBy:
-          type: string
-          example: 4c0190e5d702748f0931@AdobeId
-    content-fragment-listing-response:
-      title: Content Fragment
-      type: object
-      allOf:
-      - $ref: '#/components/schemas/content-fragment-metadata'
-      - $ref: '#/components/schemas/entity-audit-fields'
-      - $ref: '#/components/schemas/fragment-self-href'
-    content-fragment:
-      title: Content Fragment
-      type: object
-      discriminator:
-        propertyName: type
-        mapping:
-          html: '#/components/schemas/email-html-fragment'
-          expression: '#/components/schemas/expression-fragment'
-      required:
-      - name
-      - type
-      - channels
-      properties:
-        name:
-          $ref: '#/components/schemas/name'
-        description:
-          $ref: '#/components/schemas/description'
-        type:
-          $ref: '#/components/schemas/fragment-type'
-        source:
-          $ref: '#/components/schemas/fragment-source'
-        parentFolderId:
-          $ref: '#/components/schemas/parent-folder-id'
-    fragment-origin:
+          $ref: '#/components/schemas/href-link'
+        page:
+          $ref: '#/components/schemas/href-link'
+      example:
+        next:
+          href: /fragments?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
+        page:
+          href: /fragments?orderBy={orderBy}&start={start}&limit={limit}
+    expression-content:
       type: string
-      title: Origin
-      description: Content Fragment Origin/Source system.
-      enum:
-      - ajo
-      - external
-    id:
-      type: string
-      title: Content Template Id.
-      description: Content Template Id.
-      example: b6d70a45-a149-453b-85ba-809a5d40066d
-    fragment-status:
-      type: string
-      title: Fragment Status
-      description: Fragment Status
-      example: DRAFT
-      enum:
-      - DRAFT
-      - PUBLISHING
-      - PUBLISHED
-    fragment-channel-enum:
-      type: string
-      title: channel
-      description: Supported channels for Content Fragment.
-      example: email
-      enum:
-      - email
-      - shared
-    published-expression-fragment-content:
-      description: Published Expression Fragment content
-      title: Published Expression Fragment content.
-      type: object
-      required:
-      - expression
-      properties:
-        expression:
-          $ref: '#/components/schemas/expression-content'
-    publish-fragment-request:
-      type: object
-      properties:
-        fragmentId:
-          $ref: '#/components/schemas/id'
-      required:
-      - fragmentId
-    fragment-content:
-      type: string
-      title: Html Fragment Content
-      description: Html Fragment Content
-      example: <div> Hi {{profile.person.name}} its a great day to shop !! </div>
-    publishing-job-status:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-          - complete
-          - inProgress
-          - error
-        errors:
-          type: array
-          items:
-            $ref: '#/components/schemas/errorResponse'
+      title: Expression Content
+      description: Expression Content
+      example: Hi {{profile.person.name}} its a great day to shop !!
     live-fragment-content:
       title: Published Content Fragment
       type: object
@@ -625,91 +678,12 @@ components:
           oneOf:
           - $ref: '#/components/schemas/published-html-fragment-content'
           - $ref: '#/components/schemas/published-expression-fragment-content'
-    content-fragment-with-audit:
-      title: Content Fragment with audit fields.
-      type: object
-      discriminator:
-        propertyName: type
-        mapping:
-          html: '#/components/schemas/html-fragment-with-audit'
-          expression: '#/components/schemas/expression-fragment-with-audit'
-      required:
-      - name
-      - type
-      - channels
-      properties:
-        id:
-          $ref: '#/components/schemas/id'
-        name:
-          $ref: '#/components/schemas/name'
-        description:
-          $ref: '#/components/schemas/description'
-        type:
-          $ref: '#/components/schemas/fragment-type'
-        status:
-          $ref: '#/components/schemas/fragment-status'
-        channels:
-          $ref: '#/components/schemas/fragment-channel-enum'
-        labels:
-          $ref: '#/components/schemas/olac-labels'
-        source:
-          $ref: '#/components/schemas/fragment-source'
-        parentFolderId:
-          $ref: '#/components/schemas/parent-folder-id'
-    patch-request:
-      title: Patch Request
-      type: array
-      items:
-        $ref: '#/components/schemas/patch-document'
-    published-html-fragment-content:
-      description: Published HTML Fragment content
-      title: Published HTML Fragment content.
-      type: object
-      required:
-      - content
-      properties:
-        content:
-          $ref: '#/components/schemas/fragment-content'
-    fragment-type:
-      type: string
-      title: Fragment Type
-      description: Fragment Type
-      example: html
-      enum:
-      - html
-      - expression
   parameters:
-    property:
-      name: property
-      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
-      in: query
-      schema:
-        items:
-          type: string
-        type: array
-      required: false
-      example: property=name~^test
-    start:
-      name: start
-      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
-      in: query
-      schema:
-        type: string
-        format: byte
-      required: false
-      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
     ImsOrgIdParam:
       name: x-gw-ims-org-id
       in: header
       description: Your Identity Management Services (IMS) Organization id
       required: true
-      schema:
-        type: string
-    RequestIdParam:
-      in: header
-      name: x-request-id
-      description: A unique string to identify the request, MUST be unique for each request
-      required: false
       schema:
         type: string
     orderBy:
@@ -721,14 +695,23 @@ components:
         default: -modifiedAt
       required: false
       example: orderBy=%2BmodifiedAt.
-    APIKeyParam:
-      name: x-api-key
+    IfMatchParam:
+      name: If-Match
       in: header
-      description: API Key
       required: true
+      description: etag of resource to match before update of resource.
       schema:
         type: string
-        x-example: cjm client
+    property:
+      name: property
+      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
+      in: query
+      schema:
+        items:
+          type: string
+        type: array
+      required: false
+      example: property=name~^test
     SandboxNameParam:
       name: x-sandbox-name
       in: header
@@ -746,13 +729,30 @@ components:
         minimum: 1
         maximum: 1000
       required: false
-    IfMatchParam:
-      name: If-Match
+    RequestIdParam:
       in: header
-      required: true
-      description: etag of resource to match before update of resource.
+      name: x-request-id
+      description: A unique string to identify the request, MUST be unique for each request
+      required: false
       schema:
         type: string
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key
+      required: true
+      schema:
+        type: string
+        x-example: cjm client
+    start:
+      name: start
+      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
+      in: query
+      schema:
+        type: string
+        format: byte
+      required: false
+      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
   headers:
     etag:
       schema:

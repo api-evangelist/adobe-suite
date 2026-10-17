@@ -731,18 +731,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 components:
   parameters:
-    property:
-      name: property
-      in: query
-      description: 'Regex used to filter objects in the response. For example: "property=name==test."'
-      schema:
-        type: string
-    start:
-      name: start
-      in: query
-      description: The start of where a sub-setted list of items should begin.
-      schema:
-        type: integer
     jobType:
       name: jobType
       in: query
@@ -753,17 +741,35 @@ components:
         - NEW
         - RESUME
         - ROLLBACK
-    transferID:
-      name: transferID
-      in: path
-      description: The ID of the request you want to fetch.
+    targetSandbox:
+      name: targetSandbox
+      in: query
+      description: Represents the sandbox name where you want to import your artifacts.
       required: true
       schema:
         type: string
-    jobID:
-      name: jobID
-      in: path
-      description: The ID of the job you want to fetch.
+    jobStatus:
+      name: jobStatus
+      in: query
+      description: The status of the job. This value can be `PENDING`, `IN_PROGRESS`, `SUCCESS`, `FAILED`, or `CANCELLED`.
+      schema:
+        type: string
+        enum:
+        - PENDING
+        - IN_PROGRESS
+        - SUCCESS
+        - FAILED
+        - CANCELLED
+    orderBy:
+      name: orderBy
+      in: query
+      description: Parameter used to identify a property to order listed responses by, including sort direction ("asc:" for ascending, "desc:" for descending). For example, "orderBy=asc:created,updated".
+      schema:
+        type: string
+    x-api-key:
+      name: x-api-key
+      in: header
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string
@@ -778,56 +784,11 @@ components:
         - PUBLISHED
         - PUBLISH_IN_PROGRESS
         - PUBLISH_FAILED
-    jobStatus:
-      name: jobStatus
-      in: query
-      description: The status of the job. This value can be `PENDING`, `IN_PROGRESS`, `SUCCESS`, `FAILED`, or `CANCELLED`.
-      schema:
-        type: string
-        enum:
-        - PENDING
-        - IN_PROGRESS
-        - SUCCESS
-        - FAILED
-        - CANCELLED
-    content-type:
-      name: Content-Type
-      in: header
-      description: The type of content being sent in the body of the request. This value should be `application/json`.
-      required: true
-      schema:
-        type: string
-    x-user-token:
-      name: x-user-token
-      in: header
-      description: The access token for the current user. If present, this token is used instead of the token in the Authorization header to lookup sandboxes.
-      schema:
-        type: string
     authorization:
       name: Authorization
       in: header
       description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer ". For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
-      schema:
-        type: string
-    packageID:
-      name: packageID
-      in: path
-      description: The ID of a package.
-      required: true
-      schema:
-        type: string
-    targetSandbox:
-      name: targetSandbox
-      in: query
-      description: Represents the sandbox name where you want to import your artifacts.
-      required: true
-      schema:
-        type: string
-    orderBy:
-      name: orderBy
-      in: query
-      description: Parameter used to identify a property to order listed responses by, including sort direction ("asc:" for ascending, "desc:" for descending). For example, "orderBy=asc:created,updated".
       schema:
         type: string
     x-sandbox-name:
@@ -837,11 +798,10 @@ components:
       required: true
       schema:
         type: string
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      in: header
-      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
+    property:
+      name: property
+      in: query
+      description: 'Regex used to filter objects in the response. For example: "property=name==test."'
       schema:
         type: string
     accept:
@@ -851,6 +811,12 @@ components:
       required: true
       schema:
         type: string
+    start:
+      name: start
+      in: query
+      description: The start of where a sub-setted list of items should begin.
+      schema:
+        type: integer
     expiryPeriod:
       name: expiryPeriod
       in: query
@@ -863,14 +829,361 @@ components:
       description: The maximum number of records to be returned in the response. The default limit is 20.
       schema:
         type: integer
-    x-api-key:
-      name: x-api-key
+    packageID:
+      name: packageID
+      in: path
+      description: The ID of a package.
+      required: true
+      schema:
+        type: string
+    jobID:
+      name: jobID
+      in: path
+      description: The ID of the job you want to fetch.
+      required: true
+      schema:
+        type: string
+    x-user-token:
+      name: x-user-token
       in: header
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      description: The access token for the current user. If present, this token is used instead of the token in the Authorization header to lookup sandboxes.
+      schema:
+        type: string
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      in: header
+      description: The Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
+    content-type:
+      name: Content-Type
+      in: header
+      description: The type of content being sent in the body of the request. This value should be `application/json`.
+      required: true
+      schema:
+        type: string
+    transferID:
+      name: transferID
+      in: path
+      description: The ID of the request you want to fetch.
       required: true
       schema:
         type: string
   schemas:
+    ImportPublicPackagePayload:
+      type: object
+      required:
+      - imsOrgId
+      - packageId
+      properties:
+        imsOrgId:
+          type: string
+          description: The ID of the organization making the import request.
+          example: '{ORG_ID}'
+        packageId:
+          type: string
+          description: The ID of the shared package to be imported.
+          example: '{PACKAGE_ID}'
+    DependentObjectsPayload:
+      type: array
+      description: A list of objects to retrieve child objects for within the specified package.
+      items:
+        type: object
+        required:
+        - id
+        - type
+        properties:
+          id:
+            type: string
+            description: The ID of the parent object.
+            example: 4d4c874ec3344d64bf8b3160e60ac78b
+          type:
+            type: string
+            description: The object type.
+            example: MAPPING_SET
+    FetchShareByIDResponse:
+      type: object
+      description: A success response returns details of a share request.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the share record.
+          example: '{ID}'
+        sourceIMSOrgId:
+          type: string
+          description: ID of the source organization sharing the package.
+          example: '{ORG_ID}'
+        sourceOrgName:
+          type: string
+          description: The name of the source organization.
+          example: '{SOURCE_ORG}'
+        targetIMSOrgId:
+          type: string
+          description: ID of the target organization receiving the package.
+          example: '{TARGET_ID}'
+        targetOrgName:
+          type: string
+          description: The name of the target organization.
+          example: '{TARGET_ORG}'
+        packageId:
+          type: string
+          description: The ID of the package.
+          example: '{PACKAGE_ID}'
+        packageName:
+          type: string
+          description: The name of the package.
+          example: '{PACKAGE_NAME}'
+        status:
+          type: string
+          description: The current status of the share request.
+          example: COMPLETED
+        initiatedBy:
+          type: string
+          description: The user or system who initiated the request.
+          example: '{INITIATED_BY}'
+        createdDate:
+          type: integer
+          format: int64
+          description: The timestamp when the request was created.
+          example: 1724442856000
+        requestType:
+          type: string
+          description: Type of request.
+          example: PRIVATE
+    SubmitImportPayload:
+      type: object
+      required:
+      - id
+      - destinationSandbox
+      properties:
+        id:
+          type: string
+          description: The ID of the package to be imported.
+          example: 09484a599f5f4a5faa43986643964615
+        name:
+          type: string
+          description: The name of the package.
+          example: acme
+        description:
+          type: string
+          description: A description of the package.
+          example: Acme Business Group
+        destinationSandbox:
+          type: object
+          description: The sandbox into which the package should be imported.
+          required:
+          - name
+          - imsOrgId
+          properties:
+            name:
+              type: string
+              description: The name of the target sandbox.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The IMS Org ID of the target sandbox.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+        alternatives:
+          type: object
+          description: A mapping of artifact IDs to their replacement alternatives.
+          additionalProperties:
+            type: object
+            required:
+            - id
+            - type
+            properties:
+              id:
+                type: string
+                description: ID of the alternative artifact.
+                example: https://ns.adobe.com/cjmstage/schemas/a3b935344685afad4e52c753161cf673ec23d4fb1b3e9ce
+              type:
+                type: string
+                description: Type of the alternative artifact.
+                example: REGISTRY_SCHEMA
+    ListPartnershipRequestsResponse:
+      type: object
+      description: A successful response returns a list of outgoing and incoming share requests and their details.
+      properties:
+        totalElements:
+          type: integer
+          description: Total number of partnership records available.
+          example: 1
+        currentPage:
+          type: integer
+          description: The current page index.
+          example: 0
+        totalPages:
+          type: integer
+          description: Total number of pages available.
+          example: 1
+        hasPreviousPage:
+          type: boolean
+          description: Indicates whether a previous page exists.
+          example: false
+        hasNextPage:
+          type: boolean
+          description: Indicates whether a next page is available.
+          example: false
+        nextPage:
+          type:
+          - integer
+          - 'null'
+          description: Index of the next page, if applicable.
+          example: null
+        pageSize:
+          type:
+          - integer
+          - 'null'
+          description: Number of items per page, if defined.
+          example: null
+        data:
+          type: array
+          description: List of partnership records on the current page.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier of the partnership.
+                example: '{ID}'
+              version:
+                type: integer
+                description: Version number of the partnership record.
+                example: 1
+              createdDate:
+                type: integer
+                format: int64
+                description: Timestamp when the partnership was created.
+                example: 1724929446000
+              modifiedDate:
+                type: integer
+                format: int64
+                description: Timestamp when the partnership was last modified.
+                example: 1724929617000
+              modifiedBy:
+                type: string
+                description: ID of the user who last modified the partnership.
+                example: '{MODIFIED_BY}'
+              sourceIMSOrgId:
+                type: string
+                description: ID of the source organization.
+                example: '{ORG_ID}'
+              targetIMSOrgId:
+                type: string
+                description: ID of the target organization.
+                example: '{TARGET_ID}'
+              sourceRegion:
+                type: string
+                description: The region of the source organization.
+                example: va7
+              targetRegion:
+                type: string
+                description: The region of the target organization.
+                example: va6
+              sourceOrgName:
+                type: string
+                description: The name of the source organization.
+                example: '{SOURCE_ORG}'
+              targetOrgName:
+                type: string
+                description: The name of the target organization.
+                example: '{TARGET_ORG}'
+              status:
+                type: string
+                description: Current status of the partnership.
+                example: APPROVED
+              createdByName:
+                type: string
+                description: Name of the user who created the partnership.
+                example: '{CREATED_BY}'
+              modifiedByName:
+                type: string
+                description: Name of the user who last modified the partnership.
+                example: '{MODIFIED_BY}'
+              modifiedByIMSOrgId:
+                type: string
+                description: Organization ID of the last modifier.
+                example: '{MODIFIED_BY}'
+              statusHistory:
+                type: string
+                description: Serialized history of actions taken on the partnership.
+                example: '[{"actionTakenBy":"{ACTION_BY}","actionTakenByName":"{NAME}","actionTakenByImsOrgID":"{ORG_ID}","action":"INITIATED","actionTimeStamp":1724929442467,"reason":null},{"actionTakenBy":null,"actionTakenByName":"{NAME}","actionTakenByImsOrgID":"{ORG_ID}","action":"APPROVED","actionTimeStamp":1724929617531,"reason":"Done"}]'
+              linkingId:
+                type: string
+                description: Linking ID associated with the partnership.
+                example: '{LINKING_ID}'
+    CheckImportPermissionsResponse:
+      type: object
+      properties:
+        packageID:
+          type: string
+          description: The ID of the package being validated.
+          example: b7bda68eb1214c86824f1d7204616e51
+        targetSandboxName:
+          type: string
+          description: The name of the sandbox where the package is intended to be imported or validated.
+          example: acme-sandbox
+        permissionResponse:
+          type: array
+          description: List of permission evaluations per artifact.
+          items:
+            type: object
+            properties:
+              artifactID:
+                type: string
+                description: The ID of the artifact being evaluated.
+                example: 4aca57b6-8b83-450b-a460-e8a07ca79a44
+              requiredPermissions:
+                type: object
+                description: Full set of permissions required for the artifact.
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        palmResourceType:
+                          type: string
+                          description: The type of resource the permission applies to.
+                          example: Segment
+                        resourcePermissions:
+                          type: array
+                          items:
+                            type: string
+                          description: List of required actions for this resource type.
+                          example:
+                          - read
+                          - write
+                          - delete
+              missingPermissions:
+                type: object
+                description: The required permissions that are not currently granted.
+                properties:
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        palmResourceType:
+                          type: string
+                          description: The resource type with missing permissions.
+                          example: Dataset
+                        resourcePermissions:
+                          type: array
+                          items:
+                            type: string
+                          description: List of missing permission actions.
+                          example:
+                          - read
+              artifactType:
+                type: string
+                description: The artifact type.
+                example: PROFILE_SEGMENT
+              creationAllowed:
+                type: boolean
+                description: Indicates whether the artifact can be created in the target sandbox based on current permissions.
+                example: true
     PartnershipRequestPayload:
       type: object
       required:
@@ -927,136 +1240,6 @@ components:
                 type: string
                 description: The artifact type to be deleted.
                 example: JOURNEY
-    Page.Links:
-      type: object
-      properties:
-        next:
-          $ref: '#/components/schemas/Link'
-        page:
-          $ref: '#/components/schemas/Link'
-    PackageResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the package.
-          example: 8f585fad94d042cd82dbcba594108a41
-        version:
-          type: integer
-          description: The version of the package.
-          example: 2
-        createdDate:
-          type: integer
-          format: int64
-          description: The date the package was created.
-          example: 1685597784000
-        modifiedDate:
-          type: integer
-          format: int64
-          description: The date the package was last modified.
-          example: 1685597810000
-        createdBy:
-          type: string
-          description: The Adobe ID of the user who created the package.
-          example: '{CREATED_BY}'
-        modifiedBy:
-          type: string
-          description: The Adobe ID of the user who last modified the package.
-          example: '{MODIFIED_BY}'
-        tenantId:
-          type: string
-          description: The tenant ID.
-          example: c875b077162b40409c1327b16da99c1b
-        name:
-          type: string
-          description: The title of the package.
-          example: acme
-        description:
-          type: string
-          description: A description of the package.
-          example: Acme Business Group
-        imsOrgId:
-          type: string
-          description: The organization's ID.
-          example: 5C1328435BF324E90A49402A@AdobeOrg
-        packageType:
-          type: string
-          description: The package type.
-          example: PARTIAL
-        expiry:
-          type: integer
-          format: int64
-          description: The expiry date of the package.
-          example: 1693373810000
-        publishDate:
-          type: integer
-          format: int64
-          description: The timestamp when the package was published.
-          example: 1685597810000
-        status:
-          type: string
-          description: The status of the package.
-          example: PUBLISHED
-        artifactsList:
-          type: array
-          description: A list of artifacts that are included in the package.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: The ID of the artifact.
-                example: f4f57771-2bd2-469a-9c13-8d803eeb6515
-              type:
-                type: string
-                description: The artifact type.
-                example: JOURNEY
-              found:
-                type: boolean
-                description: Whether the artifact was found during package creation.
-                example: false
-              count:
-                type: integer
-                description: The number of matching artifacts found.
-                example: 0
-        packageVisibility:
-          type: string
-          description: The visibility of the package.
-          example: private
-          enum:
-          - private
-          - public
-          schemaMapping:
-            type: object
-            description: The schema mapping for the package.
-            properties:
-              source:
-                type: string
-                description: The source schema.
-                example: source-schema
-              target:
-                type: string
-                description: The target schema.
-                example: target-schema
-        sourceSandbox:
-          type: object
-          description: Details for the sandbox the package belongs to.
-          properties:
-            name:
-              type: string
-              description: The name of the source sandbox.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The organization ID of the source sandbox.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-    Link:
-      type: object
-      properties:
-        href:
-          type: string
-        templated:
-          type: boolean
     DeletePackageResponse:
       type: object
       description: A successful response returns a reason which shows the package ID deleted.
@@ -1218,55 +1401,459 @@ components:
           type: string
           description: The ID of the job .
           example: 18abab44e25f40c284a4bd6e8f52fd29
-    FetchShareByIDResponse:
+    Page:
       type: object
-      description: A success response returns details of a share request.
+      properties:
+        limit:
+          type: integer
+          description: The maximum number of records to be returned in the response.
+        count:
+          type: integer
+          description: The number of records returned in the response.
+    ListPackagesResponse:
+      type: object
+      description: A successful response returns a list of packages belonging to your organization.
+      properties:
+        totalElements:
+          type: integer
+          description: Total number of elements available across all pages.
+          example: 109
+        currentPage:
+          type: integer
+          description: The current page number being returned.
+          example: 0
+        totalPages:
+          type: integer
+          description: Total number of pages available.
+          example: 6
+        hasPreviousPage:
+          type: boolean
+          description: Indicates whether there is a previous page.
+          example: false
+        hasNextPage:
+          type: boolean
+          description: Indicates whether there is a next page.
+          example: true
+        data:
+          type: array
+          description: List of packages for the current page.
+          items:
+            $ref: '#/components/schemas/PackageResponse'
+    PackageResponse:
+      type: object
       properties:
         id:
           type: string
-          description: Unique identifier of the share record.
-          example: '{ID}'
-        sourceIMSOrgId:
-          type: string
-          description: ID of the source organization sharing the package.
-          example: '{ORG_ID}'
-        sourceOrgName:
-          type: string
-          description: The name of the source organization.
-          example: '{SOURCE_ORG}'
-        targetIMSOrgId:
-          type: string
-          description: ID of the target organization receiving the package.
-          example: '{TARGET_ID}'
-        targetOrgName:
-          type: string
-          description: The name of the target organization.
-          example: '{TARGET_ORG}'
-        packageId:
-          type: string
-          description: The ID of the package.
-          example: '{PACKAGE_ID}'
-        packageName:
-          type: string
-          description: The name of the package.
-          example: '{PACKAGE_NAME}'
-        status:
-          type: string
-          description: The current status of the share request.
-          example: COMPLETED
-        initiatedBy:
-          type: string
-          description: The user or system who initiated the request.
-          example: '{INITIATED_BY}'
+          description: The unique identifier of the package.
+          example: 8f585fad94d042cd82dbcba594108a41
+        version:
+          type: integer
+          description: The version of the package.
+          example: 2
         createdDate:
           type: integer
           format: int64
-          description: The timestamp when the request was created.
-          example: 1724442856000
-        requestType:
+          description: The date the package was created.
+          example: 1685597784000
+        modifiedDate:
+          type: integer
+          format: int64
+          description: The date the package was last modified.
+          example: 1685597810000
+        createdBy:
           type: string
-          description: Type of request.
-          example: PRIVATE
+          description: The Adobe ID of the user who created the package.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: The Adobe ID of the user who last modified the package.
+          example: '{MODIFIED_BY}'
+        tenantId:
+          type: string
+          description: The tenant ID.
+          example: c875b077162b40409c1327b16da99c1b
+        name:
+          type: string
+          description: The title of the package.
+          example: acme
+        description:
+          type: string
+          description: A description of the package.
+          example: Acme Business Group
+        imsOrgId:
+          type: string
+          description: The organization's ID.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        packageType:
+          type: string
+          description: The package type.
+          example: PARTIAL
+        expiry:
+          type: integer
+          format: int64
+          description: The expiry date of the package.
+          example: 1693373810000
+        publishDate:
+          type: integer
+          format: int64
+          description: The timestamp when the package was published.
+          example: 1685597810000
+        status:
+          type: string
+          description: The status of the package.
+          example: PUBLISHED
+        artifactsList:
+          type: array
+          description: A list of artifacts that are included in the package.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the artifact.
+                example: f4f57771-2bd2-469a-9c13-8d803eeb6515
+              type:
+                type: string
+                description: The artifact type.
+                example: JOURNEY
+              found:
+                type: boolean
+                description: Whether the artifact was found during package creation.
+                example: false
+              count:
+                type: integer
+                description: The number of matching artifacts found.
+                example: 0
+        packageVisibility:
+          type: string
+          description: The visibility of the package.
+          example: private
+          enum:
+          - private
+          - public
+          schemaMapping:
+            type: object
+            description: The schema mapping for the package.
+            properties:
+              source:
+                type: string
+                description: The source schema.
+                example: source-schema
+              target:
+                type: string
+                description: The target schema.
+                example: target-schema
+        sourceSandbox:
+          type: object
+          description: Details for the sandbox the package belongs to.
+          properties:
+            name:
+              type: string
+              description: The name of the source sandbox.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The organization ID of the source sandbox.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+    DeleteArtifactResponse:
+      type: object
+      description: A successful response returns your updated package.
+      properties:
+        id:
+          type: string
+          description: The ID of the package.
+          example: 6fa50baedd344a278129a87e68cc9dc7
+        version:
+          type: integer
+          description: The version of the package.
+          example: 5
+        createdDate:
+          type: integer
+          format: int64
+          description: The date the package was created.
+          example: 1684235842000
+        modifiedDate:
+          type: integer
+          format: int64
+          description: The date the package was last modified.
+          example: 1684478830416
+        createdBy:
+          type: string
+          description: The Adobe ID of the person who created the package.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: The Adobe ID of the person who last modified the package.
+          example: '{MODIFIED_BY}'
+        tenantId:
+          type: string
+          description: The tenant ID.
+          example: c875b077162b40409c1327b16da99c1b
+        name:
+          type: string
+          description: The title of the package.
+          example: Acme
+        description:
+          type: string
+          description: A description of the package.
+          example: Acme Business Group
+        imsOrgId:
+          type: string
+          description: The organization's ID.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        sourceSandbox:
+          type: object
+          description: Details for the sandbox the package belongs to.
+          properties:
+            name:
+              type: string
+              description: The name of the sandbox the package belongs to.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The organization ID of the sandbox the package belongs to.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+        packageType:
+          type: string
+          description: The package type.
+          example: PARTIAL
+        expiry:
+          type: integer
+          format: int64
+          description: The expiry date of the package.
+          example: 1692254830403
+        status:
+          type: string
+          description: The status of the package. The default status is `DRAFT`.
+          example: DRAFT
+        artifactsList:
+          type: array
+          description: A list of artifacts that are included in the package.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the artifact.
+                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
+              type:
+                type: string
+                description: The artifact type.
+                example: JOURNEY
+              found:
+                type: boolean
+                description: Whether the artifact was found during package creation.
+                example: false
+              count:
+                type: integer
+                description: The number of matching artifacts found.
+                example: 0
+    CreatePackageResponse:
+      type: object
+      description: A successful response returns your newly created package.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the created package.
+          example: 209f886b00444eac9bb5836fe32e7681
+        version:
+          type: integer
+          description: The package version.
+          example: 0
+        createdDate:
+          type: integer
+          description: The date the package was created.
+          format: int64
+          example: 1684475012105
+        modifiedDate:
+          type: integer
+          description: The date the package was last modified.
+          format: int64
+          example: 1684475012105
+        createdBy:
+          type: string
+          description: The Adobe ID of the user who created the package.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: The Adobe ID of who last modified the package.
+          example: '{MODIFIED_BY}'
+        tenantId:
+          type: string
+          description: The tenant ID.
+          example: c875b077162b40409c1327b16da99c1b
+        requestId:
+          type: string
+          description: The request ID.
+          example: devxa54a6b56d04f46119d9e3cc006fcc1cb
+        userId:
+          type: string
+          description: The ID of the user who created the package.
+          example: platform_exim
+        name:
+          type: string
+          description: The name of the package.
+          example: Acme
+        description:
+          type: string
+          description: The package description.
+          example: Acme Business Group
+        imsOrgId:
+          type: string
+          description: The organization's ID.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        sourceSandbox:
+          type: object
+          description: Details for the sandbox the package belongs to.
+          properties:
+            name:
+              type: string
+              description: The name of the sandbox the package belongs to.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The organization ID of sandbox the package belongs to.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+        packageType:
+          type: string
+          description: The package type.
+          example: PARTIAL
+        expiry:
+          type: integer
+          description: The expiry date of the package.
+          format: int64
+          example: 1684613110000
+        status:
+          type: string
+          description: The status of the package. The default status is `DRAFT`.
+          example: DRAFT
+        artifactsList:
+          type: array
+          description: A list of artifacts that are included in the package.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the artifact.
+                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
+              type:
+                type: string
+                description: The artifact type.
+                example: JOURNEY
+              found:
+                type: boolean
+                description: Whether the artifact was found during package creation.
+                example: false
+              count:
+                type: integer
+                description: The number of matching artifacts found.
+                example: 0
+    UpdatePackageResponse:
+      type: object
+      description: A successful response returns your updated package.
+      properties:
+        id:
+          type: string
+          description: The ID of the package.
+          example: 6fa50baedd344a278129a87e68cc9dc7
+        version:
+          type: integer
+          description: The version of the package.
+          example: 6
+        createdDate:
+          type: integer
+          format: int64
+          description: The date the package was created.
+          example: 1684235842000
+        modifiedDate:
+          type: integer
+          format: int64
+          description: The date the package was last modified.
+          example: 1684479094129
+        createdBy:
+          type: string
+          description: The Adobe ID of the person who created the package.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: The Adobe ID of the person who last modified the package.
+          example: '{MODIFIED_BY}'
+        tenantId:
+          type: string
+          description: The tenant ID.
+          example: c875b077162b40409c1327b16da99c1b
+        name:
+          type: string
+          description: The title of the package.
+          example: acme
+        description:
+          type: string
+          description: A description of the package.
+          example: Acme Business Group
+        imsOrgId:
+          type: string
+          description: The organization's ID.
+          example: 5C1328435BF324E90A49402A@AdobeOrg
+        sourceSandbox:
+          type: object
+          description: Details for the sandbox the package belongs to.
+          properties:
+            name:
+              type: string
+              description: The name of the sandbox the package belongs to.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The organization ID of the sandbox the package belongs to.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+        packageType:
+          type: string
+          description: The package type.
+          example: PARTIAL
+        expiry:
+          type: integer
+          format: int64
+          description: The expiry date of the package.
+          example: 1692255094127
+        status:
+          type: string
+          description: The status of the package. The default status is `DRAFT`.
+          example: DRAFT
+        artifactsList:
+          type: array
+          description: A list of artifacts that are included in the package.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the artifact.
+                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
+              type:
+                type: string
+                description: The artifact type.
+                example: JOURNEY
+              found:
+                type: boolean
+                description: Whether the artifact was found during package creation.
+                example: false
+              count:
+                type: integer
+                description: The number of matching artifacts found.
+                example: 0
+    ListAvailableSandboxes:
+      type: object
+      description: A successful response returns a list of sandboxes that are available for the current user.
+      properties:
+        sandboxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetSandboxUserResponse'
+        _page:
+          $ref: '#/components/schemas/Page'
+        _links:
+          $ref: '#/components/schemas/Page.Links'
     AddArtifactResponse:
       type: object
       description: A successful response returns your updated package.
@@ -1360,97 +1947,84 @@ components:
                 type: integer
                 description: The number of matching artifacts found.
                 example: 0
-    DependentObjectsPayload:
-      type: array
-      description: A list of objects to retrieve child objects for within the specified package.
-      items:
-        type: object
-        required:
-        - id
-        - type
-        properties:
-          id:
-            type: string
-            description: The ID of the parent object.
-            example: 4d4c874ec3344d64bf8b3160e60ac78b
-          type:
-            type: string
-            description: The object type.
-            example: MAPPING_SET
-    ApprovePartnershipRequestResponse:
+    AddArtifactPayload:
+      required:
+      - id
+      - action
       type: object
-      description: A successful response returns details regarding the approved partnership request.
       properties:
         id:
           type: string
-          description: Unique identifier of the partnership.
-          example: '{ID}'
-        version:
-          type: integer
-          description: Version number of the partnership record.
-          example: 1
-        createdDate:
-          type: integer
-          format: int64
-          description: Timestamp when the partnership was created.
-          example: 1726737474000
-        modifiedDate:
-          type: integer
-          format: int64
-          description: Timestamp when the partnership was last modified.
-          example: 1726737541731
-        createdBy:
+          description: Defines the ID of the package to be updated.
+          example: 6fa50baedd344a278129a87e68cc9dc7
+        action:
           type: string
-          description: ID of the user who created the partnership.
-          example: '{CREATED_BY}'
-        modifiedBy:
+          description: To add artifacts into the package, the action value should be `ADD`. Action is only supported for `PARTIAL` package type.
+          enum:
+          - ADD
+          example: ADD
+        expiry:
           type: string
-          description: ID of the user who last modified the partnership.
-          example: '{MODIFIED_BY}'
-        sourceIMSOrgId:
+          format: date-time
+          description: Send if a custom expiration is needed. Defaults to +90 days from the API call.
+          example: 2023-05-20 20:05:10+00:00
+        artifacts:
+          type: array
+          description: The list of artifacts to be added to the package.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The ID of the artifact to be added.
+                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29@1647559351683
+              type:
+                type: string
+                description: The artifact type to be added. For a complete list of supported artifact types, visit the [update a package](https://www.adobe.com/go/sandbox-tooling-api-package-update) guide.
+                example: JOURNEY
+    ApprovePartnershipRequestPayload:
+      type: object
+      required:
+      - linkingID
+      - status
+      - reason
+      - targetIMSOrgDetails
+      properties:
+        linkingID:
           type: string
-          description: ID of the source organization.
-          example: '{ORG_ID}'
-        targetIMSOrgId:
-          type: string
-          description: ID of the target organization.
-          example: '{TARGET_ID}'
-        sourceRegion:
-          type: string
-          description: The region of the source organization.
-          example: va7
-        targetRegion:
-          type: string
-          description: The region of the target organization.
-          example: va7
-        sourceOrgName:
-          type: string
-          description: The name of the source organization.
-          example: '{SOURCE_ORG}'
-        targetOrgName:
-          type: string
-          description: The name of the target organization.
-          example: '{TARGET_ORG}'
+          description: Unique ID used to identify the partnership.
+          example: '{LINKING_ID}'
         status:
           type: string
-          description: Current status of the partnership.
+          description: Action to take on the partnership request.
+          enum:
+          - APPROVED
+          - REJECTED
           example: APPROVED
-        createdByName:
+        reason:
           type: string
-          description: Name of the user who created the partnership.
-          example: '{CREATED_BY}'
-        modifiedByIMSOrgId:
-          type: string
-          description: ID of the organization that last modified the partnership.
-          example: '{MODIFIED_BY}'
-        statusHistory:
-          type: string
-          description: Serialized history of actions taken on the partnership, including timestamps and users.
-          example: '[{"actionTakenBy":"{ACTION_BY}","actionTakenByName":"{NAME}","actionTakenByImsOrgID":"acme@AdobeOrg","action":"INITIATED","actionTimeStamp":1726737474450,"reason":null},{"actionTakenBy":null,"actionTakenByName":null,"actionTakenByImsOrgID":"745F37C35E4B776E0A49421B@AdobeOrg","action":"APPROVED","actionTimeStamp":1726737541818,"reason":"Done"}]'
-        linkingId:
-          type: string
-          description: The linking ID used to associate the partnership with a package or workflow.
-          example: '{LINKING_ID}'
+          description: A message providing context for the action taken.
+          example: Done
+        targetIMSOrgDetails:
+          type: object
+          description: Metadata about the organization performing the action.
+          required:
+          - id
+          - name
+          - region
+          properties:
+            id:
+              type: string
+              description: The Adobe ID of the target organization.
+              example: acme@AdobeOrg
+            name:
+              type: string
+              description: Name of the target organization.
+              example: acme
+            region:
+              type: string
+              description: Region of the target organization.
+              example: va7
     FetchJobResponse:
       type: object
       description: A successful response returns details for the queried job ID.
@@ -1608,716 +2182,6 @@ components:
               description: A mapping of artifact IDs to their parent lineage in the source environment.
               additionalProperties:
                 type: string
-    ListPartnershipRequestsResponse:
-      type: object
-      description: A successful response returns a list of outgoing and incoming share requests and their details.
-      properties:
-        totalElements:
-          type: integer
-          description: Total number of partnership records available.
-          example: 1
-        currentPage:
-          type: integer
-          description: The current page index.
-          example: 0
-        totalPages:
-          type: integer
-          description: Total number of pages available.
-          example: 1
-        hasPreviousPage:
-          type: boolean
-          description: Indicates whether a previous page exists.
-          example: false
-        hasNextPage:
-          type: boolean
-          description: Indicates whether a next page is available.
-          example: false
-        nextPage:
-          type:
-          - integer
-          - 'null'
-          description: Index of the next page, if applicable.
-          example: null
-        pageSize:
-          type:
-          - integer
-          - 'null'
-          description: Number of items per page, if defined.
-          example: null
-        data:
-          type: array
-          description: List of partnership records on the current page.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: Unique identifier of the partnership.
-                example: '{ID}'
-              version:
-                type: integer
-                description: Version number of the partnership record.
-                example: 1
-              createdDate:
-                type: integer
-                format: int64
-                description: Timestamp when the partnership was created.
-                example: 1724929446000
-              modifiedDate:
-                type: integer
-                format: int64
-                description: Timestamp when the partnership was last modified.
-                example: 1724929617000
-              modifiedBy:
-                type: string
-                description: ID of the user who last modified the partnership.
-                example: '{MODIFIED_BY}'
-              sourceIMSOrgId:
-                type: string
-                description: ID of the source organization.
-                example: '{ORG_ID}'
-              targetIMSOrgId:
-                type: string
-                description: ID of the target organization.
-                example: '{TARGET_ID}'
-              sourceRegion:
-                type: string
-                description: The region of the source organization.
-                example: va7
-              targetRegion:
-                type: string
-                description: The region of the target organization.
-                example: va6
-              sourceOrgName:
-                type: string
-                description: The name of the source organization.
-                example: '{SOURCE_ORG}'
-              targetOrgName:
-                type: string
-                description: The name of the target organization.
-                example: '{TARGET_ORG}'
-              status:
-                type: string
-                description: Current status of the partnership.
-                example: APPROVED
-              createdByName:
-                type: string
-                description: Name of the user who created the partnership.
-                example: '{CREATED_BY}'
-              modifiedByName:
-                type: string
-                description: Name of the user who last modified the partnership.
-                example: '{MODIFIED_BY}'
-              modifiedByIMSOrgId:
-                type: string
-                description: Organization ID of the last modifier.
-                example: '{MODIFIED_BY}'
-              statusHistory:
-                type: string
-                description: Serialized history of actions taken on the partnership.
-                example: '[{"actionTakenBy":"{ACTION_BY}","actionTakenByName":"{NAME}","actionTakenByImsOrgID":"{ORG_ID}","action":"INITIATED","actionTimeStamp":1724929442467,"reason":null},{"actionTakenBy":null,"actionTakenByName":"{NAME}","actionTakenByImsOrgID":"{ORG_ID}","action":"APPROVED","actionTimeStamp":1724929617531,"reason":"Done"}]'
-              linkingId:
-                type: string
-                description: Linking ID associated with the partnership.
-                example: '{LINKING_ID}'
-    CopyPayloadResponse:
-      type: object
-      description: A successful response returns the package’s payload.
-      required:
-      - imsOrgId
-      - packageId
-      properties:
-        imsOrgId:
-          type: string
-          description: The ID of the organization.
-          example: '{ORG_ID}'
-        packageId:
-          type: string
-          description: The ID of the package.
-          example: '{PACKAGE_ID}'
-    CheckImportPermissionsResponse:
-      type: object
-      properties:
-        packageID:
-          type: string
-          description: The ID of the package being validated.
-          example: b7bda68eb1214c86824f1d7204616e51
-        targetSandboxName:
-          type: string
-          description: The name of the sandbox where the package is intended to be imported or validated.
-          example: acme-sandbox
-        permissionResponse:
-          type: array
-          description: List of permission evaluations per artifact.
-          items:
-            type: object
-            properties:
-              artifactID:
-                type: string
-                description: The ID of the artifact being evaluated.
-                example: 4aca57b6-8b83-450b-a460-e8a07ca79a44
-              requiredPermissions:
-                type: object
-                description: Full set of permissions required for the artifact.
-                properties:
-                  resources:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        palmResourceType:
-                          type: string
-                          description: The type of resource the permission applies to.
-                          example: Segment
-                        resourcePermissions:
-                          type: array
-                          items:
-                            type: string
-                          description: List of required actions for this resource type.
-                          example:
-                          - read
-                          - write
-                          - delete
-              missingPermissions:
-                type: object
-                description: The required permissions that are not currently granted.
-                properties:
-                  resources:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        palmResourceType:
-                          type: string
-                          description: The resource type with missing permissions.
-                          example: Dataset
-                        resourcePermissions:
-                          type: array
-                          items:
-                            type: string
-                          description: List of missing permission actions.
-                          example:
-                          - read
-              artifactType:
-                type: string
-                description: The artifact type.
-                example: PROFILE_SEGMENT
-              creationAllowed:
-                type: boolean
-                description: Indicates whether the artifact can be created in the target sandbox based on current permissions.
-                example: true
-    SubmitImportPayload:
-      type: object
-      required:
-      - id
-      - destinationSandbox
-      properties:
-        id:
-          type: string
-          description: The ID of the package to be imported.
-          example: 09484a599f5f4a5faa43986643964615
-        name:
-          type: string
-          description: The name of the package.
-          example: acme
-        description:
-          type: string
-          description: A description of the package.
-          example: Acme Business Group
-        destinationSandbox:
-          type: object
-          description: The sandbox into which the package should be imported.
-          required:
-          - name
-          - imsOrgId
-          properties:
-            name:
-              type: string
-              description: The name of the target sandbox.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The IMS Org ID of the target sandbox.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-        alternatives:
-          type: object
-          description: A mapping of artifact IDs to their replacement alternatives.
-          additionalProperties:
-            type: object
-            required:
-            - id
-            - type
-            properties:
-              id:
-                type: string
-                description: ID of the alternative artifact.
-                example: https://ns.adobe.com/cjmstage/schemas/a3b935344685afad4e52c753161cf673ec23d4fb1b3e9ce
-              type:
-                type: string
-                description: Type of the alternative artifact.
-                example: REGISTRY_SCHEMA
-    AddArtifactPayload:
-      required:
-      - id
-      - action
-      type: object
-      properties:
-        id:
-          type: string
-          description: Defines the ID of the package to be updated.
-          example: 6fa50baedd344a278129a87e68cc9dc7
-        action:
-          type: string
-          description: To add artifacts into the package, the action value should be `ADD`. Action is only supported for `PARTIAL` package type.
-          enum:
-          - ADD
-          example: ADD
-        expiry:
-          type: string
-          format: date-time
-          description: Send if a custom expiration is needed. Defaults to +90 days from the API call.
-          example: 2023-05-20 20:05:10+00:00
-        artifacts:
-          type: array
-          description: The list of artifacts to be added to the package.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: The ID of the artifact to be added.
-                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29@1647559351683
-              type:
-                type: string
-                description: The artifact type to be added. For a complete list of supported artifact types, visit the [update a package](https://www.adobe.com/go/sandbox-tooling-api-package-update) guide.
-                example: JOURNEY
-    ImportPublicPackageResponse:
-      type: object
-      description: A successful response returns details on the imported public package.
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the share import request.
-          example: '{ID}'
-        version:
-          type: integer
-          description: Version number of the import request record.
-          example: 0
-        createdDate:
-          type: integer
-          format: int64
-          description: Timestamp when the import request was created.
-          example: 1729658890425
-        modifiedDate:
-          type: integer
-          format: int64
-          description: Timestamp when the import request was last modified.
-          example: 1729658890425
-        createdBy:
-          type: string
-          description: Identifier of the user who created the import request.
-          example: '{CREATED_BY}'
-        modifiedBy:
-          type: string
-          description: Identifier of the user who last modified the import request.
-          example: '{MODIFIED_BY}'
-        sourceIMSOrgId:
-          type: string
-          description: The ID of the organization that shared the package.
-          example: '{ORG_ID}'
-        targetIMSOrgId:
-          type: string
-          description: The ID of the organization requesting the package.
-          example: '{TARGET_ID}'
-        packageId:
-          type: string
-          description: The ID of the shared package being imported.
-          example: '{PACKAGE_ID}'
-        status:
-          type: string
-          description: Current status of the import request.
-          example: PENDING
-        initiatedBy:
-          type: string
-          description: Identity of the user or service that initiated the pull request.
-          example: '{INITIATED_BY}'
-        pipelineMessageId:
-          type: string
-          description: Identifier used to track the pull request within the pipeline or message system.
-          example: '{MESSAGE_ID}'
-        requestType:
-          type: string
-          description: Type of share request, such as `PUBLIC` or `PRIVATE`.
-          example: PUBLIC
-    UpdatePackageResponse:
-      type: object
-      description: A successful response returns your updated package.
-      properties:
-        id:
-          type: string
-          description: The ID of the package.
-          example: 6fa50baedd344a278129a87e68cc9dc7
-        version:
-          type: integer
-          description: The version of the package.
-          example: 6
-        createdDate:
-          type: integer
-          format: int64
-          description: The date the package was created.
-          example: 1684235842000
-        modifiedDate:
-          type: integer
-          format: int64
-          description: The date the package was last modified.
-          example: 1684479094129
-        createdBy:
-          type: string
-          description: The Adobe ID of the person who created the package.
-          example: '{CREATED_BY}'
-        modifiedBy:
-          type: string
-          description: The Adobe ID of the person who last modified the package.
-          example: '{MODIFIED_BY}'
-        tenantId:
-          type: string
-          description: The tenant ID.
-          example: c875b077162b40409c1327b16da99c1b
-        name:
-          type: string
-          description: The title of the package.
-          example: acme
-        description:
-          type: string
-          description: A description of the package.
-          example: Acme Business Group
-        imsOrgId:
-          type: string
-          description: The organization's ID.
-          example: 5C1328435BF324E90A49402A@AdobeOrg
-        sourceSandbox:
-          type: object
-          description: Details for the sandbox the package belongs to.
-          properties:
-            name:
-              type: string
-              description: The name of the sandbox the package belongs to.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The organization ID of the sandbox the package belongs to.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-        packageType:
-          type: string
-          description: The package type.
-          example: PARTIAL
-        expiry:
-          type: integer
-          format: int64
-          description: The expiry date of the package.
-          example: 1692255094127
-        status:
-          type: string
-          description: The status of the package. The default status is `DRAFT`.
-          example: DRAFT
-        artifactsList:
-          type: array
-          description: A list of artifacts that are included in the package.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: The ID of the artifact.
-                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
-              type:
-                type: string
-                description: The artifact type.
-                example: JOURNEY
-              found:
-                type: boolean
-                description: Whether the artifact was found during package creation.
-                example: false
-              count:
-                type: integer
-                description: The number of matching artifacts found.
-                example: 0
-    CreateShareRequestPayload:
-      type: object
-      required:
-      - packageId
-      - targets
-      properties:
-        packageId:
-          type: string
-          description: The ID of the package to be shared.
-          example: '{PACKAGE_ID}'
-        targets:
-          type: array
-          description: List of target organizations to which the package will be shared.
-          items:
-            type: object
-            required:
-            - imsOrgId
-            properties:
-              imsOrgId:
-                type: string
-                description: The ID of the target organization that should receive the package.
-                example: '{TARGET_IMS_ORG}'
-    ImportPublicPackagePayload:
-      type: object
-      required:
-      - imsOrgId
-      - packageId
-      properties:
-        imsOrgId:
-          type: string
-          description: The ID of the organization making the import request.
-          example: '{ORG_ID}'
-        packageId:
-          type: string
-          description: The ID of the shared package to be imported.
-          example: '{PACKAGE_ID}'
-    DeleteArtifactResponse:
-      type: object
-      description: A successful response returns your updated package.
-      properties:
-        id:
-          type: string
-          description: The ID of the package.
-          example: 6fa50baedd344a278129a87e68cc9dc7
-        version:
-          type: integer
-          description: The version of the package.
-          example: 5
-        createdDate:
-          type: integer
-          format: int64
-          description: The date the package was created.
-          example: 1684235842000
-        modifiedDate:
-          type: integer
-          format: int64
-          description: The date the package was last modified.
-          example: 1684478830416
-        createdBy:
-          type: string
-          description: The Adobe ID of the person who created the package.
-          example: '{CREATED_BY}'
-        modifiedBy:
-          type: string
-          description: The Adobe ID of the person who last modified the package.
-          example: '{MODIFIED_BY}'
-        tenantId:
-          type: string
-          description: The tenant ID.
-          example: c875b077162b40409c1327b16da99c1b
-        name:
-          type: string
-          description: The title of the package.
-          example: Acme
-        description:
-          type: string
-          description: A description of the package.
-          example: Acme Business Group
-        imsOrgId:
-          type: string
-          description: The organization's ID.
-          example: 5C1328435BF324E90A49402A@AdobeOrg
-        sourceSandbox:
-          type: object
-          description: Details for the sandbox the package belongs to.
-          properties:
-            name:
-              type: string
-              description: The name of the sandbox the package belongs to.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The organization ID of the sandbox the package belongs to.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-        packageType:
-          type: string
-          description: The package type.
-          example: PARTIAL
-        expiry:
-          type: integer
-          format: int64
-          description: The expiry date of the package.
-          example: 1692254830403
-        status:
-          type: string
-          description: The status of the package. The default status is `DRAFT`.
-          example: DRAFT
-        artifactsList:
-          type: array
-          description: A list of artifacts that are included in the package.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: The ID of the artifact.
-                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
-              type:
-                type: string
-                description: The artifact type.
-                example: JOURNEY
-              found:
-                type: boolean
-                description: Whether the artifact was found during package creation.
-                example: false
-              count:
-                type: integer
-                description: The number of matching artifacts found.
-                example: 0
-    ApprovePartnershipRequestPayload:
-      type: object
-      required:
-      - linkingID
-      - status
-      - reason
-      - targetIMSOrgDetails
-      properties:
-        linkingID:
-          type: string
-          description: Unique ID used to identify the partnership.
-          example: '{LINKING_ID}'
-        status:
-          type: string
-          description: Action to take on the partnership request.
-          enum:
-          - APPROVED
-          - REJECTED
-          example: APPROVED
-        reason:
-          type: string
-          description: A message providing context for the action taken.
-          example: Done
-        targetIMSOrgDetails:
-          type: object
-          description: Metadata about the organization performing the action.
-          required:
-          - id
-          - name
-          - region
-          properties:
-            id:
-              type: string
-              description: The Adobe ID of the target organization.
-              example: acme@AdobeOrg
-            name:
-              type: string
-              description: Name of the target organization.
-              example: acme
-            region:
-              type: string
-              description: Region of the target organization.
-              example: va7
-    Page:
-      type: object
-      properties:
-        limit:
-          type: integer
-          description: The maximum number of records to be returned in the response.
-        count:
-          type: integer
-          description: The number of records returned in the response.
-    PublishPackageResponse:
-      type: object
-      description: A successful response returns the published package.
-      properties:
-        name:
-          type: string
-          description: The name of the package.
-          example: acme
-        description:
-          type: string
-          description: A description of the package.
-          example: Acme Business Group
-        visibility:
-          type: string
-          description: The visibility scope of the package.
-          example: TENANT
-        sourceSandbox:
-          type: object
-          description: Information about the sandbox from which the package is being exported.
-          properties:
-            name:
-              type: string
-              description: The name of the source sandbox.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The organization ID of the source sandbox.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-        type:
-          type: string
-          description: The type of package export.
-          example: PARTIAL
-        correlationId:
-          type: string
-          description: The ID used to correlate related operations.
-          example: 48effe5e-1bef-4250-9c71-23b93ef5d285
-        jobId:
-          type: string
-          description: The ID of the export job.
-          example: 18abab44e25f40c284a4bd6e8f52fd29
-    CreatePackagePayload:
-      required:
-      - name
-      - packageType
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of your package.
-          example: Acme
-        description:
-          type: string
-          description: A description to provide more information on your package.
-          example: Acme Business Group
-        packageType:
-          type: string
-          description: The package type is `PARTIAL` to indicate you are including specific artifacts in a package or `FULL` when exporting the entire sandbox.
-          example: PARTIAL
-          enum:
-          - PARTIAL
-          - FULL
-        sourceSandbox:
-          type: object
-          description: The source sandbox of the package.
-          properties:
-            name:
-              type: string
-              description: The name of the sandbox
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The ID of the organization the sandbox belongs to.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-        expiry:
-          type: string
-          description: A timestamp that defines the expiration date for the package.
-          example: '2023-05-20T20:05:10Z'
-        artifacts:
-          type: array
-          description: The list of artifacts to be exported in a package. The artifact value should be null or empty when `packageType` is `FULL`.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: The ID of the artifact.
-                example: 27115daa-c92b-4f17-a077-d65ffeb0c525
-              type:
-                type: string
-                description: The artifact type.
-                example: PROFILE_SEGMENT
-              title:
-                type: string
-                description: A title for the artifact.
-                example: Acme Profile Segment
     CreateShareRequestResponse:
       type: array
       description: A successful response returns details of the package requested and its share status.
@@ -2374,62 +2238,6 @@ components:
             type: string
             description: Indicates the type of request.
             example: PRIVATE
-    GetSandboxUserResponse:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the sandbox in which the operation will take place.
-          example: acme-sandbox
-        title:
-          type: string
-          description: The display name for the sandbox.
-          example: ACME Sandbox
-        state:
-          type: string
-          description: "The current processing state of the sandbox. The state of a sandbox can be any of the following:\n\n - **`creating`:** The sandbox has been created, but is still being provisioned by the system.\n - **`active`:** The sandbox is created and active.\n - **`deleted`:** The sandbox has been manually disabled.\n - **`failed`:** Due to an error, the sandbox was not able to be provisioned by the system and is disabled.\n"
-          example: active
-          enum:
-          - creating
-          - active
-          - deleting
-          - resetting
-          - deleted
-          - failed
-        type:
-          type: string
-          description: The type of sandbox. The current supported sandbox types include `development` and `production`.
-          example: development
-          enum:
-          - production
-          - development
-        region:
-          type: string
-          example: VA7
-        isDefault:
-          type: boolean
-          description: A boolean property indicating whether this sandbox is the default production sandbox for the organization.
-          example: true
-        etag:
-          type: integer
-          description: An identifier for a specific version of the sandbox. `etag` is used for version control and caching efficiency.
-          example: 2
-        createdDate:
-          type: string
-          description: The date and time the sandbox was created.
-          format: date-time
-        lastModifiedDate:
-          type: string
-          description: The date and time the sandbox was last modified.
-          format: date-time
-        createdBy:
-          type: string
-          description: Details of the user who created the sandbox.
-          example: ''
-        modifiedBy:
-          type: string
-          description: Details of the user who last modified the sandbox.
-          example: ''
     PartnershipRequestResponse:
       type: object
       description: A successful response returns details regarding your partnership request.
@@ -2513,6 +2321,399 @@ components:
             type: object
             description: Reserved for future error structure.
             example: {}
+    FetchShareListResponse:
+      type: object
+      description: A successful response returns a list of all transfer requests from the search parameters provided.
+      properties:
+        totalElements:
+          type: integer
+          description: Total number of share records available.
+          example: 43
+        currentPage:
+          type: integer
+          description: The current page index.
+          example: 0
+        totalPages:
+          type: integer
+          description: The total number of pages available.
+          example: 22
+        hasPreviousPage:
+          type: boolean
+          description: Indicates if a previous page exists.
+          example: false
+        hasNextPage:
+          type: boolean
+          description: Indicates if another page of results exists.
+          example: true
+        nextPage:
+          type:
+          - integer
+          - 'null'
+          description: The index of the next page, if any.
+          example: null
+        pageSize:
+          type:
+          - integer
+          - 'null'
+          description: Number of items per page, if specified.
+          example: null
+        data:
+          type: array
+          description: List of shared package records on the current page.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier of the share record.
+                example: '{ID}'
+              sourceIMSOrgId:
+                type: string
+                description: ID of the source organization sharing the package.
+                example: '{ORG_ID}'
+              sourceOrgName:
+                type: string
+                description: Name of the source organization.
+                example: '{SOURCE_ORG}'
+              targetIMSOrgId:
+                type: string
+                description: ID of the target organization receiving the package.
+                example: '{TARGET_ID}'
+              targetOrgName:
+                type: string
+                description: Name of the target organization.
+                example: '{TARGET_ORG}'
+              packageId:
+                type: string
+                description: ID of the shared package.
+                example: '{PACKAGE_ID}'
+              packageName:
+                type: string
+                description: Name of the shared package.
+                example: '{PACKAGE_NAME}'
+              status:
+                type: string
+                description: Status of the share request.
+                example: COMPLETED
+              initiatedBy:
+                type: string
+                description: The user or system who initiated the share request.
+                example: '{INITIATED_BY}'
+              completedTime:
+                type: integer
+                format: int64
+                description: Timestamp when the share request was completed.
+                example: 1726129077000
+              createdDate:
+                type: integer
+                format: int64
+                description: Timestamp when the share request was created.
+                example: 1726129062000
+              requestType:
+                type: string
+                description: Type of share request.
+                example: PRIVATE
+    GetSandboxUserResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the sandbox in which the operation will take place.
+          example: acme-sandbox
+        title:
+          type: string
+          description: The display name for the sandbox.
+          example: ACME Sandbox
+        state:
+          type: string
+          description: "The current processing state of the sandbox. The state of a sandbox can be any of the following:\n\n - **`creating`:** The sandbox has been created, but is still being provisioned by the system.\n - **`active`:** The sandbox is created and active.\n - **`deleted`:** The sandbox has been manually disabled.\n - **`failed`:** Due to an error, the sandbox was not able to be provisioned by the system and is disabled.\n"
+          example: active
+          enum:
+          - creating
+          - active
+          - deleting
+          - resetting
+          - deleted
+          - failed
+        type:
+          type: string
+          description: The type of sandbox. The current supported sandbox types include `development` and `production`.
+          example: development
+          enum:
+          - production
+          - development
+        region:
+          type: string
+          example: VA7
+        isDefault:
+          type: boolean
+          description: A boolean property indicating whether this sandbox is the default production sandbox for the organization.
+          example: true
+        etag:
+          type: integer
+          description: An identifier for a specific version of the sandbox. `etag` is used for version control and caching efficiency.
+          example: 2
+        createdDate:
+          type: string
+          description: The date and time the sandbox was created.
+          format: date-time
+        lastModifiedDate:
+          type: string
+          description: The date and time the sandbox was last modified.
+          format: date-time
+        createdBy:
+          type: string
+          description: Details of the user who created the sandbox.
+          example: ''
+        modifiedBy:
+          type: string
+          description: Details of the user who last modified the sandbox.
+          example: ''
+    Link:
+      type: object
+      properties:
+        href:
+          type: string
+        templated:
+          type: boolean
+    PublishPackageResponse:
+      type: object
+      description: A successful response returns the published package.
+      properties:
+        name:
+          type: string
+          description: The name of the package.
+          example: acme
+        description:
+          type: string
+          description: A description of the package.
+          example: Acme Business Group
+        visibility:
+          type: string
+          description: The visibility scope of the package.
+          example: TENANT
+        sourceSandbox:
+          type: object
+          description: Information about the sandbox from which the package is being exported.
+          properties:
+            name:
+              type: string
+              description: The name of the source sandbox.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The organization ID of the source sandbox.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
+        type:
+          type: string
+          description: The type of package export.
+          example: PARTIAL
+        correlationId:
+          type: string
+          description: The ID used to correlate related operations.
+          example: 48effe5e-1bef-4250-9c71-23b93ef5d285
+        jobId:
+          type: string
+          description: The ID of the export job.
+          example: 18abab44e25f40c284a4bd6e8f52fd29
+    CreateShareRequestPayload:
+      type: object
+      required:
+      - packageId
+      - targets
+      properties:
+        packageId:
+          type: string
+          description: The ID of the package to be shared.
+          example: '{PACKAGE_ID}'
+        targets:
+          type: array
+          description: List of target organizations to which the package will be shared.
+          items:
+            type: object
+            required:
+            - imsOrgId
+            properties:
+              imsOrgId:
+                type: string
+                description: The ID of the target organization that should receive the package.
+                example: '{TARGET_IMS_ORG}'
+    Page.Links:
+      type: object
+      properties:
+        next:
+          $ref: '#/components/schemas/Link'
+        page:
+          $ref: '#/components/schemas/Link'
+    ImportPublicPackageResponse:
+      type: object
+      description: A successful response returns details on the imported public package.
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the share import request.
+          example: '{ID}'
+        version:
+          type: integer
+          description: Version number of the import request record.
+          example: 0
+        createdDate:
+          type: integer
+          format: int64
+          description: Timestamp when the import request was created.
+          example: 1729658890425
+        modifiedDate:
+          type: integer
+          format: int64
+          description: Timestamp when the import request was last modified.
+          example: 1729658890425
+        createdBy:
+          type: string
+          description: Identifier of the user who created the import request.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: Identifier of the user who last modified the import request.
+          example: '{MODIFIED_BY}'
+        sourceIMSOrgId:
+          type: string
+          description: The ID of the organization that shared the package.
+          example: '{ORG_ID}'
+        targetIMSOrgId:
+          type: string
+          description: The ID of the organization requesting the package.
+          example: '{TARGET_ID}'
+        packageId:
+          type: string
+          description: The ID of the shared package being imported.
+          example: '{PACKAGE_ID}'
+        status:
+          type: string
+          description: Current status of the import request.
+          example: PENDING
+        initiatedBy:
+          type: string
+          description: Identity of the user or service that initiated the pull request.
+          example: '{INITIATED_BY}'
+        pipelineMessageId:
+          type: string
+          description: Identifier used to track the pull request within the pipeline or message system.
+          example: '{MESSAGE_ID}'
+        requestType:
+          type: string
+          description: Type of share request, such as `PUBLIC` or `PRIVATE`.
+          example: PUBLIC
+    ApprovePartnershipRequestResponse:
+      type: object
+      description: A successful response returns details regarding the approved partnership request.
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the partnership.
+          example: '{ID}'
+        version:
+          type: integer
+          description: Version number of the partnership record.
+          example: 1
+        createdDate:
+          type: integer
+          format: int64
+          description: Timestamp when the partnership was created.
+          example: 1726737474000
+        modifiedDate:
+          type: integer
+          format: int64
+          description: Timestamp when the partnership was last modified.
+          example: 1726737541731
+        createdBy:
+          type: string
+          description: ID of the user who created the partnership.
+          example: '{CREATED_BY}'
+        modifiedBy:
+          type: string
+          description: ID of the user who last modified the partnership.
+          example: '{MODIFIED_BY}'
+        sourceIMSOrgId:
+          type: string
+          description: ID of the source organization.
+          example: '{ORG_ID}'
+        targetIMSOrgId:
+          type: string
+          description: ID of the target organization.
+          example: '{TARGET_ID}'
+        sourceRegion:
+          type: string
+          description: The region of the source organization.
+          example: va7
+        targetRegion:
+          type: string
+          description: The region of the target organization.
+          example: va7
+        sourceOrgName:
+          type: string
+          description: The name of the source organization.
+          example: '{SOURCE_ORG}'
+        targetOrgName:
+          type: string
+          description: The name of the target organization.
+          example: '{TARGET_ORG}'
+        status:
+          type: string
+          description: Current status of the partnership.
+          example: APPROVED
+        createdByName:
+          type: string
+          description: Name of the user who created the partnership.
+          example: '{CREATED_BY}'
+        modifiedByIMSOrgId:
+          type: string
+          description: ID of the organization that last modified the partnership.
+          example: '{MODIFIED_BY}'
+        statusHistory:
+          type: string
+          description: Serialized history of actions taken on the partnership, including timestamps and users.
+          example: '[{"actionTakenBy":"{ACTION_BY}","actionTakenByName":"{NAME}","actionTakenByImsOrgID":"acme@AdobeOrg","action":"INITIATED","actionTimeStamp":1726737474450,"reason":null},{"actionTakenBy":null,"actionTakenByName":null,"actionTakenByImsOrgID":"745F37C35E4B776E0A49421B@AdobeOrg","action":"APPROVED","actionTimeStamp":1726737541818,"reason":"Done"}]'
+        linkingId:
+          type: string
+          description: The linking ID used to associate the partnership with a package or workflow.
+          example: '{LINKING_ID}'
+    UpdatePackageMetadata:
+      required:
+      - id
+      - action
+      - name
+      - sourceSandbox
+      type: object
+      properties:
+        id:
+          type: string
+          description: Defines the ID of the package to be updated.
+          example: 6fa50baedd344a278129a87e68cc9dc7
+        action:
+          type: string
+          description: To update metadata information about the package, action value should be `UPDATE`.
+          enum:
+          - UPDATE
+          example: UPDATE
+        name:
+          type: string
+          description: The updated name of the package. Duplicate package names are not allowed.
+          example: Acme Corp
+        description:
+          type: string
+          description: The updated description of the package.
+          example: Acme Business Group
+        sourceSandbox:
+          type: object
+          properties:
+            name:
+              type: string
+              description: The name of the source sandbox for the package.
+              example: acme-sandbox
+            imsOrgId:
+              type: string
+              description: The org ID of the source sandbox for the package.
+              example: 5C1328435BF324E90A49402A@AdobeOrg
     ImportPackageResponse:
       type: array
       description: Conflicts are returned in the response. The response shows the original package plus the `alternatives` fragment as an array ordered by ranking.
@@ -2610,164 +2811,6 @@ components:
           enum:
           - PUBLIC
           example: PUBLIC
-    UpdatePackageMetadata:
-      required:
-      - id
-      - action
-      - name
-      - sourceSandbox
-      type: object
-      properties:
-        id:
-          type: string
-          description: Defines the ID of the package to be updated.
-          example: 6fa50baedd344a278129a87e68cc9dc7
-        action:
-          type: string
-          description: To update metadata information about the package, action value should be `UPDATE`.
-          enum:
-          - UPDATE
-          example: UPDATE
-        name:
-          type: string
-          description: The updated name of the package. Duplicate package names are not allowed.
-          example: Acme Corp
-        description:
-          type: string
-          description: The updated description of the package.
-          example: Acme Business Group
-        sourceSandbox:
-          type: object
-          properties:
-            name:
-              type: string
-              description: The name of the source sandbox for the package.
-              example: acme-sandbox
-            imsOrgId:
-              type: string
-              description: The org ID of the source sandbox for the package.
-              example: 5C1328435BF324E90A49402A@AdobeOrg
-    ListPackagesResponse:
-      type: object
-      description: A successful response returns a list of packages belonging to your organization.
-      properties:
-        totalElements:
-          type: integer
-          description: Total number of elements available across all pages.
-          example: 109
-        currentPage:
-          type: integer
-          description: The current page number being returned.
-          example: 0
-        totalPages:
-          type: integer
-          description: Total number of pages available.
-          example: 6
-        hasPreviousPage:
-          type: boolean
-          description: Indicates whether there is a previous page.
-          example: false
-        hasNextPage:
-          type: boolean
-          description: Indicates whether there is a next page.
-          example: true
-        data:
-          type: array
-          description: List of packages for the current page.
-          items:
-            $ref: '#/components/schemas/PackageResponse'
-    FetchShareListResponse:
-      type: object
-      description: A successful response returns a list of all transfer requests from the search parameters provided.
-      properties:
-        totalElements:
-          type: integer
-          description: Total number of share records available.
-          example: 43
-        currentPage:
-          type: integer
-          description: The current page index.
-          example: 0
-        totalPages:
-          type: integer
-          description: The total number of pages available.
-          example: 22
-        hasPreviousPage:
-          type: boolean
-          description: Indicates if a previous page exists.
-          example: false
-        hasNextPage:
-          type: boolean
-          description: Indicates if another page of results exists.
-          example: true
-        nextPage:
-          type:
-          - integer
-          - 'null'
-          description: The index of the next page, if any.
-          example: null
-        pageSize:
-          type:
-          - integer
-          - 'null'
-          description: Number of items per page, if specified.
-          example: null
-        data:
-          type: array
-          description: List of shared package records on the current page.
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                description: Unique identifier of the share record.
-                example: '{ID}'
-              sourceIMSOrgId:
-                type: string
-                description: ID of the source organization sharing the package.
-                example: '{ORG_ID}'
-              sourceOrgName:
-                type: string
-                description: Name of the source organization.
-                example: '{SOURCE_ORG}'
-              targetIMSOrgId:
-                type: string
-                description: ID of the target organization receiving the package.
-                example: '{TARGET_ID}'
-              targetOrgName:
-                type: string
-                description: Name of the target organization.
-                example: '{TARGET_ORG}'
-              packageId:
-                type: string
-                description: ID of the shared package.
-                example: '{PACKAGE_ID}'
-              packageName:
-                type: string
-                description: Name of the shared package.
-                example: '{PACKAGE_NAME}'
-              status:
-                type: string
-                description: Status of the share request.
-                example: COMPLETED
-              initiatedBy:
-                type: string
-                description: The user or system who initiated the share request.
-                example: '{INITIATED_BY}'
-              completedTime:
-                type: integer
-                format: int64
-                description: Timestamp when the share request was completed.
-                example: 1726129077000
-              createdDate:
-                type: integer
-                format: int64
-                description: Timestamp when the share request was created.
-                example: 1726129062000
-              requestType:
-                type: string
-                description: Type of share request.
-                example: PRIVATE
     ListJobsResponse:
       type: object
       description: A successful response returns all successful import jobs.
@@ -2848,124 +2891,77 @@ components:
                 type: string
                 description: The identifier of the user who created the job.
                 example: '{CREATED_BY}'
-    ListAvailableSandboxes:
+    CopyPayloadResponse:
       type: object
-      description: A successful response returns a list of sandboxes that are available for the current user.
+      description: A successful response returns the package’s payload.
+      required:
+      - imsOrgId
+      - packageId
       properties:
-        sandboxes:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetSandboxUserResponse'
-        _page:
-          $ref: '#/components/schemas/Page'
-        _links:
-          $ref: '#/components/schemas/Page.Links'
-    CreatePackageResponse:
+        imsOrgId:
+          type: string
+          description: The ID of the organization.
+          example: '{ORG_ID}'
+        packageId:
+          type: string
+          description: The ID of the package.
+          example: '{PACKAGE_ID}'
+    CreatePackagePayload:
+      required:
+      - name
+      - packageType
       type: object
-      description: A successful response returns your newly created package.
       properties:
-        id:
-          type: string
-          description: The unique identifier of the created package.
-          example: 209f886b00444eac9bb5836fe32e7681
-        version:
-          type: integer
-          description: The package version.
-          example: 0
-        createdDate:
-          type: integer
-          description: The date the package was created.
-          format: int64
-          example: 1684475012105
-        modifiedDate:
-          type: integer
-          description: The date the package was last modified.
-          format: int64
-          example: 1684475012105
-        createdBy:
-          type: string
-          description: The Adobe ID of the user who created the package.
-          example: '{CREATED_BY}'
-        modifiedBy:
-          type: string
-          description: The Adobe ID of who last modified the package.
-          example: '{MODIFIED_BY}'
-        tenantId:
-          type: string
-          description: The tenant ID.
-          example: c875b077162b40409c1327b16da99c1b
-        requestId:
-          type: string
-          description: The request ID.
-          example: devxa54a6b56d04f46119d9e3cc006fcc1cb
-        userId:
-          type: string
-          description: The ID of the user who created the package.
-          example: platform_exim
         name:
           type: string
-          description: The name of the package.
+          description: The name of your package.
           example: Acme
         description:
           type: string
-          description: The package description.
+          description: A description to provide more information on your package.
           example: Acme Business Group
-        imsOrgId:
+        packageType:
           type: string
-          description: The organization's ID.
-          example: 5C1328435BF324E90A49402A@AdobeOrg
+          description: The package type is `PARTIAL` to indicate you are including specific artifacts in a package or `FULL` when exporting the entire sandbox.
+          example: PARTIAL
+          enum:
+          - PARTIAL
+          - FULL
         sourceSandbox:
           type: object
-          description: Details for the sandbox the package belongs to.
+          description: The source sandbox of the package.
           properties:
             name:
               type: string
-              description: The name of the sandbox the package belongs to.
+              description: The name of the sandbox
               example: acme-sandbox
             imsOrgId:
               type: string
-              description: The organization ID of sandbox the package belongs to.
+              description: The ID of the organization the sandbox belongs to.
               example: 5C1328435BF324E90A49402A@AdobeOrg
-        packageType:
-          type: string
-          description: The package type.
-          example: PARTIAL
         expiry:
-          type: integer
-          description: The expiry date of the package.
-          format: int64
-          example: 1684613110000
-        status:
           type: string
-          description: The status of the package. The default status is `DRAFT`.
-          example: DRAFT
-        artifactsList:
+          description: A timestamp that defines the expiration date for the package.
+          example: '2023-05-20T20:05:10Z'
+        artifacts:
           type: array
-          description: A list of artifacts that are included in the package.
+          description: The list of artifacts to be exported in a package. The artifact value should be null or empty when `packageType` is `FULL`.
           items:
             type: object
             properties:
               id:
                 type: string
                 description: The ID of the artifact.
-                example: d8d8ed6d-696a-40bd-b4fe-ca053ec94e29
+                example: 27115daa-c92b-4f17-a077-d65ffeb0c525
               type:
                 type: string
                 description: The artifact type.
-                example: JOURNEY
-              found:
-                type: boolean
-                description: Whether the artifact was found during package creation.
-                example: false
-              count:
-                type: integer
-                description: The number of matching artifacts found.
-                example: 0
+                example: PROFILE_SEGMENT
+              title:
+                type: string
+                description: A title for the artifact.
+                example: Acme Profile Segment
   responses:
-    InternalServerError:
-      x-summary: Internal Server Error.
-      description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
-      content: {}
     BadRequest:
       x-summary: Bad Request
       description: Bad request. Check the syntax and payload information.
@@ -2973,4 +2969,8 @@ components:
     Forbidden:
       x-summary: Forbidden
       description: You do not have the correct access permissions for this endpoint.
+      content: {}
+    InternalServerError:
+      x-summary: Internal Server Error.
+      description: There was an internal server error. Try the request again in a few minutes, and contact Adobe Support if the problem persists.
       content: {}

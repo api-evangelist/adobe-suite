@@ -79,31 +79,135 @@ paths:
       tags:
       - Status
 components:
+  examples:
+    exportRenditionResponseSampleOne:
+      summary: Export Rendition response sample 1
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: succeeded
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pageRenditionsResult:
+        - pageNumber: 1
+          renditionUrl: https://example.com/rendition/page1.jpg
+        - pageNumber: 2
+          renditionUrl: https://example.com/rendition/page2.jpg
+        - pageNumber: 3
+          renditionUrl: https://example.com/rendition/page2.jpg
+        - pageNumber: 4
+          renditionUrl: https://example.com/rendition/page2.jpg
+        - pageNumber: 5
+          renditionUrl: https://example.com/rendition/page2.jpg
+    errorResponseDetailsNotFound:
+      summary: Not Found
+      value:
+        error_code: not_found
+        message: Requested resource not found
+    jobStatusResponseSampleThree:
+      summary: Job status response failed
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: failed
+    exportRenditionResponseSampleTwo:
+      summary: Export Rendition response sample 2
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: partially_succeeded
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pageRenditionsResult:
+        - pageNumber: 1
+          renditionUrl: https://example.com/rendition/page1.jpg
+        - pageNumber: 2
+          error:
+            error_code: access_error
+            message: Not allowed
+        - pageNumber: 3
+          renditionUrl: https://example.com/rendition/page3.jpg
+    exportPdfRenditionResponseSampleTwo:
+      summary: Export PDF Rendition Response - Failed
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: failed
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pageRenditionsResult:
+        - error:
+            error_code: runtime_error
+            message: Runtime error
+    errorResponseDetailsRuntimeError:
+      summary: Runtime Error
+      value:
+        error_code: runtime_error
+        message: Runtime error
+    generateVariationResponseSample:
+      summary: Generate variation request succeeded
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: succeeded
+        document:
+          id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Generated Document
+          thumbnailUrl: https://example.com/thumbnails/generated-doc.png
+    exportPdfRenditionResponseSampleOne:
+      summary: Export PDF Rendition Response - Succeeded
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: succeeded
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pageRenditionsResult:
+        - renditionUrl: https://example.com/rendition/document.pdf
+    jobStatusResponseSampleTwo:
+      summary: Job status response succeeded
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: succeeded
+    exportRenditionResponseSampleThree:
+      summary: Export Rendition response sample 3
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: failed
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pageRenditionsResult:
+        - pageNumber: 1
+          error:
+            error_code: runtime_error
+            message: Runtime error
+        - pageNumber: 2
+          error:
+            error_code: runtime_error
+            message: Runtime error
+    jobStatusResponseSampleOne:
+      summary: Job status response running
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        status: running
   schemas:
-    ExpressDocument:
-      description: Details of the Express document.
+    JobStatus:
+      description: Various statuses of a job.
+      enum:
+      - cancel_requested
+      - cancelled
+      - failed
+      - partially_succeeded
+      - pending
+      - running
+      - succeeded
+      type: string
+    ErrorResponseDetails:
+      description: Details of the error response.
       type: object
       properties:
-        id:
-          description: The unique identifier of the document.
+        error_code:
+          description: The error code.
           type: string
-        name:
-          description: The name or title of the document.
+        message:
+          description: The error message.
           type: string
-        thumbnailUrl:
-          description: 'Pre-signed URL for the Document''s thumbnail rendition.
-
-            The size of the rendition will be `640 pixels` along the longest side. The format of the rendition will be a `PNG` image.'
-          type: string
+        validation_errors:
+          description: Validation error messages.
+          type: array
+          items:
+            type: string
       required:
-      - id
-      - name
-      - thumbnailUrl
-    ExportRenditionResponse:
-      description: Response payload for the "export-rendition" API.
-      anyOf:
-      - $ref: '#/components/schemas/PageRenditionResponse'
-      - $ref: '#/components/schemas/PdfRenditionResponse'
+      - error_code
     FailedPdfRendition:
       description: Result of a failed PDF rendition export.
       type: object
@@ -113,19 +217,28 @@ components:
           description: Error object indicating the reason for the failure.
       required:
       - error
-    JobStatusResponse:
-      description: Base response payload returned by Job Status API.
+    FailedPageRendition:
+      description: Details of the page rendition that failed to export.
       type: object
       properties:
-        jobId:
-          description: The identifier of the job.
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-          description: The status of the job.
+        pageNumber:
+          description: The page number for which the rendition export request was made.
+          type: number
+        error:
+          $ref: '#/components/schemas/ErrorResponseDetails'
+          description: Error object indicating the reason for the failure.
       required:
-      - jobId
-      - status
+      - error
+      - pageNumber
+    SuccessfulPdfRendition:
+      description: Result of a successful PDF rendition export.
+      type: object
+      properties:
+        renditionUrl:
+          description: The URL of the PDF rendition.
+          type: string
+      required:
+      - renditionUrl
     PageRenditionResponse:
       description: Response payload for the "export-rendition" API when exporting page renditions.
       type: object
@@ -151,62 +264,6 @@ components:
       - jobId
       - pageRenditionsResult
       - status
-    FailedPageRendition:
-      description: Details of the page rendition that failed to export.
-      type: object
-      properties:
-        pageNumber:
-          description: The page number for which the rendition export request was made.
-          type: number
-        error:
-          $ref: '#/components/schemas/ErrorResponseDetails'
-          description: Error object indicating the reason for the failure.
-      required:
-      - error
-      - pageNumber
-    GenerateVariationResponse:
-      description: Response payload for the "generate-variation" API.
-      type: object
-      properties:
-        document:
-          $ref: '#/components/schemas/ExpressDocument'
-          description: Specifies the details of the generated variation.
-        jobId:
-          description: The identifier of the job.
-          type: string
-        status:
-          $ref: '#/components/schemas/JobStatus'
-          description: The status of the job.
-      required:
-      - document
-      - jobId
-      - status
-    ErrorResponseDetails:
-      description: Details of the error response.
-      type: object
-      properties:
-        error_code:
-          description: The error code.
-          type: string
-        message:
-          description: The error message.
-          type: string
-        validation_errors:
-          description: Validation error messages.
-          type: array
-          items:
-            type: string
-      required:
-      - error_code
-    SuccessfulPdfRendition:
-      description: Result of a successful PDF rendition export.
-      type: object
-      properties:
-        renditionUrl:
-          description: The URL of the PDF rendition.
-          type: string
-      required:
-      - renditionUrl
     SuccessfulPageRendition:
       description: Details of the page rendition that was successfully exported.
       type: object
@@ -220,17 +277,24 @@ components:
       required:
       - pageNumber
       - renditionUrl
-    JobStatus:
-      description: Various statuses of a job.
-      enum:
-      - cancel_requested
-      - cancelled
-      - failed
-      - partially_succeeded
-      - pending
-      - running
-      - succeeded
-      type: string
+    ExportRenditionResponse:
+      description: Response payload for the "export-rendition" API.
+      anyOf:
+      - $ref: '#/components/schemas/PageRenditionResponse'
+      - $ref: '#/components/schemas/PdfRenditionResponse'
+    JobStatusResponse:
+      description: Base response payload returned by Job Status API.
+      type: object
+      properties:
+        jobId:
+          description: The identifier of the job.
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          description: The status of the job.
+      required:
+      - jobId
+      - status
     PdfRenditionResponse:
       description: Response payload for the "export-rendition" API when exporting PDF rendition.
       type: object
@@ -256,106 +320,42 @@ components:
       - jobId
       - pageRenditionsResult
       - status
-  examples:
-    jobStatusResponseSampleOne:
-      summary: Job status response running
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: running
-    jobStatusResponseSampleThree:
-      summary: Job status response failed
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: failed
-    exportPdfRenditionResponseSampleOne:
-      summary: Export PDF Rendition Response - Succeeded
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: succeeded
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pageRenditionsResult:
-        - renditionUrl: https://example.com/rendition/document.pdf
-    exportPdfRenditionResponseSampleTwo:
-      summary: Export PDF Rendition Response - Failed
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: failed
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pageRenditionsResult:
-        - error:
-            error_code: runtime_error
-            message: Runtime error
-    errorResponseDetailsRuntimeError:
-      summary: Runtime Error
-      value:
-        error_code: runtime_error
-        message: Runtime error
-    errorResponseDetailsNotFound:
-      summary: Not Found
-      value:
-        error_code: not_found
-        message: Requested resource not found
-    jobStatusResponseSampleTwo:
-      summary: Job status response succeeded
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: succeeded
-    exportRenditionResponseSampleThree:
-      summary: Export Rendition response sample 3
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: failed
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pageRenditionsResult:
-        - pageNumber: 1
-          error:
-            error_code: runtime_error
-            message: Runtime error
-        - pageNumber: 2
-          error:
-            error_code: runtime_error
-            message: Runtime error
-    generateVariationResponseSample:
-      summary: Generate variation request succeeded
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: succeeded
+    GenerateVariationResponse:
+      description: Response payload for the "generate-variation" API.
+      type: object
+      properties:
         document:
-          id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Generated Document
-          thumbnailUrl: https://example.com/thumbnails/generated-doc.png
-    exportRenditionResponseSampleTwo:
-      summary: Export Rendition response sample 2
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: partially_succeeded
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pageRenditionsResult:
-        - pageNumber: 1
-          renditionUrl: https://example.com/rendition/page1.jpg
-        - pageNumber: 2
-          error:
-            error_code: access_error
-            message: Not allowed
-        - pageNumber: 3
-          renditionUrl: https://example.com/rendition/page3.jpg
-    exportRenditionResponseSampleOne:
-      summary: Export Rendition response sample 1
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        status: succeeded
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pageRenditionsResult:
-        - pageNumber: 1
-          renditionUrl: https://example.com/rendition/page1.jpg
-        - pageNumber: 2
-          renditionUrl: https://example.com/rendition/page2.jpg
-        - pageNumber: 3
-          renditionUrl: https://example.com/rendition/page2.jpg
-        - pageNumber: 4
-          renditionUrl: https://example.com/rendition/page2.jpg
-        - pageNumber: 5
-          renditionUrl: https://example.com/rendition/page2.jpg
+          $ref: '#/components/schemas/ExpressDocument'
+          description: Specifies the details of the generated variation.
+        jobId:
+          description: The identifier of the job.
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          description: The status of the job.
+      required:
+      - document
+      - jobId
+      - status
+    ExpressDocument:
+      description: Details of the Express document.
+      type: object
+      properties:
+        id:
+          description: The unique identifier of the document.
+          type: string
+        name:
+          description: The name or title of the document.
+          type: string
+        thumbnailUrl:
+          description: 'Pre-signed URL for the Document''s thumbnail rendition.
+
+            The size of the rendition will be `640 pixels` along the longest side. The format of the rendition will be a `PNG` image.'
+          type: string
+      required:
+      - id
+      - name
+      - thumbnailUrl
   securitySchemes:
     apiKey:
       type: apiKey

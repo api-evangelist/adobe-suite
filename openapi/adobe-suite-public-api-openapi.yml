@@ -345,6 +345,30 @@ paths:
       x-operation-id-source: derived
 components:
   parameters:
+    RequestId:
+      in: header
+      name: x-request-id
+      description: A unique identifier for the request
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Subdomain:
+      in: header
+      name: x-gw-subdomain
+      description: Customer's Workfront subdomain
+      required: true
+      schema:
+        type: string
+        example: your-workfront-subdomain
+    StageId:
+      schema:
+        type: string
+        pattern: ^[\w-:]+$
+        example: design-review
+      name: stageId
+      in: path
+      required: true
     AssetId:
       description: The id of the asset being approved
       schema:
@@ -354,22 +378,13 @@ components:
       name: assetId
       in: path
       required: true
-    Subdomain:
+    ApiKey:
       in: header
-      name: x-gw-subdomain
-      description: Customer's Workfront subdomain
+      name: x-api-key
+      description: Generated API key from Adobe Developer Console
       required: true
       schema:
         type: string
-        example: your-workfront-subdomain
-    RequestId:
-      in: header
-      name: x-request-id
-      description: A unique identifier for the request
-      required: true
-      schema:
-        type: string
-        format: uuid
     AssetType:
       name: AssetType
       in: path
@@ -380,21 +395,13 @@ components:
         enum:
         - DOCV
         example: test
-    ApiKey:
-      in: header
-      name: x-api-key
-      description: Generated API key from Adobe Developer Console
-      required: true
-      schema:
-        type: string
-    StageId:
-      schema:
-        type: string
-        pattern: ^[\w-:]+$
-        example: design-review
-      name: stageId
-      in: path
-      required: true
+  responses:
+    ApprovalResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssetApproval'
   schemas:
     AssetApproval:
       type: object
@@ -670,13 +677,6 @@ components:
                 description: Stage structure and dependencies for this path
                 items:
                   type: object
-  responses:
-    ApprovalResponse:
-      description: OK
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/AssetApproval'
   securitySchemes:
     developer-console-auth:
       type: http

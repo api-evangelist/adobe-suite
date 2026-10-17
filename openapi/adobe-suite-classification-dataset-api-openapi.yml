@@ -186,14 +186,51 @@ paths:
           description: The dataset doesn't exist in the IMS ORG
 components:
   schemas:
-    ReportSuiteCompatibilityMetric:
+    Notification:
+      type: object
       properties:
-        metrics:
+        method:
+          type: string
+          enum:
+          - email
+          - rabbit
+        state:
+          type: string
+          enum:
+          - created
+          - queued
+          - validated
+          - failed_validation
+          - processing
+          - done_processing
+          - failed_processing
+          - completed
+        recipients:
           type: array
           items:
-            $ref: '#/components/schemas/CompatibilityMetric'
-        report_suite_id:
+            type: string
+      description: List of notifications to be sent for all imports and exports that occur.
+    ClassificationSubscription:
+      required:
+      - dimension
+      - rsid
+      - unique
+      type: object
+      properties:
+        rsid:
           type: string
+          description: The report suite id for which you would like to subscribe to a classification set.
+        dimension:
+          type: string
+          description: The dimension identity you would like to be classified. Should be prefixed with variables/ i.e. variables/page
+        unique:
+          type: boolean
+          description: Force update of unique_hash to avoid duplicate subscriptions
+        editable:
+          type: boolean
+          description: Flag to indicate if the subscription is editable by the current user based on report suite permissions.
+          readOnly: true
+      description: A list of classification subscriptions. Subscriptions are not required at the time of creation but no data will be classified until at least one subscription exists.
     ApiAnalyticsClassificationColumn:
       required:
       - display_name
@@ -222,38 +259,6 @@ components:
           type: string
           description: An optional classification dataset id, whose dataset classifies this column's data.
       description: A list of classification column definitions. Column definitions are not required at the time of creation but no data will be classified until at least one column definition exists.
-    ClassificationSubscription:
-      required:
-      - dimension
-      - rsid
-      - unique
-      type: object
-      properties:
-        rsid:
-          type: string
-          description: The report suite id for which you would like to subscribe to a classification set.
-        dimension:
-          type: string
-          description: The dimension identity you would like to be classified. Should be prefixed with variables/ i.e. variables/page
-        unique:
-          type: boolean
-          description: Force update of unique_hash to avoid duplicate subscriptions
-        editable:
-          type: boolean
-          description: Flag to indicate if the subscription is editable by the current user based on report suite permissions.
-          readOnly: true
-      description: A list of classification subscriptions. Subscriptions are not required at the time of creation but no data will be classified until at least one subscription exists.
-    CompatibilityMetric:
-      type: object
-      properties:
-        id:
-          type: array
-          items:
-            type: string
-        datasets:
-          type: array
-          items:
-            type: string
     ApiClassificationSet:
       properties:
         owner:
@@ -312,42 +317,37 @@ components:
         email:
           type: string
       description: Contact information for a person responsible for the classification definition and/or data.
-    Notification:
+    ReportSuiteCompatibilityMetric:
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompatibilityMetric'
+        report_suite_id:
+          type: string
+    CompatibilityMetric:
       type: object
       properties:
-        method:
-          type: string
-          enum:
-          - email
-          - rabbit
-        state:
-          type: string
-          enum:
-          - created
-          - queued
-          - validated
-          - failed_validation
-          - processing
-          - done_processing
-          - failed_processing
-          - completed
-        recipients:
+        id:
           type: array
           items:
             type: string
-      description: List of notifications to be sent for all imports and exports that occur.
+        datasets:
+          type: array
+          items:
+            type: string
   parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
-      required: true
-      schema:
-        type: string
     x-api-key:
       name: x-api-key
       in: header
       description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
       required: true
       schema:
         type: string

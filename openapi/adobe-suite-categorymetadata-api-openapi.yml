@@ -154,85 +154,6 @@ paths:
                     locale: en-US
 components:
   schemas:
-    Source:
-      title: Catalog source
-      description: Source of the entity, for example, "en-US" for US English.
-      type: object
-      required:
-      - locale
-      properties:
-        locale:
-          type: string
-          description: A single value that represents content locale, for example, English.
-          example: English
-    FeedCategoryMetadataDelete:
-      title: Delete category metadata attribute
-      description: Delete metadata information for a category attribute.
-      required:
-      - code
-      - source
-      type: object
-      properties:
-        code:
-          type: string
-          description: Attribute code
-        source:
-          $ref: '#/components/schemas/Source'
-    401Response:
-      title: 401 Unauthorized
-      type: object
-      properties:
-        title:
-          type: string
-          description: Error title
-        status:
-          type: string
-          description: Error status code
-        error_code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-      example:
-        title: ErrInvalidOauthToken
-        status: '401'
-        error_code: '401013'
-        message: Oauth token is not valid
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    FeedCategoryMetadataUpdate:
-      title: Update category metadata attribute
-      description: Metadata information for a category attribute.
-      required:
-      - code
-      - source
-      type: object
-      properties:
-        code:
-          type: string
-          description: Attribute code
-        source:
-          $ref: '#/components/schemas/Source'
-        label:
-          type: string
-          description: Label for the attribute that is displayed in user interfaces.
-          example: Attribute Name
-        dataType:
-          type: string
-          description: Data type
-          example: TEXT
-          enum:
-          - TEXT
-          - DECIMAL
-          - INTEGER
-          - BOOLEAN
     403Response:
       title: 403 Forbidden
       type: object
@@ -282,6 +203,44 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
+    FeedItemFailedValidationResult:
+      title: FeedItemFailedValidationResult
+      type: object
+      properties:
+        code:
+          type: string
+          description: Code name of invalid field.
+        itemIndex:
+          type: integer
+          format: int32
+          description: Reference to the line item with an invalid payload. The line count begins at 0.
+        message:
+          type: string
+          description: Error description
+        value:
+          type: string
+          description: Original value passed in the request.
+    401Response:
+      title: 401 Unauthorized
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrInvalidOauthToken
+        status: '401'
+        error_code: '401013'
+        message: Oauth token is not valid
     ProcessFeedResponse:
       title: Response payload
       type: object
@@ -297,6 +256,32 @@ components:
       example:
         status: ACCEPTED
         acceptedCount: 4
+    FeedCategoryMetadataUpdate:
+      title: Update category metadata attribute
+      description: Metadata information for a category attribute.
+      required:
+      - code
+      - source
+      type: object
+      properties:
+        code:
+          type: string
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+        label:
+          type: string
+          description: Label for the attribute that is displayed in user interfaces.
+          example: Attribute Name
+        dataType:
+          type: string
+          description: Data type
+          example: TEXT
+          enum:
+          - TEXT
+          - DECIMAL
+          - INTEGER
+          - BOOLEAN
     FeedCategoryMetadata:
       title: Create or update category metadata attribute
       description: Metadata information for a category attribute.
@@ -325,40 +310,39 @@ components:
           - DECIMAL
           - INTEGER
           - BOOLEAN
-    FeedItemFailedValidationResult:
-      title: FeedItemFailedValidationResult
+    FeedCategoryMetadataDelete:
+      title: Delete category metadata attribute
+      description: Delete metadata information for a category attribute.
+      required:
+      - code
+      - source
       type: object
       properties:
         code:
           type: string
-          description: Code name of invalid field.
-        itemIndex:
-          type: integer
-          format: int32
-          description: Reference to the line item with an invalid payload. The line count begins at 0.
-        message:
+          description: Attribute code
+        source:
+          $ref: '#/components/schemas/Source'
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
+      type: object
+      required:
+      - locale
+      properties:
+        locale:
           type: string
-          description: Error description
-        value:
-          type: string
-          description: Original value passed in the request.
+          description: A single value that represents content locale, for example, English.
+          example: English
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
   parameters:
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
     ContentEncoding:
       name: Content-Encoding
       in: header
@@ -368,25 +352,23 @@ components:
         enum:
         - gzip
       description: Use this header if the payload is compressed with gzip.
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
   responses:
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
-    AcceptedResponse:
-      x-summary: All items accepted
-      description: 'All items accepted and will be processed asynchronously
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/ProcessFeedResponse'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -416,6 +398,33 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
     TooManyRequestsResponse:
       x-summary: Too many requests
       description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
@@ -427,15 +436,6 @@ components:
         text/html;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/429Response'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

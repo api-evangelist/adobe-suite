@@ -261,24 +261,12 @@ paths:
                     locale: en-US
 components:
   schemas:
-    Source:
-      title: Catalog source
-      description: Source of the entity, for example, "en-US" for US English.
-      type: object
-      required:
-      - locale
-      properties:
-        locale:
-          type: string
-          description: A single value that represents content locale, for example, English.
-          example: English
-    FeedCategory:
-      title: FeedCategory
-      description: Category information for organizing products with hierarchical structure and localization support.
+    FeedCategoryDelete:
+      title: Delete category
+      description: Delete category information for removing categories from the catalog.
       required:
       - slug
       - source
-      - name
       type: object
       properties:
         slug:
@@ -288,7 +276,7 @@ components:
           pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
           description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
 
-            String can contain only lowercase letters, numbers, and hyphens.
+            Must use only lowercase letters, numbers, and hyphens.
 
             Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
 
@@ -296,127 +284,7 @@ components:
           example: men/clothing/pants
         source:
           $ref: '#/components/schemas/Source'
-        name:
-          type: string
-          minLength: 1
-          maxLength: 128
-          description: Display name of the category
-          example: Men's Pants
-        description:
-          type:
-          - string
-          - 'null'
-          description: Full-text description of the category.
-          example: Men's clothing, shoes, and accessories
-        families:
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-          description: 'Optional array of product family identifiers that this category is associated with.
-
-            Used for enhanced product organization and filtering.
-
-            '
-          example:
-          - apparel
-          - clothing
-        position:
-          type: integer
-          format: int32
-          description: Sort order for the category
-        metaTags:
-          $ref: '#/components/schemas/CategoryMetaAttribute'
-        attributes:
-          type: array
-          description: A list of category attributes.
-          items:
-            $ref: '#/components/schemas/CategoryAttribute'
-        images:
-          type: array
-          description: A list of category images.
-          items:
-            $ref: '#/components/schemas/CategoryImage'
       additionalProperties: false
-    CategoryAttribute:
-      title: Category Attribute
-      type: object
-      required:
-      - code
-      - values
-      properties:
-        code:
-          type: string
-          description: Category Attribute Code
-        values:
-          type: array
-          description: A list of value(s) associated with a specified attribute code.
-          items:
-            type: string
-    CategoryMetaAttribute:
-      title: Meta Attributes
-      description: Meta attributes that are specified in <meta> tags.
-      type: object
-      properties:
-        title:
-          type: string
-          description: A meta title
-        keywords:
-          type: array
-          description: A meta keywords
-          items:
-            type: string
-        description:
-          type: string
-          description: A meta description
-    CategoryImage:
-      title: Category Image
-      type: object
-      required:
-      - url
-      properties:
-        url:
-          type: string
-          description: Media resource URL
-        label:
-          type: string
-          description: Media resource label
-        roles:
-          type: array
-          description: 'Roles associated with this image that determine how the image is used on the storefront.
-
-            - `BASE`: Category image is visible as a main image on the Category Detail Page.
-
-            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
-
-            '
-          items:
-            enum:
-            - BASE
-            - THUMBNAIL
-        customRoles:
-          type: array
-          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
-
-            '
-          items:
-            type: string
-    ProcessFeedResponse:
-      title: Response payload
-      type: object
-      properties:
-        status:
-          type: string
-          description: Request status.
-          default: ACCEPTED
-        acceptedCount:
-          type: integer
-          description: The number of received and accepted items.
-          format: int32
-      example:
-        status: ACCEPTED
-        acceptedCount: 4
     401Response:
       title: 401 Unauthorized
       type: object
@@ -508,30 +376,27 @@ components:
           items:
             $ref: '#/components/schemas/CategoryImage'
       additionalProperties: false
-    FeedCategoryDelete:
-      title: Delete category
-      description: Delete category information for removing categories from the catalog.
-      required:
-      - slug
-      - source
+    403Response:
+      title: 403 Forbidden
       type: object
       properties:
-        slug:
+        title:
           type: string
-          minLength: 1
-          maxLength: 1024
-          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
-          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
-
-            Must use only lowercase letters, numbers, and hyphens.
-
-            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
-
-            '
-          example: men/clothing/pants
-        source:
-          $ref: '#/components/schemas/Source'
-      additionalProperties: false
+          description: Error title
+        status:
+          type: string
+          description: Error status code
+        error_code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      example:
+        title: ErrMissingOauthToken
+        status: '403'
+        error_code: '403010'
+        message: Oauth token is missing
     400ProcessFeedResponse:
       title: Response payload
       type: object
@@ -560,35 +425,69 @@ components:
           code: source
           message: required property 'source' not found
           value: ''
-    429Response:
-      title: 429 Too Many Requests
-      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
-
-        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
-
-        '
-      type: string
-    403Response:
-      title: 403 Forbidden
+    CategoryMetaAttribute:
+      title: Meta Attributes
+      description: Meta attributes that are specified in <meta> tags.
       type: object
       properties:
         title:
           type: string
-          description: Error title
-        status:
+          description: A meta title
+        keywords:
+          type: array
+          description: A meta keywords
+          items:
+            type: string
+        description:
           type: string
-          description: Error status code
-        error_code:
+          description: A meta description
+    CategoryImage:
+      title: Category Image
+      type: object
+      required:
+      - url
+      properties:
+        url:
           type: string
-          description: Error code
-        message:
+          description: Media resource URL
+        label:
           type: string
-          description: Error message
-      example:
-        title: ErrMissingOauthToken
-        status: '403'
-        error_code: '403010'
-        message: Oauth token is missing
+          description: Media resource label
+        roles:
+          type: array
+          description: 'Roles associated with this image that determine how the image is used on the storefront.
+
+            - `BASE`: Category image is visible as a main image on the Category Detail Page.
+
+            - `THUMBNAIL`: Thumbnail images appear in the thumbnail gallery, shopping cart, etc.
+
+            '
+          items:
+            enum:
+            - BASE
+            - THUMBNAIL
+        customRoles:
+          type: array
+          description: 'Custom image role. Merchants can define custom roles in addition to the predefined values.
+
+            '
+          items:
+            type: string
+    CategoryAttribute:
+      title: Category Attribute
+      type: object
+      required:
+      - code
+      - values
+      properties:
+        code:
+          type: string
+          description: Category Attribute Code
+        values:
+          type: array
+          description: A list of value(s) associated with a specified attribute code.
+          items:
+            type: string
     FeedItemFailedValidationResult:
       title: FeedItemFailedValidationResult
       type: object
@@ -606,33 +505,135 @@ components:
         value:
           type: string
           description: Original value passed in the request.
-  parameters:
-    ContentType:
-      name: Content-Type
-      in: header
-      required: true
-      schema:
-        type: string
-        enum:
-        - application/json
-        default: application/json
-    ContentEncoding:
-      name: Content-Encoding
-      in: header
-      required: false
-      schema:
-        type: string
-        enum:
-        - gzip
-      description: Use this header if the payload is compressed with gzip.
-    Authorization:
-      name: Authorization
-      in: header
-      required: true
-      schema:
-        type: string
-        description: Authorization Bearer token
+    ProcessFeedResponse:
+      title: Response payload
+      type: object
+      properties:
+        status:
+          type: string
+          description: Request status.
+          default: ACCEPTED
+        acceptedCount:
+          type: integer
+          description: The number of received and accepted items.
+          format: int32
+      example:
+        status: ACCEPTED
+        acceptedCount: 4
+    FeedCategory:
+      title: FeedCategory
+      description: Category information for organizing products with hierarchical structure and localization support.
+      required:
+      - slug
+      - source
+      - name
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          pattern: ^[a-z0-9-]+(?:\/[a-z0-9-]+)*$
+          description: 'Category slug using hierarchical format with forward slashes to represent parent-child relationships.
+
+            String can contain only lowercase letters, numbers, and hyphens.
+
+            Examples: ''men'', ''men/clothing'', ''men/clothing/pants''
+
+            '
+          example: men/clothing/pants
+        source:
+          $ref: '#/components/schemas/Source'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Display name of the category
+          example: Men's Pants
+        description:
+          type:
+          - string
+          - 'null'
+          description: Full-text description of the category.
+          example: Men's clothing, shoes, and accessories
+        families:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+          description: 'Optional array of product family identifiers that this category is associated with.
+
+            Used for enhanced product organization and filtering.
+
+            '
+          example:
+          - apparel
+          - clothing
+        position:
+          type: integer
+          format: int32
+          description: Sort order for the category
+        metaTags:
+          $ref: '#/components/schemas/CategoryMetaAttribute'
+        attributes:
+          type: array
+          description: A list of category attributes.
+          items:
+            $ref: '#/components/schemas/CategoryAttribute'
+        images:
+          type: array
+          description: A list of category images.
+          items:
+            $ref: '#/components/schemas/CategoryImage'
+      additionalProperties: false
+    Source:
+      title: Catalog source
+      description: Source of the entity, for example, "en-US" for US English.
+      type: object
+      required:
+      - locale
+      properties:
+        locale:
+          type: string
+          description: A single value that represents content locale, for example, English.
+          example: English
+    429Response:
+      title: 429 Too Many Requests
+      description: 'Too many requests. Indicates that a client has exceeded the rate limit of 300 requests per minute.
+
+        Check the `retry-after` header to get the time (in seconds) to wait before sending the next request.
+
+        '
+      type: string
   responses:
+    AcceptedResponse:
+      x-summary: All items accepted
+      description: 'All items accepted and will be processed asynchronously
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/ProcessFeedResponse'
+    ForbiddenResponse:
+      x-summary: Forbidden request
+      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/403Response'
+    UnauthorizedResponse:
+      x-summary: Unauthorized request
+      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
+
+        '
+      content:
+        application/json;charset=UTF-8:
+          schema:
+            $ref: '#/components/schemas/401Response'
     InvalidItemsResponse:
       x-summary: Request rejected
       description: 'Some of the received items are invalid. Check the "message" and "errors" fields for details.
@@ -662,24 +663,6 @@ components:
         application/json;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/400ProcessFeedResponse'
-    ForbiddenResponse:
-      x-summary: Forbidden request
-      description: 'Verify that the `Authorization` header is present, and that the Bearer token is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/403Response'
-    AcceptedResponse:
-      x-summary: All items accepted
-      description: 'All items accepted and will be processed asynchronously
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/ProcessFeedResponse'
     TooManyRequestsResponse:
       x-summary: Too many requests
       description: 'Indicates that a client has exceeded the rate limit of 300 requests per minute.
@@ -691,15 +674,32 @@ components:
         text/html;charset=UTF-8:
           schema:
             $ref: '#/components/schemas/429Response'
-    UnauthorizedResponse:
-      x-summary: Unauthorized request
-      description: 'Verify that the Bearer token provided in the `Authorization` header is still valid.
-
-        '
-      content:
-        application/json;charset=UTF-8:
-          schema:
-            $ref: '#/components/schemas/401Response'
+  parameters:
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+        default: application/json
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Authorization Bearer token
+    ContentEncoding:
+      name: Content-Encoding
+      in: header
+      required: false
+      schema:
+        type: string
+        enum:
+        - gzip
+      description: Use this header if the payload is compressed with gzip.
 externalDocs:
   url: https://github.com/adobe-commerce/aco-ts-sdk/blob/main/README.md
   description: Learn about the Adobe Commerce Optimizer TypeScript and JavaScript SDK for Merchandising Services

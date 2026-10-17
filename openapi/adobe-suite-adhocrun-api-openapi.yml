@@ -127,6 +127,15 @@ paths:
       - Adhocrun
 components:
   schemas:
+    adhocActivationRequestV2:
+      type: object
+      title: V2 request (recommended)
+      description: 'Request body for v2 of the ad hoc activation API. Use this version by including the `Accept: application/vnd.adobe.adhoc.activation+json; version=2` header. Only `activationInfo` is required. No audience export job ID is needed.'
+      required:
+      - activationInfo
+      properties:
+        activationInfo:
+          $ref: '#/components/schemas/activationInfoMap'
     activationOrderItem:
       type: object
       properties:
@@ -142,6 +151,14 @@ components:
           type: string
           description: The URL of the flow run in the Flow Service API. Use this URL to track the progress of the activation job.
           example: https://platform.adobe.io/data/foundation/flowservice/runs/88d6da63-dc97-460e-b781-fc795a7386d9
+    adhocActivationResponse:
+      type: object
+      properties:
+        order:
+          type: array
+          description: A list of activation order records, one per audience submitted for activation.
+          items:
+            $ref: '#/components/schemas/activationOrderItem'
     activationInfoMap:
       type: object
       description: A map of destination instance IDs to arrays of audience IDs to activate. Each key is a destination instance ID; each value is a list of audience IDs to activate to that destination. Retrieve destination instance IDs from **Destinations > Browse** in the Experience Platform UI. For [external or custom upload audiences](https://experienceleague.adobe.com/en/docs/experience-platform/segmentation/ui/audience-portal#import-audience), use the system-generated ID shown as **ID#** in the [audience summary panel](https://experienceleague.adobe.com/en/docs/experience-platform/segmentation/ui/audience-portal#audience-summary) in the Audiences UI, not the external source ID.
@@ -172,23 +189,6 @@ components:
             description: An audience export job ID.
           example:
           - f3b7b8b4-1b2c-3d4e-5f6a-7b8c9d0e1f2a
-    adhocActivationRequestV2:
-      type: object
-      title: V2 request (recommended)
-      description: 'Request body for v2 of the ad hoc activation API. Use this version by including the `Accept: application/vnd.adobe.adhoc.activation+json; version=2` header. Only `activationInfo` is required. No audience export job ID is needed.'
-      required:
-      - activationInfo
-      properties:
-        activationInfo:
-          $ref: '#/components/schemas/activationInfoMap'
-    adhocActivationResponse:
-      type: object
-      properties:
-        order:
-          type: array
-          description: A list of activation order records, one per audience submitted for activation.
-          items:
-            $ref: '#/components/schemas/activationOrderItem'
   parameters:
     accept:
       name: Accept
@@ -199,14 +199,19 @@ components:
         enum:
         - application/vnd.adobe.adhoc.activation+json; version=2
       in: header
-    content-type:
-      name: Content-Type
-      description: The media type of the request body. Must be `application/json`.
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
       required: true
       schema:
         type: string
-        enum:
-        - application/json
+      in: header
+    authorization:
+      name: Authorization
+      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+      required: true
+      schema:
+        type: string
       in: header
     x-sandbox-name:
       name: x-sandbox-name
@@ -222,19 +227,14 @@ components:
       schema:
         type: string
       in: header
-    authorization:
-      name: Authorization
-      description: The access token which can be copied from your Experience Platform integration, prefixed with "Bearer". For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
+    content-type:
+      name: Content-Type
+      description: The media type of the request body. Must be `application/json`.
       required: true
       schema:
         type: string
-      in: header
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, see the [authentication tutorial](http://www.adobe.com/go/platform-api-authentication-en).
-      required: true
-      schema:
-        type: string
+        enum:
+        - application/json
       in: header
     x-sandbox-id:
       name: x-sandbox-id

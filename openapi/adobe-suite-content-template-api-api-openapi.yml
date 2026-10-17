@@ -220,6 +220,37 @@ paths:
           $ref: '#/components/responses/409'
 components:
   schemas:
+    content-template-listing-response:
+      title: Content Template
+      type: object
+      properties:
+        subType:
+          $ref: '#/components/schemas/template-sub-type-enum'
+      allOf:
+      - $ref: '#/components/schemas/content-template-metadata'
+      - $ref: '#/components/schemas/entity-audit-fields'
+      - $ref: '#/components/schemas/self-href'
+    name:
+      type: string
+      title: Content Name
+      description: Content Name
+      example: Cyber Monday Sale - Header !!
+      minLength: 1
+    self-href:
+      title: Self-Href
+      type: object
+      properties:
+        self:
+          type: object
+          properties:
+            href:
+              type: string
+              example: /templates/b6d70a45-a149-453b-85ba-809a5d40066d
+    patch-request:
+      title: Patch Request
+      type: array
+      items:
+        $ref: '#/components/schemas/patch-document'
     patch-document:
       title: Patch Document
       description: A JSONPatch document as defined by RFC 6902
@@ -243,27 +274,31 @@ components:
         from:
           type: string
           description: A string containing a JSON Pointer value.
-    olac-labels:
-      title: OLAC Label Details
-      type: array
-      items:
-        type: string
-        example: custom/sensitive-data
-    description:
+    template-type:
       type: string
-      title: Description
-      description: Description
-      example: Cyber Monday Sale - Header Banner!!
-    content-template-listing-response:
-      title: Content Template
+      title: Template Type
+      description: Template Type
+      example: html
+      enum:
+      - html
+      - html_primary_page
+      - html_sub_page
+      - content
+    template-list-link:
+      title: Content Template List Link.
       type: object
+      required:
+      - self
       properties:
-        subType:
-          $ref: '#/components/schemas/template-sub-type-enum'
-      allOf:
-      - $ref: '#/components/schemas/content-template-metadata'
-      - $ref: '#/components/schemas/entity-audit-fields'
-      - $ref: '#/components/schemas/self-href'
+        next:
+          $ref: '#/components/schemas/href-link'
+        page:
+          $ref: '#/components/schemas/href-link'
+      example:
+        next:
+          href: /templates?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
+        page:
+          href: /templates?orderBy={orderBy}&start={start}&limit={limit}
     template-sub-type-enum:
       title: Template sub type
       description: Sub type. This is only enabled for Content templates with code channel.
@@ -272,59 +307,14 @@ components:
       - HTML
       - JSON
       example: HTML
-    self-href:
-      title: Self-Href
-      type: object
-      properties:
-        self:
-          type: object
-          properties:
-            href:
-              type: string
-              example: /templates/b6d70a45-a149-453b-85ba-809a5d40066d
-    name:
+    template-origin:
       type: string
-      title: Content Name
-      description: Content Name
-      example: Cyber Monday Sale - Header !!
-      minLength: 1
-    href-link:
-      title: Href-link
-      type: object
-      required:
-      - href
-      properties:
-        href:
-          type: string
-    page:
-      title: Page
-      type: object
-      properties:
-        orderBy:
-          type: string
-          enum:
-          - modifiedAt
-          - createdAt
-          - name
-          example: -modifiedAt
-        start:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-        next:
-          type: string
-          format: byte
-          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
-        count:
-          type: integer
-          example: 10
-    parent-folder-id:
-      type:
-      - string
-      - 'null'
-      title: Folder Id
-      description: Id of the folder in which the content is present.
-      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+      title: Origin
+      description: Content Template Origin/Source system.
+      enum:
+      - ajo
+      - aem
+      - external
     entity-audit-fields:
       title: Entity Audit Fields.
       type: object
@@ -343,53 +333,6 @@ components:
         modifiedBy:
           type: string
           example: 4c0190e5d702748f0931@AdobeId
-    template-source:
-      title: Template Source.
-      type:
-      - object
-      - 'null'
-      required:
-      - origin
-      properties:
-        origin:
-          $ref: '#/components/schemas/template-origin'
-        metadata:
-          title: MetaData
-          description: List containing custom properties(key-value pair).
-          additionalProperties: true
-    content-template-with-audit:
-      title: Content Template with audit fields.
-      type: object
-      discriminator:
-        propertyName: templateType
-        mapping:
-          html: '#/components/schemas/email-html-template-with-audit'
-          html_primary_page: '#/components/schemas/primary-page-email-html-template-with-audit'
-          html_sub_page: '#/components/schemas/sub-page-email-html-template-with-audit'
-          content: '#/components/schemas/channel-template-with-audit'
-      required:
-      - name
-      - templateType
-      - channels
-      properties:
-        id:
-          $ref: '#/components/schemas/id'
-        name:
-          $ref: '#/components/schemas/name'
-        description:
-          $ref: '#/components/schemas/description'
-        templateType:
-          $ref: '#/components/schemas/template-type'
-        channels:
-          $ref: '#/components/schemas/template-channel-enum'
-        labels:
-          $ref: '#/components/schemas/olac-labels'
-        source:
-          $ref: '#/components/schemas/template-source'
-        subType:
-          $ref: '#/components/schemas/template-sub-type-enum'
-        parentFolderId:
-          $ref: '#/components/schemas/parent-folder-id'
     content-template-metadata:
       title: Content Template metadata.
       type: object
@@ -414,70 +357,27 @@ components:
           $ref: '#/components/schemas/template-source'
         parentFolderId:
           $ref: '#/components/schemas/parent-folder-id'
-    id:
-      type: string
-      title: Content Template Id.
-      description: Content Template Id.
-      example: b6d70a45-a149-453b-85ba-809a5d40066d
-    template-page-response:
-      title: Content Template Page Response
-      type: object
-      properties:
-        _page:
-          $ref: '#/components/schemas/page'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/content-template-listing-response'
-        _links:
-          $ref: '#/components/schemas/template-list-link'
-    template-origin:
-      type: string
-      title: Origin
-      description: Content Template Origin/Source system.
-      enum:
-      - ajo
-      - aem
-      - external
-    template-list-link:
-      title: Content Template List Link.
-      type: object
+    parent-folder-id:
+      type:
+      - string
+      - 'null'
+      title: Folder Id
+      description: Id of the folder in which the content is present.
+      example: a49dbe03-34e6-4231-aba0-0c255a9f08a1
+    template-source:
+      title: Template Source.
+      type:
+      - object
+      - 'null'
       required:
-      - self
+      - origin
       properties:
-        next:
-          $ref: '#/components/schemas/href-link'
-        page:
-          $ref: '#/components/schemas/href-link'
-      example:
-        next:
-          href: /templates?start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==&limit=20&orderBy=%2BmodifiedAt
-        page:
-          href: /templates?orderBy={orderBy}&start={start}&limit={limit}
-    template-type:
-      type: string
-      title: Template Type
-      description: Template Type
-      example: html
-      enum:
-      - html
-      - html_primary_page
-      - html_sub_page
-      - content
-    template-channel-enum:
-      type: string
-      title: channel
-      description: Supported channels for Content Template.
-      example: email
-      enum:
-      - email
-      - push
-      - inapp
-      - sms
-      - code
-      - directMail
-      - landingpage
-      - shared
+        origin:
+          $ref: '#/components/schemas/template-origin'
+        metadata:
+          title: MetaData
+          description: List containing custom properties(key-value pair).
+          additionalProperties: true
     content-template:
       description: Content templates allow us to easily reuse custom content, facilitating accelerated and improved design process.<br> <b>subType</b> field is only supported for content template with code channel
       title: Content Template
@@ -513,43 +413,117 @@ components:
           $ref: '#/components/schemas/template-sub-type-enum'
         parentFolderId:
           $ref: '#/components/schemas/parent-folder-id'
-    patch-request:
-      title: Patch Request
+    id:
+      type: string
+      title: Content Template Id.
+      description: Content Template Id.
+      example: b6d70a45-a149-453b-85ba-809a5d40066d
+    href-link:
+      title: Href-link
+      type: object
+      required:
+      - href
+      properties:
+        href:
+          type: string
+    description:
+      type: string
+      title: Description
+      description: Description
+      example: Cyber Monday Sale - Header Banner!!
+    template-page-response:
+      title: Content Template Page Response
+      type: object
+      properties:
+        _page:
+          $ref: '#/components/schemas/page'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/content-template-listing-response'
+        _links:
+          $ref: '#/components/schemas/template-list-link'
+    olac-labels:
+      title: OLAC Label Details
       type: array
       items:
-        $ref: '#/components/schemas/patch-document'
-  parameters:
-    property:
-      name: property
-      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
-      in: query
-      schema:
-        items:
-          type: string
-        type: array
-      required: false
-      example: property=name~^test
-    start:
-      name: start
-      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
-      in: query
-      schema:
         type: string
-        format: byte
-      required: false
-      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        example: custom/sensitive-data
+    content-template-with-audit:
+      title: Content Template with audit fields.
+      type: object
+      discriminator:
+        propertyName: templateType
+        mapping:
+          html: '#/components/schemas/email-html-template-with-audit'
+          html_primary_page: '#/components/schemas/primary-page-email-html-template-with-audit'
+          html_sub_page: '#/components/schemas/sub-page-email-html-template-with-audit'
+          content: '#/components/schemas/channel-template-with-audit'
+      required:
+      - name
+      - templateType
+      - channels
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        name:
+          $ref: '#/components/schemas/name'
+        description:
+          $ref: '#/components/schemas/description'
+        templateType:
+          $ref: '#/components/schemas/template-type'
+        channels:
+          $ref: '#/components/schemas/template-channel-enum'
+        labels:
+          $ref: '#/components/schemas/olac-labels'
+        source:
+          $ref: '#/components/schemas/template-source'
+        subType:
+          $ref: '#/components/schemas/template-sub-type-enum'
+        parentFolderId:
+          $ref: '#/components/schemas/parent-folder-id'
+    page:
+      title: Page
+      type: object
+      properties:
+        orderBy:
+          type: string
+          enum:
+          - modifiedAt
+          - createdAt
+          - name
+          example: -modifiedAt
+        start:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        next:
+          type: string
+          format: byte
+          example: eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
+        count:
+          type: integer
+          example: 10
+    template-channel-enum:
+      type: string
+      title: channel
+      description: Supported channels for Content Template.
+      example: email
+      enum:
+      - email
+      - push
+      - inapp
+      - sms
+      - code
+      - directMail
+      - landingpage
+      - shared
+  parameters:
     ImsOrgIdParam:
       name: x-gw-ims-org-id
       in: header
       description: Your Identity Management Services (IMS) Organization id
       required: true
-      schema:
-        type: string
-    RequestIdParam:
-      in: header
-      name: x-request-id
-      description: A unique string to identify the request, MUST be unique for each request
-      required: false
       schema:
         type: string
     orderBy:
@@ -561,14 +535,23 @@ components:
         default: -modifiedAt
       required: false
       example: orderBy=%2BmodifiedAt.
-    APIKeyParam:
-      name: x-api-key
+    IfMatchParam:
+      name: If-Match
       in: header
-      description: API Key
       required: true
+      description: etag of resource to match before update of resource.
       schema:
         type: string
-        x-example: cjm client
+    property:
+      name: property
+      description: '<p>Optional property filters.  Filtering is supported on following properties: id, name, status, description, fragmentType, templateType, modifiedAt, createdAt, createdBy and modifiedBy Ex. property=id==31e62feb-69b7-4e7b-8065-a921455c2c15&property=name~^test</p>'
+      in: query
+      schema:
+        items:
+          type: string
+        type: array
+      required: false
+      example: property=name~^test
     SandboxNameParam:
       name: x-sandbox-name
       in: header
@@ -586,13 +569,30 @@ components:
         minimum: 1
         maximum: 1000
       required: false
-    IfMatchParam:
-      name: If-Match
+    RequestIdParam:
       in: header
-      required: true
-      description: etag of resource to match before update of resource.
+      name: x-request-id
+      description: A unique string to identify the request, MUST be unique for each request
+      required: false
       schema:
         type: string
+    APIKeyParam:
+      name: x-api-key
+      in: header
+      description: API Key
+      required: true
+      schema:
+        type: string
+        x-example: cjm client
+    start:
+      name: start
+      description: Used for pagination. Specifies the criteria for next page with respect to the property specified in orderBy.
+      in: query
+      schema:
+        type: string
+        format: byte
+      required: false
+      example: start=eyJtb2RpZmllZEF0IjoxNjA2OTc2NzI3NTQ5fQ==
   headers:
     etag:
       schema:

@@ -375,21 +375,6 @@ paths:
                 $ref: '#/components/schemas/CustomMarketingActionNotFound'
 components:
   schemas:
-    _links:
-      type: object
-      properties:
-        _links:
-          type: object
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: The URI reference that clients may use to obtain this resource. Typically this URL ends with the `name` or `id` property of the resource.
-                  format: uri
-                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
-          description: Contains the URI reference that clients may use to obtain this resource.
     ServiceProperties:
       properties:
         imsOrg:
@@ -428,23 +413,18 @@ components:
           example: '{USER_ID}'
       allOf:
       - $ref: '#/components/schemas/_links'
-    MarketingActionRequest:
-      required:
-      - name
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the marketing action, which also acts as its unique identifier.
-          example: analyticsDB
-        description:
-          type: string
-          description: A description for the marketing action.
-          example: Push data to external database for analytics.
     MarketingActionResponse:
       allOf:
       - $ref: '#/components/schemas/MarketingActionRequest'
       - $ref: '#/components/schemas/ServiceProperties'
+    BadRequestError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
     MarketingActionsPageCustom:
       allOf:
       - $ref: '#/components/schemas/PagingProperties'
@@ -455,39 +435,6 @@ components:
             description: Contains the returned custom marketing actions.
             items:
               $ref: '#/components/schemas/MarketingActionResponseCustom'
-    NotFoundError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
-      - type: object
-        example:
-          type: /placeholder/type/uri
-          status: 404
-          title: NotFound
-    CoreMarketingActionsPage:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCoreMarketingActions'
-      - type: object
-        properties:
-          children:
-            type: array
-            description: Contains the returned marketing actions.
-            items:
-              $ref: '#/components/schemas/CoreMarketingActionResponse'
-    CustomMarketingActionNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
-          type: string
-          detail: https://platform.adobe.io:443/marketingActions/custom/marketingActionName not found
-    CreateMarketingActionError:
-      allOf:
-      - $ref: '#/components/schemas/BadRequestError'
-      - type: object
-        example:
-          type: string
-          detail: 'Unable to parse MarketingActionRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
     _linksPaging:
       type: object
       properties:
@@ -505,14 +452,28 @@ components:
                   type: string
                   description: When present and set to `true`, indicates that this is a templated URL.
           description: Contains a templated URL for clients to obtain this resource.
-    BadRequestError:
+    _links:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URI reference that clients may use to obtain this resource. Typically this URL ends with the `name` or `id` property of the resource.
+                  format: uri
+                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
+          description: Contains the URI reference that clients may use to obtain this resource.
+    CreateMarketingActionError:
       allOf:
-      - $ref: '#/components/schemas/Error'
+      - $ref: '#/components/schemas/BadRequestError'
       - type: object
         example:
-          type: /placeholder/type/uri
-          status: 400
-          title: BadRequest
+          type: string
+          detail: 'Unable to parse MarketingActionRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
     Error:
       type: object
       properties:
@@ -544,6 +505,58 @@ components:
                   href:
                     type: string
                     example: https://platform.adobe.io:443/data/foundation/dulepolicy/marketingActions/custom/analyticsDB
+    CustomMarketingActionNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/marketingActions/custom/marketingActionName not found
+    NotFoundError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 404
+          title: NotFound
+    CoreMarketingActionNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/marketingActions/core/marketingActionName not found
+    _linksPagingCoreMarketingActions:
+      allOf:
+      - $ref: '#/components/schemas/_linksPaging'
+    _linksMarketingAction:
+      allOf:
+      - $ref: '#/components/schemas/_links'
+    MarketingActionRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the marketing action, which also acts as its unique identifier.
+          example: analyticsDB
+        description:
+          type: string
+          description: A description for the marketing action.
+          example: Push data to external database for analytics.
+    PagingProperties:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of resources returned.
+              example: 1
+          description: Contains a `count` property for the number of resources returned.
     CoreMarketingActionResponse:
       properties:
         name:
@@ -556,28 +569,15 @@ components:
           example: Export to Third Party
       allOf:
       - $ref: '#/components/schemas/_linksMarketingAction'
-    _linksMarketingAction:
+    CoreMarketingActionsPage:
       allOf:
-      - $ref: '#/components/schemas/_links'
-    CoreMarketingActionNotFound:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCoreMarketingActions'
       - type: object
-        example:
-          type: string
-          detail: https://platform.adobe.io:443/marketingActions/core/marketingActionName not found
-    PagingProperties:
-      type: object
-      properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of resources returned.
-              example: 1
-          description: Contains a `count` property for the number of resources returned.
-    _linksPagingCoreMarketingActions:
-      allOf:
-      - $ref: '#/components/schemas/_linksPaging'
+        properties:
+          children:
+            type: array
+            description: Contains the returned marketing actions.
+            items:
+              $ref: '#/components/schemas/CoreMarketingActionResponse'
 x-original-swagger-version: '2.0'

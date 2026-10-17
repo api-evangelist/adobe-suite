@@ -268,6 +268,23 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
+    callbacksUpdateResponse:
+      allOf:
+      - $ref: '#/components/schemas/callbacksLookupResponse'
+    callbacksCreateResponse:
+      allOf:
+      - $ref: '#/components/schemas/callbacksLookupResponse'
+    callbacksAttributes:
+      type: object
+      properties:
+        subscriptions:
+          type: array
+          description: Lists the audit event types that this callback is subscribed to.
+          items:
+            type: string
+        url:
+          type: string
+          description: The URL that the callback will send messages to.
     callbacksLookupResponse:
       allOf:
       - $ref: '#/components/schemas/dataLookup'
@@ -277,6 +294,13 @@ components:
             type: object
             allOf:
             - $ref: '#/components/schemas/callbacksEntity'
+    dataLookup:
+      type: object
+      properties:
+        data:
+          type: object
+          properties: {}
+          description: Contains the details of the resource.
     callbacksListResponse:
       allOf:
       - $ref: '#/components/schemas/dataList'
@@ -285,6 +309,18 @@ components:
           data:
             type: array
       - $ref: '#/components/schemas/metaList'
+    callbacksCreatePayload:
+      allOf:
+      - $ref: '#/components/schemas/dataCreateNoType'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              attributes:
+                type: object
+                allOf:
+                - $ref: '#/components/schemas/callbacksAttributes'
     callbacksEntity:
       allOf:
       - $ref: '#/components/schemas/basicResourceProperties'
@@ -323,6 +359,30 @@ components:
                 type: string
                 description: A link to the callback itself.
             description: Contains links related to the callback which can be used in subsequent fetch requests.
+    relatedProperty:
+      type: object
+      properties:
+        property:
+          type: object
+          properties:
+            links:
+              type: object
+              properties:
+                related:
+                  type: string
+                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
+              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The unique ID of the property.
+                type:
+                  type: string
+                  description: The resource type for the property (`properties`).
+              description: Contains further information about the related property.
+          description: Contains details about the property that owns the resource.
     metaList:
       type: object
       properties:
@@ -349,72 +409,6 @@ components:
                   description: The total number of results in the response.
               description: Contains pagination information about the list response.
           description: Contains a `pagination` object that provides pagination information about the list response.
-    dataLookup:
-      type: object
-      properties:
-        data:
-          type: object
-          properties: {}
-          description: Contains the details of the resource.
-    dataList:
-      type: object
-      properties:
-        data:
-          type: array
-          description: Contains the results from the listing call.
-          items:
-            type: object
-            properties: {}
-    callbacksAttributes:
-      type: object
-      properties:
-        subscriptions:
-          type: array
-          description: Lists the audit event types that this callback is subscribed to.
-          items:
-            type: string
-        url:
-          type: string
-          description: The URL that the callback will send messages to.
-    basicResourceProperties:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique ID for the resource.
-        type:
-          type: string
-          description: The resource type.
-    callbacksUpdateResponse:
-      allOf:
-      - $ref: '#/components/schemas/callbacksLookupResponse'
-    callbacksUpdatePayload:
-      allOf:
-      - $ref: '#/components/schemas/dataUpdate'
-      - type: object
-        properties:
-          data:
-            type: object
-            properties:
-              attributes:
-                type: object
-                allOf:
-                - $ref: '#/components/schemas/callbacksAttributes'
-    dataCreateNoType:
-      required:
-      - data
-      type: object
-      properties:
-        data:
-          required:
-          - attributes
-          type: object
-          properties:
-            attributes:
-              type: object
-              properties: {}
-              description: The attributes for the resource being created.
-          description: Contains the attributes for the resource being created.
     dataUpdate:
       required:
       - data
@@ -455,9 +449,42 @@ components:
               - rule_components
               - secrets
           description: Contains the attributes and type for the resource being updated.
-    callbacksCreatePayload:
+    dataList:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Contains the results from the listing call.
+          items:
+            type: object
+            properties: {}
+    basicResourceProperties:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique ID for the resource.
+        type:
+          type: string
+          description: The resource type.
+    dataCreateNoType:
+      required:
+      - data
+      type: object
+      properties:
+        data:
+          required:
+          - attributes
+          type: object
+          properties:
+            attributes:
+              type: object
+              properties: {}
+              description: The attributes for the resource being created.
+          description: Contains the attributes for the resource being created.
+    callbacksUpdatePayload:
       allOf:
-      - $ref: '#/components/schemas/dataCreateNoType'
+      - $ref: '#/components/schemas/dataUpdate'
       - type: object
         properties:
           data:
@@ -467,31 +494,4 @@ components:
                 type: object
                 allOf:
                 - $ref: '#/components/schemas/callbacksAttributes'
-    callbacksCreateResponse:
-      allOf:
-      - $ref: '#/components/schemas/callbacksLookupResponse'
-    relatedProperty:
-      type: object
-      properties:
-        property:
-          type: object
-          properties:
-            links:
-              type: object
-              properties:
-                related:
-                  type: string
-                  description: A link that can be used in a subsequent API call to fetch the related property for the resource.
-              description: Contains a `related` link that can be used in a subsequent API call to fetch the related property for the resource.
-            data:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: The unique ID of the property.
-                type:
-                  type: string
-                  description: The resource type for the property (`properties`).
-              description: Contains further information about the related property.
-          description: Contains details about the property that owns the resource.
 x-original-swagger-version: '2.0'

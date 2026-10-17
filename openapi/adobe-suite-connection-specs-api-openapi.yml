@@ -560,17 +560,34 @@ paths:
           description: An internal error has occurred. Please try again. If the problem persisits, contact customer support.
 components:
   schemas:
-    PolicyItemDTO:
+    EncryptionSpecDTO:
       type: object
       properties:
-        duleLabels:
-          type: array
-          items:
-            type: string
-        enforcementRefs:
-          type: array
-          items:
-            type: string
+        name:
+          type: string
+          description: The name of the type of the encryption supported.
+        type:
+          type: string
+          description: The type of the encryption.
+        spec:
+          type: object
+          properties:
+            encryptionAlgo:
+              type: object
+              properties:
+                type:
+                  type: string
+                description:
+                  type: string
+            publicKey:
+              type: object
+              properties:
+                type:
+                  type: string
+                contentEncoding:
+                  type: string
+                description:
+                  type: string
     ExploreConnectionResponse:
       type: array
       items:
@@ -644,13 +661,6 @@ components:
             $ref: '#/components/schemas/EntitlementSpecDTO'
         policy:
           $ref: '#/components/schemas/PolicyItemDTO'
-    ConnectionSpecResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConnectionSpecItemDTO'
     ConnectionSpecItemDTO:
       type: object
       properties:
@@ -708,178 +718,6 @@ components:
           description: Contains high-level information regarding the queried source, including information on its category and name to be displayed in Platform UI.
         permissionsInfo:
           $ref: '#/components/schemas/PermissionDTO'
-    UpdateConnectionSpecRequest:
-      type: object
-      required:
-      - name
-      - providerId
-      properties:
-        name:
-          type: string
-        providerId:
-          type: string
-        version:
-          type: string
-        type:
-          type: string
-        settings:
-          type: object
-          additionalProperties:
-            type: object
-        attributes:
-          type: object
-          additionalProperties:
-            type: object
-        authSpec:
-          type: array
-          items:
-            $ref: '#/components/schemas/AuthenticationSpecDTO'
-        encryptionSpecs:
-          type: array
-          items:
-            $ref: '#/components/schemas/EncryptionSpecDTO'
-        sourceSpec:
-          $ref: '#/components/schemas/SourceSpecDTO'
-        targetSpec:
-          $ref: '#/components/schemas/TargetSpecDTO'
-        exploreSpec:
-          $ref: '#/components/schemas/ExploreSpecDTO'
-        permissionsInfo:
-          type: object
-          additionalProperties:
-            type: array
-            items:
-              $ref: '#/components/schemas/PermissionDTO'
-        entitlementInfo:
-          type: array
-          items:
-            $ref: '#/components/schemas/EntitlementSpecDTO'
-        policy:
-          $ref: '#/components/schemas/PolicyItemDTO'
-    EncryptionSpecDTO:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the type of the encryption supported.
-        type:
-          type: string
-          description: The type of the encryption.
-        spec:
-          type: object
-          properties:
-            encryptionAlgo:
-              type: object
-              properties:
-                type:
-                  type: string
-                description:
-                  type: string
-            publicKey:
-              type: object
-              properties:
-                type:
-                  type: string
-                contentEncoding:
-                  type: string
-                description:
-                  type: string
-    TargetSpecDTO:
-      type: object
-      properties:
-        name:
-          type: string
-          description: The name of the type of the target.
-          example: CloudStorage
-        type:
-          type: string
-          description: The type of the target. This value is the same as the category assigned to the target.
-          example: CloudStorage
-        spec:
-          type: object
-          properties:
-            schema:
-              type: string
-              example: http://json-schema.org/draft-07/schema#
-            type:
-              type: string
-              example: object
-            dataSetId:
-              type: string
-        attributes:
-          type: object
-          properties:
-            uiAttributes:
-              type: object
-              properties:
-                isDestination:
-                  type: boolean
-                  description: A boolean value that defines if the queried item is a destination.
-                  example: true
-                documentationLink:
-                  type: string
-                  description: A link to the documentation about a given destination.
-                  example: http://www.adobe.com/go/sources-google-cloud-storage-en
-                category:
-                  type: string
-                  description: The category that corresponds with the destination. Example categories include `social`, `cloudStorage`, `emailMarketing`.
-                  example: cloudStorage
-                icon:
-                  type: string
-                  description: The image that corresponds with a given destination when displayed on the destination catalog in the Experience Platform UI.
-                  example: google
-                description:
-                  type: string
-                  description: A brief description used to provide high-level information on a given destination.
-                label:
-                  type: string
-                  description: The label or name of a destination displayed on the destination catalog in the Experience Platform UI.
-    PermissionDTO:
-      type: object
-      properties:
-        manage:
-          type: array
-          description: Defines the type of access available to the `manage` permission.
-          items:
-            type: object
-            properties:
-              '@type':
-                type: string
-                description: Defines the permission level required for the source.
-                example: lowlevel
-              name:
-                type: string
-                description: Defines the integration type of the source.
-                example: EnterpriseSource
-              permissions:
-                type: array
-                description: Defines the actions a user can do, given the `manage` permission.
-                items:
-                  type: string
-                  enum:
-                  - write
-        view:
-          type: array
-          items:
-            type: object
-            properties:
-              '@type':
-                type: string
-                description: Defines the permission level required for the source.
-                example: lowlevel
-              name:
-                type: string
-                description: Defines the integration type of the source.
-                example: EnterpriseSource
-              permissions:
-                type: array
-                description: Defines the actions a user can do, given the `manage` permission.
-                items:
-                  type: string
-                  enum:
-                  - read
-            description: Defines the type of access available to the `view` permission.
-      description: Contains information regarding the permissions applied to the queried source.
     ExploreSpecDTO:
       type: object
       properties:
@@ -1062,28 +900,54 @@ components:
                               type: boolean
                               description: Defines if the schema of the fields of the data can be fetched.
                               example: false
-    AuthenticationSpecDTO:
+    UpdateConnectionSpecRequest:
       type: object
+      required:
+      - name
+      - providerId
       properties:
         name:
           type: string
-          description: The name of the authentication type used to authenticate a source against Experience Platform.
-          example: Basic Authentication for google-cloud
+        providerId:
+          type: string
+        version:
+          type: string
         type:
           type: string
-          description: The type of authentication used to connect a source.
-          example: KeyBased
-        spec:
+        settings:
           type: object
-          properties:
-            accessKeyId:
-              type: string
-              description: The access key ID assigned to the user account.
-              example: GOOGMG1234ABCDEFGHIJKLMN
-            secretAccessKey:
-              type: string
-              description: The secret access key assigned to the user account.
-              example: xxxx
+          additionalProperties:
+            type: object
+        attributes:
+          type: object
+          additionalProperties:
+            type: object
+        authSpec:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthenticationSpecDTO'
+        encryptionSpecs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EncryptionSpecDTO'
+        sourceSpec:
+          $ref: '#/components/schemas/SourceSpecDTO'
+        targetSpec:
+          $ref: '#/components/schemas/TargetSpecDTO'
+        exploreSpec:
+          $ref: '#/components/schemas/ExploreSpecDTO'
+        permissionsInfo:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PermissionDTO'
+        entitlementInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntitlementSpecDTO'
+        policy:
+          $ref: '#/components/schemas/PolicyItemDTO'
     SourceSpecDTO:
       type: object
       properties:
@@ -1160,6 +1024,28 @@ components:
                   description: The label or name of a source displayed on the sources catalog in the Experience Platform UI.
                   example: Google Cloud Storage
               description: Contains information to display in the sources catalog of Experience Platform UI for a given source.
+    AuthenticationSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the authentication type used to authenticate a source against Experience Platform.
+          example: Basic Authentication for google-cloud
+        type:
+          type: string
+          description: The type of authentication used to connect a source.
+          example: KeyBased
+        spec:
+          type: object
+          properties:
+            accessKeyId:
+              type: string
+              description: The access key ID assigned to the user account.
+              example: GOOGMG1234ABCDEFGHIJKLMN
+            secretAccessKey:
+              type: string
+              description: The secret access key assigned to the user account.
+              example: xxxx
     EntitlementSpecDTO:
       type: object
       properties:
@@ -1172,4 +1058,118 @@ components:
           items:
             type: string
             description: The name of the entitlement supported.
+    PolicyItemDTO:
+      type: object
+      properties:
+        duleLabels:
+          type: array
+          items:
+            type: string
+        enforcementRefs:
+          type: array
+          items:
+            type: string
+    PermissionDTO:
+      type: object
+      properties:
+        manage:
+          type: array
+          description: Defines the type of access available to the `manage` permission.
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - write
+        view:
+          type: array
+          items:
+            type: object
+            properties:
+              '@type':
+                type: string
+                description: Defines the permission level required for the source.
+                example: lowlevel
+              name:
+                type: string
+                description: Defines the integration type of the source.
+                example: EnterpriseSource
+              permissions:
+                type: array
+                description: Defines the actions a user can do, given the `manage` permission.
+                items:
+                  type: string
+                  enum:
+                  - read
+            description: Defines the type of access available to the `view` permission.
+      description: Contains information regarding the permissions applied to the queried source.
+    ConnectionSpecResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionSpecItemDTO'
+    TargetSpecDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the type of the target.
+          example: CloudStorage
+        type:
+          type: string
+          description: The type of the target. This value is the same as the category assigned to the target.
+          example: CloudStorage
+        spec:
+          type: object
+          properties:
+            schema:
+              type: string
+              example: http://json-schema.org/draft-07/schema#
+            type:
+              type: string
+              example: object
+            dataSetId:
+              type: string
+        attributes:
+          type: object
+          properties:
+            uiAttributes:
+              type: object
+              properties:
+                isDestination:
+                  type: boolean
+                  description: A boolean value that defines if the queried item is a destination.
+                  example: true
+                documentationLink:
+                  type: string
+                  description: A link to the documentation about a given destination.
+                  example: http://www.adobe.com/go/sources-google-cloud-storage-en
+                category:
+                  type: string
+                  description: The category that corresponds with the destination. Example categories include `social`, `cloudStorage`, `emailMarketing`.
+                  example: cloudStorage
+                icon:
+                  type: string
+                  description: The image that corresponds with a given destination when displayed on the destination catalog in the Experience Platform UI.
+                  example: google
+                description:
+                  type: string
+                  description: A brief description used to provide high-level information on a given destination.
+                label:
+                  type: string
+                  description: The label or name of a destination displayed on the destination catalog in the Experience Platform UI.
 x-original-swagger-version: '2.0'

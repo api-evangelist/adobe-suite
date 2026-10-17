@@ -143,26 +143,60 @@ paths:
                 $ref: '#/components/schemas/JobError'
 components:
   schemas:
-    VectorizeInput:
+    VectorizeSourceUrl:
       type: object
       properties:
-        source:
-          description: The source containing the raster file to vectorize.
-          allOf:
-          - $ref: '#/components/schemas/VectorizeSourceUrl'
-        mediaType:
-          description: The media type of the source file.
-          allOf:
-          - $ref: '#/components/schemas/VectorizeInputMediaType'
+        url:
+          type: string
+          description: The URL pointing to the input raster file.
+          example: https://your-bucket.s3.amazonaws.com/your-image.png
       required:
-      - source
-      - mediaType
-    VectorizeInputMediaType:
+      - url
+    JobError:
+      type: object
+      properties:
+        error_code:
+          type: string
+          description: The error code.
+          example: validation_error
+        message:
+          type: string
+          description: The error message.
+          example: Invalid request payload. Check validation_errors for details.
+        validation_errors:
+          description: An array of various validation errors.
+          type: array
+          items:
+            type: string
+      required:
+      - error_code
+    JobStatus:
       type: string
-      description: The media type of the input raster file.
+      description: The job status.
       enum:
-      - image/png
-      - image/jpeg
+      - running
+      - failed
+      - succeeded
+    LongJobError:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The error title.
+          example: ErrInvalidOauthToken
+        status:
+          type: integer
+          description: The HTTP status code.
+        error_code:
+          type: integer
+          description: The error code.
+        message:
+          type: string
+          description: The error message.
+          example: Oauth token is not valid
+      required:
+      - status
+      - error_code
     ImageTraceJobApiResponse:
       type: object
       title: Succeeded (Image Trace)
@@ -211,72 +245,26 @@ components:
           example: https://output-bucket.s3.amazonaws.com/rendition-output.pdf
       required:
       - url
-    JobStatus:
+    VectorizeInputMediaType:
       type: string
-      description: The job status.
+      description: The media type of the input raster file.
       enum:
-      - running
-      - failed
-      - succeeded
-    VectorizeSettings:
-      type: object
-      description: Vectorization preset. Only `preset` is supported.
-      additionalProperties: false
-      properties:
-        preset:
-          type: string
-          description: Vectorization preset. `enhanced_general` favors a clean, vector-style look. `high_fidelity_photo` favors photorealistic tracing. Omit to use the service default. Other values return 400.
-          enum:
-          - enhanced_general
-          - high_fidelity_photo
-          example: enhanced_general
-    VectorizeSourceUrl:
+      - image/png
+      - image/jpeg
+    VectorizeInput:
       type: object
       properties:
-        url:
-          type: string
-          description: The URL pointing to the input raster file.
-          example: https://your-bucket.s3.amazonaws.com/your-image.png
-      required:
-      - url
-    JobStatusPollPayload:
-      type: object
-      title: Running
-      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
-      properties:
-        status:
-          description: The job status.
+        source:
+          description: The source containing the raster file to vectorize.
           allOf:
-          - $ref: '#/components/schemas/JobStatus'
-          - enum:
-            - running
-        jobId:
-          type: string
-          description: The job ID.
-          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
-        Retry-After:
-          type: string
-          description: Suggested number of seconds to wait before sending another request to this endpoint.
-          example: '1'
-      required:
-      - status
-      - jobId
-      - Retry-After
-      additionalProperties: false
-    VectorizeRequest:
-      type: object
-      description: Request body for an Image Trace job. Input accepts PNG or JPEG; output is SVG.
-      properties:
-        input:
-          description: Input raster source and media type.
+          - $ref: '#/components/schemas/VectorizeSourceUrl'
+        mediaType:
+          description: The media type of the source file.
           allOf:
-          - $ref: '#/components/schemas/VectorizeInput'
-        settings:
-          description: Optional vectorization preset (`preset` only).
-          allOf:
-          - $ref: '#/components/schemas/VectorizeSettings'
+          - $ref: '#/components/schemas/VectorizeInputMediaType'
       required:
-      - input
+      - source
+      - mediaType
     ImageTraceJobFailedResponse:
       type: object
       title: Failed
@@ -303,44 +291,32 @@ components:
       - status
       - error_code
       - message
-    JobError:
+    VectorizeRequest:
       type: object
+      description: Request body for an Image Trace job. Input accepts PNG or JPEG; output is SVG.
       properties:
-        error_code:
-          type: string
-          description: The error code.
-          example: validation_error
-        message:
-          type: string
-          description: The error message.
-          example: Invalid request payload. Check validation_errors for details.
-        validation_errors:
-          description: An array of various validation errors.
-          type: array
-          items:
-            type: string
+        input:
+          description: Input raster source and media type.
+          allOf:
+          - $ref: '#/components/schemas/VectorizeInput'
+        settings:
+          description: Optional vectorization preset (`preset` only).
+          allOf:
+          - $ref: '#/components/schemas/VectorizeSettings'
       required:
-      - error_code
-    LongJobError:
+      - input
+    VectorizeSettings:
       type: object
+      description: Vectorization preset. Only `preset` is supported.
+      additionalProperties: false
       properties:
-        title:
+        preset:
           type: string
-          description: The error title.
-          example: ErrInvalidOauthToken
-        status:
-          type: integer
-          description: The HTTP status code.
-        error_code:
-          type: integer
-          description: The error code.
-        message:
-          type: string
-          description: The error message.
-          example: Oauth token is not valid
-      required:
-      - status
-      - error_code
+          description: Vectorization preset. `enhanced_general` favors a clean, vector-style look. `high_fidelity_photo` favors photorealistic tracing. Omit to use the service default. Other values return 400.
+          enum:
+          - enhanced_general
+          - high_fidelity_photo
+          example: enhanced_general
     JobLinkResponse:
       type: object
       properties:
@@ -355,6 +331,30 @@ components:
       required:
       - jobId
       - statusUrl
+    JobStatusPollPayload:
+      type: object
+      title: Running
+      description: Returned while the job is still processing. Poll again after the interval indicated by `Retry-After`.
+      properties:
+        status:
+          description: The job status.
+          allOf:
+          - $ref: '#/components/schemas/JobStatus'
+          - enum:
+            - running
+        jobId:
+          type: string
+          description: The job ID.
+          example: 48db6300-1cc5-4a31-84f6-5092fbd67484
+        Retry-After:
+          type: string
+          description: Suggested number of seconds to wait before sending another request to this endpoint.
+          example: '1'
+      required:
+      - status
+      - jobId
+      - Retry-After
+      additionalProperties: false
   securitySchemes:
     AccessToken:
       type: http

@@ -347,12 +347,42 @@ paths:
           x-summary: Resource not found
 components:
   schemas:
-    identityNamespaces:
+    IdentityGroup:
       type: object
-      title: Identity Namespaces
-      description: List of allowed identity namespaces.
-      additionalProperties:
-        $ref: '#/components/schemas/identityNamespace'
+      example:
+      - namespaces:
+        - IDFA
+        - GAID
+      - namespaces:
+        - EMAIL
+      properties:
+        namespaces:
+          type: array
+          items:
+            type: string
+    customerAuthenticationConfiguration:
+      type: object
+      discriminator:
+        propertyName: authType
+      properties:
+        authType:
+          title: Customer Authentication Type
+          example: BEARER
+          description: Defines Customer Authentication type.
+          type: string
+          enum:
+          - S3
+          - SFTP_WITH_SSH_KEY
+          - SFTP_WITH_PASSWORD
+          - OAUTH1
+          - OAUTH2
+          - BASIC
+          - BEARER
+        options:
+          type: object
+          additionalProperties: {}
+      required:
+      - authType
     destination:
       properties:
         name:
@@ -706,6 +736,39 @@ components:
               example: true
               title: Segment Grouping Enabled
               description: 'Defines whether the activated audiences should be exported in a single file or multiple files, based on audience [merge policy](https://experienceleague.adobe.com/en/docs/experience-platform/profile/merge-policies/overview). Supported values: `true` exports one file per merge policy, `false` exports one file per audience, regardless of the merge policy. This is the default behavior. You can achieve the same result by omitting this parameter entirely.'
+    identityNamespaces:
+      type: object
+      title: Identity Namespaces
+      description: List of allowed identity namespaces.
+      additionalProperties:
+        $ref: '#/components/schemas/identityNamespace'
+    identityNamespace:
+      type: object
+      properties:
+        acceptsAttributes:
+          type: boolean
+          example: 'true'
+          description: Indicates if customers can map standard profile attributes to the identity that you are configuring.
+        acceptsCustomNamespaces:
+          type: boolean
+          example: 'true'
+          description: Indicates if customers can map identities belonging to [custom namespaces](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html?lang=en#manage-namespaces) to the identity that you are configuring.
+        transformation:
+          type: string
+          description: Used, for example, when the Platform customer has plain email addresses as an attribute and your platform only accepts hashed emails. This is where you would provide the transformation that needs to be applied (for example, transform the email to lowercase, then hash).
+        acceptedGlobalNamespaces:
+          type: object
+          example:
+            Email: {}
+            IDFA: {}
+          description: 'Indicates which [standard identity namespaces](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html?lang=en#standard-namespaces) (for example: IDFA, GAID, Email) customers can map to the identity that you are configuring. <br> When you use `acceptedGlobalNamespaces`, you can use `requiredTransformation:sha256(lower($))` to lowercase and hash email addresses or phone numbers.'
+          additionalProperties:
+            type: object
+            properties:
+              requiredTransformation:
+                type: string
+                example: sha256(lower($))
+                description: Indicates how values should be transformed. For example, use `requiredTransformation:sha256(lower($))`` to lowercase and hash email addresses or phone numbers.
     response:
       properties:
         instanceId:
@@ -727,61 +790,6 @@ components:
       allOf:
       - $ref: '#/components/schemas/response'
       - $ref: '#/components/schemas/destination'
-    IdentityGroup:
-      type: object
-      example:
-      - namespaces:
-        - IDFA
-        - GAID
-      - namespaces:
-        - EMAIL
-      properties:
-        namespaces:
-          type: array
-          items:
-            type: string
-    configurableAggregation:
-      title: Configurable Aggregation
-      description: Required parameters to set up configurable aggregation.
-      type: object
-      properties:
-        splitUserById:
-          type: boolean
-          example: false
-          description: Use this flag if the call to the destination should be split by identity. Set this flag to true if your server only accepts one identity per call, for a given namespace.
-        maxBatchAgeInSecs:
-          type: integer
-          example: 3000
-          description: '<ul><li>*Minimum value: 1800*</li><li>*Maximum value: 3600*</li><li>See parameter in example configuration [here](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/functionality/destination-configuration.html?lang=en#example-configuration). Configure a value between the minimum and maximum accepted values. Together with `maxNumEventsInBatch`, this parameter determines how long Experience Platform should wait until sending an API call to your endpoint. <br> For example, if you use the maximum value for both parameters, Experience Platform will wait either 3600 seconds OR until there are 10.000 qualified profiles before making the API call, whichever happens first. </li></ul>'
-        maxNumEventsInBatch:
-          type: integer
-          example: 5000
-          description: '<ul><li>*Minimum value: 1000*</li><li>*Maximum value: 10000*</li><li>See parameter in example configuration [here](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/functionality/destination-configuration.html?lang=en#example-configuration). Configure a value between the minimum and maximum accepted values. For a description of this parameter, see `maxBatchAgeInSecs` just above.</li></ul> '
-        aggregationKey:
-          type: object
-          description: 'Allows you to aggregate the exported profiles mapped to the destination based on the parameters below: 1.segment ID, 2.segment status,3. identity namespace.'
-          properties:
-            includeSegmentId:
-              type: boolean
-              example: true
-              description: Set this to true if you want to group profiles exported to your destination by segment ID.
-            includeSegmentStatus:
-              type: boolean
-              example: true
-              description: You must set both `includeSegmentId:true` and `includeSegmentStatus:true` if you want to group profiles exported to your destination by segment ID AND segment status.
-            includeIdentity:
-              type: boolean
-              example: true
-              description: Set this to true if you want to group profiles exported to your destination by identity namespace.
-            oneIdentityPerGroup:
-              type: boolean
-              example: false
-              description: Use this parameter to specify if you want the exported profiles to be aggregated into groups of a single identity (GAID, IDFA, phone numbers, email, etc.)
-            groups:
-              type: array
-              description: Create lists of identity groups if you want to group profiles exported to your destination by groups of identity namespace. For example, you could combine profiles that contain the IDFA and GAID mobile identifiers into one call to your destination and emails into another by using the configuration in the example.
-              items:
-                $ref: '#/components/schemas/IdentityGroup'
     destinationDeliveryItem:
       type: object
       description: Settings related how customers authenticate to your destination.
@@ -802,29 +810,6 @@ components:
           type: string
           example: 2307ec2b-4798-45a4-9239-5d0a2fb0ed67
           description: The `instanceId` of the destination server configuration used for this destination.
-    customerAuthenticationConfiguration:
-      type: object
-      discriminator:
-        propertyName: authType
-      properties:
-        authType:
-          title: Customer Authentication Type
-          example: BEARER
-          description: Defines Customer Authentication type.
-          type: string
-          enum:
-          - S3
-          - SFTP_WITH_SSH_KEY
-          - SFTP_WITH_PASSWORD
-          - OAUTH1
-          - OAUTH2
-          - BASIC
-          - BEARER
-        options:
-          type: object
-          additionalProperties: {}
-      required:
-      - authType
     customerDataField:
       type: object
       properties:
@@ -872,44 +857,52 @@ components:
           type: string
           example: password
           description: The format associated with the data. If you use `password` as format, Experience Platform will automatically treat the data field value as sensitive information and encrypt it.
-    identityNamespace:
+    configurableAggregation:
+      title: Configurable Aggregation
+      description: Required parameters to set up configurable aggregation.
       type: object
       properties:
-        acceptsAttributes:
+        splitUserById:
           type: boolean
-          example: 'true'
-          description: Indicates if customers can map standard profile attributes to the identity that you are configuring.
-        acceptsCustomNamespaces:
-          type: boolean
-          example: 'true'
-          description: Indicates if customers can map identities belonging to [custom namespaces](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html?lang=en#manage-namespaces) to the identity that you are configuring.
-        transformation:
-          type: string
-          description: Used, for example, when the Platform customer has plain email addresses as an attribute and your platform only accepts hashed emails. This is where you would provide the transformation that needs to be applied (for example, transform the email to lowercase, then hash).
-        acceptedGlobalNamespaces:
+          example: false
+          description: Use this flag if the call to the destination should be split by identity. Set this flag to true if your server only accepts one identity per call, for a given namespace.
+        maxBatchAgeInSecs:
+          type: integer
+          example: 3000
+          description: '<ul><li>*Minimum value: 1800*</li><li>*Maximum value: 3600*</li><li>See parameter in example configuration [here](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/functionality/destination-configuration.html?lang=en#example-configuration). Configure a value between the minimum and maximum accepted values. Together with `maxNumEventsInBatch`, this parameter determines how long Experience Platform should wait until sending an API call to your endpoint. <br> For example, if you use the maximum value for both parameters, Experience Platform will wait either 3600 seconds OR until there are 10.000 qualified profiles before making the API call, whichever happens first. </li></ul>'
+        maxNumEventsInBatch:
+          type: integer
+          example: 5000
+          description: '<ul><li>*Minimum value: 1000*</li><li>*Maximum value: 10000*</li><li>See parameter in example configuration [here](https://experienceleague.adobe.com/docs/experience-platform/destinations/destination-sdk/functionality/destination-configuration.html?lang=en#example-configuration). Configure a value between the minimum and maximum accepted values. For a description of this parameter, see `maxBatchAgeInSecs` just above.</li></ul> '
+        aggregationKey:
           type: object
-          example:
-            Email: {}
-            IDFA: {}
-          description: 'Indicates which [standard identity namespaces](https://experienceleague.adobe.com/docs/experience-platform/identity/namespaces.html?lang=en#standard-namespaces) (for example: IDFA, GAID, Email) customers can map to the identity that you are configuring. <br> When you use `acceptedGlobalNamespaces`, you can use `requiredTransformation:sha256(lower($))` to lowercase and hash email addresses or phone numbers.'
-          additionalProperties:
-            type: object
-            properties:
-              requiredTransformation:
-                type: string
-                example: sha256(lower($))
-                description: Indicates how values should be transformed. For example, use `requiredTransformation:sha256(lower($))`` to lowercase and hash email addresses or phone numbers.
+          description: 'Allows you to aggregate the exported profiles mapped to the destination based on the parameters below: 1.segment ID, 2.segment status,3. identity namespace.'
+          properties:
+            includeSegmentId:
+              type: boolean
+              example: true
+              description: Set this to true if you want to group profiles exported to your destination by segment ID.
+            includeSegmentStatus:
+              type: boolean
+              example: true
+              description: You must set both `includeSegmentId:true` and `includeSegmentStatus:true` if you want to group profiles exported to your destination by segment ID AND segment status.
+            includeIdentity:
+              type: boolean
+              example: true
+              description: Set this to true if you want to group profiles exported to your destination by identity namespace.
+            oneIdentityPerGroup:
+              type: boolean
+              example: false
+              description: Use this parameter to specify if you want the exported profiles to be aggregated into groups of a single identity (GAID, IDFA, phone numbers, email, etc.)
+            groups:
+              type: array
+              description: Create lists of identity groups if you want to group profiles exported to your destination by groups of identity namespace. For example, you could combine profiles that contain the IDFA and GAID mobile identifiers into one call to your destination and emails into another by using the configuration in the example.
+              items:
+                $ref: '#/components/schemas/IdentityGroup'
   parameters:
-    x-sandbox-name:
-      name: x-sandbox-name
-      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
-      required: true
-      schema:
-        type: string
-      in: header
-    x-gw-ims-org-id:
-      name: x-gw-ims-org-id
-      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+    x-api-key:
+      name: x-api-key
+      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
       required: true
       schema:
         type: string
@@ -921,9 +914,16 @@ components:
       schema:
         type: string
       in: header
-    x-api-key:
-      name: x-api-key
-      description: The API key which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
+    x-sandbox-name:
+      name: x-sandbox-name
+      description: The name of the sandbox in which the operation will take place. See the [sandboxes overview](https://adobe.com/go/sandbox-overview-en) for more information. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en)
+      required: true
+      schema:
+        type: string
+      in: header
+    x-gw-ims-org-id:
+      name: x-gw-ims-org-id
+      description: The IMS Organization ID which can be copied from your Experience Platform integration. For more information on how to obtain this value, visit the [getting started tutorial](http://www.adobe.com/go/destination-sdk-getting-started-en).
       required: true
       schema:
         type: string

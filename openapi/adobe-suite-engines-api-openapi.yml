@@ -590,6 +590,34 @@ paths:
           content: {}
 components:
   schemas:
+    MLEngineArtifact:
+      required:
+      - location
+      - name
+      - packagingType
+      type: object
+      properties:
+        location:
+          type: string
+        reference:
+          $ref: '#/components/schemas/ArtifactReference'
+        name:
+          type: string
+        executionType:
+          type: string
+        packagingType:
+          type: string
+          default: docker
+          enum:
+          - docker
+          - jar
+          - egg
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+            properties: {}
+          readOnly: true
     LinkObject:
       required:
       - href
@@ -615,15 +643,40 @@ components:
         hrefLang:
           type: string
           description: The language of the target resource (as defined by RFC5988)
-    ArtifactReference:
+    EngineListingLinks:
+      allOf:
+      - $ref: '#/components/schemas/PagingNavigationAttributes'
+      - type: object
+        properties:
+          self:
+            $ref: '#/components/schemas/LinkObject'
+          createEngine:
+            $ref: '#/components/schemas/LinkObject'
+    TaskSpec:
       required:
-      - artifactId
+      - type
       type: object
       properties:
-        artifactId:
+        type:
           type: string
-        version:
+          enum:
+          - ContainerTaskSpec
+          - SparkTaskSpec
+      description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
+      discriminator:
+        propertyName: type
+    EnginesDockerRegistryInfo:
+      type: object
+      properties:
+        host:
           type: string
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+        password:
+          type: string
+          readOnly: true
     PagingNavigationAttributes:
       type: object
       properties:
@@ -631,55 +684,22 @@ components:
           $ref: '#/components/schemas/LinkObject'
         page:
           $ref: '#/components/schemas/LinkObject'
-    SenseiApiResponse:
+    MLEngineArtifactOverride:
+      required:
+      - artifact
+      - defaultMLInstanceConfigs
+      - id
+      - name
       type: object
       properties:
-        type:
+        id:
           type: string
-          readOnly: true
-          example: https://platform.adobe.io/data/foundation/ml/problems/illegal-argument
-        title:
+        name:
           type: string
-          readOnly: true
-          example: Illegal Argument
-        status:
-          type: integer
-          format: int32
-          readOnly: true
-          example: 400
-        detail:
-          type: string
-          readOnly: true
-          example: Model specification name must not be empty
-        additionalDetails:
-          type: object
-          additionalProperties:
-            type: string
-    MLInstanceTaskList:
-      type: array
-      items:
-        $ref: '#/components/schemas/MLInstanceTask'
-    MLInstanceTaskParameter:
-      type: object
-      properties:
-        key:
-          type: string
-        value:
-          type: string
-        secret:
-          type: boolean
-      description: A parameter passed to an MLInstanceTask
-    EngineListing:
-      type: object
-      properties:
-        children:
-          type: array
-          items:
-            $ref: '#/components/schemas/EngineSummary'
-        _page:
-          $ref: '#/components/schemas/PagingInformationAttributes'
-        _links:
-          $ref: '#/components/schemas/EngineListingLinks'
+        artifact:
+          $ref: '#/components/schemas/MLEngineArtifact'
+        defaultMLInstanceConfigs:
+          $ref: '#/components/schemas/MLInstanceTask'
     EngineSummary:
       required:
       - name
@@ -740,6 +760,26 @@ components:
           properties:
             self:
               $ref: '#/components/schemas/LinkObject'
+    ArtifactReference:
+      required:
+      - artifactId
+      type: object
+      properties:
+        artifactId:
+          type: string
+        version:
+          type: string
+    EngineListing:
+      type: object
+      properties:
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/EngineSummary'
+        _page:
+          $ref: '#/components/schemas/PagingInformationAttributes'
+        _links:
+          $ref: '#/components/schemas/EngineListingLinks'
     Engine:
       allOf:
       - $ref: '#/components/schemas/EngineSummary'
@@ -774,34 +814,6 @@ components:
                 $ref: '#/components/schemas/LinkObject'
               listMLInstances:
                 $ref: '#/components/schemas/LinkObject'
-    EnginesDockerRegistryInfo:
-      type: object
-      properties:
-        host:
-          type: string
-          readOnly: true
-        username:
-          type: string
-          readOnly: true
-        password:
-          type: string
-          readOnly: true
-    MLEngineArtifactOverride:
-      required:
-      - artifact
-      - defaultMLInstanceConfigs
-      - id
-      - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        artifact:
-          $ref: '#/components/schemas/MLEngineArtifact'
-        defaultMLInstanceConfigs:
-          $ref: '#/components/schemas/MLInstanceTask'
     MLInstanceTask:
       type: object
       properties:
@@ -878,6 +890,44 @@ components:
                       type: object
                       properties: {}
       description: A single execution unit of Sensei
+    MLInstanceTaskParameter:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        secret:
+          type: boolean
+      description: A parameter passed to an MLInstanceTask
+    SenseiApiResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+          example: https://platform.adobe.io/data/foundation/ml/problems/illegal-argument
+        title:
+          type: string
+          readOnly: true
+          example: Illegal Argument
+        status:
+          type: integer
+          format: int32
+          readOnly: true
+          example: 400
+        detail:
+          type: string
+          readOnly: true
+          example: Model specification name must not be empty
+        additionalDetails:
+          type: object
+          additionalProperties:
+            type: string
+    MLInstanceTaskList:
+      type: array
+      items:
+        $ref: '#/components/schemas/MLInstanceTask'
     PagingInformationAttributes:
       type: object
       properties:
@@ -901,54 +951,4 @@ components:
         next:
           type: string
           readOnly: true
-    MLEngineArtifact:
-      required:
-      - location
-      - name
-      - packagingType
-      type: object
-      properties:
-        location:
-          type: string
-        reference:
-          $ref: '#/components/schemas/ArtifactReference'
-        name:
-          type: string
-        executionType:
-          type: string
-        packagingType:
-          type: string
-          default: docker
-          enum:
-          - docker
-          - jar
-          - egg
-        metadata:
-          type: object
-          additionalProperties:
-            type: object
-            properties: {}
-          readOnly: true
-    TaskSpec:
-      required:
-      - type
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-          - ContainerTaskSpec
-          - SparkTaskSpec
-      description: Refer to ContainerTaskSpec and SparkTaskSpec definitions for the specific types of TaskSpec
-      discriminator:
-        propertyName: type
-    EngineListingLinks:
-      allOf:
-      - $ref: '#/components/schemas/PagingNavigationAttributes'
-      - type: object
-        properties:
-          self:
-            $ref: '#/components/schemas/LinkObject'
-          createEngine:
-            $ref: '#/components/schemas/LinkObject'
 x-original-swagger-version: '2.0'

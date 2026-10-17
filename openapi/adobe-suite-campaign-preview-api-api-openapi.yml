@@ -37,44 +37,22 @@ paths:
         404:
           $ref: '#/components/responses/404'
 components:
-  responses:
-    CampaignPreviewResponse:
-      description: Success Response
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/CampaignPreviewResponseBody'
   schemas:
-    PreviewRequestItem:
+    email-preview:
       type: object
       properties:
-        userId:
-          description: Identifier of the test profile
+        subject:
           type: string
-          example: test@gmail.com
-        namespace:
-          description: Namespace of the userId. Can be Email, ECID etc
-          type: string
-          example: Email
-        profileAttributes:
-          description: Profile attributes in form of json key values. If profileAttributes are provided in the request payload as JSON key-value pairs, they will be used to render content. In this case, profile details will not be fetched from the Unified Profile Store using userId and namespace.
+          title: Subject
+          description: Subject of Mail
+          example: Your test score
+        html:
           type: object
-        contextAttributes:
-          description: Context attributes in form of json key values
-          type: object
-      required:
-      - userId
-      - namespace
-    sms-preview:
-      type: object
-      properties:
-        text:
-          type: string
-        messageType:
-          type: string
-          enum:
-          - sms
-          - mms
+          properties:
+            body:
+              type: string
+              description: HTML/Text body string
+              example: <html>Hello John </html>
     CampaignPreviewResponseBody:
       type: object
       description: Campaign Preview Response
@@ -98,28 +76,36 @@ components:
             - $ref: '#/components/schemas/push-preview'
             - $ref: '#/components/schemas/sms-preview'
             description: Preview content per variant per profileId. Will contain PxV items in previews, where P is no of the items in the request & V is no of variants in campaign.
-    Channel:
-      type: object
-      description: channel
-      enum:
-      - email
-      - push
-      - sms
-    email-preview:
+    push-android-specific-properties:
       type: object
       properties:
-        subject:
-          type: string
-          title: Subject
-          description: Subject of Mail
-          example: Your test score
-        html:
+        media:
           type: object
+          minProperties: 1
           properties:
-            body:
-              type: string
-              description: HTML/Text body string
-              example: <html>Hello John </html>
+            uri:
+              $ref: '#/components/schemas/push-media-uri'
+            iconUri:
+              $ref: '#/components/schemas/push-media-uri'
+    CampaignPreviewRequest:
+      type: object
+      properties:
+        previewRequestItems:
+          description: previewing for multiple profiles
+          minItems: 1
+          type: array
+          items:
+            $ref: '#/components/schemas/PreviewRequestItem'
+    sms-preview:
+      type: object
+      properties:
+        text:
+          type: string
+        messageType:
+          type: string
+          enum:
+          - sms
+          - mms
     push-media-uri:
       type: string
       description: External Link OR Adobe Asset ID
@@ -135,17 +121,6 @@ components:
           minProperties: 1
           properties:
             uri:
-              $ref: '#/components/schemas/push-media-uri'
-    push-android-specific-properties:
-      type: object
-      properties:
-        media:
-          type: object
-          minProperties: 1
-          properties:
-            uri:
-              $ref: '#/components/schemas/push-media-uri'
-            iconUri:
               $ref: '#/components/schemas/push-media-uri'
     push-preview:
       type: object
@@ -171,24 +146,34 @@ components:
           description: Properties specific to Android devices only
           allOf:
           - $ref: '#/components/schemas/push-android-specific-properties'
-    CampaignPreviewRequest:
+    PreviewRequestItem:
       type: object
       properties:
-        previewRequestItems:
-          description: previewing for multiple profiles
-          minItems: 1
-          type: array
-          items:
-            $ref: '#/components/schemas/PreviewRequestItem'
+        userId:
+          description: Identifier of the test profile
+          type: string
+          example: test@gmail.com
+        namespace:
+          description: Namespace of the userId. Can be Email, ECID etc
+          type: string
+          example: Email
+        profileAttributes:
+          description: Profile attributes in form of json key values. If profileAttributes are provided in the request payload as JSON key-value pairs, they will be used to render content. In this case, profile details will not be fetched from the Unified Profile Store using userId and namespace.
+          type: object
+        contextAttributes:
+          description: Context attributes in form of json key values
+          type: object
+      required:
+      - userId
+      - namespace
+    Channel:
+      type: object
+      description: channel
+      enum:
+      - email
+      - push
+      - sms
   parameters:
-    SandboxNameParam:
-      name: x-sandbox-name
-      in: header
-      description: Filter on platform sandbox name
-      required: true
-      schema:
-        type: string
-        example: prod
     CampaignIdParam:
       name: campaignId
       in: path
@@ -221,6 +206,14 @@ components:
       schema:
         type: string
         example: 829495afa589475ab56850a702359cf9
+    SandboxNameParam:
+      name: x-sandbox-name
+      in: header
+      description: Filter on platform sandbox name
+      required: true
+      schema:
+        type: string
+        example: prod
   requestBodies:
     CampaignPreviewRequest:
       description: Campaign Preview Request
@@ -229,6 +222,13 @@ components:
           schema:
             allOf:
             - $ref: '#/components/schemas/CampaignPreviewRequest'
+  responses:
+    CampaignPreviewResponse:
+      description: Success Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CampaignPreviewResponseBody'
   securitySchemes:
     imsUserToken:
       type: http

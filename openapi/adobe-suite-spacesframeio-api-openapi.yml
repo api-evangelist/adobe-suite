@@ -135,22 +135,30 @@ paths:
       x-s3d-public: true
 components:
   schemas:
-    rest_base.SpaceFile:
+    rest_base.FileFrameIO:
       type: object
       properties:
-        name:
+        $schema:
+          description: A URL to the JSON Schema for this object.
           type: string
-        size:
-          type: integer
-          format: int64
-          minimum: 0
-        url:
+          format: uri
+          examples:
+          - https://s3d.adobe.io/schemas/rest_base.FileFrameIO.json
+          readOnly: true
+        accessToken:
+          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
           type: string
+          examples:
+          - base64.jwt.token
+        folderId:
+          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
+          type: string
+          examples:
+          - 01234567-89ab-cdef-0123-456789abcdef
       additionalProperties: false
       required:
-      - url
-      - name
-      - size
+      - folderId
+      - accessToken
     ffapierrors.FFAPIError:
       description: The error within the error response.
       type: object
@@ -211,30 +219,22 @@ components:
       - id
       - expiry
       - files
-    rest_base.FileFrameIO:
+    rest_base.SpaceFile:
       type: object
       properties:
-        $schema:
-          description: A URL to the JSON Schema for this object.
+        name:
           type: string
-          format: uri
-          examples:
-          - https://s3d.adobe.io/schemas/rest_base.FileFrameIO.json
-          readOnly: true
-        accessToken:
-          description: Frame.io access token or Developer token. See https://developer.frame.io/docs/getting-started/authentication for obtaining a token.
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        url:
           type: string
-          examples:
-          - base64.jwt.token
-        folderId:
-          description: Frame.io folder ID containing the assets. This should be the ID of the folder (not an asset ID). For best performance and to avoid [size limitations](/#what-is-the-maximum-size-of-assets-i-can-process), use the folder ID closest to your target assets. The system will retrieve all content from the specified folder, so choosing a parent folder with many subfolders may exceed the maximum retrieval size limit
-          type: string
-          examples:
-          - 01234567-89ab-cdef-0123-456789abcdef
       additionalProperties: false
       required:
-      - folderId
-      - accessToken
+      - url
+      - name
+      - size
   securitySchemes:
     bearerAuth:
       description: 'Adobe service-to-service (S2S) access token. Pass `Authorization: Bearer <Token>`. The token is not a JWT.'

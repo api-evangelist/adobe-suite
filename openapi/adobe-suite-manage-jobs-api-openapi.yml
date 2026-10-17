@@ -1040,11 +1040,23 @@ paths:
       description: Production server.
 components:
   examples:
-    ErrorBodyForbidden:
-      summary: Api Key is required
+    StatusApiInProgressRequestResponse:
+      summary: Inprogress response with job details
       value:
-        error_code: '403000'
-        message: Api Key is required
+        jobId: string
+        status: running
+    ListJobsLimitOutOfRange:
+      summary: limit parameter outside [1, 100]
+      value:
+        error_code: limit_out_of_range
+        message: limit must be between 1 and 100.
+    StatusAPIFailedUnsupportedBackgroundResponse:
+      summary: Unsupported Background File Type
+      value:
+        jobId: string
+        status: failed
+        error_code: validation_error
+        message: Unsupported file type for background
     StatusAPIFailedInputFileDownloadResponse:
       summary: Failed Input Download
       value:
@@ -1052,13 +1064,70 @@ components:
         status: failed
         error_code: resource_not_found
         message: Failed to download input file
-    StatusAPIFailedFFMpegErrorResponse:
-      summary: Error in FFMpeg
+    StatusAPIFailedBackgroundCropErrorResponse:
+      summary: Error in Background Aspect Ratio
+      value:
+        jobId: string
+        status: failed
+        error_code: validation_error
+        message: ' Image background asset should be 16:9 aspect ratio, please provide crop the media and then send'
+    DGRRenderPartialSuccess:
+      summary: DGR render partially succeeded
+      value:
+        jobId: <jobId>
+        status: partially_succeeded
+        outputs:
+        - variationIndex: 1
+          presetIndex: 0
+          destination:
+            url: https://<SIGNED_OUTPUT_URL>.mp4
+        errors:
+        - variationIndex: 0
+          presetIndex: 0
+          error:
+            error_code: validation_error
+            message: You have exceeded the limit for...
+    ListJobsInvalidCursor:
+      summary: Malformed or expired cursor
+      value:
+        error_code: invalid_cursor
+        message: The provided cursor is invalid or has expired.
+    StatusAPIFailedBackgroundResolutionErrorResponse:
+      summary: Error in Background Resolution
+      value:
+        jobId: string
+        status: failed
+        error_code: validation_error
+        message: Background asset resolution should be greater than 640x360
+    StatusAPIFailedDownloadErrorResponse:
+      summary: Failed Stock Media Download
       value:
         jobId: string
         status: failed
         error_code: runtime_error
-        message: Failed in FFmpeg worker
+        message: Unable to download stock media
+    TEXT_TO_SPEECH_ENTITY_CREATION_ERROR:
+      summary: Internal Server Error during Entity Creation
+      value:
+        error_code: runtime_error
+        message: Internal Server Error while creating text to speech request
+    StatusAPIFailedMediatypeMismatchResponse:
+      summary: Invalid Input Mediatype
+      value:
+        jobId: string
+        status: failed
+        error_code: validation_error
+        message: Provided input mediaType should match the type of source media
+    ErrorBodyResourceNotFound:
+      summary: Not Found
+      value:
+        error_code: unknown_job_id
+        message: The requested resource was not found.
+    RunTimeError:
+      summary: Internal Server Error
+      value:
+        error_code: runtime_error
+        message: Internal Server Error
     DGRRenderSuccessTwoVariations:
       summary: DGR render succeeded (two variations)
       value:
@@ -1073,52 +1142,106 @@ components:
           presetIndex: 0
           destination:
             url: https://<SIGNED_OUTPUT_URL>.mp4
-    ErrorBodyAPIKeyInvalid:
-      summary: Api Key is invalid
+    TEXT_TO_SPEECH_SERVICE_SUBMIT_ERROR:
+      summary: Internal Server Error during Submit
       value:
-        error_code: '403003'
-        message: Api Key is invalid
+        error_code: runtime_error
+        message: Internal Server Error while submitting text to speech request
     DGRJobStatusNotStarted:
       summary: DGR job not started
       value:
         status: not_started
         jobId: <the_jobID_GUID>
-    CancelJobAlreadyCompleted:
-      summary: Render job already completed
+    RenderJobListFirstPage:
+      summary: First page of render jobs, more pages available
       value:
-        error_code: job_completed
-        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already completed and cannot be canceled.
-    DGRJobFailed:
-      summary: DGR job failed
+        paging:
+          nextUrl: https://audio-video-api.adobe.io/v1/templates/render-jobs?cursor=eyJzIjoiMjAyNi0wNS0wNFQwOToxNDowMVoifQ&limit=20
+          totalRecords: 47
+        jobs:
+        - jobId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          status: succeeded
+          totalJobItems: 5
+          createdDate: '2026-05-20T10:00:00Z'
+          completedDate: '2026-05-20T10:05:30Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/3fa85f64-5717-4562-b3fc-2c963f66afa6
+        - jobId: 7ba95c74-6828-5673-c4fd-3d074g77bgb7
+          status: running
+          totalJobItems: 10
+          percentCompleted: 42.0
+          createdDate: '2026-05-20T11:00:00Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/7ba95c74-6828-5673-c4fd-3d074g77bgb7
+          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/7ba95c74-6828-5673-c4fd-3d074g77bgb7
+    DGRJobCanceled:
+      summary: DGR render job canceled (applies only to render jobs from POST /v1/templates/render)
       value:
-        jobId: 6b77c479-b599-46d3-a6bc-307b5389c105
-        status: failed
-        message: 'Error extracting definition.json: [Errno 2] No such file or directory: ''6b77c479-b599-46d3-a6bc-307b5389c105/template.zip'''
-    StatusAPIFailedUnsupportedBackgroundResponse:
-      summary: Unsupported Background File Type
+        jobId: 27776956-d405-4754-97e9-7e9cfd3809af
+        status: canceled
+        createdDate: '2024-02-21T14:00:00Z'
+        totalJobItems: 3
+        outputs:
+        - destination:
+            url: https://mogrt-outputs-prod.s3.amazonaws.com/27776956-d405-4754-97e9-7e9cfd3809af/some_custom_file_name.mp4
+          startedDate: '2024-02-21T14:05:00Z'
+          completedDate: '2024-02-21T14:07:17Z'
+          variationIndex: 0
+          presetIndex: 0
+        errors:
+        - variationIndex: 1
+          presetIndex: 0
+          error:
+            error_code: validation_error
+            message: You have exceeded the limit for...
+    ListJobsFilterOutOfRetention:
+      summary: createdDate outside 30-day retention window
+      value:
+        error_code: filter_out_of_retention
+        message: createdDate filter values must fall within the 30-day retention window.
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    DGRJobStatusRunning:
+      summary: DGR job running
+      value:
+        status: running
+        percentCompleted: '55'
+        jobId: <the_jobID_GUID>
+    StatusAPIFailedMediaTrimAlphaErrorResponse:
+      summary: Error Processing Avatar Alpha Video
       value:
         jobId: string
         status: failed
-        error_code: validation_error
-        message: Unsupported file type for background
-    RenderJobListLastPage:
-      summary: Last page of render jobs (no nextUrl)
+        error_code: runtime_error
+        message: Error while triming avatar alpha video
+    ErrorBodyAPIKeyInvalid:
+      summary: Api Key is invalid
       value:
-        paging:
-          totalRecords: 47
-        jobs:
-        - jobId: 9cd06d85-7939-6784-d5ge-4e185h88chc8
-          status: running
-          totalJobItems: 50
-          percentCompleted: 23.0
-          createdDate: '2026-05-04T08:01:09Z'
-          statusUrl: https://audio-video-api.adobe.io/v1/status/9cd06d85-7939-6784-d5ge-4e185h88chc8
-          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/9cd06d85-7939-6784-d5ge-4e185h88chc8
-    ListJobsLimitOutOfRange:
-      summary: limit parameter outside [1, 100]
+        error_code: '403003'
+        message: Api Key is invalid
+    StatusAPIFailedMediaTrimErrorResponse:
+      summary: Error Processing Avatar Video
       value:
-        error_code: limit_out_of_range
-        message: limit must be between 1 and 100.
+        jobId: string
+        status: failed
+        error_code: runtime_error
+        message: Error while triming avatar video
+    StatusAPIFailedCAISigningResponse:
+      summary: CAI Signing Failed
+      value:
+        jobId: string
+        status: failed
+        error_code: runtime_error
+        message: CAI Signing Failed
+    StatusApiSuccessRequestResponse:
+      summary: Success response with job details
+      value:
+        jobId: string
+        status: succeeded
+        output:
+          destination:
+            url: string
     DGRDescribeSuccess:
       summary: DGR describe template succeeded
       value:
@@ -1189,75 +1312,6 @@ components:
             - label: Logo comment
               type: comment
               text: Add your company logo here.
-    StatusAPIFailedMediaTrimAlphaErrorResponse:
-      summary: Error Processing Avatar Alpha Video
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Error while triming avatar alpha video
-    StatusApiSuccessRequestResponse:
-      summary: Success response with job details
-      value:
-        jobId: string
-        status: succeeded
-        output:
-          destination:
-            url: string
-    StatusAPIFailedTTSInternalErrorResponse:
-      summary: Error Getting Status
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Internal Server Error while getting text to speech request status
-    DGRJobStatusRunning:
-      summary: DGR job running
-      value:
-        status: running
-        percentCompleted: '55'
-        jobId: <the_jobID_GUID>
-    StatusAPIFailedInternalErrorResponse:
-      summary: Error Processing Response
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Internal Server Error while receiving or handling response
-    StatusAPIFailedTTSErrorResponse:
-      summary: Error in TTS
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Run time error in tts
-    ListJobsInvalidFilter:
-      summary: Syntactically invalid FIQL expression
-      value:
-        error_code: invalid_filter
-        message: 'Invalid filter: unexpected token at position 5.'
-    StatusAPIFailedLipsyncErrorResponse:
-      summary: Error in lip sync
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Validation failure in Lipsync Pipeline
-    RunTimeError:
-      summary: Internal Server Error
-      value:
-        error_code: runtime_error
-        message: Internal Server Error
-    StatusApiInProgressRequestResponse:
-      summary: Inprogress response with job details
-      value:
-        jobId: string
-        status: running
-    CancelJobNotFound:
-      summary: Render job not found
-      value:
-        error_code: job_not_found
-        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af does not exist or is no longer accessible.
     StatusAPIFailedAvatarErrorResponse:
       summary: Error in Avatar
       value:
@@ -1265,13 +1319,56 @@ components:
         status: failed
         error_code: runtime_error
         message: Run time error in avatar
-    StatusAPIFailedCAISigningResponse:
-      summary: CAI Signing Failed
+    StatusAPIFailedDurationTooLongResponse:
+      summary: Unsupported Audio Duration
+      value:
+        jobId: string
+        status: failed
+        error_code: validation_error
+        message: Audio duration should be less than 30 mins
+    CancelAccepted:
+      summary: Render job cancellation accepted
+      value:
+        jobId: 27776956-d405-4754-97e9-7e9cfd3809af
+        status: canceling
+    DGRRenderSuccessMultiple:
+      summary: DGR render succeeded (multiple outputs)
+      value:
+        jobId: <jobId>
+        status: succeeded
+        outputs:
+        - variationIndex: 0
+          presetIndex: 0
+          destination:
+            url: https://<SIGNED_OUTPUT_URL>.mp4
+        - variationIndex: 0
+          presetIndex: 1
+          destination:
+            url: https://<SIGNED_OUTPUT_URL>.mp4
+    CancelJobAlreadyCompleted:
+      summary: Render job already completed
+      value:
+        error_code: job_completed
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already completed and cannot be canceled.
+    StatusAPIFailedFFMpegErrorResponse:
+      summary: Error in FFMpeg
       value:
         jobId: string
         status: failed
         error_code: runtime_error
-        message: CAI Signing Failed
+        message: Failed in FFmpeg worker
+    CancelJobAlreadyCanceled:
+      summary: Render job already canceled
+      value:
+        error_code: job_already_canceled
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already canceled.
+    StatusAPIFailedTTSErrorResponse:
+      summary: Error in TTS
+      value:
+        jobId: string
+        status: failed
+        error_code: runtime_error
+        message: Run time error in tts
     StatusAPIFailedCropAreaErrorResponse:
       summary: Error in Crop Area
       value:
@@ -1279,25 +1376,48 @@ components:
         status: failed
         error_code: validation_error
         message: Crop Area is going out of bounds
-    ListJobsInvalidStatusFilter:
-      summary: Invalid status value in filter
+    RenderJobListEmpty:
+      summary: No matching render jobs
       value:
-        error_code: invalid_status_filter
-        message: status must be one of not_started, running, succeeded, partially_succeeded, failed, canceled.
-    StatusAPIFailedDownloadErrorResponse:
-      summary: Failed Stock Media Download
+        paging:
+          totalRecords: 0
+        jobs: []
+    StatusAPIFailedInternalErrorResponse:
+      summary: Error Processing Response
       value:
         jobId: string
         status: failed
         error_code: runtime_error
-        message: Unable to download stock media
-    StatusAPIFailedMediatypeMismatchResponse:
-      summary: Invalid Input Mediatype
+        message: Internal Server Error while receiving or handling response
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    StatusAPIFailedLipsyncPollingErrorResponse:
+      summary: Error polling for lip sync
       value:
         jobId: string
         status: failed
-        error_code: validation_error
-        message: Provided input mediaType should match the type of source media
+        error_code: runtime_error
+        message: Failed while polling for Lipsync
+    ListJobsInvalidFilter:
+      summary: Syntactically invalid FIQL expression
+      value:
+        error_code: invalid_filter
+        message: 'Invalid filter: unexpected token at position 5.'
+    StatusAPIFailedUploadErrorResponse:
+      summary: Failed Output Upload
+      value:
+        jobId: string
+        status: failed
+        error_code: runtime_error
+        message: Unable to upload the output
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
     DGRDescribeAEPSuccess:
       summary: DGR describe AEP project succeeded
       value:
@@ -1379,36 +1499,35 @@ components:
             - id: c259:l261:layer
               name: 6. Video Media
               compName: A. Variable Duration
-    ListJobsFilterOutOfRetention:
-      summary: createdDate outside 30-day retention window
+    ListJobsInvalidStatusFilter:
+      summary: Invalid status value in filter
       value:
-        error_code: filter_out_of_retention
-        message: createdDate filter values must fall within the 30-day retention window.
-    TEXT_TO_SPEECH_SERVICE_SUBMIT_ERROR:
-      summary: Internal Server Error during Submit
-      value:
-        error_code: runtime_error
-        message: Internal Server Error while submitting text to speech request
-    StatusAPIFailedDurationTooLongResponse:
-      summary: Unsupported Audio Duration
-      value:
-        jobId: string
-        status: failed
-        error_code: validation_error
-        message: Audio duration should be less than 30 mins
-    StatusAPIFailedUploadErrorResponse:
-      summary: Failed Output Upload
-      value:
-        jobId: string
-        status: failed
-        error_code: runtime_error
-        message: Unable to upload the output
-    RenderJobListEmpty:
-      summary: No matching render jobs
+        error_code: invalid_status_filter
+        message: status must be one of not_started, running, succeeded, partially_succeeded, failed, canceled.
+    RenderJobListLastPage:
+      summary: Last page of render jobs (no nextUrl)
       value:
         paging:
-          totalRecords: 0
-        jobs: []
+          totalRecords: 47
+        jobs:
+        - jobId: 9cd06d85-7939-6784-d5ge-4e185h88chc8
+          status: running
+          totalJobItems: 50
+          percentCompleted: 23.0
+          createdDate: '2026-05-04T08:01:09Z'
+          statusUrl: https://audio-video-api.adobe.io/v1/status/9cd06d85-7939-6784-d5ge-4e185h88chc8
+          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/9cd06d85-7939-6784-d5ge-4e185h88chc8
+    DGRJobFailed:
+      summary: DGR job failed
+      value:
+        jobId: 6b77c479-b599-46d3-a6bc-307b5389c105
+        status: failed
+        message: 'Error extracting definition.json: [Errno 2] No such file or directory: ''6b77c479-b599-46d3-a6bc-307b5389c105/template.zip'''
+    CancelJobNotFound:
+      summary: Render job not found
+      value:
+        error_code: job_not_found
+        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af does not exist or is no longer accessible.
     DGRRenderSuccessSingle:
       summary: DGR render succeeded (single output)
       value:
@@ -1419,271 +1538,21 @@ components:
           presetIndex: 0
           destination:
             url: https://<SIGNED_OUTPUT_URL>.mp4
-    ErrorBodyUnauthorized:
-      summary: Invalid Token
-      value:
-        error_code: '401013'
-        message: Oauth token is not valid
-    StatusAPIFailedLipsyncPollingErrorResponse:
-      summary: Error polling for lip sync
+    StatusAPIFailedTTSInternalErrorResponse:
+      summary: Error Getting Status
       value:
         jobId: string
         status: failed
         error_code: runtime_error
-        message: Failed while polling for Lipsync
-    DGRRenderSuccessMultiple:
-      summary: DGR render succeeded (multiple outputs)
-      value:
-        jobId: <jobId>
-        status: succeeded
-        outputs:
-        - variationIndex: 0
-          presetIndex: 0
-          destination:
-            url: https://<SIGNED_OUTPUT_URL>.mp4
-        - variationIndex: 0
-          presetIndex: 1
-          destination:
-            url: https://<SIGNED_OUTPUT_URL>.mp4
-    TEXT_TO_SPEECH_ENTITY_CREATION_ERROR:
-      summary: Internal Server Error during Entity Creation
-      value:
-        error_code: runtime_error
-        message: Internal Server Error while creating text to speech request
-    StatusAPIFailedBackgroundCropErrorResponse:
-      summary: Error in Background Aspect Ratio
-      value:
-        jobId: string
-        status: failed
-        error_code: validation_error
-        message: ' Image background asset should be 16:9 aspect ratio, please provide crop the media and then send'
-    DGRRenderPartialSuccess:
-      summary: DGR render partially succeeded
-      value:
-        jobId: <jobId>
-        status: partially_succeeded
-        outputs:
-        - variationIndex: 1
-          presetIndex: 0
-          destination:
-            url: https://<SIGNED_OUTPUT_URL>.mp4
-        errors:
-        - variationIndex: 0
-          presetIndex: 0
-          error:
-            error_code: validation_error
-            message: You have exceeded the limit for...
-    DGRJobCanceled:
-      summary: DGR render job canceled (applies only to render jobs from POST /v1/templates/render)
-      value:
-        jobId: 27776956-d405-4754-97e9-7e9cfd3809af
-        status: canceled
-        createdDate: '2024-02-21T14:00:00Z'
-        totalJobItems: 3
-        outputs:
-        - destination:
-            url: https://mogrt-outputs-prod.s3.amazonaws.com/27776956-d405-4754-97e9-7e9cfd3809af/some_custom_file_name.mp4
-          startedDate: '2024-02-21T14:05:00Z'
-          completedDate: '2024-02-21T14:07:17Z'
-          variationIndex: 0
-          presetIndex: 0
-        errors:
-        - variationIndex: 1
-          presetIndex: 0
-          error:
-            error_code: validation_error
-            message: You have exceeded the limit for...
-    CancelJobAlreadyCanceled:
-      summary: Render job already canceled
-      value:
-        error_code: job_already_canceled
-        message: Render job 27776956-d405-4754-97e9-7e9cfd3809af was already canceled.
-    StatusAPIFailedMediaTrimErrorResponse:
-      summary: Error Processing Avatar Video
+        message: Internal Server Error while getting text to speech request status
+    StatusAPIFailedLipsyncErrorResponse:
+      summary: Error in lip sync
       value:
         jobId: string
         status: failed
         error_code: runtime_error
-        message: Error while triming avatar video
-    ErrorBodyTooManyRequests:
-      summary: Too many requests
-      value:
-        error_code: '429050'
-        message: Too many requests
-    StatusAPIFailedBackgroundResolutionErrorResponse:
-      summary: Error in Background Resolution
-      value:
-        jobId: string
-        status: failed
-        error_code: validation_error
-        message: Background asset resolution should be greater than 640x360
-    ListJobsInvalidCursor:
-      summary: Malformed or expired cursor
-      value:
-        error_code: invalid_cursor
-        message: The provided cursor is invalid or has expired.
-    CancelAccepted:
-      summary: Render job cancellation accepted
-      value:
-        jobId: 27776956-d405-4754-97e9-7e9cfd3809af
-        status: canceling
-    RenderJobListFirstPage:
-      summary: First page of render jobs, more pages available
-      value:
-        paging:
-          nextUrl: https://audio-video-api.adobe.io/v1/templates/render-jobs?cursor=eyJzIjoiMjAyNi0wNS0wNFQwOToxNDowMVoifQ&limit=20
-          totalRecords: 47
-        jobs:
-        - jobId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-          status: succeeded
-          totalJobItems: 5
-          createdDate: '2026-05-20T10:00:00Z'
-          completedDate: '2026-05-20T10:05:30Z'
-          statusUrl: https://audio-video-api.adobe.io/v1/status/3fa85f64-5717-4562-b3fc-2c963f66afa6
-        - jobId: 7ba95c74-6828-5673-c4fd-3d074g77bgb7
-          status: running
-          totalJobItems: 10
-          percentCompleted: 42.0
-          createdDate: '2026-05-20T11:00:00Z'
-          statusUrl: https://audio-video-api.adobe.io/v1/status/7ba95c74-6828-5673-c4fd-3d074g77bgb7
-          cancelUrl: https://audio-video-api.adobe.io/v1/cancel/7ba95c74-6828-5673-c4fd-3d074g77bgb7
-    ErrorBodyResourceNotFound:
-      summary: Not Found
-      value:
-        error_code: unknown_job_id
-        message: The requested resource was not found.
+        message: Validation failure in Lipsync Pipeline
   schemas:
-    PagingInfo:
-      type: object
-      description: Cursor-based pagination metadata returned by the List Render Jobs endpoint.
-      required:
-      - totalRecords
-      properties:
-        nextUrl:
-          type: string
-          format: uri
-          description: Absolute URL to the next page of results. Absent on the last page — treat its absence as the end of the result set.
-        totalRecords:
-          type: integer
-          description: Total number of render jobs matching the filter across all pages.
-    Destination:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-          description: The pre-signed URL pointing to the output destination.
-      required:
-      - url
-      description: Destination details including a pre-signed URL for the output media.
-    RenderJobListItem:
-      type: object
-      description: Summary of a single template render job as returned by `GET /v1/templates/render-jobs`. Applies only to render jobs submitted via `POST /v1/templates/render`.
-      required:
-      - jobId
-      - status
-      - totalJobItems
-      - createdDate
-      - statusUrl
-      properties:
-        jobId:
-          type: string
-          format: uuid
-          description: Unique identifier of the render job.
-        status:
-          type: string
-          enum:
-          - not_started
-          - running
-          - succeeded
-          - partially_succeeded
-          - failed
-          - canceled
-          description: Current overall status of the render job.
-        totalJobItems:
-          type: integer
-          description: Total number of output items (variation × preset combinations) in this batch render job.
-        percentCompleted:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 100
-          description: Percentage of the job completed (0–100). Present only when `status` is `running`.
-        createdDate:
-          type: string
-          format: date-time
-          description: ISO 8601 date-time when the render job was submitted.
-        completedDate:
-          type: string
-          format: date-time
-          description: ISO 8601 date-time when the job reached a terminal state. Present only when `status` is `succeeded`, `partially_succeeded`, `failed`, or `canceled`.
-        statusUrl:
-          type: string
-          format: uri
-          description: Absolute URL to poll for the latest job status (`GET /v1/status/{jobId}`).
-        cancelUrl:
-          type: string
-          format: uri
-          description: Absolute URL to submit a cancel request (`PUT /v1/cancel/{jobId}`). Present only when the job is still cancellable (`status` is `not_started` or `running`).
-    StatusAPIResponseStatus:
-      type: string
-      enum:
-      - pending
-      - running
-      - failed
-      - succeeded
-      description: Status of the job.
-    CancelAcceptedResponse:
-      type: object
-      description: Success response body returned with HTTP 202 when a render job cancel request is accepted. Applies only to render jobs submitted via `POST /v1/templates/render`.
-      required:
-      - jobId
-      - status
-      properties:
-        jobId:
-          type: string
-          format: uuid
-          description: UUID of the render job for which cancellation was accepted.
-        status:
-          type: string
-          enum:
-          - canceling
-          description: Transient in-progress status. Poll `GET /v1/status/{jobId}` to observe the terminal `canceled` state.
-    ErrorResponse:
-      type: object
-      required:
-      - error_code
-      - message
-      properties:
-        error_code:
-          type: string
-          description: The error code returned with the response.
-        message:
-          type: string
-          description: The error message returned with the response.
-        messageId:
-          type: string
-          description: The error message ID returned with the response.
-    StatusAPIFailedResponse:
-      type: object
-      description: Response object for failed jobs.
-      properties:
-        status:
-          $ref: '#/components/schemas/StatusAPIResponseStatus'
-        jobId:
-          type: string
-        error_code:
-          type: string
-        message:
-          type: string
-    FailedResponse:
-      type: object
-      description: Generic error response object.
-      properties:
-        error_code:
-          type: string
-        message:
-          type: string
     JobStatus:
       type: object
       required:
@@ -1916,33 +1785,114 @@ components:
                         compName:
                           type: string
                           description: Name of the composition that contains the layer.
-    StatusAPICompletedResponse:
+    CancelAcceptedResponse:
       type: object
+      description: Success response body returned with HTTP 202 when a render job cancel request is accepted. Applies only to render jobs submitted via `POST /v1/templates/render`.
+      required:
+      - jobId
+      - status
       properties:
         jobId:
           type: string
+          format: uuid
+          description: UUID of the render job for which cancellation was accepted.
+        status:
+          type: string
+          enum:
+          - canceling
+          description: Transient in-progress status. Poll `GET /v1/status/{jobId}` to observe the terminal `canceled` state.
+    StatusAPIFailedResponse:
+      type: object
+      description: Response object for failed jobs.
+      properties:
         status:
           $ref: '#/components/schemas/StatusAPIResponseStatus'
-        output:
-          type: object
-          properties:
-            destination:
-              $ref: '#/components/schemas/Destination'
-    StatusAPIResponse:
+        jobId:
+          type: string
+        error_code:
+          type: string
+        message:
+          type: string
+    FailedResponse:
       type: object
-      description: Response object for job status queries.
-      oneOf:
-      - $ref: '#/components/schemas/StatusAPIInprogressResponse'
-      - $ref: '#/components/schemas/StatusAPICompletedResponse'
-      - $ref: '#/components/schemas/StatusAPIFailedResponse'
-      - $ref: '#/components/schemas/JobStatus'
-    StatusAPIInprogressResponse:
+      description: Generic error response object.
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+    RenderJobListItem:
       type: object
+      description: Summary of a single template render job as returned by `GET /v1/templates/render-jobs`. Applies only to render jobs submitted via `POST /v1/templates/render`.
+      required:
+      - jobId
+      - status
+      - totalJobItems
+      - createdDate
+      - statusUrl
       properties:
         jobId:
           type: string
+          format: uuid
+          description: Unique identifier of the render job.
         status:
-          $ref: '#/components/schemas/StatusAPIResponseStatus'
+          type: string
+          enum:
+          - not_started
+          - running
+          - succeeded
+          - partially_succeeded
+          - failed
+          - canceled
+          description: Current overall status of the render job.
+        totalJobItems:
+          type: integer
+          description: Total number of output items (variation × preset combinations) in this batch render job.
+        percentCompleted:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Percentage of the job completed (0–100). Present only when `status` is `running`.
+        createdDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date-time when the render job was submitted.
+        completedDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date-time when the job reached a terminal state. Present only when `status` is `succeeded`, `partially_succeeded`, `failed`, or `canceled`.
+        statusUrl:
+          type: string
+          format: uri
+          description: Absolute URL to poll for the latest job status (`GET /v1/status/{jobId}`).
+        cancelUrl:
+          type: string
+          format: uri
+          description: Absolute URL to submit a cancel request (`PUT /v1/cancel/{jobId}`). Present only when the job is still cancellable (`status` is `not_started` or `running`).
+    StatusAPIResponseStatus:
+      type: string
+      enum:
+      - pending
+      - running
+      - failed
+      - succeeded
+      description: Status of the job.
+    ErrorResponse:
+      type: object
+      required:
+      - error_code
+      - message
+      properties:
+        error_code:
+          type: string
+          description: The error code returned with the response.
+        message:
+          type: string
+          description: The error message returned with the response.
+        messageId:
+          type: string
+          description: The error message ID returned with the response.
     RenderJobListResponse:
       type: object
       description: Response body for `GET /v1/templates/render-jobs`. Contains render jobs submitted via `POST /v1/templates/render` only.
@@ -1957,6 +1907,56 @@ components:
           items:
             $ref: '#/components/schemas/RenderJobListItem'
           description: Ordered list of render job summaries for the current page. Empty array when no jobs match the filter.
+    StatusAPICompletedResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusAPIResponseStatus'
+        output:
+          type: object
+          properties:
+            destination:
+              $ref: '#/components/schemas/Destination'
+    StatusAPIInprogressResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusAPIResponseStatus'
+    PagingInfo:
+      type: object
+      description: Cursor-based pagination metadata returned by the List Render Jobs endpoint.
+      required:
+      - totalRecords
+      properties:
+        nextUrl:
+          type: string
+          format: uri
+          description: Absolute URL to the next page of results. Absent on the last page — treat its absence as the end of the result set.
+        totalRecords:
+          type: integer
+          description: Total number of render jobs matching the filter across all pages.
+    StatusAPIResponse:
+      type: object
+      description: Response object for job status queries.
+      oneOf:
+      - $ref: '#/components/schemas/StatusAPIInprogressResponse'
+      - $ref: '#/components/schemas/StatusAPICompletedResponse'
+      - $ref: '#/components/schemas/StatusAPIFailedResponse'
+      - $ref: '#/components/schemas/JobStatus'
+    Destination:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The pre-signed URL pointing to the output destination.
+      required:
+      - url
+      description: Destination details including a pre-signed URL for the output media.
     ValidationErrorResponse:
       type: object
       title: ValidationErrorResponse
@@ -1974,65 +1974,6 @@ components:
           items:
             $ref: '#/components/schemas/ValidationErrorDetail'
           description: List of field-level validation errors.
-    PreciseUpsamplerResponse:
-      type: object
-      title: PreciseUpsamplerResponse
-      description: Upscale result. Each item in outputs is a storage reference for an upscaled image.
-      required:
-      - outputs
-      - version
-      properties:
-        outputs:
-          type: array
-          items:
-            $ref: '#/components/schemas/UpscaleBinaryOutput'
-          description: The list of upscaled images (storage items).
-        version:
-          type: string
-          description: The version of the upscale feature.
-    UpscaleBinaryOutput:
-      type: object
-      title: UpscaleBinaryOutput
-      description: Reference to output binary (for example an upscaled image). Use id in subsequent API calls or the presigned URL to download.
-      properties:
-        id:
-          type: string
-          description: The internal ID for a storage item.
-        presignedUrl:
-          type: string
-          format: uri
-          minLength: 1
-          maxLength: 4096
-          description: URL to download the file. Expires in one hour.
-        creativeCloudFileId:
-          type: string
-          description: Optional ID of the file in ACP. Must be an ACP File asset ID.
-        creativeCloudComponentId:
-          type: string
-          description: Optional ID of the component in ACP. Must be an ACP Component asset ID.
-        name:
-          type: string
-          description: Optional name for the item (for example for lookup in multipart responses).
-    ValidationErrorDetail:
-      type: object
-      properties:
-        loc:
-          type: array
-          items:
-            oneOf:
-            - type: string
-            - type: integer
-          description: Path to the field that caused the error.
-        msg:
-          type: string
-          description: Human-readable error message.
-        type:
-          type: string
-          description: Error type identifier.
-        ctx:
-          type: object
-          additionalProperties: true
-          description: Additional context about the error.
     JobSucceededPayload:
       type: object
       title: JobSucceededPayload
@@ -2056,6 +1997,34 @@ components:
           oneOf:
           - $ref: '#/components/schemas/JobResult'
           - $ref: '#/components/schemas/PreciseUpsamplerResponse'
+    PreciseUpsamplerResponse:
+      type: object
+      title: PreciseUpsamplerResponse
+      description: Upscale result. Each item in outputs is a storage reference for an upscaled image.
+      required:
+      - outputs
+      - version
+      properties:
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpscaleBinaryOutput'
+          description: The list of upscaled images (storage items).
+        version:
+          type: string
+          description: The version of the upscale feature.
+    JobResult:
+      type: object
+      title: JobResult
+      description: Contains output data returned by a successfully completed job.
+      required:
+      - outputs
+      properties:
+        outputs:
+          type: array
+          description: List of generated outputs.
+          items:
+            $ref: '#/components/schemas/JobOutput'
     JobResponse:
       title: JobResponse
       description: Represents the job response, which may be either in progress or completed.
@@ -2081,18 +2050,6 @@ components:
               url: https://example.com
       - status: running
         jobId: <string>
-    ApiErrorGeneric:
-      type: object
-      title: ApiErrorGeneric
-      description: The error within the error response for non-400 failure responses.
-      properties:
-        error_code:
-          type: string
-          description: The error code.
-        message:
-          title: Message
-          description: A human-readable error message.
-          type: string
     ValidationErrorCode422:
       type: string
       title: ValidationErrorCode422
@@ -2100,18 +2057,6 @@ components:
       enum:
       - validation_error
       - cai_assertion_violation_error
-    PublicBinary-Output:
-      type: object
-      title: PublicBinary-Output
-      description: Represents binary output (e.g., image, mesh, etc.) with pre-signed URL or storage ID.
-      required:
-      - url
-      properties:
-        url:
-          type: string
-          format: uri
-          example: https://example.com
-          description: Temporary pre-signed URL to access the output file.
     JobPollPayload:
       type: object
       title: JobPollPayload
@@ -2140,18 +2085,30 @@ components:
         message:
           type: string
           description: Human-readable string describing the error or status.
-    JobResult:
+    ApiErrorGeneric:
       type: object
-      title: JobResult
-      description: Contains output data returned by a successfully completed job.
-      required:
-      - outputs
+      title: ApiErrorGeneric
+      description: The error within the error response for non-400 failure responses.
       properties:
-        outputs:
-          type: array
-          description: List of generated outputs.
-          items:
-            $ref: '#/components/schemas/JobOutput'
+        error_code:
+          type: string
+          description: The error code.
+        message:
+          title: Message
+          description: A human-readable error message.
+          type: string
+    PublicBinary-Output:
+      type: object
+      title: PublicBinary-Output
+      description: Represents binary output (e.g., image, mesh, etc.) with pre-signed URL or storage ID.
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://example.com
+          description: Temporary pre-signed URL to access the output file.
     JobOutput:
       type: object
       title: JobOutput
@@ -2167,6 +2124,49 @@ components:
         image:
           $ref: '#/components/schemas/PublicBinary-Output'
           description: The generated output image.
+    ValidationErrorDetail:
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+            - type: string
+            - type: integer
+          description: Path to the field that caused the error.
+        msg:
+          type: string
+          description: Human-readable error message.
+        type:
+          type: string
+          description: Error type identifier.
+        ctx:
+          type: object
+          additionalProperties: true
+          description: Additional context about the error.
+    UpscaleBinaryOutput:
+      type: object
+      title: UpscaleBinaryOutput
+      description: Reference to output binary (for example an upscaled image). Use id in subsequent API calls or the presigned URL to download.
+      properties:
+        id:
+          type: string
+          description: The internal ID for a storage item.
+        presignedUrl:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 4096
+          description: URL to download the file. Expires in one hour.
+        creativeCloudFileId:
+          type: string
+          description: Optional ID of the file in ACP. Must be an ACP File asset ID.
+        creativeCloudComponentId:
+          type: string
+          description: Optional ID of the component in ACP. Must be an ACP Component asset ID.
+        name:
+          type: string
+          description: Optional name for the item (for example for lookup in multipart responses).
   parameters:
     XRequestIdHeader:
       name: x-request-id

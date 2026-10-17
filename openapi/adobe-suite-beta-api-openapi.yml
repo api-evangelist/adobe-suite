@@ -474,121 +474,28 @@ paths:
       - Beta
 components:
   schemas:
-    JobResponse:
-      description: Response payload returned by any asynchronous endpoint.
+    TaggedDocumentDetailsResponse:
+      description: Response payload for GET "/tagged-documents/\{documentId\}" API.
       type: object
       properties:
-        jobId:
-          description: The identifier of the job.
+        name:
+          description: The name of the document.
           type: string
-        statusUrl:
-          description: A URL using which the status of the job can be fetched.
-          type: string
-      required:
-      - jobId
-      - statusUrl
-    ExpressDocument:
-      description: Details of the Express document.
-      type: object
-      properties:
         id:
           description: The unique identifier of the document.
           type: string
-        name:
-          description: The name or title of the document.
-          type: string
-        thumbnailUrl:
-          description: 'Pre-signed URL for the Document''s thumbnail rendition.
-
-            The size of the rendition will be `640 pixels` along the longest side. The format of the rendition will be a `PNG` image.'
-          type: string
-      required:
-      - id
-      - name
-      - thumbnailUrl
-    Size:
-      description: Represents a dimension within a Page.
-      type: object
-      properties:
-        width:
-          description: The width in pixels ( px ).
-          type: number
-        height:
-          description: The height in pixels ( px ).
-          type: number
-      required:
-      - height
-      - width
-    TaggedDocumentsResponse:
-      description: Response payload for GET "/tagged-documents" API.
-      type: object
-      properties:
         paging:
           description: Pagination details of the response.
           $ref: '#/components/schemas/Pagination'
-        documents:
-          description: A list of documents accessible (both owned and shared with) to the user.
+        documentPages:
+          description: List of the pages from Express Document.
           type: array
           items:
-            $ref: '#/components/schemas/ExpressDocument'
-    ImageRenditionOptions:
-      description: Options for the image rendition request.
-      type: object
-      properties:
-        format:
-          $ref: '#/components/schemas/ImageRenditionFormat'
-          description: Image rendition format
-        size:
-          description: 'The size of the "image" rendition on the longest side. The aspect ratio is maintained.
-
-            For image the minimum size supported is 1px and maximum size supported is 8192px.
-
-
-            If not provided, the default size of page is considered.'
-          type: number
+            $ref: '#/components/schemas/DocumentPageDetails'
       required:
-      - format
-    TaggedDocumentsSortBy:
-      description: Represents the sortBy field enum for tagged documents.
-      enum:
-      - +modifiedDate
-      - +name
-      - -modifiedDate
-      - -name
-      - -relevance
-      - modifiedDate
+      - documentPages
+      - id
       - name
-      - relevance
-      type: string
-    PdfMarginUnit:
-      description: The unit of measurement for the bleed or crop margin.
-      enum:
-      - in
-      - mm
-      type: string
-    ValueWithUnit:
-      description: 'Configuration settings for the "print" PDF rendition.
-
-        It includes values to adjust the amount and unit of measurement.'
-      type: object
-      properties:
-        amount:
-          description: 'The amount of bleed or crop margin.
-
-            It can be a positive or negative value.'
-          type: number
-        unit:
-          $ref: '#/components/schemas/PdfMarginUnit'
-          description: The unit of measurement for the bleed or crop margin.
-      required:
-      - amount
-      - unit
-    ImageRenditionFormat:
-      description: The format of the bitmap rendition.
-      enum:
-      - image/jpeg
-      - image/png
-      type: string
     TaggedElementType:
       description: The supported tag types in a document.
       enum:
@@ -596,25 +503,51 @@ components:
       - text
       - video
       type: string
-    VideoRenditionOptions:
-      description: Options for the video rendition request.
+    ErrorResponseDetails:
+      description: Details of the error response.
       type: object
       properties:
-        format:
-          description: video rendition format
+        error_code:
+          description: The error code.
           type: string
-          enum:
-          - video/mp4
-        size:
-          description: 'The size of the "video" rendition on the longest side. The aspect ratio is maintained.
-
-            For video the minimum size supported is 146px and maximum size supported is 4096px.
-
-
-            If not provided, the default size of page is considered.'
-          type: number
+        message:
+          description: The error message.
+          type: string
+        validation_errors:
+          description: Validation error messages.
+          type: array
+          items:
+            type: string
       required:
-      - format
+      - error_code
+    VariationDetails:
+      description: Details of how the variation should be generated.
+      type: object
+      properties:
+        tagMappings:
+          description: 'A key-value pair where each key represents the unique identifier of a tag element, and the value represents the corresponding element''s content. The value type varies by element type: for text elements, it is a plain string; for image or video elements, it is a pre-signed URL pointing to the image or video resource. Allowed domains for pre-signed URLs are AWS, Dropbox and Azure (windows.net). The key is obtained from the response of `/tagged-documents/{documentId}` in `documentPages` -\> `taggedElements` -\> `name`.'
+          type: object
+          additionalProperties:
+            type: string
+        pages:
+          description: 'A comma-separated string of page numbers for which the variation request is made. For example, "1,2,3".
+
+            Page ranges can also be specified. For example, "1-3" includes pages 1, 2, and 3.
+
+            Another example is "1,3-5", which includes pages 1, 3, 4, and 5.
+
+            "1-" can be used to specify all pages, while "5-" indicates page 5 to the last page.
+
+            If not provided, all pages are considered by default. Page numbers start from 1.'
+          type: string
+        preferredDocumentName:
+          description: The preferred name for the generated document. If you do not provide a name or the name is already in use, the system automatically generates a unique name.
+          type: string
+        projectId:
+          description: The identifier of the project where the variation is to be stored.
+          type: string
+      required:
+      - tagMappings
     Pagination:
       description: Pagination details of the response.
       type: object
@@ -628,49 +561,52 @@ components:
       required:
       - nextUrl
       - totalRecords
-    DocumentPageDetails:
-      description: The details of a single page in the Express Document.
+    ImageRenditionFormat:
+      description: The format of the bitmap rendition.
+      enum:
+      - image/jpeg
+      - image/png
+      type: string
+    ExportRenditionRequest:
+      description: Payload for requesting rendition of a document.
       type: object
       properties:
-        pageNumber:
-          description: The number of the page starting from 1.
-          type: number
-        pageTitle:
-          description: The title of the page.
+        id:
+          description: The identifier of the document that needs to be rendered.
           type: string
-        thumbnailUrl:
-          description: 'Pre-signed URL for the page''s thumbnail rendition valid for 4 hours.
+        pages:
+          description: 'A comma-separated string of page numbers for which the rendition request is made. For example, "1,2,3".
 
-            The size of the rendition will be 640 pixels along the longest side. The format of the rendition will be a PNG image.'
+            Page ranges can also be specified. For example, "1-3" includes pages 1, 2, and 3.
+
+            Another example is "1,3-5", which includes pages 1, 3, 4, and 5.
+
+            "1-" can be used to specify all pages, while "5-" indicates page 5 to the last page.
+
+            If not provided, the first page is considered by default. Page numbers start from 1.'
           type: string
-        size:
-          $ref: '#/components/schemas/Size'
-          description: The original width and height of the page.
-        taggedElements:
-          description: 'List of all the tagged elements on this page.
-
-            If this page do not have any tagged element, this field will be undefined.'
-          type: array
-          items:
-            $ref: '#/components/schemas/TaggedElement'
+        options:
+          description: Options for the requested rendition.
+          anyOf:
+          - $ref: '#/components/schemas/ImageRenditionOptions'
+          - $ref: '#/components/schemas/VideoRenditionOptions'
+          - $ref: '#/components/schemas/PdfRenditionOptions'
       required:
-      - pageNumber
-      - pageTitle
-      - size
-      - thumbnailUrl
-    Point:
-      description: Represents position within a page. 0,0 represents the top-left corner of a page.
+      - id
+      - options
+    GenerateVariationRequest:
+      description: Generate variation of a tagged document. One single variation can be generated at a time.
       type: object
       properties:
-        x:
-          description: The left co-ordinate position in px.
-          type: number
-        y:
-          description: The top co-ordinate position in px.
-          type: number
+        id:
+          description: The identifier of the tagged document.
+          type: string
+        variationDetails:
+          $ref: '#/components/schemas/VariationDetails'
+          description: Specify the details required to generate the requested variation.
       required:
-      - x
-      - y
+      - id
+      - variationDetails
     PdfRenditionOptions:
       description: Options for the requested PDF rendition.
       type: object
@@ -703,23 +639,127 @@ components:
           - $ref: '#/components/schemas/StandardConfig'
       required:
       - format
-    ErrorResponseDetails:
-      description: Details of the error response.
+    PdfMarginUnit:
+      description: The unit of measurement for the bleed or crop margin.
+      enum:
+      - in
+      - mm
+      type: string
+    VideoRenditionOptions:
+      description: Options for the video rendition request.
       type: object
       properties:
-        error_code:
-          description: The error code.
+        format:
+          description: video rendition format
           type: string
-        message:
-          description: The error message.
-          type: string
-        validation_errors:
-          description: Validation error messages.
+          enum:
+          - video/mp4
+        size:
+          description: 'The size of the "video" rendition on the longest side. The aspect ratio is maintained.
+
+            For video the minimum size supported is 146px and maximum size supported is 4096px.
+
+
+            If not provided, the default size of page is considered.'
+          type: number
+      required:
+      - format
+    PrintConfig:
+      description: Configuration options for print-ready PDF renditions.
+      type: object
+      properties:
+        bleed:
+          description: 'Controls whether to include bleed settings in the PDF.
+
+            Defaults to false.'
+          type: boolean
+        bleedSettings:
+          description: 'Configuration settings for bleed margins.
+
+            Only applies when bleed is true.
+
+            Default value is 0.125 <unit>.'
+          $ref: '#/components/schemas/ValueWithUnit'
+        cropMargins:
+          description: 'Controls whether to include crop margins in the PDF.
+
+            Defaults to false.'
+          type: boolean
+        cropMarginsSettings:
+          description: 'Configuration settings for crop margins.
+
+            Only applies when cropMargins is true.
+
+            Default value is 0.125 <unit>.'
+          $ref: '#/components/schemas/ValueWithUnit'
+    TaggedDocumentsResponse:
+      description: Response payload for GET "/tagged-documents" API.
+      type: object
+      properties:
+        paging:
+          description: Pagination details of the response.
+          $ref: '#/components/schemas/Pagination'
+        documents:
+          description: A list of documents accessible (both owned and shared with) to the user.
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/ExpressDocument'
+    Point:
+      description: Represents position within a page. 0,0 represents the top-left corner of a page.
+      type: object
+      properties:
+        x:
+          description: The left co-ordinate position in px.
+          type: number
+        y:
+          description: The top co-ordinate position in px.
+          type: number
       required:
-      - error_code
+      - x
+      - y
+    Size:
+      description: Represents a dimension within a Page.
+      type: object
+      properties:
+        width:
+          description: The width in pixels ( px ).
+          type: number
+        height:
+          description: The height in pixels ( px ).
+          type: number
+      required:
+      - height
+      - width
+    DocumentPageDetails:
+      description: The details of a single page in the Express Document.
+      type: object
+      properties:
+        pageNumber:
+          description: The number of the page starting from 1.
+          type: number
+        pageTitle:
+          description: The title of the page.
+          type: string
+        thumbnailUrl:
+          description: 'Pre-signed URL for the page''s thumbnail rendition valid for 4 hours.
+
+            The size of the rendition will be 640 pixels along the longest side. The format of the rendition will be a PNG image.'
+          type: string
+        size:
+          $ref: '#/components/schemas/Size'
+          description: The original width and height of the page.
+        taggedElements:
+          description: 'List of all the tagged elements on this page.
+
+            If this page do not have any tagged element, this field will be undefined.'
+          type: array
+          items:
+            $ref: '#/components/schemas/TaggedElement'
+      required:
+      - pageNumber
+      - pageTitle
+      - size
+      - thumbnailUrl
     TaggedElement:
       description: The details of a tag element inside the page.
       type: object
@@ -762,298 +802,129 @@ components:
 
             Defaults to false.'
           type: boolean
-    ExportRenditionRequest:
-      description: Payload for requesting rendition of a document.
+    JobResponse:
+      description: Response payload returned by any asynchronous endpoint.
       type: object
       properties:
-        id:
-          description: The identifier of the document that needs to be rendered.
+        jobId:
+          description: The identifier of the job.
           type: string
-        pages:
-          description: 'A comma-separated string of page numbers for which the rendition request is made. For example, "1,2,3".
-
-            Page ranges can also be specified. For example, "1-3" includes pages 1, 2, and 3.
-
-            Another example is "1,3-5", which includes pages 1, 3, 4, and 5.
-
-            "1-" can be used to specify all pages, while "5-" indicates page 5 to the last page.
-
-            If not provided, the first page is considered by default. Page numbers start from 1.'
+        statusUrl:
+          description: A URL using which the status of the job can be fetched.
           type: string
-        options:
-          description: Options for the requested rendition.
-          anyOf:
-          - $ref: '#/components/schemas/ImageRenditionOptions'
-          - $ref: '#/components/schemas/VideoRenditionOptions'
-          - $ref: '#/components/schemas/PdfRenditionOptions'
       required:
-      - id
-      - options
-    TaggedDocumentDetailsResponse:
-      description: Response payload for GET "/tagged-documents/\{documentId\}" API.
+      - jobId
+      - statusUrl
+    ValueWithUnit:
+      description: 'Configuration settings for the "print" PDF rendition.
+
+        It includes values to adjust the amount and unit of measurement.'
       type: object
       properties:
-        name:
-          description: The name of the document.
-          type: string
+        amount:
+          description: 'The amount of bleed or crop margin.
+
+            It can be a positive or negative value.'
+          type: number
+        unit:
+          $ref: '#/components/schemas/PdfMarginUnit'
+          description: The unit of measurement for the bleed or crop margin.
+      required:
+      - amount
+      - unit
+    TaggedDocumentsSortBy:
+      description: Represents the sortBy field enum for tagged documents.
+      enum:
+      - +modifiedDate
+      - +name
+      - -modifiedDate
+      - -name
+      - -relevance
+      - modifiedDate
+      - name
+      - relevance
+      type: string
+    ExpressDocument:
+      description: Details of the Express document.
+      type: object
+      properties:
         id:
           description: The unique identifier of the document.
           type: string
-        paging:
-          description: Pagination details of the response.
-          $ref: '#/components/schemas/Pagination'
-        documentPages:
-          description: List of the pages from Express Document.
-          type: array
-          items:
-            $ref: '#/components/schemas/DocumentPageDetails'
+        name:
+          description: The name or title of the document.
+          type: string
+        thumbnailUrl:
+          description: 'Pre-signed URL for the Document''s thumbnail rendition.
+
+            The size of the rendition will be `640 pixels` along the longest side. The format of the rendition will be a `PNG` image.'
+          type: string
       required:
-      - documentPages
       - id
       - name
-    GenerateVariationRequest:
-      description: Generate variation of a tagged document. One single variation can be generated at a time.
+      - thumbnailUrl
+    ImageRenditionOptions:
+      description: Options for the image rendition request.
       type: object
       properties:
-        id:
-          description: The identifier of the tagged document.
-          type: string
-        variationDetails:
-          $ref: '#/components/schemas/VariationDetails'
-          description: Specify the details required to generate the requested variation.
+        format:
+          $ref: '#/components/schemas/ImageRenditionFormat'
+          description: Image rendition format
+        size:
+          description: 'The size of the "image" rendition on the longest side. The aspect ratio is maintained.
+
+            For image the minimum size supported is 1px and maximum size supported is 8192px.
+
+
+            If not provided, the default size of page is considered.'
+          type: number
       required:
-      - id
-      - variationDetails
-    PrintConfig:
-      description: Configuration options for print-ready PDF renditions.
-      type: object
-      properties:
-        bleed:
-          description: 'Controls whether to include bleed settings in the PDF.
-
-            Defaults to false.'
-          type: boolean
-        bleedSettings:
-          description: 'Configuration settings for bleed margins.
-
-            Only applies when bleed is true.
-
-            Default value is 0.125 <unit>.'
-          $ref: '#/components/schemas/ValueWithUnit'
-        cropMargins:
-          description: 'Controls whether to include crop margins in the PDF.
-
-            Defaults to false.'
-          type: boolean
-        cropMarginsSettings:
-          description: 'Configuration settings for crop margins.
-
-            Only applies when cropMargins is true.
-
-            Default value is 0.125 <unit>.'
-          $ref: '#/components/schemas/ValueWithUnit'
-    VariationDetails:
-      description: Details of how the variation should be generated.
-      type: object
-      properties:
-        tagMappings:
-          description: 'A key-value pair where each key represents the unique identifier of a tag element, and the value represents the corresponding element''s content. The value type varies by element type: for text elements, it is a plain string; for image or video elements, it is a pre-signed URL pointing to the image or video resource. Allowed domains for pre-signed URLs are AWS, Dropbox and Azure (windows.net). The key is obtained from the response of `/tagged-documents/{documentId}` in `documentPages` -\> `taggedElements` -\> `name`.'
-          type: object
-          additionalProperties:
-            type: string
-        pages:
-          description: 'A comma-separated string of page numbers for which the variation request is made. For example, "1,2,3".
-
-            Page ranges can also be specified. For example, "1-3" includes pages 1, 2, and 3.
-
-            Another example is "1,3-5", which includes pages 1, 3, 4, and 5.
-
-            "1-" can be used to specify all pages, while "5-" indicates page 5 to the last page.
-
-            If not provided, all pages are considered by default. Page numbers start from 1.'
-          type: string
-        preferredDocumentName:
-          description: The preferred name for the generated document. If you do not provide a name or the name is already in use, the system automatically generates a unique name.
-          type: string
-        projectId:
-          description: The identifier of the project where the variation is to be stored.
-          type: string
-      required:
-      - tagMappings
+      - format
   examples:
-    errorResponseDetailsUnprocessableEntity:
-      summary: Unprocessable Entity
-      value:
-        error_code: validation_error
-        message: Validation error
-        validation_errors:
-        - The input value is invalid
-    errorResponseDetailsForbiddenMissingExpressEntitlement:
-      summary: Forbidden - Missing Adobe Express entitlement
-      value:
-        error_code: access_error
-        message: The account associated with the provided access token does not have Adobe Express entitlements
-    errorResponseDetailsUnauthorized:
-      summary: Unauthorized
-      value:
-        error_code: unauthorized_error
-        message: Not authorized
-    errorResponseDetailsServiceUnavailable:
-      summary: Service Unavailable
-      value:
-        error_code: service_unavailable
-        message: The service is temporarily unable to handle the request
-    exportRenditionRequestSampleFour:
-      summary: Export Rendition Request Sample 4
-      value:
-        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
-        pages: 1-
-        options:
-          format: video/mp4
-    errorResponseDetailsTooManyRequests:
-      summary: Too Many Requests
-      value:
-        error_code: rate_limited
-        message: Too many requests
-    errorResponseDetailsBadRequest:
-      summary: Bad Request
-      value:
-        error_code: client_error
-        message: Client Error
-    jobResponseSample:
-      summary: Job response sample
-      value:
-        jobId: af121560-218e-4dd9-918d-add12b3b6d98
-        statusUrl: https://example.com/status/af121560-218e-4dd9-918d-add12b3b6d98
-    exportRenditionRequestSampleSix:
-      summary: Export PDF Rendition - Standard PDF
-      value:
-        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
-        pages: 1-3
-        options:
-          format: application/pdf
-          pdfType: standard
-          downloadIndividualPdfFiles: true
-          config:
-            accessibilityTags: true
-    errorResponseDetailsForbiddenMissingTypekitEntitlement:
-      summary: Forbidden - Missing Typekit entitlement
-      value:
-        error_code: access_error
-        message: The account associated with the provided access token does not have 'typekit' entitlement
-    errorResponseDetailsPublicTemplate:
-      summary: Bad Request - Public Template
-      value:
-        error_code: client_error
-        message: Document is a public template and cannot be exported directly. Please create a copy first.
-    errorResponseDetailsForbiddenExpressApiRequiresPremiumAccount:
-      summary: Forbidden - Premium Adobe Express account required
-      value:
-        error_code: access_error
-        message: Access to the Express API requires a premium Adobe Express account
-    errorResponseDetailsForbidden:
-      summary: Forbidden
-      value:
-        error_code: access_error
-        message: Not allowed
-    generateVariationRequestSample:
-      summary: Generate Variation Request Sample
-      value:
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        variationDetails:
-          pages: 1,2
-          preferredDocumentName: Generated Document 1
-          tagMappings:
-            imageTag: https://www.adobe.com/image.jpg
-            textTag: Hello World
-            videoTag: https://www.adobe.com/video.mp4
-    errorResponseDetailsForbiddenMissingExpressApiEntitlement:
-      summary: Forbidden - Missing Express API entitlement
-      value:
-        error_code: access_error
-        message: The account associated with the provided access token does not have Express API entitlements
-    errorResponseDetailsStockContent:
-      summary: Unprocessable Entity - Stock Content Detected
-      value:
-        error_code: stock_content_detected
-        message: Document contains stock-licensed content and cannot be used for rendition generation
-    exportRenditionRequestSampleOne:
-      summary: Export Rendition Request Sample 1
-      value:
-        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-        pages: 1,2,3
-        options:
-          format: image/jpeg
-          size: 1024
-    exportRenditionRequestSampleThree:
-      summary: Export Rendition Request Sample 3
+    exportRenditionRequestSampleSeven:
+      summary: Export PDF Rendition - Print PDF
       value:
         id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
         pages: 1-5
         options:
-          format: image/png
-          size: 2048
-    taggedDocumentsResponseSample:
-      summary: Tagged Documents response sample
-      value:
-        documents:
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 1
-          thumbnailUrl: https://example.com/thumbnail1.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 2
-          thumbnailUrl: https://example.com/thumbnail2.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 3
-          thumbnailUrl: https://example.com/thumbnail3.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 4
-          thumbnailUrl: https://example.com/thumbnail4.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 5
-          thumbnailUrl: https://example.com/thumbnail5.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 6
-          thumbnailUrl: https://example.com/thumbnail6.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 7
-          thumbnailUrl: https://example.com/thumbnail7.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 8
-          thumbnailUrl: https://example.com/thumbnail8.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 9
-          thumbnailUrl: https://example.com/thumbnail9.png
-        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
-          name: Sample Document 10
-          thumbnailUrl: https://example.com/thumbnail10.png
-        paging:
-          nextUrl: https://example.com/beta/tagged-documents/urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa?start=10
-          totalRecords: 14
-    errorResponseDetailsRuntimeError:
-      summary: Runtime Error
-      value:
-        error_code: runtime_error
-        message: Runtime error
+          format: application/pdf
+          pdfType: print
+          downloadIndividualPdfFiles: false
+          config:
+            bleed: true
+            bleedSettings:
+              amount: 0.125
+              unit: in
+            cropMargins: true
+            cropMarginsSettings:
+              amount: 0.125
+              unit: in
     errorResponseDetailsNotFound:
       summary: Not Found
       value:
         error_code: not_found
         message: Requested resource not found
+    errorResponseDetailsForbiddenTechnicalAccountNonFreeTypekit:
+      summary: Forbidden - Technical account has non-free Typekit entitlement
+      value:
+        error_code: access_error
+        message: The account associated with the provided access token has 'typekit' entitlements beyond the free tier, which is not permitted for API access
+    errorResponseDetailsStockContent:
+      summary: Unprocessable Entity - Stock Content Detected
+      value:
+        error_code: stock_content_detected
+        message: Document contains stock-licensed content and cannot be used for rendition generation
+    errorResponseDetailsTooManyRequests:
+      summary: Too Many Requests
+      value:
+        error_code: rate_limited
+        message: Too many requests
     exportRenditionRequestSampleTwo:
       summary: Export Rendition Request Sample 2
       value:
         id: urn:aaid:sc:AP:33e40394-0000-000c-0002-a27de4c3d2b8
         options:
           format: image/jpeg
-    exportRenditionRequestSampleFive:
-      summary: Export Rendition Request Sample 5
-      value:
-        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
-        pages: 1,2
-        options:
-          format: video/mp4
-          size: 1080
     taggedDocumentDetailsResponseSampleTwo:
       summary: Tagged document details response sample 2
       value:
@@ -1098,6 +969,63 @@ components:
           thumbnailUrl: https://example.com/page2-thumbnail.png
         id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
         name: Project Proposal
+    errorResponseDetailsForbiddenExpressApiRequiresPremiumAccount:
+      summary: Forbidden - Premium Adobe Express account required
+      value:
+        error_code: access_error
+        message: Access to the Express API requires a premium Adobe Express account
+    exportRenditionRequestSampleThree:
+      summary: Export Rendition Request Sample 3
+      value:
+        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
+        pages: 1-5
+        options:
+          format: image/png
+          size: 2048
+    generateVariationRequestSample:
+      summary: Generate Variation Request Sample
+      value:
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        variationDetails:
+          pages: 1,2
+          preferredDocumentName: Generated Document 1
+          tagMappings:
+            imageTag: https://www.adobe.com/image.jpg
+            textTag: Hello World
+            videoTag: https://www.adobe.com/video.mp4
+    exportRenditionRequestSampleFive:
+      summary: Export Rendition Request Sample 5
+      value:
+        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
+        pages: 1,2
+        options:
+          format: video/mp4
+          size: 1080
+    exportRenditionRequestSampleOne:
+      summary: Export Rendition Request Sample 1
+      value:
+        id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+        pages: 1,2,3
+        options:
+          format: image/jpeg
+          size: 1024
+    errorResponseDetailsPublicTemplate:
+      summary: Bad Request - Public Template
+      value:
+        error_code: client_error
+        message: Document is a public template and cannot be exported directly. Please create a copy first.
+    errorResponseDetailsUnprocessableEntity:
+      summary: Unprocessable Entity
+      value:
+        error_code: validation_error
+        message: Validation error
+        validation_errors:
+        - The input value is invalid
+    errorResponseDetailsRuntimeError:
+      summary: Runtime Error
+      value:
+        error_code: runtime_error
+        message: Runtime error
     exportRenditionRequestPublicTemplate:
       summary: Export Rendition - Public Template (returns 400)
       description: Requesting rendition of a public template that has not been copied to the user's account will return a 400 Bad Request.
@@ -1107,38 +1035,6 @@ components:
         options:
           format: image/jpeg
           size: 1024
-    exportRenditionRequestStockContent:
-      summary: Export Rendition - Document with Stock Assets (returns 422)
-      description: Requesting rendition of a document that contains Adobe Stock-licensed assets will return a 422 Unprocessable Entity.
-      value:
-        id: urn:aaid:sc:AP:c129e458-8cc9-5c73-a44d-710796fea23a
-        pages: '1'
-        options:
-          format: image/jpeg
-          size: 1024
-    exportRenditionRequestSampleSeven:
-      summary: Export PDF Rendition - Print PDF
-      value:
-        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
-        pages: 1-5
-        options:
-          format: application/pdf
-          pdfType: print
-          downloadIndividualPdfFiles: false
-          config:
-            bleed: true
-            bleedSettings:
-              amount: 0.125
-              unit: in
-            cropMargins: true
-            cropMarginsSettings:
-              amount: 0.125
-              unit: in
-    errorResponseDetailsForbiddenTechnicalAccountNonFreeTypekit:
-      summary: Forbidden - Technical account has non-free Typekit entitlement
-      value:
-        error_code: access_error
-        message: The account associated with the provided access token has 'typekit' entitlements beyond the free tier, which is not permitted for API access
     taggedDocumentDetailsResponseSampleOne:
       summary: Tagged document details response sample 1
       value:
@@ -1305,6 +1201,110 @@ components:
         name: Project Proposal
         paging:
           nextUrl: https://example.com/api/tagged-documents/urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa?start=11
+          totalRecords: 14
+    errorResponseDetailsForbiddenMissingExpressApiEntitlement:
+      summary: Forbidden - Missing Express API entitlement
+      value:
+        error_code: access_error
+        message: The account associated with the provided access token does not have Express API entitlements
+    exportRenditionRequestSampleSix:
+      summary: Export PDF Rendition - Standard PDF
+      value:
+        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
+        pages: 1-3
+        options:
+          format: application/pdf
+          pdfType: standard
+          downloadIndividualPdfFiles: true
+          config:
+            accessibilityTags: true
+    errorResponseDetailsUnauthorized:
+      summary: Unauthorized
+      value:
+        error_code: unauthorized_error
+        message: Not authorized
+    errorResponseDetailsServiceUnavailable:
+      summary: Service Unavailable
+      value:
+        error_code: service_unavailable
+        message: The service is temporarily unable to handle the request
+    exportRenditionRequestStockContent:
+      summary: Export Rendition - Document with Stock Assets (returns 422)
+      description: Requesting rendition of a document that contains Adobe Stock-licensed assets will return a 422 Unprocessable Entity.
+      value:
+        id: urn:aaid:sc:AP:c129e458-8cc9-5c73-a44d-710796fea23a
+        pages: '1'
+        options:
+          format: image/jpeg
+          size: 1024
+    errorResponseDetailsForbiddenMissingTypekitEntitlement:
+      summary: Forbidden - Missing Typekit entitlement
+      value:
+        error_code: access_error
+        message: The account associated with the provided access token does not have 'typekit' entitlement
+    errorResponseDetailsForbidden:
+      summary: Forbidden
+      value:
+        error_code: access_error
+        message: Not allowed
+    jobResponseSample:
+      summary: Job response sample
+      value:
+        jobId: af121560-218e-4dd9-918d-add12b3b6d98
+        statusUrl: https://example.com/status/af121560-218e-4dd9-918d-add12b3b6d98
+    errorResponseDetailsBadRequest:
+      summary: Bad Request
+      value:
+        error_code: client_error
+        message: Client Error
+    exportRenditionRequestSampleFour:
+      summary: Export Rendition Request Sample 4
+      value:
+        id: urn:aaid:sc:AP:33e40394-0000-000c-0001-a27de4c3d2b8
+        pages: 1-
+        options:
+          format: video/mp4
+    errorResponseDetailsForbiddenMissingExpressEntitlement:
+      summary: Forbidden - Missing Adobe Express entitlement
+      value:
+        error_code: access_error
+        message: The account associated with the provided access token does not have Adobe Express entitlements
+    taggedDocumentsResponseSample:
+      summary: Tagged Documents response sample
+      value:
+        documents:
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 1
+          thumbnailUrl: https://example.com/thumbnail1.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 2
+          thumbnailUrl: https://example.com/thumbnail2.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 3
+          thumbnailUrl: https://example.com/thumbnail3.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 4
+          thumbnailUrl: https://example.com/thumbnail4.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 5
+          thumbnailUrl: https://example.com/thumbnail5.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 6
+          thumbnailUrl: https://example.com/thumbnail6.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 7
+          thumbnailUrl: https://example.com/thumbnail7.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 8
+          thumbnailUrl: https://example.com/thumbnail8.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 9
+          thumbnailUrl: https://example.com/thumbnail9.png
+        - id: urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa
+          name: Sample Document 10
+          thumbnailUrl: https://example.com/thumbnail10.png
+        paging:
+          nextUrl: https://example.com/beta/tagged-documents/urn:aaid:sc:AP:0000aaaa-0000-000a-0000-000000aaaaaa?start=10
           totalRecords: 14
   securitySchemes:
     apiKey:

@@ -369,50 +369,29 @@ paths:
           description: Internal server error, upload file to internal storage failed
 components:
   schemas:
-    ApiClassificationJob:
+    ApiJobHistory:
+      type: object
       properties:
-        setName:
+        timestamp:
           type: string
-          description: The name of the classification dataset.
-        jobId:
+          description: The time when the job state changed
+        jobState:
           type: string
-          description: The id of the job.
-        jobSize:
-          type: integer
-          description: The size of the job file
-          format: int64
-        jobOptions:
-          type: object
-          description: The import or export options of the job.
-        name:
+          description: The state of the job
+          enum:
+          - created
+          - queued
+          - validated
+          - failed_validation
+          - processing
+          - done_processing
+          - failed_processing
+          - completed
+        message:
           type: string
-          description: The name of the job.
-        totalLines:
-          type: integer
-          description: The total lines of the file.
-          format: int32
-        datasetId:
-          type: string
-          description: The classification dataset id of the job.
-        noeffectLines:
-          type: integer
-          description: The no effect lines of import job.
-          format: int32
-        history:
-          type: array
-          description: The history of the job.
-          items:
-            $ref: '#/components/schemas/ApiJobHistory'
-        state:
-          type: string
-          description: The state of the job.
-        type:
-          type: string
-          description: The type of the job.
-        imsOrgId:
-          type: string
-          description: The IMS Org Id of the job.
-    JobImportOptionsWithData:
+          description: The details of the job history
+      description: The history of the job.
+    ApiJobImportOptions:
       type: object
       properties:
         dataFormat:
@@ -429,37 +408,30 @@ components:
           type: string
         keyOptions:
           $ref: '#/components/schemas/KeyOption'
-        jobImportOption:
-          $ref: '#/components/schemas/JobImportOptions'
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/JsonRecord'
-    JsonRecord:
+    Notification:
       type: object
       properties:
-        key:
+        method:
           type: string
-        action:
+          enum:
+          - email
+          - rabbit
+        state:
           type: string
-        data:
-          type: object
-          additionalProperties:
-            type: object
-    ImportApiJobRecord:
-      properties:
-        api_job_status:
-          type: string
-        dataset_id:
-          type: string
-        api_job_id:
-          type: string
-        ims_org_id:
-          type: string
-        taxonomist_job_id:
-          type: string
-        job_options:
-          $ref: '#/components/schemas/JobImportOptions'
+          enum:
+          - created
+          - queued
+          - validated
+          - failed_validation
+          - processing
+          - done_processing
+          - failed_processing
+          - completed
+        recipients:
+          type: array
+          items:
+            type: string
+      description: List of notifications to be sent for all imports and exports that occur.
     ApiJobExportOptions:
       type: object
       properties:
@@ -503,7 +475,81 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Notification'
-    ApiJobImportOptions:
+    KeyOption:
+      type: object
+      properties:
+        byte_length:
+          type: integer
+          format: int32
+        type:
+          type: string
+        overwrite:
+          type: boolean
+    ImportApiJobRecord:
+      properties:
+        api_job_status:
+          type: string
+        dataset_id:
+          type: string
+        api_job_id:
+          type: string
+        ims_org_id:
+          type: string
+        taxonomist_job_id:
+          type: string
+        job_options:
+          $ref: '#/components/schemas/JobImportOptions'
+    ApiClassificationJob:
+      properties:
+        setName:
+          type: string
+          description: The name of the classification dataset.
+        jobId:
+          type: string
+          description: The id of the job.
+        jobSize:
+          type: integer
+          description: The size of the job file
+          format: int64
+        jobOptions:
+          type: object
+          description: The import or export options of the job.
+        name:
+          type: string
+          description: The name of the job.
+        totalLines:
+          type: integer
+          description: The total lines of the file.
+          format: int32
+        datasetId:
+          type: string
+          description: The classification dataset id of the job.
+        noeffectLines:
+          type: integer
+          description: The no effect lines of import job.
+          format: int32
+        history:
+          type: array
+          description: The history of the job.
+          items:
+            $ref: '#/components/schemas/ApiJobHistory'
+        state:
+          type: string
+          description: The state of the job.
+        type:
+          type: string
+          description: The type of the job.
+        imsOrgId:
+          type: string
+          description: The IMS Org Id of the job.
+    NotificationExtra:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    JobImportOptionsWithData:
       type: object
       properties:
         dataFormat:
@@ -520,28 +566,23 @@ components:
           type: string
         keyOptions:
           $ref: '#/components/schemas/KeyOption'
-    ApiJobHistory:
+        jobImportOption:
+          $ref: '#/components/schemas/JobImportOptions'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JsonRecord'
+    JsonRecord:
       type: object
       properties:
-        timestamp:
+        key:
           type: string
-          description: The time when the job state changed
-        jobState:
+        action:
           type: string
-          description: The state of the job
-          enum:
-          - created
-          - queued
-          - validated
-          - failed_validation
-          - processing
-          - done_processing
-          - failed_processing
-          - completed
-        message:
-          type: string
-          description: The details of the job history
-      description: The history of the job.
+        data:
+          type: object
+          additionalProperties:
+            type: object
     JobImportOptions:
       type: object
       properties:
@@ -577,47 +618,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NotificationExtra'
-    NotificationExtra:
-      type: object
-      properties:
-        key:
-          type: string
-        value:
-          type: string
-    Notification:
-      type: object
-      properties:
-        method:
-          type: string
-          enum:
-          - email
-          - rabbit
-        state:
-          type: string
-          enum:
-          - created
-          - queued
-          - validated
-          - failed_validation
-          - processing
-          - done_processing
-          - failed_processing
-          - completed
-        recipients:
-          type: array
-          items:
-            type: string
-      description: List of notifications to be sent for all imports and exports that occur.
-    KeyOption:
-      type: object
-      properties:
-        byte_length:
-          type: integer
-          format: int32
-        type:
-          type: string
-        overwrite:
-          type: boolean
     ApiClassificationJobPage:
       properties:
         size:
@@ -644,17 +644,17 @@ components:
           type: integer
           format: int64
   parameters:
-    authorization:
-      name: Authorization
-      in: header
-      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
-      required: true
-      schema:
-        type: string
     x-api-key:
       name: x-api-key
       in: header
       description: The API key copied from your AA API client integration. For more information on how to obtain this value, see [Getting started with the CJA API](https://developer.adobe.com/cja-apis/docs/getting-started/).
+      required: true
+      schema:
+        type: string
+    authorization:
+      name: Authorization
+      in: header
+      description: The access token copied from your AA API client integration, prefixed with "Bearer ".
       required: true
       schema:
         type: string

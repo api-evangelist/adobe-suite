@@ -318,16 +318,6 @@ paths:
                   $ref: '#/components/examples/ErrorBodyInternalServerError'
 components:
   schemas:
-    Source:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-          description: The pre-signed URL pointing to the input source.
-      required:
-      - url
-      description: Source details including a pre-signed URL for accessing the input media. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
     VideoInput:
       type: object
       properties:
@@ -344,15 +334,6 @@ components:
       - url
       - mediaType
       description: The video input details for a dub request.
-    VideoInputMediaType:
-      type: string
-      description: Media type of the video input.
-      enum:
-      - video/mp4
-      - video/mov
-      - video/quicktime
-      - video/x-msvideo
-      - video/x-matroska
     DubVideoRequest:
       type: object
       title: Video dub request
@@ -375,6 +356,15 @@ components:
       required:
       - video
       description: The video dub request body.
+    VideoInputMediaType:
+      type: string
+      description: Media type of the video input.
+      enum:
+      - video/mp4
+      - video/mov
+      - video/quicktime
+      - video/x-msvideo
+      - video/x-matroska
     AudioInput:
       type: object
       properties:
@@ -386,29 +376,6 @@ components:
       - url
       - mediaType
       description: The audio input details for a dub request.
-    TranscriptInput:
-      type: object
-      properties:
-        source:
-          $ref: '#/components/schemas/Source'
-          description: The pre-signed URL to download the translated/edited transcripts. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
-      required:
-      - source
-      description: Transcript input details for a transcribe request.
-    DubRequest:
-      type: object
-      oneOf:
-      - $ref: '#/components/schemas/DubAudioRequest'
-      - $ref: '#/components/schemas/DubVideoRequest'
-      description: The dub request body.
-    TranscribeAudioInput:
-      type: object
-      properties:
-        audio:
-          $ref: '#/components/schemas/AudioInput'
-      required:
-      - audio
-      description: The request body for transcribing audio.
     DubAudioRequest:
       type: object
       title: Audio dub request
@@ -427,47 +394,6 @@ components:
       required:
       - audio
       description: The audio dub request body.
-    TranscribeRequest:
-      type: object
-      oneOf:
-      - $ref: '#/components/schemas/TranscribeAudioInput'
-      - $ref: '#/components/schemas/TranscribeVideoInput'
-      properties:
-        targetLocaleCodes:
-          type: array
-          description: This determines the language used in the processed output. See the usage notes for more about [the supported languages](https://developer.adobe.com/audio-video-firefly-services/getting-started/usage/#language-support).
-          items:
-            $ref: '#/components/schemas/TargetLocaleCodes'
-        captions:
-          $ref: '#/components/schemas/Captions'
-          description: Details to generate captions.
-      description: Transcribe request body.
-    JobStatusLinkResponse:
-      type: object
-      properties:
-        statusUrl:
-          type: string
-          description: URL to download the results of the job.
-        jobId:
-          type: string
-          description: The job ID.
-      required:
-      - statusUrl
-      - jobId
-      description: Job status response.
-    ErrorBody:
-      type: object
-      description: The error response object.
-      properties:
-        message:
-          type: string
-          description: The error message.
-        error_code:
-          type: string
-          description: Associated error code.
-      required:
-      - error_code
-      - message
     TranscribeVideoInput:
       type: object
       properties:
@@ -476,6 +402,28 @@ components:
       required:
       - video
       description: The request body for transcribing video.
+    TranscriptInput:
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+          description: The pre-signed URL to download the translated/edited transcripts. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
+      required:
+      - source
+      description: Transcript input details for a transcribe request.
+    TranscribeAudioInput:
+      type: object
+      properties:
+        audio:
+          $ref: '#/components/schemas/AudioInput'
+      required:
+      - audio
+      description: The request body for transcribing audio.
+    TargetCaptionFormats:
+      type: string
+      description: Target caption format.
+      enum:
+      - SRT
     Captions:
       type: object
       properties:
@@ -484,20 +432,6 @@ components:
           items:
             $ref: '#/components/schemas/TargetCaptionFormats'
           description: 'Accepted values: [''SRT'']'
-    TargetCaptionFormats:
-      type: string
-      description: Target caption format.
-      enum:
-      - SRT
-    AudioInputMediaType:
-      type: string
-      description: Media type of the audio input.
-      enum:
-      - audio/mp3
-      - audio/wav
-      - audio/mpeg
-      - audio/x-m4a
-      - audio/aac
     TargetLocaleCodes:
       type: string
       description: Locale code for dubbing target.
@@ -522,63 +456,136 @@ components:
       - fr-FR
       - it-IT
       - pt-PT
+    JobStatusLinkResponse:
+      type: object
+      properties:
+        statusUrl:
+          type: string
+          description: URL to download the results of the job.
+        jobId:
+          type: string
+          description: The job ID.
+      required:
+      - statusUrl
+      - jobId
+      description: Job status response.
+    TranscribeRequest:
+      type: object
+      oneOf:
+      - $ref: '#/components/schemas/TranscribeAudioInput'
+      - $ref: '#/components/schemas/TranscribeVideoInput'
+      properties:
+        targetLocaleCodes:
+          type: array
+          description: This determines the language used in the processed output. See the usage notes for more about [the supported languages](https://developer.adobe.com/audio-video-firefly-services/getting-started/usage/#language-support).
+          items:
+            $ref: '#/components/schemas/TargetLocaleCodes'
+        captions:
+          $ref: '#/components/schemas/Captions'
+          description: Details to generate captions.
+      description: Transcribe request body.
+    AudioInputMediaType:
+      type: string
+      description: Media type of the audio input.
+      enum:
+      - audio/mp3
+      - audio/wav
+      - audio/mpeg
+      - audio/x-m4a
+      - audio/aac
+    ErrorBody:
+      type: object
+      description: The error response object.
+      properties:
+        message:
+          type: string
+          description: The error message.
+        error_code:
+          type: string
+          description: Associated error code.
+      required:
+      - error_code
+      - message
+    DubRequest:
+      type: object
+      oneOf:
+      - $ref: '#/components/schemas/DubAudioRequest'
+      - $ref: '#/components/schemas/DubVideoRequest'
+      description: The dub request body.
+    Source:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The pre-signed URL pointing to the input source.
+      required:
+      - url
+      description: Source details including a pre-signed URL for accessing the input media. See the [list of allowed domains for storage](https://developer.adobe.com/audio-video-firefly-services/getting-started/storage-solutions/).
   examples:
-    ErrorBodyForbidden:
-      summary: Api Key is required
-      value:
-        error_code: '403000'
-        message: Api Key is required
-    ValidationErrorInputSourceBlank:
-      summary: Input source blank error
-      value:
-        error_code: validation_error
-        message: Input source URL cannot be blank
-    AudioInputToGenerateTranscriptAndCaptionsFromTargetFormatsFromSourceAudio:
-      summary: Generate transcript and captions from source audio
+    AudioInputToGenerateTranscriptFromSourceAudio:
+      summary: Generate transcript from source audio
       value:
         audio:
           source:
             url: <pre_signed_url_for_downloading_the_audio_input>
           mediaType: audio/wav
-        targetLocaleCodes:
-        - en-US
-        captions:
-          targetFormats:
-          - SRT
-    ErrorBodyMethodNotAllowed:
-      summary: Method Not Allowed
+    DubRequestUsingAudioEditedTranslatedTranscript:
+      summary: Dub request using audio edited translated transcript
       value:
-        error_code: method_not_allowed
-        message: The HTTP method is not supported for this endpoint.
-    DubRequestUsingAutoTranslatedTranscripts:
-      summary: Dub request using auto-translated transcripts
+        audio:
+          source:
+            url: <pre_signed_url_for_downloading_the_audio_input>
+          mediaType: audio/wav
+        transcripts:
+        - source:
+            url: <pre_signed_url_for_downloading_the_edited_translated_transcript>
+    ErrorBodyInternalServerError:
+      summary: Internal Server Error
+      value:
+        error_code: internal_server_error
+        message: An unexpected error occurred while processing the request.
+    ValidationErrorSourceUrlEmpty:
+      summary: Source URL empty error
+      value:
+        error_code: validation_error
+        message: Source URL cannot be empty
+    JobStatusLinkResponse:
+      summary: Job status link response
+      value:
+        jobId: <jobId>
+        statusUrl: https://<baseUrl>/v1/status/<jobId>
+    ErrorBodyResourceNotFound:
+      summary: Not Found
+      value:
+        error_code: unknown_job_id
+        message: The requested resource was not found.
+    DubRequestUsingEditedTranslatedTranscript:
+      summary: Dub request using edited translated transcript
       value:
         video:
           source:
             url: <pre_signed_url_for_downloading_the_video_input>
           mediaType: video/mp4
-        targetLocaleCodes:
-        - es-ES
+        transcripts:
+        - source:
+            url: <pre_signed_url_for_downloading_the_edited_translated_transcript>
         lipSync: true
-    VideoInputToGenerateTranscriptFromTargetLanguageVideo:
-      summary: Generate transcript from video in target language (Spanish)
-      value:
-        video:
-          source:
-            url: <pre_signed_url_for_downloading_the_video_input>
-          mediaType: video/mp4
-        targetLocaleCodes:
-        - es-ES
-    ValidationErrorBlankTargetLocaleCode:
-      summary: Blank target locale code error
+    ValidationErrorBlankTranscriptSourceField:
+      summary: Blank transcript source field error
       value:
         error_code: validation_error
-        message: Target locale code cannot be blank
-    ValidationErrorInvalidTranscriptUrl:
-      summary: Invalid transcript URL error
+        message: Transcript source field cannot be blank
+    ValidationErrorInvalidVideoAudioSourceUrl:
+      summary: Invalid video/audio source URL error
       value:
         error_code: validation_error
-        message: Invalid transcript URL format
+        message: Invalid video/audio source URL format
+    ValidationErrorLocaleCodeNotRequiredForEditedTranscript:
+      summary: Locale code not required for edited transcript error
+      value:
+        error_code: validation_error
+        message: Locale code is not required for edited transcript
     VideoInputToGenerateTranscriptAndCaptionsFromTargetFormatsFromSourceVideo:
       summary: Generate transcript and captions from source video
       value:
@@ -591,108 +598,21 @@ components:
         captions:
           targetFormats:
           - SRT
-    ErrorBodyLegalReasons:
-      summary: Legal Restrictions
+    ErrorBodyMethodNotAllowed:
+      summary: Method Not Allowed
       value:
-        error_code: unauthorized_legal_reasons
-        message: 'Unauthorized access: Legal restrictions prevent you from accessing this resource.'
-    ValidationErrorUnsupportedVideoMediaType:
-      summary: Unsupported video media type error
-      value:
-        error_code: validation_error
-        message: Unsupported video media type
-    ValidationErrorMissingTargetLocaleCode:
-      summary: Missing target locale code error
+        error_code: method_not_allowed
+        message: The HTTP method is not supported for this endpoint.
+    ValidationErrorInputSourceBlank:
+      summary: Input source blank error
       value:
         error_code: validation_error
-        message: Target locale code is required
-    ValidationErrorCaptionGenerationNotSupportedWithTranslation:
-      summary: Caption generation not supported with translation error
+        message: Input source URL cannot be blank
+    ErrorBodyBadRequest:
+      summary: Bad Request
       value:
-        error_code: validation_error
-        message: Caption generation is not supported with translation
-    DubRequestUsingAudioEditedTranslatedTranscript:
-      summary: Dub request using audio edited translated transcript
-      value:
-        audio:
-          source:
-            url: <pre_signed_url_for_downloading_the_audio_input>
-          mediaType: audio/wav
-        transcripts:
-        - source:
-            url: <pre_signed_url_for_downloading_the_edited_translated_transcript>
-    ValidationErrorInvalidVideoAudioSourceUrl:
-      summary: Invalid video/audio source URL error
-      value:
-        error_code: validation_error
-        message: Invalid video/audio source URL format
-    DubRequestUsingEditedTranslatedTranscript:
-      summary: Dub request using edited translated transcript
-      value:
-        video:
-          source:
-            url: <pre_signed_url_for_downloading_the_video_input>
-          mediaType: video/mp4
-        transcripts:
-        - source:
-            url: <pre_signed_url_for_downloading_the_edited_translated_transcript>
-        lipSync: true
-    DubRequestUsingAudioEditedSourceTranscript:
-      summary: Dub request using audio edited source transcript
-      value:
-        audio:
-          source:
-            url: <pre_signed_url_for_downloading_the_audio_input>
-          mediaType: audio/wav
-        transcripts:
-        - source:
-            url: <pre_signed_url_for_downloading_the_edited_transcript>
-        targetLocaleCodes:
-        - es-ES
-    ErrorBodyInternalServerError:
-      summary: Internal Server Error
-      value:
-        error_code: internal_server_error
-        message: An unexpected error occurred while processing the request.
-    ErrorBodyUnauthorized:
-      summary: Invalid Token
-      value:
-        error_code: '401013'
-        message: Oauth token is not valid
-    AudioInputToGenerateTranscriptFromTargetLanguageAudio:
-      summary: Generate transcript from audio in target language (Spanish)
-      value:
-        audio:
-          source:
-            url: <pre_signed_url_for_downloading_the_audio_input>
-          mediaType: audio/wav
-        targetLocaleCodes:
-        - es-ES
-    ValidationErrorVideoSourceBlank:
-      summary: Video source blank error
-      value:
-        error_code: validation_error
-        message: Video source URL cannot be blank
-    ValidationErrorSourceUrlEmpty:
-      summary: Source URL empty error
-      value:
-        error_code: validation_error
-        message: Source URL cannot be empty
-    ValidationErrorUnsupportedTargetLocaleCode:
-      summary: Unsupported target locale code error
-      value:
-        error_code: validation_error
-        message: Unsupported target locale code
-    ValidationErrorBlankTranscriptSourceField:
-      summary: Blank transcript source field error
-      value:
-        error_code: validation_error
-        message: Transcript source field cannot be blank
-    ValidationErrorVideoInputMediaTypeMissing:
-      summary: Video input media type missing error
-      value:
-        error_code: validation_error
-        message: Video input media type is required
+        error_code: bad_request
+        message: The request was invalid or cannot be served.
     ValidationErrorAudioSourceBlank:
       summary: Audio source blank error
       value:
@@ -705,6 +625,126 @@ components:
           source:
             url: <pre_signed_url_for_downloading_the_video_input>
           mediaType: video/mp4
+    ErrorBodyForbidden:
+      summary: Api Key is required
+      value:
+        error_code: '403000'
+        message: Api Key is required
+    ValidationErrorVideoAndAudioSimultaneous:
+      summary: Video and audio simultaneous error
+      value:
+        error_code: validation_error
+        message: Cannot provide both video and audio input simultaneously
+    ValidationErrorMissingTargetLocaleCode:
+      summary: Missing target locale code error
+      value:
+        error_code: validation_error
+        message: Target locale code is required
+    DubRequestUsingAudioEditedSourceTranscript:
+      summary: Dub request using audio edited source transcript
+      value:
+        audio:
+          source:
+            url: <pre_signed_url_for_downloading_the_audio_input>
+          mediaType: audio/wav
+        transcripts:
+        - source:
+            url: <pre_signed_url_for_downloading_the_edited_transcript>
+        targetLocaleCodes:
+        - es-ES
+    ErrorBodyLegalReasons:
+      summary: Legal Restrictions
+      value:
+        error_code: unauthorized_legal_reasons
+        message: 'Unauthorized access: Legal restrictions prevent you from accessing this resource.'
+    ValidationErrorVideoSourceBlank:
+      summary: Video source blank error
+      value:
+        error_code: validation_error
+        message: Video source URL cannot be blank
+    ValidationErrorBlankTargetLocaleCode:
+      summary: Blank target locale code error
+      value:
+        error_code: validation_error
+        message: Target locale code cannot be blank
+    ValidationErrorUnsupportedVideoMediaType:
+      summary: Unsupported video media type error
+      value:
+        error_code: validation_error
+        message: Unsupported video media type
+    ValidationErrorUnsupportedTargetLocaleCode:
+      summary: Unsupported target locale code error
+      value:
+        error_code: validation_error
+        message: Unsupported target locale code
+    ValidationErrorInvalidTranscriptUrl:
+      summary: Invalid transcript URL error
+      value:
+        error_code: validation_error
+        message: Invalid transcript URL format
+    ValidationErrorEitherTargetLocaleCodesOrTranscriptionRequired:
+      summary: Either target locale codes or transcription required error
+      value:
+        error_code: validation_error
+        message: Either target locale codes or transcription is required
+    AudioInputToGenerateTranscriptFromTargetLanguageAudio:
+      summary: Generate transcript from audio in target language (Spanish)
+      value:
+        audio:
+          source:
+            url: <pre_signed_url_for_downloading_the_audio_input>
+          mediaType: audio/wav
+        targetLocaleCodes:
+        - es-ES
+    ValidationErrorCaptionGenerationNotSupportedWithTranslation:
+      summary: Caption generation not supported with translation error
+      value:
+        error_code: validation_error
+        message: Caption generation is not supported with translation
+    ErrorBodyUnauthorized:
+      summary: Invalid Token
+      value:
+        error_code: '401013'
+        message: Oauth token is not valid
+    ValidationErrorUnsupportedAudioMediaType:
+      summary: Unsupported audio media type error
+      value:
+        error_code: validation_error
+        message: Unsupported audio media type
+    ValidationErrorVideoInputMediaTypeMissing:
+      summary: Video input media type missing error
+      value:
+        error_code: validation_error
+        message: Video input media type is required
+    ErrorBodyTooManyRequests:
+      summary: Too many requests
+      value:
+        error_code: '429050'
+        message: Too many requests
+    DubRequestUsingAutoTranslatedTranscripts:
+      summary: Dub request using auto-translated transcripts
+      value:
+        video:
+          source:
+            url: <pre_signed_url_for_downloading_the_video_input>
+          mediaType: video/mp4
+        targetLocaleCodes:
+        - es-ES
+        lipSync: true
+    ValidationErrorAudioInputMediaTypeMissing:
+      summary: Audio input media type missing error
+      value:
+        error_code: validation_error
+        message: Audio input media type is required
+    VideoInputToGenerateTranscriptFromTargetLanguageVideo:
+      summary: Generate transcript from video in target language (Spanish)
+      value:
+        video:
+          source:
+            url: <pre_signed_url_for_downloading_the_video_input>
+          mediaType: video/mp4
+        targetLocaleCodes:
+        - es-ES
     DubRequestUsingEditedSourceTranscript:
       summary: Dub request using edited source transcript
       value:
@@ -718,26 +758,18 @@ components:
         targetLocaleCodes:
         - es-ES
         lipSync: true
-    ValidationErrorAudioInputMediaTypeMissing:
-      summary: Audio input media type missing error
+    AudioInputToGenerateTranscriptAndCaptionsFromTargetFormatsFromSourceAudio:
+      summary: Generate transcript and captions from source audio
       value:
-        error_code: validation_error
-        message: Audio input media type is required
-    ErrorBodyTooManyRequests:
-      summary: Too many requests
-      value:
-        error_code: '429050'
-        message: Too many requests
-    ValidationErrorEitherTargetLocaleCodesOrTranscriptionRequired:
-      summary: Either target locale codes or transcription required error
-      value:
-        error_code: validation_error
-        message: Either target locale codes or transcription is required
-    ErrorBodyBadRequest:
-      summary: Bad Request
-      value:
-        error_code: bad_request
-        message: The request was invalid or cannot be served.
+        audio:
+          source:
+            url: <pre_signed_url_for_downloading_the_audio_input>
+          mediaType: audio/wav
+        targetLocaleCodes:
+        - en-US
+        captions:
+          targetFormats:
+          - SRT
     DubRequestUsingAudioAutoTranslatedTranscripts:
       summary: Dub request using audio auto-translated transcripts
       value:
@@ -747,38 +779,6 @@ components:
           mediaType: audio/wav
         targetLocaleCodes:
         - es-ES
-    ValidationErrorLocaleCodeNotRequiredForEditedTranscript:
-      summary: Locale code not required for edited transcript error
-      value:
-        error_code: validation_error
-        message: Locale code is not required for edited transcript
-    ValidationErrorVideoAndAudioSimultaneous:
-      summary: Video and audio simultaneous error
-      value:
-        error_code: validation_error
-        message: Cannot provide both video and audio input simultaneously
-    JobStatusLinkResponse:
-      summary: Job status link response
-      value:
-        jobId: <jobId>
-        statusUrl: https://<baseUrl>/v1/status/<jobId>
-    AudioInputToGenerateTranscriptFromSourceAudio:
-      summary: Generate transcript from source audio
-      value:
-        audio:
-          source:
-            url: <pre_signed_url_for_downloading_the_audio_input>
-          mediaType: audio/wav
-    ErrorBodyResourceNotFound:
-      summary: Not Found
-      value:
-        error_code: unknown_job_id
-        message: The requested resource was not found.
-    ValidationErrorUnsupportedAudioMediaType:
-      summary: Unsupported audio media type error
-      value:
-        error_code: validation_error
-        message: Unsupported audio media type
   securitySchemes:
     AccessToken:
       type: http

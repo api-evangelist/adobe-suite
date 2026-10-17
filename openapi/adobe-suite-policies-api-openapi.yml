@@ -534,78 +534,44 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    _linksPaging:
-      type: object
-      properties:
-        _links:
-          type: object
-          properties:
-            _page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: The URL template.
-                  format: uri
-                templated:
-                  type: string
-                  description: When present and set to `true`, indicates that this is a templated URL.
-          description: Contains a templated URL for clients to obtain this resource.
-    Error:
-      type: object
-      properties:
-        type:
-          type: string
-          description: A placeholder value for the error type.
-          example: /placeholder/type/uri
-        status:
-          type: integer
-          description: The HTTP status associated with the error.
-          format: int32
-        title:
-          type: string
-          description: The error title.
-        detail:
-          type: string
-          description: A description of the error.
-    _linksPagingCustomPolicies:
-      allOf:
-      - $ref: '#/components/schemas/_linksPaging'
     CustomPolicyResponse:
       allOf:
       - $ref: '#/components/schemas/CustomPolicyRequest'
       - $ref: '#/components/schemas/PolicyResponseCustomEval'
-    PagingProperties:
-      type: object
-      properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of resources returned.
-              example: 1
-          description: Contains a `count` property for the number of resources returned.
-    _linksPagingCorePolicies:
+    PolicyRequest:
       allOf:
-      - $ref: '#/components/schemas/_linksPaging'
-    PolicyResponseCustomEval:
+      - $ref: '#/components/schemas/PolicyBody'
+    CustomPoliciesPage:
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCustomPolicies'
+      - type: object
+        properties:
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/CustomPolicyResponse'
+    PolicyPatchResponse:
       allOf:
       - $ref: '#/components/schemas/PolicyResponse'
       - type: object
         properties:
-          marketingActionRefs:
-            type: array
-            example: []
-          _links:
-            type: object
-            properties:
-              self:
-                type: object
-                properties:
-                  href:
-                    type: string
-                    example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
+          name:
+            type: string
+            example: Email Policy 001
+    CreatePolicyError:
+      allOf:
+      - $ref: '#/components/schemas/BadRequestError'
+      - type: object
+        example:
+          type: string
+          detail: 'Unable to parse PolicyRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
+    CustomPolicyRequest:
+      allOf:
+      - $ref: '#/components/schemas/PolicyBody'
+    PagingPropertiesCorePolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCorePolicies'
     CorePolicyResponse:
       allOf:
       - $ref: '#/components/schemas/PolicyBody'
@@ -631,46 +597,36 @@ components:
             type: string
             description: The ID of the core policy.
             example: corepolicy_0003
-    PolicyPatchRequest:
+    PolicyResponse:
       allOf:
-      - $ref: '#/components/schemas/PatchDocument'
-    PagingPropertiesCorePolicies:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCorePolicies'
-    BadRequestError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
-      - type: object
-        example:
-          type: /placeholder/type/uri
-          status: 400
-          title: BadRequest
-    PolicyRequest:
-      allOf:
-      - $ref: '#/components/schemas/PolicyBody'
-    CustomPolicyRequest:
-      allOf:
-      - $ref: '#/components/schemas/PolicyBody'
-    PoliciesPage:
-      properties:
-        _links:
-          type: object
-          properties:
-            _page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core?{?limit,start,property}
-      allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCorePolicies'
       - type: object
         properties:
-          children:
+          id:
+            type: string
+            description: The unique ID for this policy resource, as assigned by the service.
+            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
+      - $ref: '#/components/schemas/PolicyBody'
+      - $ref: '#/components/schemas/ServiceProperties'
+    _linksPagingCustomPolicies:
+      allOf:
+      - $ref: '#/components/schemas/_linksPaging'
+    PolicyResponseCustomEval:
+      allOf:
+      - $ref: '#/components/schemas/PolicyResponse'
+      - type: object
+        properties:
+          marketingActionRefs:
             type: array
-            items:
-              $ref: '#/components/schemas/CorePolicyResponse'
+            example: []
+          _links:
+            type: object
+            properties:
+              self:
+                type: object
+                properties:
+                  href:
+                    type: string
+                    example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/custom/emailPolicy
     PatchDocument:
       required:
       - op
@@ -695,6 +651,16 @@ components:
           properties: {}
           description: The value to be used in the context of the patch operation.
       description: A JSON Patch document as defined by RFC 6902. See the [JSON Patch specification](https://datatracker.ietf.org/doc/html/rfc6902) for more information.
+    PolicyPatchRequest:
+      allOf:
+      - $ref: '#/components/schemas/PatchDocument'
+    CustomPolicyNotFound:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        example:
+          type: string
+          detail: https://platform.adobe.io:443/policies/custom/12345 not found
     ServiceProperties:
       properties:
         imsOrg:
@@ -733,18 +699,34 @@ components:
           example: '{USER_ID}'
       allOf:
       - $ref: '#/components/schemas/_links'
-    PolicyPatchResponse:
+    BadRequestError:
       allOf:
-      - $ref: '#/components/schemas/PolicyResponse'
+      - $ref: '#/components/schemas/Error'
       - type: object
-        properties:
-          name:
-            type: string
-            example: Email Policy 001
-    PagingPropertiesCustomPolicies:
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
+    _linksPaging:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URL template.
+                  format: uri
+                templated:
+                  type: string
+                  description: When present and set to `true`, indicates that this is a templated URL.
+          description: Contains a templated URL for clients to obtain this resource.
+    _linksPagingCorePolicies:
       allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCustomPolicies'
+      - $ref: '#/components/schemas/_linksPaging'
     NotFoundError:
       allOf:
       - $ref: '#/components/schemas/Error'
@@ -753,15 +735,17 @@ components:
           type: /placeholder/type/uri
           status: 404
           title: NotFound
-    CustomPoliciesPage:
-      allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCustomPolicies'
-      - type: object
-        properties:
-          children:
-            type: array
-            items:
-              $ref: '#/components/schemas/CustomPolicyResponse'
+    PagingProperties:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of resources returned.
+              example: 1
+          description: Contains a `count` property for the number of resources returned.
     PolicyBody:
       type: object
       properties:
@@ -822,6 +806,10 @@ components:
           operands:
           - label: C3
           - label: C7
+    PagingPropertiesCustomPolicies:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCustomPolicies'
     _links:
       type: object
       properties:
@@ -837,6 +825,23 @@ components:
                   format: uri
                   example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
           description: Contains the URI reference that clients may use to obtain this resource.
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+          description: A placeholder value for the error type.
+          example: /placeholder/type/uri
+        status:
+          type: integer
+          description: The HTTP status associated with the error.
+          format: int32
+        title:
+          type: string
+          description: The error title.
+        detail:
+          type: string
+          description: A description of the error.
     CorePolicyNotFound:
       allOf:
       - $ref: '#/components/schemas/NotFoundError'
@@ -844,28 +849,23 @@ components:
         example:
           type: string
           detail: https://platform.adobe.io:443/policies/core/corepolicy_9999 not found
-    CustomPolicyNotFound:
+    PoliciesPage:
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core?{?limit,start,property}
       allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        example:
-          type: string
-          detail: https://platform.adobe.io:443/policies/custom/12345 not found
-    PolicyResponse:
-      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCorePolicies'
       - type: object
         properties:
-          id:
-            type: string
-            description: The unique ID for this policy resource, as assigned by the service.
-            example: 76131228-7654-11e8-adc0-fa7ae01bbebc
-      - $ref: '#/components/schemas/PolicyBody'
-      - $ref: '#/components/schemas/ServiceProperties'
-    CreatePolicyError:
-      allOf:
-      - $ref: '#/components/schemas/BadRequestError'
-      - type: object
-        example:
-          type: string
-          detail: 'Unable to parse PolicyRequest: No usable value for name. Did not find value which can be converted into java.lang.String'
+          children:
+            type: array
+            items:
+              $ref: '#/components/schemas/CorePolicyResponse'
 x-original-swagger-version: '2.0'

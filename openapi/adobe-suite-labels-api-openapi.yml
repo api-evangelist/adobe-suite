@@ -320,78 +320,97 @@ paths:
       x-codegen-request-body-name: body
 components:
   schemas:
-    _linksPaging:
-      type: object
-      properties:
-        _links:
-          type: object
-          properties:
-            _page:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: The URL template.
-                  format: uri
-                templated:
-                  type: string
-                  description: When present and set to `true`, indicates that this is a templated URL.
-          description: Contains a templated URL for clients to obtain this resource.
-    Error:
-      type: object
-      properties:
-        type:
-          type: string
-          description: A placeholder value for the error type.
-          example: /placeholder/type/uri
-        status:
-          type: integer
-          description: The HTTP status associated with the error.
-          format: int32
-        title:
-          type: string
-          description: The error title.
-        detail:
-          type: string
-          description: A description of the error.
-    PagingProperties:
-      type: object
-      properties:
-        _page:
-          type: object
-          properties:
-            count:
-              type: integer
-              description: The number of resources returned.
-              example: 1
-          description: Contains a `count` property for the number of resources returned.
-    _linksPagingCustomLabels:
+    CustomLabelsPage:
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCustomLabels'
+      - type: object
+        properties:
+          children:
+            type: array
+            description: A list of the returned labels.
+            items:
+              $ref: '#/components/schemas/CustomLabelsResponse'
+    LabelsPage:
+      allOf:
+      - $ref: '#/components/schemas/PagingPropertiesCoreLabels'
+      - type: object
+        properties:
+          children:
+            type: array
+            description: A list of the returned labels.
+            items:
+              $ref: '#/components/schemas/LabelsResponse'
+    _linksPagingCoreLabels:
       allOf:
       - $ref: '#/components/schemas/_linksPaging'
-    CoreLabelBody:
+    LabelBody:
+      type: object
+      properties:
+        name:
+          type: string
+          description: A unique name for the label, which also acts as its identifier.
+          example: C1
+        category:
+          type: string
+          example: Contract
+        friendlyName:
+          type: string
+          description: A short, friendly name that can be displayed for the label in user interfaces.
+          example: Aggregate export only
+        description:
+          type: string
+          description: A description of the label's use case.
+          example: Data can only be exported from Adobe Experience Cloud in an aggregated form without including individual or device identifiers.
+    CustomNotFoundError:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        properties:
+          detail:
+            type: string
+            example: https://platform.adobe.io:443/labels/custom/L2 not found
+    CustomLabelRequest:
       allOf:
       - $ref: '#/components/schemas/LabelBody'
       - type: object
         properties:
           category:
             type: string
+            description: The category of the label. Must be set to `Custom` for custom labels.
+            example: Custom
+    PagingPropertiesCustomLabels:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCustomLabels'
+    PagingPropertiesCoreLabels:
+      allOf:
+      - $ref: '#/components/schemas/PagingProperties'
+      - $ref: '#/components/schemas/_linksPagingCoreLabels'
+    CustomLabelBody:
+      allOf:
+      - $ref: '#/components/schemas/LabelBody'
+      - type: object
+        properties:
+          name:
+            type: string
+            example: L2
+          category:
+            type: string
             description: The category of the label. Possible values for core labels include `Contract`, `Identity`, and `Sensitive`. Custom labels use the `Custom` category.
-            example: Contract
-    _linksPagingCoreLabels:
+            example: Custom
+          friendlyName:
+            type: string
+            example: Purchase History Data
+          description:
+            type: string
+            example: Data containing information on past transactions
+    CreateLabelError:
       allOf:
-      - $ref: '#/components/schemas/_linksPaging'
-    BadRequestError:
-      allOf:
-      - $ref: '#/components/schemas/Error'
+      - $ref: '#/components/schemas/BadRequestError'
       - type: object
         example:
-          type: /placeholder/type/uri
-          status: 400
-          title: BadRequest
-    CustomLabelsResponse:
-      allOf:
-      - $ref: '#/components/schemas/CustomLabelBody'
-      - $ref: '#/components/schemas/ServiceProperties'
+          type: string
+          detail: 'Unable to parse LabelRequest: No usable value for category. Did not find value which can be converted into java.lang.String.'
     ServiceProperties:
       properties:
         imsOrg:
@@ -430,25 +449,44 @@ components:
           example: '{USER_ID}'
       allOf:
       - $ref: '#/components/schemas/_links'
-    CustomLabelRequest:
+    BadRequestError:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        example:
+          type: /placeholder/type/uri
+          status: 400
+          title: BadRequest
+    CustomLabelsResponse:
+      allOf:
+      - $ref: '#/components/schemas/CustomLabelBody'
+      - $ref: '#/components/schemas/ServiceProperties'
+    _linksPaging:
+      type: object
+      properties:
+        _links:
+          type: object
+          properties:
+            _page:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: The URL template.
+                  format: uri
+                templated:
+                  type: string
+                  description: When present and set to `true`, indicates that this is a templated URL.
+          description: Contains a templated URL for clients to obtain this resource.
+    CoreLabelBody:
       allOf:
       - $ref: '#/components/schemas/LabelBody'
       - type: object
         properties:
           category:
             type: string
-            description: The category of the label. Must be set to `Custom` for custom labels.
-            example: Custom
-    CustomLabelsPage:
-      allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCustomLabels'
-      - type: object
-        properties:
-          children:
-            type: array
-            description: A list of the returned labels.
-            items:
-              $ref: '#/components/schemas/CustomLabelsResponse'
+            description: The category of the label. Possible values for core labels include `Contract`, `Identity`, and `Sensitive`. Custom labels use the `Custom` category.
+            example: Contract
     NotFoundError:
       allOf:
       - $ref: '#/components/schemas/Error'
@@ -457,6 +495,25 @@ components:
           type: /placeholder/type/uri
           status: 404
           title: NotFound
+    CoreNotFoundError:
+      allOf:
+      - $ref: '#/components/schemas/NotFoundError'
+      - type: object
+        properties:
+          detail:
+            type: string
+            example: https://platform.adobe.io:443/labels/core/C15 not found
+    PagingProperties:
+      type: object
+      properties:
+        _page:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: The number of resources returned.
+              example: 1
+          description: Contains a `count` property for the number of resources returned.
     LabelsResponse:
       allOf:
       - $ref: '#/components/schemas/CoreLabelBody'
@@ -476,81 +533,24 @@ components:
                   format: uri
                   example: https://platform.adobe.io:443/data/foundation/dulepolicy/policies/core/corepolicy_0003
           description: Contains the URI reference that clients may use to obtain this resource.
-    CoreNotFoundError:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        properties:
-          detail:
-            type: string
-            example: https://platform.adobe.io:443/labels/core/C15 not found
-    CustomNotFoundError:
-      allOf:
-      - $ref: '#/components/schemas/NotFoundError'
-      - type: object
-        properties:
-          detail:
-            type: string
-            example: https://platform.adobe.io:443/labels/custom/L2 not found
-    LabelBody:
+    Error:
       type: object
       properties:
-        name:
+        type:
           type: string
-          description: A unique name for the label, which also acts as its identifier.
-          example: C1
-        category:
+          description: A placeholder value for the error type.
+          example: /placeholder/type/uri
+        status:
+          type: integer
+          description: The HTTP status associated with the error.
+          format: int32
+        title:
           type: string
-          example: Contract
-        friendlyName:
+          description: The error title.
+        detail:
           type: string
-          description: A short, friendly name that can be displayed for the label in user interfaces.
-          example: Aggregate export only
-        description:
-          type: string
-          description: A description of the label's use case.
-          example: Data can only be exported from Adobe Experience Cloud in an aggregated form without including individual or device identifiers.
-    CreateLabelError:
+          description: A description of the error.
+    _linksPagingCustomLabels:
       allOf:
-      - $ref: '#/components/schemas/BadRequestError'
-      - type: object
-        example:
-          type: string
-          detail: 'Unable to parse LabelRequest: No usable value for category. Did not find value which can be converted into java.lang.String.'
-    LabelsPage:
-      allOf:
-      - $ref: '#/components/schemas/PagingPropertiesCoreLabels'
-      - type: object
-        properties:
-          children:
-            type: array
-            description: A list of the returned labels.
-            items:
-              $ref: '#/components/schemas/LabelsResponse'
-    PagingPropertiesCoreLabels:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCoreLabels'
-    PagingPropertiesCustomLabels:
-      allOf:
-      - $ref: '#/components/schemas/PagingProperties'
-      - $ref: '#/components/schemas/_linksPagingCustomLabels'
-    CustomLabelBody:
-      allOf:
-      - $ref: '#/components/schemas/LabelBody'
-      - type: object
-        properties:
-          name:
-            type: string
-            example: L2
-          category:
-            type: string
-            description: The category of the label. Possible values for core labels include `Contract`, `Identity`, and `Sensitive`. Custom labels use the `Custom` category.
-            example: Custom
-          friendlyName:
-            type: string
-            example: Purchase History Data
-          description:
-            type: string
-            example: Data containing information on past transactions
+      - $ref: '#/components/schemas/_linksPaging'
 x-original-swagger-version: '2.0'
